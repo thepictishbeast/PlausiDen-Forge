@@ -1447,6 +1447,117 @@
   .loom-pulse-dot { background: Highlight !important; }
 }
 
+/* T27: print stylesheet. Optimised for paper / save-as-PDF /
+ * receipts / share-by-email. Aggressive override: forces black
+ * ink on white paper, drops decorative chrome (nav, sidebar,
+ * footer, aesthetic pickers), keeps the semantic main content
+ * laid out for sequential reading.
+ *
+ * Doctrine: print is a different MEDIUM, not a different theme —
+ * NEVER inherit dark theme tokens for print (would emit black
+ * pages and use a quart of ink per page). */
+@media print {
+  /* 1. Force light/legible base regardless of theme. */
+  :root {
+    --loom-color-bg-canvas:    #ffffff;
+    --loom-color-surface:      #ffffff;
+    --loom-color-surface-muted:#f6f7f8;
+    --loom-color-ink:          #000000;
+    --loom-color-ink-muted:    #444444;
+    --loom-color-border:       #888888;
+    --loom-color-border-strong:#000000;
+    color-scheme: light;
+  }
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* 2. Drop chrome — nav, sidebar widgets, aesthetic pickers,
+   *    diagnostic banners, dev overlays. Primary content stays. */
+  .loom-nav,
+  .loom-poc-banner-wrap,
+  .loom-css-loaded,
+  .loom-skip,
+  .loom-nav-actions,
+  .forge-overlay,
+  [data-loom-aesthetic-set],
+  [data-loom-aesthetic-reset],
+  [data-loom-theme-toggle],
+  .loom-pill-tabs,
+  .loom-section-head .loom-link {
+    display: none !important;
+  }
+
+  /* 3. Strip backgrounds + shadows. Saves ink + neutralizes
+   *    decorative gradients that print as muddy gray. */
+  .loom-card-battle,
+  .loom-panel,
+  .loom-hero,
+  .loom-leader,
+  .loom-vote-row,
+  .loom-stat,
+  .loom-thumb {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: 1px solid #888888 !important;
+    color: #000000 !important;
+  }
+  .loom-card-battle .thumb,
+  .loom-card-battle .thumb[data-category],
+  .loom-thumb-icon {
+    background: #ffffff !important;
+    color: #000000 !important;
+    text-shadow: none !important;
+  }
+
+  /* 4. Force linear flow — no sticky nav, no fixed sidebars.
+   *    Cards/panels should never break across pages. */
+  .loom-grid-app,
+  .loom-feed-grid {
+    display: block !important;
+  }
+  .loom-card-battle,
+  .loom-panel,
+  .loom-hero,
+  .loom-leader,
+  .loom-vote-row {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+
+  /* 5. Buttons → text-only ("View challenge" instead of a styled
+   *    button). On paper, nothing's clickable. */
+  .loom-btn {
+    background: transparent !important;
+    border: 1px dashed #888888 !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  /* 6. Show URL after every external link so the printed page
+   *    carries enough context to follow up. Skip for in-page
+   *    fragments (#main) and for buttons. */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    color: #444444;
+    font-size: 0.85em;
+    word-break: break-all;
+  }
+
+  /* 7. Page setup — let the browser pick paper size; just set
+   *    sane margins and orphan/widow control. */
+  @page {
+    margin: 1.5cm;
+  }
+  p, li, blockquote {
+    orphans: 3;
+    widows: 3;
+  }
+}
+
 /* Reduced motion — disable transitions + animations for users
  * who set the OS preference. */
 @media (prefers-reduced-motion: reduce) {
