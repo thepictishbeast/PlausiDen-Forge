@@ -1742,6 +1742,198 @@
 [data-stagger="11"] { animation-delay: 660ms; }
 [data-stagger="12"] { animation-delay: 720ms; }
 
+/* T22: navigation/disclosure components — Tabs, Pagination,
+ * Accordion, Popover. Each ships an ARIA-correct contract; the
+ * HTML markup pattern is documented inline so callers wire it
+ * the same way every time.
+ *
+ * --------- Tabs ---------
+ *   <div class="loom-tabs" role="tablist">
+ *     <button role="tab" aria-selected="true" aria-controls="p1" id="t1">Overview</button>
+ *     <button role="tab" aria-selected="false" aria-controls="p2" id="t2">Rules</button>
+ *   </div>
+ *   <section role="tabpanel" id="p1" aria-labelledby="t1">…</section>
+ *   <section role="tabpanel" id="p2" aria-labelledby="t2" hidden>…</section>
+ *
+ * Difference vs .loom-pill-tabs (segmented filter chips): Tabs
+ * are content-switching (one panel visible at a time). Pill-tabs
+ * are filter selectors (the underlying list re-renders).
+ */
+.loom-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: var(--loom-border-component);
+  margin-bottom: var(--loom-space-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.loom-tabs::-webkit-scrollbar { display: none; }
+.loom-tabs > [role="tab"] {
+  padding: var(--loom-space-3) var(--loom-space-4);
+  background: transparent;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  color: var(--loom-color-ink-muted);
+  font-weight: 600;
+  font-size: var(--loom-font-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--loom-transition-fast),
+              border-color var(--loom-transition-fast);
+}
+.loom-tabs > [role="tab"]:hover { color: var(--loom-color-ink); }
+.loom-tabs > [role="tab"][aria-selected="true"] {
+  color: var(--loom-color-ink);
+  border-block-end-color: var(--loom-color-primary);
+}
+
+/* --------- Pagination ---------
+ *   <nav class="loom-pagination" aria-label="Page navigation">
+ *     <button data-action="prev" aria-label="Previous page">←</button>
+ *     <button aria-current="page">1</button>
+ *     <button>2</button>  <button>3</button>
+ *     <span class="loom-pagination-gap" aria-hidden="true">…</span>
+ *     <button>12</button>
+ *     <button data-action="next" aria-label="Next page">→</button>
+ *   </nav>
+ */
+.loom-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-1);
+  flex-wrap: wrap;
+}
+.loom-pagination > button,
+.loom-pagination > a {
+  min-width: 36px;
+  min-height: 36px;
+  padding: var(--loom-space-1) var(--loom-space-2);
+  border: var(--loom-border-component);
+  border-radius: var(--loom-radius-md);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  font-weight: 600;
+  font-size: var(--loom-font-sm);
+  cursor: pointer;
+  transition: background var(--loom-transition-fast),
+              border-color var(--loom-transition-fast);
+}
+.loom-pagination > button:hover,
+.loom-pagination > a:hover {
+  background: var(--loom-color-bg-overlay);
+}
+.loom-pagination > [aria-current="page"] {
+  background: var(--loom-color-primary);
+  color: var(--loom-color-primary-fg);
+  border-color: var(--loom-color-primary);
+}
+.loom-pagination > button[disabled],
+.loom-pagination > a[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.loom-pagination-gap {
+  padding: 0 var(--loom-space-2);
+  color: var(--loom-color-ink-muted);
+}
+
+/* --------- Accordion ---------
+ * Built on native <details>/<summary>. Accessible by default —
+ * keyboard, screen reader, ARIA expanded state all free from the
+ * HTML spec. We just style the chrome.
+ *
+ *   <details class="loom-accordion">
+ *     <summary>Section title</summary>
+ *     <div class="loom-accordion-body">…</div>
+ *   </details>
+ *
+ *   data-variant="ghost" drops the surrounding border for nested
+ *   accordions or dense lists.
+ */
+.loom-accordion {
+  border: var(--loom-border-component);
+  border-radius: var(--loom-radius-md);
+  background: var(--loom-color-surface);
+  overflow: hidden;
+}
+.loom-accordion + .loom-accordion {
+  margin-block-start: var(--loom-space-2);
+}
+.loom-accordion > summary {
+  padding: var(--loom-space-3) var(--loom-space-4);
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--loom-space-3);
+  user-select: none;
+  transition: background var(--loom-transition-fast);
+}
+.loom-accordion > summary::-webkit-details-marker { display: none; }
+.loom-accordion > summary::after {
+  content: "▾";
+  color: var(--loom-color-ink-muted);
+  font-size: var(--loom-font-sm);
+  transition: transform var(--loom-transition-fast);
+}
+.loom-accordion[open] > summary::after {
+  transform: rotate(180deg);
+}
+.loom-accordion > summary:hover {
+  background: var(--loom-color-bg-overlay);
+}
+.loom-accordion-body {
+  padding: 0 var(--loom-space-4) var(--loom-space-4);
+  border-block-start: var(--loom-border-component);
+  padding-block-start: var(--loom-space-3);
+  color: var(--loom-color-ink);
+}
+.loom-accordion[data-variant="ghost"] {
+  border: 0;
+  background: transparent;
+}
+.loom-accordion[data-variant="ghost"] > summary {
+  padding-inline: 0;
+}
+
+/* --------- Popover ---------
+ * Uses the native HTML5 popover attribute (Chrome 114+, Safari 17+,
+ * Firefox 125+). Auto-handles backdrop / focus / dismiss. Caller
+ * pairs an anchor button with popovertarget=… and the popover
+ * element with popover=auto/manual.
+ *
+ *   <button popovertarget="rules-pop">Rules</button>
+ *   <div id="rules-pop" class="loom-popover" popover>
+ *     <h3>How judging works</h3>
+ *     <p>Voters strictly check rule adherence…</p>
+ *   </div>
+ *
+ *   :popover-open is the active state.
+ */
+.loom-popover {
+  /* Reset native popover defaults so it inherits Loom tokens. */
+  margin: 0;
+  padding: var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border: var(--loom-border-component);
+  border-radius: var(--loom-radius-lg);
+  box-shadow: var(--loom-shadow-elevated);
+  max-width: min(420px, calc(100vw - var(--loom-space-8)));
+  font-size: var(--loom-font-sm);
+}
+.loom-popover::backdrop {
+  background: hsl(0 0% 0% / 0.4);
+  backdrop-filter: blur(2px);
+}
+.loom-popover[data-position="top-right"] {
+  inset-block-start: var(--loom-space-4);
+  inset-inline-end: var(--loom-space-4);
+  margin: 0;
+}
+
 /* T23: feedback components — ProgressBar, Spinner, Toast.
  * Each honors prefers-reduced-motion via the universal motion
  * kill-switch already in skin (line ~1700). No per-component
