@@ -1,0 +1,52 @@
+{
+  "title": "Open votes — SkillShots",
+  "description": "Pending vote queue. Watch entries, decide who took the round.",
+  "path": "/votes.html",
+  "nav_links": [
+    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
+    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
+    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
+    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Voting open",
+      "title": "Open votes",
+      "lede": "Watch the takes. Cast your vote. Pots split when the timer runs out."
+    },
+    {
+      "kind": "card_feed",
+      "heading": "Need your eye",
+      "items": [
+        {
+          "avatar": { "kind": "initials", "letters": "9L" },
+          "title": "Pool table clear — @9ball_lori",
+          "host": "3 entries · 2 innings, no scratch",
+          "stats": [{ "label": "Closes in", "value": "12m" }],
+          "href": "/c/pool-clear-9lori",
+          "data_backend": "view-challenge",
+          "tag": "Billiards"
+        },
+        {
+          "avatar": { "kind": "initials", "letters": "KM" },
+          "title": "5-stair kickflip — @kickflip_mar",
+          "host": "2 entries · kickflip + roll-away",
+          "stats": [{ "label": "Closes in", "value": "42m" }],
+          "href": "/c/kickflip-5stair",
+          "data_backend": "view-challenge",
+          "tag": "Skate"
+        },
+        {
+          "avatar": { "kind": "initials", "letters": "OR" },
+          "title": "9-dart 501 — @oche_riv",
+          "host": "4 entries · continuous take",
+          "stats": [{ "label": "Closes in", "value": "1h 04m" }],
+          "href": "/c/9dart-501",
+          "data_backend": "view-challenge",
+          "tag": "Darts"
+        }
+      ]
+    }
+  ]
+}
