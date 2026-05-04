@@ -733,6 +733,94 @@ for f in d['findings']:
   fi
 }
 
+phase_selfaudit() {
+  # T14: introspect forge.sh itself. Catches the regression class
+  # where a phase is defined but never called, called but never
+  # defined, missing its phase_header announcement, or referenced
+  # in finding_* calls but not declared in the run list.
+  #
+  # AVP-2: assume the tooling is broken until proven otherwise.
+  # forge.sh has 18+ phases and 67+ finding_* calls — meta-drift
+  # is real risk.
+  phase_header "selfaudit"
+  local hits=0
+  local me="$0"
+  if [ ! -f "$me" ]; then
+    me="$ROOT/forge.sh"
+  fi
+  # Defined phase functions (regex includes [0-9] so phase_a11y_landmarks
+  # is recognised; my earlier audit missed it with a [a-z_]-only regex).
+  local defined
+  defined=$(grep -oE '^phase_[a-z0-9_]+' "$me" \
+            | grep -E '\(' \
+            | sort -u 2>/dev/null \
+            ; grep -oE '^phase_[a-z0-9_]+\(\)' "$me" \
+            | sed 's/()//' \
+            | sort -u)
+  defined=$(echo "$defined" | sort -u | grep -v '^$')
+  # Phases referenced in the main run list (lines that are JUST
+  # `phase_X` outside a function definition).
+  local called
+  called=$(awk '/^phase_[a-z0-9_]+$/ {print}' "$me" | sort -u)
+
+  # 1. defined but not called (dead phase)
+  for p in $defined; do
+    [ "$p" = "phase_header" ] && continue   # helper, not a phase
+    [ "$p" = "phase_selfaudit" ] && continue # this phase
+    if ! echo "$called" | grep -qx "$p"; then
+      finding_strict "selfaudit" "forge.sh" "$p defined but never called from the run list (dead phase)"
+      hits=$((hits + 1))
+    fi
+  done
+  # 2. called but not defined (broken reference)
+  for p in $called; do
+    if ! echo "$defined" | grep -qx "$p"; then
+      finding_strict "selfaudit" "forge.sh" "$p called but never defined (broken reference)"
+      hits=$((hits + 1))
+    fi
+  done
+  # 3. each phase function MUST contain a phase_header announcement
+  for p in $defined; do
+    [ "$p" = "phase_header" ] && continue
+    [ "$p" = "phase_selfaudit" ] && continue
+    # Capture the body of $p() up to the next ^phase_ definition.
+    local body
+    body=$(awk -v fn="${p}()" '
+      $0 ~ ("^"fn) {capture=1; next}
+      /^phase_[a-z0-9_]+\(\)/ {capture=0}
+      capture {print}
+    ' "$me")
+    if ! echo "$body" | grep -q 'phase_header'; then
+      finding_warn "selfaudit" "forge.sh" "$p has no phase_header call — output won't show the phase boundary"
+      hits=$((hits + 1))
+    fi
+  done
+
+  # 4. JSON report sanity (latest report parses + counts >= 0)
+  local latest_report
+  latest_report=$(ls -t "$REPORT_DIR"/build-*.json 2>/dev/null | head -1)
+  if [ -n "$latest_report" ]; then
+    if ! python3 -c "
+import json, sys
+d = json.load(open('$latest_report'))
+assert isinstance(d.get('strict_count'), int)
+assert isinstance(d.get('warn_count'), int)
+assert isinstance(d.get('findings'), list)
+assert len(d['findings']) == d['strict_count'] + d['warn_count']
+" 2>/dev/null; then
+      finding_strict "selfaudit" "$(basename "$latest_report")" "report.json shape is malformed (counts don't match findings array)"
+      hits=$((hits + 1))
+    fi
+  fi
+
+  if [ $hits -eq 0 ]; then
+    local n_defined n_called
+    n_defined=$(echo "$defined" | grep -v '^$' | wc -l)
+    n_called=$(echo "$called" | grep -v '^$' | wc -l)
+    echo "  ${C_GREEN}ok${C_OFF}      forge.sh: $n_defined phase fn(s), $n_called called, all wired"
+  fi
+}
+
 phase_self_check() {
   phase_header "self_check"
   local hits=0
@@ -943,6 +1031,7 @@ phase_sri
 phase_motion
 phase_csp_devmode
 phase_contrast
+phase_selfaudit
 phase_self_check
 
 # ----- Report -----
