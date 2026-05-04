@@ -6,6 +6,20 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>@court_dax — SkillShots</title>
+  <!-- forge:seo:start -->
+  <meta name="description" content="SkillShots profile — wins, losses, cash-out history, and challenge stats.">
+  <link rel="canonical" href="https://skillshots.example/profile.html">
+  <meta property="og:title" content="Profile — SkillShots">
+  <meta property="og:description" content="SkillShots profile — wins, losses, cash-out history, and challenge stats.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillshots.example/profile.html">
+  <meta property="og:image" content="https://skillshots.example/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Profile — SkillShots">
+  <meta name="twitter:description" content="SkillShots profile — wins, losses, cash-out history, and challenge stats.">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfilePage","name":"Profile — SkillShots","description":"SkillShots profile — wins, losses, cash-out history, and challenge stats.","url":"https://skillshots.example/profile.html"}</script>
+  <!-- forge:seo:end -->
+
   <link rel="stylesheet" href="loom-tokens.css">
   <link rel="stylesheet" href="loom-skin.css">
   <script defer src="/forge-findings.js"></script>
@@ -20,16 +34,16 @@
     <div class="loom-nav-inner">
       <a class="loom-brand" href="/">SkillShots</a>
       <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/">Battle Feed</a>
-        <a href="/leaderboard.html">Leaderboard</a>
-        <a href="/post-skill.html">Post a Skill</a>
-        <a href="/my-wins.html">My Wins</a>
-        <a href="/profile.html" aria-current="page">Profile</a>
+        <a href="/" data-backend="list-challenges">Battle Feed</a>
+        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+        <a href="/post-skill.html" data-backend="post-skill">Post a Skill</a>
+        <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
+        <a href="/profile.html" aria-current="page" data-backend="view-profile">Profile</a>
       </nav>
       <div class="loom-nav-actions">
         <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
-        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
-        <button class="loom-btn" data-variant="primary" type="button">Post skill</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
+        <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill">Post skill</button>
       </div>
     </div>
   </header>
@@ -51,7 +65,7 @@
       </div>
       <div class="loom-hero-actions">
         <button class="loom-btn" data-variant="primary" data-size="lg" type="button">Challenge @court_dax</button>
-        <button class="loom-btn" data-variant="outline" data-size="lg" type="button">Follow</button>
+        <button class="loom-btn" data-variant="outline" data-size="lg" type="button" data-backend="follow">Follow</button>
       </div>
     </section>
 
@@ -97,9 +111,9 @@
           <div class="loom-section-head">
             <h2>Recent battles</h2>
             <div class="loom-pill-tabs">
-              <button type="button" aria-pressed="true">All</button>
-              <button type="button" aria-pressed="false">Wins</button>
-              <button type="button" aria-pressed="false">Losses</button>
+              <button type="button" aria-pressed="true" data-backend="view-profile">All</button>
+              <button type="button" aria-pressed="false" data-backend="view-profile">Wins</button>
+              <button type="button" aria-pressed="false" data-backend="view-profile">Losses</button>
             </div>
           </div>
           <div class="loom-feed-grid">
@@ -166,7 +180,7 @@
           <div class="loom-panel-body">
             <p>Coordinated voting, account-sharing, payout fraud → flag the profile.</p>
           </div>
-          <button class="loom-btn" data-variant="outline" data-block="true" type="button">Report @court_dax</button>
+          <button class="loom-btn" data-variant="outline" data-block="true" type="button" data-backend="report-profile">Report @court_dax</button>
         </section>
       </aside>
     </div>

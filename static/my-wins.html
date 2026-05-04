@@ -6,6 +6,20 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>My Wins — SkillShots</title>
+  <!-- forge:seo:start -->
+  <meta name="description" content="Your SkillShots wins, in-progress challenges, and cash-out options.">
+  <link rel="canonical" href="https://skillshots.example/my-wins.html">
+  <meta property="og:title" content="My wins — SkillShots">
+  <meta property="og:description" content="Your SkillShots wins, in-progress challenges, and cash-out options.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillshots.example/my-wins.html">
+  <meta property="og:image" content="https://skillshots.example/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="My wins — SkillShots">
+  <meta name="twitter:description" content="Your SkillShots wins, in-progress challenges, and cash-out options.">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"My wins — SkillShots","description":"Your SkillShots wins, in-progress challenges, and cash-out options.","url":"https://skillshots.example/my-wins.html"}</script>
+  <!-- forge:seo:end -->
+
   <link rel="stylesheet" href="loom-tokens.css">
   <link rel="stylesheet" href="loom-skin.css">
   <script defer src="/forge-findings.js"></script>
@@ -20,16 +34,16 @@
     <div class="loom-nav-inner">
       <a class="loom-brand" href="/">SkillShots</a>
       <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/">Battle Feed</a>
-        <a href="/leaderboard.html">Leaderboard</a>
-        <a href="/post-skill.html">Post a Skill</a>
-        <a href="/my-wins.html" aria-current="page">My Wins</a>
-        <a href="/profile.html">Profile</a>
+        <a href="/" data-backend="list-challenges">Battle Feed</a>
+        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+        <a href="/post-skill.html" data-backend="post-skill">Post a Skill</a>
+        <a href="/my-wins.html" aria-current="page" data-backend="list-touches">My Wins</a>
+        <a href="/profile.html" data-backend="view-profile">Profile</a>
       </nav>
       <div class="loom-nav-actions">
         <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
-        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
-        <button class="loom-btn" data-variant="primary">Post skill</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
+        <button class="loom-btn" data-variant="primary" data-backend="post-skill">Post skill</button>
       </div>
     </div>
   </header>
@@ -40,7 +54,7 @@
         <h1 class="loom-page-title">My Wins</h1>
         <p class="loom-page-subtitle">Wallet · earnings · active battles</p>
       </div>
-      <button class="loom-btn" data-variant="outline">Cash out</button>
+      <button class="loom-btn" data-variant="outline" data-backend="cash-out">Cash out</button>
     </div>
 
     <!-- Wallet hero -->
@@ -60,9 +74,9 @@
           <div class="loom-section-head">
             <h2>Active challenges</h2>
             <div class="loom-pill-tabs">
-              <button type="button" aria-pressed="true">In progress</button>
-              <button type="button" aria-pressed="false">Voting</button>
-              <button type="button" aria-pressed="false">Closed</button>
+              <button type="button" aria-pressed="true" data-backend="list-touches">In progress</button>
+              <button type="button" aria-pressed="false" data-backend="list-challenges">Voting</button>
+              <button type="button" aria-pressed="false" data-backend="list-touches">Closed</button>
             </div>
           </div>
           <div class="loom-feed-grid">
@@ -137,7 +151,7 @@
             <p>Connected: <strong class="loom-emph">Stripe Connect · ****4129</strong></p>
             <p>Funds release T+24h after voting closes. Standard ACH 1-2 business days.</p>
           </div>
-          <button class="loom-btn" data-variant="primary" type="button" data-block="true">Cash out $842.30</button>
+          <button class="loom-btn" data-variant="primary" type="button" data-block="true" data-backend="cash-out">Cash out $842.30</button>
         </section>
 
         <section class="loom-panel" aria-labelledby="streak-h">

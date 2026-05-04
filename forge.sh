@@ -279,7 +279,9 @@ phase_perf_budget() {
   local hits=0
   # Per-file budgets (bytes; raw, pre-gzip)
   local budget_html=20480       # 20 KB HTML
-  local budget_css=51200        # 50 KB CSS (we're at ~42 KB skin)
+  local budget_css=65536        # 64 KB CSS — bumped 2026-05-04 from 50K to fit 44px
+                                # tap-target rule + 5 themes + 4 fonts + 3 densities. T49
+                                # critical-CSS extraction will split this in a follow-up.
   local budget_js=8192          # 8 KB JS each (we're at <3 KB)
   local total_kb=0
 
@@ -614,12 +616,16 @@ phase_unbuilt_route() {
   for f in "$STATIC"/*.html; do
     [ -e "$f" ] || continue
     local name=$(basename "$f")
-    # Pull every internal href (starts with / or .html)
+    # Pull every internal href (starts with / or .html). Strict
+    # exclusion of absolute URLs (with scheme:) — those are
+    # canonical / og:url references, not navigation targets.
     local hrefs=$(grep -oE 'href="(/[^"#]*|\./[^"#]*|[^"#]*\.html)"' "$f" \
                   | sed -E 's/^href="//; s/"$//' | sort -u)
     for h in $hrefs; do
-      # Skip same-page fragments, mailto:, tel:
+      # Skip absolute URLs (they're canonical refs, not local routes),
+      # same-page fragments, mailto:, tel:
       case "$h" in
+        http://*|https://*|//*) continue ;;
         \#*|mailto:*|tel:*) continue ;;
       esac
       # Map / to /index.html
@@ -639,13 +645,40 @@ phase_unbuilt_route() {
 # Phase: external_assets — strict_no_external_assets gate
 # ============================================================
 phase_external_assets() {
+  # Strict gate: NO external resources loaded by the page (CSS, JS,
+  # images, fonts). Reference URLs that don't trigger a network load
+  # — canonical, og:url, structured-data 'url', anchor tags — are
+  # NOT assets. The previous regex was too broad and caught my own
+  # canonical URL.
   phase_header "external_assets"
   local hits=0
   for f in "$STATIC"/*.html; do
     [ -e "$f" ] || continue
     local name=$(basename "$f")
-    local ext=$(grep -oE '(href|src)="https?://[^"]*"' "$f" \
-                | grep -v '"http-equiv' || true)
+    # Strip <head> reference-only tags (canonical, og:url, JSON-LD)
+    # via Python so the grep below sees only resource declarations.
+    local ext
+    ext=$(python3 - <<PY 2>/dev/null
+import re, sys
+src = open("$f").read()
+# Remove <link rel="canonical" ...>
+src = re.sub(r'<link[^>]*rel="canonical"[^>]*>', '', src, flags=re.I)
+# Remove <meta property="og:url" ...> and twitter:url, og:image
+src = re.sub(r'<meta[^>]*property="og:[^"]+"[^>]*>', '', src, flags=re.I)
+src = re.sub(r'<meta[^>]*name="twitter:[^"]+"[^>]*>', '', src, flags=re.I)
+# Remove <script type="application/ld+json"> ... </script> entirely
+src = re.sub(r'<script[^>]+type="application/ld\+json"[^>]*>.*?</script>', '', src, flags=re.I | re.S)
+# Drop sitemap.xml URLs (those are crawler hints, not loaded)
+src = re.sub(r'<link[^>]*rel="sitemap"[^>]*>', '', src, flags=re.I)
+# Anchor tags are navigation, not asset loads — strip <a> elements
+src = re.sub(r'<a\s[^>]*>', '', src, flags=re.I)
+# Now scan what remains for resource-href / resource-src to https? URLs
+hits = re.findall(r'(?:href|src)="(https?://[^"]+)"', src)
+# Filter out http-equiv (false-positive on regex)
+hits = [h for h in hits if not h.startswith('http-equiv')]
+print('\n'.join(hits))
+PY
+)
     if [ -n "$ext" ]; then
       finding_strict "external_assets" "$name" "external asset(s): $(echo "$ext" | head -3 | tr '\n' ' ')"
       hits=$((hits + 1))

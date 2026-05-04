@@ -30,6 +30,20 @@
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 
   <title>Skill Shots — Real challenges. Real stakes. Public results.</title>
+  <!-- forge:seo:start -->
+  <meta name="description" content="SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.">
+  <link rel="canonical" href="https://skillshots.example/">
+  <meta property="og:title" content="SkillShots — Real challenges. Real stakes. Public results.">
+  <meta property="og:description" content="SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillshots.example/">
+  <meta property="og:image" content="https://skillshots.example/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SkillShots">
+  <meta name="twitter:description" content="SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"SkillShots — Real challenges. Real stakes. Public results.","description":"SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.","url":"https://skillshots.example/"}</script>
+  <!-- forge:seo:end -->
+
 
   <link rel="stylesheet" href="loom-fallback.css">
   <link rel="stylesheet" href="loom-tokens.css">
@@ -64,16 +78,16 @@
     <div class="loom-nav-inner">
       <a class="loom-brand" href="/" aria-label="Skill Shots home">SkillShots</a>
       <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/" aria-current="page">Battle Feed</a>
-        <a href="/leaderboard.html">Leaderboard</a>
-        <a href="/post-skill.html">Post a Skill</a>
-        <a href="/my-wins.html">My Wins</a>
-        <a href="/profile.html">Profile</a>
+        <a href="/" aria-current="page" data-backend="list-challenges">Battle Feed</a>
+        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+        <a href="/post-skill.html" data-backend="post-skill">Post a Skill</a>
+        <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
+        <a href="/profile.html" data-backend="view-profile">Profile</a>
       </nav>
       <div class="loom-nav-actions">
         <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
-        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
-        <button class="loom-btn" data-variant="primary" type="button">Post skill</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
+        <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill">Post skill</button>
       </div>
     </div>
   </header>
@@ -122,10 +136,10 @@
         <div class="loom-section-head">
           <h2>Battle feed</h2>
           <div class="loom-pill-tabs">
-            <button type="button" aria-pressed="true">Live</button>
-            <button type="button" aria-pressed="false">Voting</button>
-            <button type="button" aria-pressed="false">Closing soon</button>
-            <button type="button" aria-pressed="false">By me</button>
+            <button type="button" aria-pressed="true" data-backend="list-challenges">Live</button>
+            <button type="button" aria-pressed="false" data-backend="list-challenges">Voting</button>
+            <button type="button" aria-pressed="false" data-backend="list-challenges">Closing soon</button>
+            <button type="button" aria-pressed="false" data-backend="list-challenges">By me</button>
           </div>
         </div>
 
@@ -318,7 +332,7 @@
             <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:comfortable">Comfortable</button>
             <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:spacious">Spacious</button>
           </div>
-          <button class="loom-btn" data-variant="ghost" data-size="sm" type="button" data-loom-aesthetic-reset data-mt="md">Reset all</button>
+          <button class="loom-btn" data-variant="ghost" data-size="sm" type="button" data-loom-aesthetic-reset data-mt="md" data-backend="view-profile">Reset all</button>
         </section>
 
       </aside>

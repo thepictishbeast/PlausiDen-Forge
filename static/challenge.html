@@ -9,6 +9,20 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
   <title>Half-court shot — challenge — SkillShots</title>
+  <!-- forge:seo:start -->
+  <meta name="description" content="View a SkillShots challenge — entries, voting period, pot, and rules.">
+  <link rel="canonical" href="https://skillshots.example/challenge.html">
+  <meta property="og:title" content="SkillShots challenge">
+  <meta property="og:description" content="View a SkillShots challenge — entries, voting period, pot, and rules.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillshots.example/challenge.html">
+  <meta property="og:image" content="https://skillshots.example/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SkillShots challenge">
+  <meta name="twitter:description" content="View a SkillShots challenge — entries, voting period, pot, and rules.">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"SkillShots challenge","description":"View a SkillShots challenge — entries, voting period, pot, and rules.","url":"https://skillshots.example/challenge.html"}</script>
+  <!-- forge:seo:end -->
+
   <link rel="stylesheet" href="loom-tokens.css">
   <link rel="stylesheet" href="loom-skin.css">
   <script defer src="/forge-findings.js"></script>
@@ -23,16 +37,16 @@
     <div class="loom-nav-inner">
       <a class="loom-brand" href="/" aria-label="Skill Shots home">SkillShots</a>
       <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/" aria-current="page">Battle Feed</a>
-        <a href="/leaderboard.html">Leaderboard</a>
-        <a href="/post-skill.html">Post a Skill</a>
-        <a href="/my-wins.html">My Wins</a>
-        <a href="/profile.html">Profile</a>
+        <a href="/" aria-current="page" data-backend="list-challenges">Battle Feed</a>
+        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+        <a href="/post-skill.html" data-backend="post-skill">Post a Skill</a>
+        <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
+        <a href="/profile.html" data-backend="view-profile">Profile</a>
       </nav>
       <div class="loom-nav-actions">
         <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
-        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
-        <button class="loom-btn" data-variant="primary" type="button">Post skill</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
+        <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill">Post skill</button>
       </div>
     </div>
   </header>
@@ -60,8 +74,8 @@
             <div class="loom-stat"><div class="loom-stat-label">Platform fee</div><div class="loom-stat-value">12%</div></div>
           </div>
           <div class="loom-hero-actions">
-            <button class="loom-btn" data-variant="primary" data-size="lg" type="button">Vote on entries</button>
-            <button class="loom-btn" data-variant="outline" data-size="lg" type="button">Enter for $60</button>
+            <button class="loom-btn" data-variant="primary" data-size="lg" type="button" data-backend="cast-vote">Vote on entries</button>
+            <button class="loom-btn" data-variant="outline" data-size="lg" type="button" data-backend="enter-challenge">Enter for $60</button>
           </div>
         </section>
 
@@ -80,8 +94,8 @@
         <div class="loom-section-head">
           <h2>Entries · 3</h2>
           <div class="loom-pill-tabs">
-            <button type="button" aria-pressed="true">Random order</button>
-            <button type="button" aria-pressed="false">Most recent</button>
+            <button type="button" aria-pressed="true" data-backend="view-challenge">Random order</button>
+            <button type="button" aria-pressed="false" data-backend="view-challenge">Most recent</button>
           </div>
         </div>
         <div class="loom-feed-grid">
@@ -159,7 +173,7 @@
           <div class="loom-panel-body">
             <p>Edited videos, false rule claims, or coordinated voting → flag it. Reports trigger a 24h pot freeze + manual review.</p>
           </div>
-          <button class="loom-btn" data-variant="outline" type="button" data-block="true">Report this challenge</button>
+          <button class="loom-btn" data-variant="outline" type="button" data-block="true" data-backend="report-challenge">Report this challenge</button>
         </section>
       </aside>
     </div>

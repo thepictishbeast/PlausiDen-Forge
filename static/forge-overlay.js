@@ -24,6 +24,34 @@
     var n = (data.findings || []).length;
     if (n === 0) return;
 
+    // Owner directive 2026-05-04: forge findings must be background
+    // logs, not user-facing UI. The overlay is OPT-IN — it only
+    // renders when ?forge=show is in the URL OR localStorage flag
+    // is set. Findings still land in window.__FORGE_FINDINGS__ for
+    // anyone who DOES want to inspect via DevTools console.
+    var optedIn = false;
+    try {
+      var qs = (window.location.search || "");
+      if (qs.indexOf("forge=show") >= 0) optedIn = true;
+      if (window.localStorage && localStorage.getItem("forge-overlay") === "1") {
+        optedIn = true;
+      }
+    } catch (_) { /* private mode etc. */ }
+    if (!optedIn) {
+      // Background log mode: print a single concise line to console
+      // so the operator knows findings exist without polluting the page.
+      try {
+        if (window.console && console.info) {
+          console.info(
+            "%c⚠ forge: " + n + " finding(s) — append ?forge=show to URL " +
+            "OR localStorage.setItem('forge-overlay','1') to render the panel.",
+            "color:#f59e0b;font-weight:600;"
+          );
+        }
+      } catch (_) { /* ignore */ }
+      return;
+    }
+
     // Inject minimal CSS scoped to the overlay only. Safe because
     // it's same-origin (CSP style-src 'self' allows our own JS to
     // mutate the DOM with classed nodes; we avoid inline style

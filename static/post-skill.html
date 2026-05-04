@@ -6,6 +6,20 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>Post a skill — SkillShots</title>
+  <!-- forge:seo:start -->
+  <meta name="description" content="Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.">
+  <link rel="canonical" href="https://skillshots.example/post-skill.html">
+  <meta property="og:title" content="Post a skill — SkillShots">
+  <meta property="og:description" content="Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillshots.example/post-skill.html">
+  <meta property="og:image" content="https://skillshots.example/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Post a skill — SkillShots">
+  <meta name="twitter:description" content="Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Post a skill — SkillShots","description":"Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.","url":"https://skillshots.example/post-skill.html"}</script>
+  <!-- forge:seo:end -->
+
   <link rel="stylesheet" href="loom-tokens.css">
   <link rel="stylesheet" href="loom-skin.css">
   <script defer src="/forge-findings.js"></script>
@@ -20,16 +34,16 @@
     <div class="loom-nav-inner">
       <a class="loom-brand" href="/">SkillShots</a>
       <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/">Battle Feed</a>
-        <a href="/leaderboard.html">Leaderboard</a>
-        <a href="/post-skill.html" aria-current="page">Post a Skill</a>
-        <a href="/my-wins.html">My Wins</a>
-        <a href="/profile.html">Profile</a>
+        <a href="/" data-backend="list-challenges">Battle Feed</a>
+        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+        <a href="/post-skill.html" aria-current="page" data-backend="post-skill">Post a Skill</a>
+        <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
+        <a href="/profile.html" data-backend="view-profile">Profile</a>
       </nav>
       <div class="loom-nav-actions">
         <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
-        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
-        <button class="loom-btn" data-variant="primary">Post skill</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
+        <button class="loom-btn" data-variant="primary" data-backend="post-skill">Post skill</button>
       </div>
     </div>
   </header>
@@ -86,7 +100,7 @@
           </div>
 
           <div class="loom-row" data-justify="between">
-            <button class="loom-btn" data-variant="ghost" type="button">Save draft</button>
+            <button class="loom-btn" data-variant="ghost" type="button" data-backend="upload-entry">Save draft</button>
             <button class="loom-btn" data-variant="primary" data-size="lg" type="button">Continue → upload</button>
           </div>
         </div>
