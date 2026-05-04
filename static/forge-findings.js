@@ -2,7 +2,7 @@
 window.__FORGE_FINDINGS__ = {
   "mode": "poc",
   "strict_count": 0,
-  "warn_count": 52,
+  "warn_count": 54,
   "findings": [
     {"severity":"WARN","phase":"seo","path":"challenge.html","message":"missing <meta name=\"description\">"}
     ,
@@ -65,6 +65,10 @@ window.__FORGE_FINDINGS__ = {
     {"severity":"WARN","phase":"seo","path":"sitemap.xml","message":"missing sitemap.xml — search-engine crawl coverage suffers"}
     ,
     {"severity":"WARN","phase":"seo","path":"robots.txt","message":"missing robots.txt — crawler hint missing"}
+    ,
+    {"severity":"WARN","phase":"perf_budget","path":"loom-skin.css","message":"51K CSS > 50K budget — split into per-route bundles"}
+    ,
+    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"9.2K JS > 8.0K budget — code-split or tree-shake"}
     ,
     {"severity":"WARN","phase":"phantom_button","path":"challenge.html","message":"7 button(s) with no data-backend (UI not declared in backends.toml)"}
     ,

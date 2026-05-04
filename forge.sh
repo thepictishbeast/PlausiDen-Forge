@@ -452,12 +452,15 @@ phase_self_check() {
         hits=$((hits + 1))
       fi
     done
-    # 3. Detect comment-text leaking into rule positions
-    # (e.g. ' .loom-brand { ... }  in a separate' on its own line).
+    # 3. Detect comment-text leaking into rule positions: a
+    # `.loom-X { ... }` literal at start of line is the smoking-gun
+    # signature of an @layer-strip-pass that mangled a doc comment.
+    # Anchor at line start so prose mentions and @keyframes are
+    # not false-positives.
     local malformed
-    malformed=$(grep -cE '\.loom-[a-z][a-z0-9-]*\s*\{\s*\.\.\.|\}\s+[a-z][a-z]+' "$skin")
+    malformed=$(grep -cE '^\s*\.loom-[a-z][a-z0-9-]*\s*\{\s*\.\.\.\s*\}' "$skin")
     if [ "$malformed" -gt 0 ]; then
-      finding_strict "self_check" "loom-skin.css" "$malformed lines look like comment text leaked into rule position (likely strip-script regression)"
+      finding_strict "self_check" "loom-skin.css" "$malformed line(s) look like comment text leaked into rule position (likely strip-script regression)"
       hits=$((hits + 1))
     fi
     # 4. No raw hex / px in skin.css outside the few intentional
