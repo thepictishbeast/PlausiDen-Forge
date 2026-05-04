@@ -639,6 +639,97 @@ for m in re.finditer(r'<a\\s[^>]*href=\"([^\"]+)\"', src, re.I):
   [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every internal anchor resolves"
 }
 
+phase_id_strategy() {
+  # T73: enforce ID-attribute invariants per the owner directive
+  # (memory: feedback_id_strategy_static_vs_dynamic).
+  #
+  # Always checked:
+  #   - no duplicate id="X" within a single page (HTML spec)
+  #   - every <label for="X"> resolves to an id="X" on the page
+  #   - every aria-labelledby / aria-describedby / aria-controls /
+  #     aria-owns reference resolves to an id on the page
+  #   - every skip-link target (anchor with href="#X" inside class
+  #     "loom-skip") points to an existing id="X"
+  #
+  # In a future dynamic-mode pass: validate that author-written
+  # IDs follow a deterministic-prefix scheme to avoid collisions
+  # across component instances. Out of scope until forge.toml
+  # introduces mode="dynamic".
+  phase_header "id_strategy"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -f "$f" ] || continue
+    local name=$(basename "$f")
+    # Use Python for the multi-pattern scan (bash regex is too brittle
+    # for HTML attribute walking).
+    local out
+    out=$(python3 - <<PY 2>/dev/null
+import re, sys
+src = open("$f").read()
+
+def all_ids():
+    return re.findall(r'\\bid="([^"]+)"', src)
+
+def all_for_labels():
+    return re.findall(r'<label\\b[^>]*\\bfor="([^"]+)"', src, re.I)
+
+def all_aria_refs():
+    refs = []
+    for attr in ('aria-labelledby', 'aria-describedby', 'aria-controls', 'aria-owns'):
+        for m in re.finditer(r'\\b' + attr + r'="([^"]+)"', src, re.I):
+            # Multi-token references: "id1 id2 id3"
+            for r in m.group(1).split():
+                refs.append((attr, r))
+    return refs
+
+def all_skiplink_refs():
+    out = []
+    for m in re.finditer(r'<a\\b[^>]*\\bclass="[^"]*loom-skip[^"]*"[^>]*\\bhref="#([^"]+)"', src, re.I):
+        out.append(m.group(1))
+    return out
+
+ids = all_ids()
+id_set = set(ids)
+fails = []
+
+# 1. Duplicates
+seen = {}
+for i in ids:
+    seen[i] = seen.get(i, 0) + 1
+for i, n in seen.items():
+    if n > 1:
+        fails.append(f"duplicate id=\"{i}\" appears {n} times")
+
+# 2. label[for] resolution
+for fid in all_for_labels():
+    if fid not in id_set:
+        fails.append(f"<label for=\"{fid}\"> has no matching <input/select/textarea id=\"{fid}\">")
+
+# 3. ARIA reference resolution
+for attr, ref in all_aria_refs():
+    if ref not in id_set:
+        fails.append(f"{attr}=\"...{ref}...\" target not found on this page")
+
+# 4. Skip-link target
+for ref in all_skiplink_refs():
+    if ref not in id_set:
+        fails.append(f"loom-skip href=\"#{ref}\" — no matching id on the page")
+
+for line in fails:
+    print(line)
+PY
+)
+    if [ -n "$out" ]; then
+      while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        finding_strict "id_strategy" "$name" "$line"
+        hits=$((hits + 1))
+      done <<< "$out"
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every id is unique + every label/ARIA/skip-link reference resolves"
+}
+
 phase_motion() {
   # T4: every CSS file with `animation:` / `transition:` / `@keyframes`
   # MUST also contain a `@media (prefers-reduced-motion: reduce)`
@@ -1086,6 +1177,7 @@ phase_viewport_audit
 phase_link_check
 phase_sri
 phase_motion
+phase_id_strategy
 phase_csp_devmode
 phase_contrast
 phase_selfaudit
