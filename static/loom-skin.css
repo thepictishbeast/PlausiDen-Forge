@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-rbpZOSIZkSJcPWf1bYA1fABimoRCJFBHEeynm/FBOz/ApBX36cL45fwVVetlbwZP — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-eRqKn8Wuc5PhY0HyHTBZuP5Uaj5i0lUoECQv6YW9nlU+cd8GcLLanySubBpR+RP9 — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -832,6 +832,35 @@
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
+
+  /* ============================================================ *
+   * Prose paragraph + standalone Heading                          *
+   * ----------                                                    *
+   * The two bridge primitives that survived without their own     *
+   * skin rules through 13 ticks of regen-tide work — fixed by    *
+   * `loom audit-bridge` (T13) drift detection.                   *
+   * ============================================================ */
+  .loom-prose {
+    font-size: var(--loom-font-base);
+    color: var(--loom-color-ink);
+    line-height: 1.6;
+    margin: 0 0 var(--loom-space-3) 0;
+    max-width: 70ch;
+  }
+  .loom-prose:last-child { margin-bottom: 0; }
+
+  .loom-heading {
+    font-family: var(--loom-font-display);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    line-height: 1.3;
+    letter-spacing: var(--loom-track-tight);
+    margin: var(--loom-space-4) 0 var(--loom-space-2) 0;
+  }
+  .loom-heading[data-loom-level="2"] { font-size: var(--loom-font-2xl, 1.5rem); }
+  .loom-heading[data-loom-level="3"] { font-size: var(--loom-font-xl, 1.25rem); }
+  .loom-heading[data-loom-level="4"] { font-size: var(--loom-font-lg, 1.125rem); }
+  .loom-heading:first-child { margin-top: 0; }
 
   /* ============================================================ *
    * Banner                                                        *
