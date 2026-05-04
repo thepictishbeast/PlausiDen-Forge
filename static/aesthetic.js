@@ -41,11 +41,35 @@
     }
   }
 
+  // T42: URL-param overrides for theme/font/density. Lets the
+  // crawler matrix sweep all 5 themes × 4 fonts × 3 densities by
+  // simply varying the query string — no JS injection needed.
+  // ?theme=hc-dark&font=mono&density=spacious applies all three.
+  // Persisted via save() so subsequent same-origin nav keeps them.
+  function readQueryParam(name) {
+    try {
+      var qs = (window.location.search || "").slice(1).split("&");
+      for (var i = 0; i < qs.length; i++) {
+        var kv = qs[i].split("=");
+        if (decodeURIComponent(kv[0]) === name) {
+          return kv.length > 1 ? decodeURIComponent(kv[1]) : "";
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
   // First-paint application — respects existing inline attribute
-  // OR localStorage choice. theme.js handles theme separately
-  // for finer-grained OS-preference fallback.
+  // OR URL-param OR localStorage choice. theme.js handles theme
+  // separately for finer-grained OS-preference fallback.
   for (var i = 0; i < DIMENSIONS.length; i++) {
     var dim = DIMENSIONS[i];
+    var fromQuery = readQueryParam(dim);
+    if (fromQuery) {
+      apply(dim, fromQuery);
+      save(dim, fromQuery);
+      continue;
+    }
     var saved = load(dim);
     if (saved) apply(dim, saved);
   }
