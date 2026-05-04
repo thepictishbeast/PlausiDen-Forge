@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-6FAXj7DgvNu0dsW1ltrBnQE/WyP2OdWN0icunArXgJ5/IMQLK3DJWAwqlEfnXDyE — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-FQC6er8lDph2j0StEFTMkeMY5ysZmbriI56vTAV7stb3v8IPtqd6SSLKCk0lIzRd — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -775,6 +775,163 @@
   }
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* ============================================================ *
+   * Form (multi-step)                                             *
+   * ----------                                                    *
+   * Wrapper section + step indicator + per-step fieldsets +       *
+   * submit row. Used for post-skill upload flow. Loom-namespaced. *
+   * ============================================================ */
+  .loom-form-section {
+    background: var(--loom-color-surface);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-component);
+    padding: var(--loom-space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-4);
+  }
+  .loom-form-section__legend {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-xl, 1.25rem);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    line-height: 1.2;
+    margin: 0;
+  }
+  .loom-form-section__steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--loom-space-3);
+  }
+  .loom-form-section__step {
+    display: flex;
+    align-items: center;
+    gap: var(--loom-space-2);
+    padding: var(--loom-space-2) var(--loom-space-3);
+    border-radius: 999px;
+    background: var(--loom-color-surface-muted);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    font-size: var(--loom-font-sm, 0.875rem);
+  }
+  .loom-form-section__step[data-state="current"] {
+    background: color-mix(in oklab, var(--loom-color-primary, currentColor) 12%, transparent);
+    color: var(--loom-color-ink);
+    font-weight: 600;
+  }
+  .loom-form-section__step[data-state="done"] {
+    background: color-mix(in oklab, var(--loom-color-success, currentColor) 12%, transparent);
+  }
+  .loom-form-section__step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--loom-color-surface);
+    color: var(--loom-color-ink);
+    font-weight: 600;
+    font-size: var(--loom-font-sm, 0.875rem);
+  }
+  .loom-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-4);
+  }
+  .loom-form[data-invalid="true"] {
+    outline: var(--loom-stroke-strong) dashed var(--loom-color-warning, currentColor);
+    outline-offset: var(--loom-stroke-thin);
+  }
+  .loom-form__step {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-3);
+  }
+  .loom-form__step-legend {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-base);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    padding: 0 0 var(--loom-space-2) 0;
+  }
+  .loom-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-1);
+  }
+  .loom-form-field__label {
+    font-size: var(--loom-font-sm, 0.875rem);
+    color: var(--loom-color-ink);
+    font-weight: 500;
+  }
+  .loom-form-field__input,
+  .loom-form-field__textarea,
+  .loom-form-field__select {
+    background: var(--loom-color-surface);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-sm);
+    padding: var(--loom-space-2) var(--loom-space-3);
+    color: var(--loom-color-ink);
+    font: inherit;
+    min-height: var(--loom-tap-min);
+    transition: border-color var(--loom-transition-fast, 150ms ease);
+  }
+  .loom-form-field__textarea {
+    min-height: calc(var(--loom-tap-min) * 2);
+    resize: vertical;
+  }
+  .loom-form-field__input:focus-visible,
+  .loom-form-field__textarea:focus-visible,
+  .loom-form-field__select:focus-visible {
+    border-color: var(--loom-color-primary, currentColor);
+  }
+  .loom-form-field__input[readonly] {
+    background: var(--loom-color-surface-muted);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  }
+  .loom-form-field__hint {
+    font-size: var(--loom-font-sm, 0.875rem);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    line-height: 1.4;
+    margin: 0;
+  }
+  .loom-form__submit-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--loom-space-2);
+    padding-top: var(--loom-space-3);
+    border-top: var(--loom-border-component);
+  }
+  .loom-form__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--loom-space-2) var(--loom-space-4);
+    border-radius: var(--loom-radius-sm);
+    background: var(--loom-color-surface-muted);
+    color: var(--loom-color-ink);
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    min-height: var(--loom-tap-min);
+    transition: filter var(--loom-transition-fast, 150ms ease);
+  }
+  .loom-form__btn[data-variant="primary"] {
+    background: var(--loom-color-primary, var(--loom-color-ink));
+    color: var(--loom-color-primary-fg, var(--loom-color-surface));
+  }
+  .loom-form__btn:hover,
+  .loom-form__btn:focus-visible {
+    filter: brightness(1.05);
   }
 
   /* ============================================================ *

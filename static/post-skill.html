@@ -1,139 +1,581 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <title>Post a skill — SkillShots</title>
-  <!-- forge:seo:start -->
-  <meta name="description" content="Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.">
-  <link rel="canonical" href="https://skillshots.example/post-skill.html">
-  <meta property="og:title" content="Post a skill — SkillShots">
-  <meta property="og:description" content="Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://skillshots.example/post-skill.html">
-  <meta property="og:image" content="https://skillshots.example/og-image.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Post a skill — SkillShots">
-  <meta name="twitter:description" content="Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Post a skill — SkillShots","description":"Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.","url":"https://skillshots.example/post-skill.html"}</script>
-  <!-- forge:seo:end -->
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'sha256-Cp04kFJP7NP7hf5vjFBeSvCCuDSipXbv5IT+SZ0EoCM='; script-src 'self' 'unsafe-hashes' 'sha256-1gCRPrLeOTpqhFgQmbyPytpWgjiZf+TQOM3j/vjn+M4='; frame-ancestors 'none'">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Post a skill — SkillShots</title>
+<meta name="description" content="Set up a new battle: rules, video upload, pot + entry fee.">
+<link rel="canonical" href="/post-skill.html">
+<style>/* SYNC-FROM-LOOM:sha384-FQC6er8lDph2j0StEFTMkeMY5ysZmbriI56vTAV7stb3v8IPtqd6SSLKCk0lIzRd — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* ===================================================================
+ * loom-skin.css — semantic component layer for the Loom design system
+ * ===================================================================
+ *
+ * ARCHITECTURE
+ * ------------
+ * This file is organized into named CSS @layer blocks. The cascade
+ * order is fixed once at the top — later layers always win over
+ * earlier ones, regardless of source order or specificity. This
+ * gives plugin authors a predictable extension point and removes
+ * specificity-war footguns.
+ *
+ * Cascade (lowest precedence first):
+ *
+ *   reset       universal box-sizing + zero defaults
+ *   tokens      surfaces design tokens as CSS custom properties on :root
+ *               (also re-exported as component-scoped --comp-* tokens
+ *               via inheritance)
+ *   primitives  layout primitives (.loom-page, .loom-stack, .loom-row)
+ *   components  composite components (.loom-card-battle, .loom-leader,
+ *               .loom-hero, .loom-nav, etc.)
+ *   plugins     OPEN — downstream apps drop overrides here. Empty
+ *               by default. Overrides land via an unwrapped block
+ *               in a separate stylesheet imported AFTER this one.
+ *   utilities   single-purpose helpers (.loom-sr-only) — wins over
+ *               components by design (utilities should be the final
+ *               override knob)
+ *
+ * COMPOSITION MODEL ("mixins / traits / inheritance" in CSS)
+ * ----------------------------------------------------------
+ * 1. CSS custom properties as MIXINS — any component declares its own
+ *    --comp-* tokens that downstream rules can override. E.g.:
+ *      .loom-card { --comp-card-pad: var(--loom-space-5); padding: var(--comp-card-pad); }
+ *      .loom-panel.is-roomy { --comp-card-pad: var(--loom-space-8); }
+ *
+ * 2. Attribute-driven VARIANTS — components dispatch on
+ *    `data-variant`, `data-tone`, `data-size`, `aria-current`,
+ *    `aria-pressed` etc. instead of stacked class names. The
+ *    attribute is the schema; the rendered HTML is unambiguous.
+ *
+ * 3. INHERITANCE via custom-property cascade — parent components
+ *    can set --comp-* tokens that children inherit automatically
+ *    (CSS custom properties inherit by default).
+ *
+ * 4. PLUGIN extension — the @layer plugins block is intentionally
+ *    empty here. A site that wants a different brand voice writes
+ *    its own unwrapped block (e.g. ".loom-brand { ... }") in a
+ *    separate file imported after this one. No specificity war.
+ *
+ * STRICT INVARIANTS (enforced by `loom lint`)
+ * -------------------------------------------
+ * - No raw color literals (hex / rgb / hsl) outside this file's
+ *   tokens layer. Every paint reads through var(--loom-color-*) or
+ *   a component-scoped --comp-* alias.
+ * - No raw px / em values for spacing, type, or radii. Every
+ *   measurement reads through var(--loom-space-*), var(--loom-font-*),
+ *   var(--loom-radius-*).
+ * - All margins / padding / borders compose from the spacing
+ *   token scale.
+ * - Every text element gets `overflow-wrap: anywhere` from the
+ *   reset layer. Every container gets `min-width: 0` so flex/grid
+ *   children don't blow out.
+ * - All animations honor `prefers-reduced-motion`.
+ * - Mobile-first: breakpoints scale up only.
+ *
+ * MOBILE-FIRST + STRICT OVERFLOW
+ * ------------------------------
+ * Default rules target a 320 px viewport. `@media (min-width: …)`
+ * upgrades layouts as space grows. The page never produces
+ * horizontal scroll: `html { overflow-x: clip; }` and every
+ * potentially-long string has `text-overflow: ellipsis` or
+ * `overflow-wrap: anywhere`.
+ *
+ * WHY THIS LAYERING (vs the old flat sheet)
+ * -----------------------------------------
+ * Plain CSS resolves rules by source-order + specificity. With
+ * many contributors + plugin extensions, both become unreliable
+ * fast — a deep selector accidentally wins; a later import
+ * silently shadows. `@layer` makes the precedence ladder explicit
+ * and reviewable. A reviewer reads the layer order at the top and
+ * knows the truth without grep'ing the whole sheet.
+ * =================================================================== */
 
-  <link rel="stylesheet" href="loom-tokens.css" integrity="sha384-Sa89M7KHi4lJ672NQAj83F8SL1o2zgzgqc8eq2CEbWFFD1VVETvoMTFzjC8Q33sJ" crossorigin="anonymous">
-  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-VLoqVGvC7f1G+oXe9E/PHFxB4jHV1EpJYU+35UkzMkLN+PXHmkkRPCUO0u5btzPk" crossorigin="anonymous">
-  <script defer src="/forge-findings.js"></script>
-  <script defer src="/forge-overlay.js" integrity="sha384-pgZq14j8YeA7F0+hj5AWxh+rscSX27K3M/OzGEOqH75wFc8pLnfZj6oFKMFG0oDZ" crossorigin="anonymous"></script>
-  <script defer src="/aesthetic.js" integrity="sha384-7SqKnkMkWBalLzGAlZ86aFUM4rg647OhvB3fMivitJKw+9A6XpsgmLPUwhQfz95/" crossorigin="anonymous"></script>
-  <script defer src="/theme.js" integrity="sha384-la1FRCOIyWYmSbU0w25Mh1vSNViF8u+h9Do/bjqVu/ARPPwXfPXxrNRJtSz1ZFXD" crossorigin="anonymous"></script>
+/* @layer cascade dropped for older-browser compat */
+/* ============================================================ *
+ * @layer reset                                                  *
+ * ============================================================ */
+
+/* unwrapped @layer */
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  * { margin: 0; padding: 0; min-width: 0; }
+
+
+  /* Diagnostic: the "CSS NOT LOADING" yellow banner in pages is
+   * styled with `.loom-css-loaded`. If skin.css applies, the banner
+   * disappears. If owner sees the banner, the bug is "browser
+   * didn't apply CSS" — verifiable from a single screenshot. */
+  .loom-css-loaded { display: none !important; }
+
+
+  /* WCAG 2.5.5 + iOS HIG floor for every interactive element on
+   * mobile-friendly layouts. Pages can opt out per-element via
+   * data-tap="compact" for hover-driven desktop UIs (e.g. dense
+   * data tables). Anything that wants to be smaller MUST justify
+   * itself with that attribute. */
+  @media (pointer: coarse), (max-width: 1024px) {
+    button:not([data-tap="compact"]),
+    a:not([data-tap="compact"]),
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([data-tap="compact"]),
+    select:not([data-tap="compact"]),
+    textarea:not([data-tap="compact"]),
+    [role="button"]:not([data-tap="compact"]),
+    [role="link"]:not([data-tap="compact"]),
+    summary:not([data-tap="compact"]) {
+      min-height: var(--loom-tap-min);
+      min-width: var(--loom-tap-min);
+    }
+    /* Inputs and selects also need width — typing inside a 0-pad
+     * box makes content scroll mid-character. */
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([data-tap="compact"]),
+    select:not([data-tap="compact"]),
+    textarea:not([data-tap="compact"]) {
+      min-width: var(--loom-tap-min);
+      padding: var(--loom-space-2) var(--loom-space-3);
+    }
+  }
+
+
+  html, body {
+    overflow-x: clip;
+    max-width: 100%;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html {
+    /* Set bg on html so body's gradient overlays cleanly + the
+     * canvas behind any centered .loom-page max-width still
+     * reads as the themed surface (was rendering white in
+     * crawler screenshots). */
+    background: var(--loom-color-bg-canvas);
+    color: var(--loom-color-ink);
+    color-scheme: light dark;
+    min-height: 100%;
+  }
+
+  /* Honor OS preference when no explicit data-theme is set. */
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme]) {
+      color-scheme: dark;
+    }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+
+  body {
+    font-family: var(--loom-font-body, -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Roboto, system-ui, sans-serif);
+    font-size: var(--loom-font-base);
+    line-height: var(--loom-leading-base, 1.5);
+    color: var(--loom-color-ink);
+    background:
+      /* Subtle ambient gradient — gives flat dark a sense of light source. */
+      radial-gradient(1200px 600px at 80% -10%,
+        hsl(218 83% 65% / 0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%,
+        hsl(272 84% 65% / 0.06), transparent 60%),
+      var(--loom-color-bg-canvas);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11", "cv02";
+  }
+
+
+  img, video, svg, canvas, picture {
+    max-width: 100%; height: auto; display: block;
+  }
+
+
+  /* Universal long-content protections. Every text element wraps. */
+  p, h1, h2, h3, h4, h5, h6, span, a, button, li, td, th, label,
+  blockquote, dt, dd, figcaption {
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  pre, code, kbd, samp { overflow-x: auto; max-width: 100%; }
+
+
+  a { color: inherit; text-decoration: none; }
+
+  button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+
+
+  :focus-visible {
+    outline: 2px solid var(--loom-color-primary);
+    outline-offset: 2px;
+    border-radius: var(--loom-radius-sm);
+  }
+
+
+  /* Hide content from sighted users without removing from a11y tree. */
+  [hidden] { display: none !important; }
+
+
+
+/* ============================================================ *
+ * @layer tokens                                                 *
+ * ------------------------------------------------------------ *
+ * loom-tokens.css already declared every base token under :root.
+ * This layer adds COMPONENT-SCOPED tokens — "trait" defaults that
+ * components compose. Children that want to retune a component
+ * override these on their own scope without changing the global
+ * design token table.                                            *
+ * ============================================================ */
+
+/* unwrapped @layer */
+
+  :root {
+    /* Component-trait tokens. Downstream overrides land here. */
+    --loom-radius-component:    var(--loom-radius-lg);
+    --loom-border-component:    1px solid var(--loom-color-border);
+    --loom-border-strong:       1px solid var(--loom-color-border-strong);
+
+    /* Layered shadow stack — premium depth.
+     * Three rays at different distances + a soft ambient =
+     * convincing volume without looking heavy. */
+    --loom-shadow-flat:
+      0 1px 0 hsl(220 33% 0% / 0.06);
+    --loom-shadow-soft:
+      0 1px 2px hsl(220 33% 0% / 0.10),
+      0 4px 12px hsl(220 33% 0% / 0.10);
+    --loom-shadow-elevated:
+      0 1px 2px hsl(220 33% 0% / 0.18),
+      0 8px 20px hsl(220 33% 0% / 0.30),
+      0 24px 48px hsl(220 33% 0% / 0.20);
+    --loom-shadow-cta:
+      0 4px 16px hsl(220 90% 28% / 0.35),
+      0 1px 2px hsl(220 33% 0% / 0.40);
+    --loom-shadow-glow-accent:
+      0 0 0 1px hsl(218 83% 65% / 0.35),
+      0 8px 32px hsl(218 83% 65% / 0.20);
+
+    --loom-pad-card:            var(--loom-space-4);
+    --loom-pad-panel:           var(--loom-space-5);
+    --loom-pad-band:            var(--loom-space-6);
+    --loom-gap-stack:           var(--loom-space-4);
+    --loom-gap-row:             var(--loom-space-3);
+    --loom-gap-grid:            var(--loom-space-4);
+    --loom-blur-glass:          16px;
+    --loom-saturate-glass:      160%;
+
+    /* Motion — premium curves. The "out" curve is what ships
+     * everywhere by default; the "spring" curve is for delight
+     * moments (button-press release, reveal). */
+    --loom-ease-out:            cubic-bezier(.16, 1, .3, 1);
+    --loom-ease-spring:         cubic-bezier(.34, 1.56, .64, 1);
+    --loom-transition-fast:     180ms var(--loom-ease-out);
+    --loom-transition-base:     280ms var(--loom-ease-out);
+    --loom-transition-slow:     520ms var(--loom-ease-out);
+    --loom-stroke-thin:         1px;
+    --loom-stroke-strong:       2px;
+
+    /* Tap-target / sizing tokens. WCAG 2.5.5 + iOS HIG floor for
+     * any interactive element on coarse pointers. The default
+     * ships at 44 — increase per surface, never decrease. */
+    --loom-tap-min:             44px;
+    /* Right-rail width on desktop layouts. Single source of truth
+     * for the column shape so .loom-page-rail and any future
+     * fixed-width columns track together. */
+    --loom-rail-width:          320px;
+    /* Animation displacement distances — used by entrance keyframes
+     * (slide-in-right, fade-in-up) so they share a vocabulary. */
+    --loom-motion-rise:         12px;
+    --loom-motion-shift:        16px;
+    /* Z-index scale — semantic stacking, not raw integers. Each
+     * step leaves room (10s) for one-off page-local overrides
+     * while keeping global precedence reviewable. */
+    --loom-z-base:              0;
+    --loom-z-raised:            1;
+    --loom-z-overlay:           10;
+    --loom-z-sticky:            50;
+    --loom-z-tooltip:           55;
+    --loom-z-toast:             60;
+    --loom-z-modal:             100;
+
+    /* Typography premium tier — display weights for hero copy. */
+    --loom-font-display: ui-rounded, "SF Pro Display",
+                         "Segoe UI Variable Display", "Inter Display",
+                         "Inter", system-ui, -apple-system, sans-serif;
+    --loom-font-body:    -apple-system, BlinkMacSystemFont,
+                         "Inter", "Segoe UI", Roboto,
+                         "Helvetica Neue", system-ui, sans-serif;
+    --loom-font-mono:    ui-monospace, "JetBrains Mono", "Fira Code",
+                         "SF Mono", Menlo, Consolas, monospace;
+    --loom-track-tight:  -0.025em;
+    --loom-track-snug:   -0.015em;
+    --loom-track-loose:  0.06em;
+    --loom-leading-tight: 1.1;
+    --loom-leading-snug:  1.3;
+    --loom-leading-base:  1.5;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --loom-pad-card:  var(--loom-space-5);
+      --loom-pad-panel: var(--loom-space-6);
+      --loom-pad-band:  var(--loom-space-8);
+    }
+  }
+
+
+
+/* ============================================================ *
+ * @layer primitives                                             *
+ * ============================================================ */
+
+/* unwrapped @layer */
+
+  .loom-page {
+    width: 100%;
+    max-width: var(--loom-break-xl);
+    margin: 0 auto;
+    padding: var(--loom-pad-band);
+  }
+
+
+  /* Skip-link target — accessibility primitive.
+   * 44×44 minimum hit-box per WCAG 2.5.5 + iOS HIG. */
+  .loom-skip {
+    position: absolute;
+    inset-inline-start: var(--loom-space-2);
+    inset-block-start: var(--loom-space-2);
+    padding: var(--loom-space-2) var(--loom-space-3);
+    background: var(--loom-color-surface);
+    color: var(--loom-color-ink);
+    border-radius: var(--loom-radius-md);
+    transform: translateY(-150%);
+    transition: transform var(--loom-transition-fast);
+    z-index: var(--loom-z-modal);
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--loom-tap-min);
+    min-width: var(--loom-tap-min);
+  }
+
+  .loom-skip:focus { transform: translateY(0); }
+
+
+  /* ---------- Page title (h1 at top of view) ---------- */
+  .loom-page-title {
+    font-size: var(--loom-font-2xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  @media (min-width: 768px) {
+    .loom-page-title { font-size: var(--loom-font-3xl); }
+  }
+
+  .loom-page-title + .loom-page-subtitle {
+    color: var(--loom-color-ink-muted);
+    margin-top: var(--loom-space-1);
+    font-size: var(--loom-font-base);
+  }
+
+
+
+/* ============================================================ *
+ * @layer plugins                                                *
+ * ------------------------------------------------------------ *
+ * Sanctioned aesthetic + font variants. Each is opt-in via an
+ * HTML attribute:
+ *
+ *   <html data-theme="dark|light|hc-dark|hc-light|sepia">
+ *   <html data-font="display|serif|mono">
+ *   <html data-density="comfortable|compact|spacious">
+ *
+ * All layered into @layer plugins so downstream apps can still
+ * override on top via their own @layer plugins blocks (CSS @layer
+ * permits cumulative additions — multiple stylesheets all
+ * @layer plugins-name compose).
+ *
+ * Adding a new theme: append a `:root[data-theme="<name>"] { ... }`
+ * block here, listing every base token it overrides. Adding a
+ * font variant: append a `:root[data-font="<name>"] { ... }` block
+ * with --loom-font-display / --loom-font-body / --loom-font-mono.
+ * ============================================================ */
+
+/* unwrapped @layer */
+
+  /* High-contrast dark — bumps borders, text, removes
+   * decorative gradients on title that lower contrast. */
+  :root[data-theme="hc-dark"] {
+    --loom-color-bg-canvas:     hsl(0 0% 0%);
+    --loom-color-surface:       hsl(0 0% 4%);
+    --loom-color-surface-muted: hsl(0 0% 8%);
+    --loom-color-ink:           hsl(0 0% 100%);
+    --loom-color-ink-muted:     hsl(0 0% 86%);
+    --loom-color-border:        hsl(0 0% 50%);
+    --loom-color-border-strong: hsl(0 0% 70%);
+    --loom-color-primary:       hsl(220 100% 75%);
+    --loom-color-success:       hsl(140 100% 60%);
+    --loom-color-warn:          hsl(35 100% 70%);
+    --loom-color-danger:        hsl(0 100% 70%);
+  }
+
+  :root[data-theme="hc-dark"] .loom-hero-title {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: var(--loom-color-ink);
+  }
+
+
+  /* High-contrast light — for users with low-vision who need
+   * AAA on a light background. */
+  :root[data-theme="hc-light"] {
+    --loom-color-bg-canvas:     hsl(0 0% 100%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(0 0% 96%);
+    --loom-color-ink:           hsl(0 0% 0%);
+    --loom-color-ink-muted:     hsl(0 0% 24%);
+    --loom-color-border:        hsl(0 0% 30%);
+    --loom-color-border-strong: hsl(0 0% 10%);
+    --loom-color-primary:       hsl(220 100% 30%);
+    --loom-color-success:       hsl(140 100% 22%);
+    --loom-color-warn:          hsl(35 100% 32%);
+    --loom-color-danger:        hsl(0 100% 35%);
+  }
+
+  :root[data-theme="hc-light"] .loom-hero-title {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: var(--loom-color-ink);
+  }
+
+
+  /* Sepia — warm low-strain reading variant. */
+  :root[data-theme="sepia"] {
+    --loom-color-bg-canvas:     hsl(35 35% 91%);
+    --loom-color-surface:       hsl(35 35% 95%);
+    --loom-color-surface-muted: hsl(35 30% 87%);
+    --loom-color-ink:           hsl(25 35% 18%);
+    --loom-color-ink-muted:     hsl(25 25% 36%);
+    --loom-color-border:        hsl(30 25% 75%);
+    --loom-color-border-strong: hsl(30 25% 60%);
+    --loom-color-primary:       hsl(20 70% 38%);
+    --loom-color-success:       hsl(140 50% 28%);
+    --loom-color-warn:          hsl(35 80% 32%);
+    --loom-color-danger:        hsl(0 60% 38%);
+    --loom-color-gradient-a:    hsl(20 70% 50%);
+    --loom-color-gradient-b:    hsl(35 80% 45%);
+  }
+
+
+  /* Font variants — swap the entire type system.
+   * data-font="display" is the default (already set in tokens layer). */
+  :root[data-font="serif"] {
+    --loom-font-display: ui-serif, Georgia, Cambria, "Times New Roman",
+                         Times, serif;
+    --loom-font-body:    ui-serif, Georgia, Cambria, "Times New Roman",
+                         Times, serif;
+  }
+
+  :root[data-font="mono"] {
+    --loom-font-display: ui-monospace, "JetBrains Mono", "SF Mono",
+                         Menlo, Consolas, monospace;
+    --loom-font-body:    ui-monospace, "JetBrains Mono", "SF Mono",
+                         Menlo, Consolas, monospace;
+    --loom-track-tight:  -0.01em;
+  }
+
+  :root[data-font="rounded"] {
+    --loom-font-display: ui-rounded, "SF Pro Rounded",
+                         "Hiragino Maru Gothic ProN", "Quicksand",
+                         system-ui, sans-serif;
+    --loom-font-body:    ui-rounded, "SF Pro Rounded",
+                         "Hiragino Maru Gothic ProN", "Quicksand",
+                         system-ui, sans-serif;
+  }
+
+
+  /* Density variants — swap the spacing scale globally.
+   * data-density="comfortable" is the default. */
+  :root[data-density="compact"] {
+    --loom-pad-card:   var(--loom-space-3);
+    --loom-pad-panel:  var(--loom-space-4);
+    --loom-pad-band:   var(--loom-space-5);
+    --loom-gap-stack:  var(--loom-space-3);
+    --loom-gap-row:    var(--loom-space-2);
+    --loom-gap-grid:   var(--loom-space-3);
+  }
+
+  :root[data-density="spacious"] {
+    --loom-pad-card:   var(--loom-space-6);
+    --loom-pad-panel:  var(--loom-space-8);
+    --loom-pad-band:   var(--loom-space-12);
+    --loom-gap-stack:  var(--loom-space-6);
+    --loom-gap-row:    var(--loom-space-4);
+    --loom-gap-grid:   var(--loom-space-6);
+  }
+
+
+/* Reduced motion — disable transitions + animations for users
+ * who set the OS preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* Increased-contrast — bump border + text contrast when the OS
+ * preference is set. */
+@media (prefers-contrast: more) {
+  :root {
+    --loom-color-border:        var(--loom-color-border-strong);
+    --loom-color-ink-muted:     var(--loom-color-ink);
+  }
+  .loom-card-battle, .loom-panel, .loom-hero {
+    border-width: 2px;
+  }
+}
+
+body[data-loom-drawer-open] .loom-drawer { transform: translateX(0); }
+
+body[data-loom-drawer-open] .loom-drawer-scrim {
+  opacity: 1; pointer-events: auto;
+}
+</style>
+  <link rel="stylesheet" href="/loom-skin.css" media="print" onload="this.media='all';this.removeAttribute('onload')" integrity="sha384-//1OLS123Zj1VBZulsyrNGeICdehfEwsEVLsYwpisGP2frWOw/N3/vziew3cUpev" crossorigin="anonymous">
+  <noscript><link rel="stylesheet" href="/loom-skin.css" integrity="sha384-//1OLS123Zj1VBZulsyrNGeICdehfEwsEVLsYwpisGP2frWOw/N3/vziew3cUpev" crossorigin="anonymous"></noscript>
 </head>
 <body>
-  <a class="loom-skip" href="#main">Skip to content</a>
-
-  <header class="loom-nav">
-    <div class="loom-nav-inner">
-      <a class="loom-brand" href="/">SkillShots</a>
-      <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/" data-loom-poly-action="true" data-backend="list-challenges">Battle Feed</a>
-        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
-        <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
-        <a href="/profile.html" data-backend="view-profile">Profile</a>
-      </nav>
-      <div class="loom-nav-actions">
-        <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
-        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
-        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-up">Sign up</button>
-        <button class="loom-btn" data-variant="primary" data-backend="post-skill" data-loom-poly-action="true">Post skill</button>
-      </div>
-    </div>
-  </header>
-
-  <main id="main" class="loom-page">
-    <h1 class="loom-page-title">Post a skill challenge</h1>
-    <p class="loom-page-subtitle" data-mb="xl">Define the rules, drop a proof video, set the pot. Voters decide the winner strictly on rule adherence.</p>
-
-    <div class="loom-step-indicator" aria-label="Form progress">
-      <div class="step" data-state="current"><span class="num">1</span>Rules &amp; category</div>
-      <div class="step" data-state="upcoming"><span class="num">2</span>Upload proof video</div>
-      <div class="step" data-state="upcoming"><span class="num">3</span>Pot &amp; entry fee</div>
-    </div>
-
-    <div class="loom-grid-app">
-      <section class="loom-panel" aria-labelledby="step1-h">
-        <h2 id="step1-h" class="loom-panel-title">Step 1 · Rules &amp; category</h2>
-
-        <div class="loom-stack" data-gap="lg">
-          <div class="loom-form-field">
-            <label for="title">Challenge title</label>
-            <input type="text" id="title" name="title" placeholder="e.g. Half-court shot — single arc, no rebound, no backboard" maxlength="120" aria-label="e.g. Half-court shot — single arc, no rebound, no backboard">
-            <div class="hint">120 chars max. State the SHOT, not the difficulty.</div>
-          </div>
-
-          <div class="loom-form-field">
-            <label for="category">Category</label>
-            <select id="category" name="category" aria-label="Category">
-              <option>Basketball</option>
-              <option>Skate</option>
-              <option>Parkour</option>
-              <option>Billiards</option>
-              <option>Darts</option>
-              <option>Mind (puzzle / speed)</option>
-              <option>Cafe (latte art / pour)</option>
-              <option>Other (custom)</option>
-            </select>
-          </div>
-
-          <div class="loom-form-field">
-            <label for="rules">Rules — measurable, observable</label>
-            <textarea id="rules" name="rules" placeholder="Specific rules voters can verify by watching:
-- Single take, no edits
-- Feet behind half-court line at release
-- Ball touches only net (or rim then net)
-- No backboard, no rebound" aria-label="Specific rules voters can verify by watching:
-- Single take, no edits
-- Feet behind half-court line at release
-- Ball touches only net (or rim then net)
-- No backboard, no rebound"></textarea>
-            <div class="hint">Voters judge against THIS list. Vague rules → contested votes.</div>
-          </div>
-
-          <div class="loom-form-field">
-            <label for="format">Required video format</label>
-            <input type="text" id="format" name="format" value="720p min · 30s max · single take" readonly aria-label="Format">
-            <div class="hint">Set automatically. Edited or sub-720p videos rejected at upload.</div>
-          </div>
-
-          <div class="loom-row" data-justify="between">
-            <button class="loom-btn" data-variant="ghost" type="button" data-backend="upload-entry" data-loom-poly-action="true">Save draft</button>
-            <button class="loom-btn" data-variant="primary" data-size="lg" type="button" data-backend="upload-entry" data-loom-poly-action="true">Continue → upload</button>
-          </div>
-        </div>
-      </section>
-
-      <aside>
-        <section class="loom-panel" aria-labelledby="tips-h">
-          <h2 id="tips-h" class="loom-panel-title">Good challenges share these</h2>
-          <div class="loom-panel-body">
-            <p><strong class="loom-emph">One outcome.</strong> "Land kickflip" not "skate well".</p>
-            <p><strong class="loom-emph">One take.</strong> Edits = ban.</p>
-            <p><strong class="loom-emph">Visible context.</strong> Voters need to see start AND end without ambiguity.</p>
-            <p><strong class="loom-emph">No subjective judging.</strong> "Best trick" = bad. "Land 360 flip on 5-stair" = good.</p>
-          </div>
-        </section>
-
-        <section class="loom-panel" aria-labelledby="pot-help-h">
-          <h2 id="pot-help-h" class="loom-panel-title">Pot sizing</h2>
-          <div class="loom-panel-body">
-            <p>Suggested entry: $10–$50 for skill-niche challenges. $50+ for national-prize-tier shots.</p>
-            <p>Higher entry → fewer entries but bigger pot. Most challenges with $20-$30 entries close with 5-12 entries.</p>
-          </div>
-        </section>
-      </aside>
-    </div>
-  </main>
-
-  <footer class="loom-footer">
-    <div>Skill Shots · <span class="tag">PoC</span></div>
-  </footer>
+<a class="loom-skip" href="#content">Skip to content</a>
+<header class="loom-page-header" role="banner">
+<nav class="loom-page-nav" aria-label="Primary">
+<a class="loom-page-brand" href="/">SkillShots</a>
+      <a class="loom-page-nav-link" href="/" data-backend="list-challenges">Battle Feed</a>
+      <a class="loom-page-nav-link" href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+      <a class="loom-page-nav-link" href="/my-wins.html" data-backend="list-touches">My Wins</a>
+      <a class="loom-page-nav-link" href="/profile.html" data-backend="view-profile">Profile</a>
+</nav>
+<h1 class="loom-page-title">Post a skill — SkillShots</h1>
+</header>
+<div id="content">
+<main class="loom-page" data-cms-path="/post-skill.html"><section class="loom-section-hero" data-loom-hero><span class="loom-section-hero__eyebrow">Set up a battle</span><h2 class="loom-section-hero__title">Post a skill</h2><p class="loom-section-hero__lede">Define the rules. Upload your take. Set the pot. Voters decide.</p></section><section class="loom-form-section"><h2 class="loom-form-section__legend">New challenge</h2><ol class="loom-form-section__steps" aria-label="Form progress"><li class="loom-form-section__step" data-state="current"><span class="loom-form-section__step-num" aria-hidden="true">1</span><span class="loom-form-section__step-label">Rules &amp; category</span></li><li class="loom-form-section__step" data-state="upcoming"><span class="loom-form-section__step-num" aria-hidden="true">2</span><span class="loom-form-section__step-label">Upload proof video</span></li><li class="loom-form-section__step" data-state="upcoming"><span class="loom-form-section__step-num" aria-hidden="true">3</span><span class="loom-form-section__step-label">Pot &amp; entry fee</span></li></ol><form class="loom-form" method="post" action="/post-skill" data-backend="post-skill"><fieldset class="loom-form__step" data-state="current"><legend class="loom-form__step-legend">Rules &amp; category</legend><div class="loom-form-field"><label class="loom-form-field__label" for="title">Challenge title</label><input class="loom-form-field__input" type="text" id="title" name="title" placeholder="e.g. Half-court shot — single arc, no rebound, no backboard" maxlength="120" required="required"><p class="loom-form-field__hint">120 chars max. State the SHOT, not the difficulty.</p></div><div class="loom-form-field"><label class="loom-form-field__label" for="category">Category</label><select class="loom-form-field__select" id="category" name="category" required="required"><option value="basketball">Basketball</option><option value="parkour">Parkour</option><option value="billiards">Billiards</option><option value="darts">Darts</option><option value="skate">Skateboard</option><option value="cafe">Cafe</option><option value="mind">Mind / Speedcube</option></select></div><div class="loom-form-field"><label class="loom-form-field__label" for="rules">Rules — measurable, observable</label><textarea class="loom-form-field__textarea" id="rules" name="rules" rows="8" placeholder="Specific rules voters can verify by watching:
+- single take
+- no edits
+- backboard contact disqualifies" required="required"></textarea><p class="loom-form-field__hint">Voters judge against THIS list. Vague rules → contested votes.</p></div><div class="loom-form-field"><label class="loom-form-field__label" for="format">Required video format</label><input class="loom-form-field__input" type="text" id="format" name="format" value="720p min · 30s max · single take" readonly><p class="loom-form-field__hint">Set automatically. Edited or sub-720p videos rejected at upload.</p></div></fieldset><fieldset class="loom-form__step" data-state="upcoming"><legend class="loom-form__step-legend">Upload proof video</legend></fieldset><fieldset class="loom-form__step" data-state="upcoming"><legend class="loom-form__step-legend">Pot &amp; entry fee</legend></fieldset><div class="loom-form__submit-row"><button class="loom-form__btn" data-variant="ghost" type="button" data-backend="post-skill">Save draft</button><button class="loom-form__btn" data-variant="primary" type="submit" data-backend="post-skill">Continue → upload</button></div></form></section></main>
+</div>
+<footer class="loom-page-footer" role="contentinfo">
+<small>SkillShots — voted skill battles.</small>
+</footer>
 </body>
 </html>

@@ -1,0 +1,87 @@
+{
+  "title": "Post a skill — SkillShots",
+  "description": "Set up a new battle: rules, video upload, pot + entry fee.",
+  "path": "/post-skill.html",
+  "nav_links": [
+    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
+    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
+    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
+    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Set up a battle",
+      "title": "Post a skill",
+      "lede": "Define the rules. Upload your take. Set the pot. Voters decide."
+    },
+    {
+      "kind": "form",
+      "legend": "New challenge",
+      "submit": {
+        "label": "Continue → upload",
+        "secondary_label": "Save draft",
+        "action": "/post-skill",
+        "data_backend": "post-skill"
+      },
+      "steps": [
+        {
+          "label": "Rules & category",
+          "state": "current",
+          "fields": [
+            {
+              "type": "text",
+              "name": "title",
+              "label": "Challenge title",
+              "hint": "120 chars max. State the SHOT, not the difficulty.",
+              "placeholder": "e.g. Half-court shot — single arc, no rebound, no backboard",
+              "max_length": 120,
+              "required": true
+            },
+            {
+              "type": "select",
+              "name": "category",
+              "label": "Category",
+              "options": [
+                { "value": "basketball", "label": "Basketball" },
+                { "value": "parkour",    "label": "Parkour" },
+                { "value": "billiards",  "label": "Billiards" },
+                { "value": "darts",      "label": "Darts" },
+                { "value": "skate",      "label": "Skateboard" },
+                { "value": "cafe",       "label": "Cafe" },
+                { "value": "mind",       "label": "Mind / Speedcube" }
+              ],
+              "required": true
+            },
+            {
+              "type": "textarea",
+              "name": "rules",
+              "label": "Rules — measurable, observable",
+              "hint": "Voters judge against THIS list. Vague rules → contested votes.",
+              "placeholder": "Specific rules voters can verify by watching:\n- single take\n- no edits\n- backboard contact disqualifies",
+              "rows": 8,
+              "required": true
+            },
+            {
+              "type": "readonly",
+              "name": "format",
+              "label": "Required video format",
+              "hint": "Set automatically. Edited or sub-720p videos rejected at upload.",
+              "value": "720p min · 30s max · single take"
+            }
+          ]
+        },
+        {
+          "label": "Upload proof video",
+          "state": "upcoming",
+          "fields": []
+        },
+        {
+          "label": "Pot & entry fee",
+          "state": "upcoming",
+          "fields": []
+        }
+      ]
+    }
+  ]
+}
