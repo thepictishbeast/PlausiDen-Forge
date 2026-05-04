@@ -66,13 +66,13 @@
         <div class="loom-stack" data-gap="lg">
           <div class="form-field">
             <label for="title">Challenge title</label>
-            <input type="text" id="title" name="title" placeholder="e.g. Half-court shot — single arc, no rebound, no backboard" maxlength="120">
+            <input type="text" id="title" name="title" placeholder="e.g. Half-court shot — single arc, no rebound, no backboard" maxlength="120" aria-label="e.g. Half-court shot — single arc, no rebound, no backboard">
             <div class="hint">120 chars max. State the SHOT, not the difficulty.</div>
           </div>
 
           <div class="form-field">
             <label for="category">Category</label>
-            <select id="category" name="category">
+            <select id="category" name="category" aria-label="Category">
               <option>Basketball</option>
               <option>Skate</option>
               <option>Parkour</option>
@@ -90,13 +90,17 @@
 - Single take, no edits
 - Feet behind half-court line at release
 - Ball touches only net (or rim then net)
+- No backboard, no rebound" aria-label="Specific rules voters can verify by watching:
+- Single take, no edits
+- Feet behind half-court line at release
+- Ball touches only net (or rim then net)
 - No backboard, no rebound"></textarea>
             <div class="hint">Voters judge against THIS list. Vague rules → contested votes.</div>
           </div>
 
           <div class="form-field">
             <label for="format">Required video format</label>
-            <input type="text" id="format" name="format" value="720p min · 30s max · single take" readonly>
+            <input type="text" id="format" name="format" value="720p min · 30s max · single take" readonly aria-label="Format">
             <div class="hint">Set automatically. Edited or sub-720p videos rejected at upload.</div>
           </div>
 
