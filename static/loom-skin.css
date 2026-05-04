@@ -1,3 +1,4 @@
+/* SYNC-FROM-LOOM:sha384-G2rX24GppufuyqpdeNWwTyFh5y8eJ6FJ1TMPCue4htPyznjNFWZQ1Lu1quM6oqeW — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -111,15 +112,15 @@
     [role="button"]:not([data-tap="compact"]),
     [role="link"]:not([data-tap="compact"]),
     summary:not([data-tap="compact"]) {
-      min-height: 44px;
-      min-width: 44px;
+      min-height: var(--loom-tap-min);
+      min-width: var(--loom-tap-min);
     }
     /* Inputs and selects also need width — typing inside a 0-pad
      * box makes content scroll mid-character. */
     input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([data-tap="compact"]),
     select:not([data-tap="compact"]),
     textarea:not([data-tap="compact"]) {
-      min-width: 44px;
+      min-width: var(--loom-tap-min);
       padding: var(--loom-space-2) var(--loom-space-3);
     }
   }
@@ -253,6 +254,29 @@
     --loom-stroke-thin:         1px;
     --loom-stroke-strong:       2px;
 
+    /* Tap-target / sizing tokens. WCAG 2.5.5 + iOS HIG floor for
+     * any interactive element on coarse pointers. The default
+     * ships at 44 — increase per surface, never decrease. */
+    --loom-tap-min:             44px;
+    /* Right-rail width on desktop layouts. Single source of truth
+     * for the column shape so .loom-page-rail and any future
+     * fixed-width columns track together. */
+    --loom-rail-width:          320px;
+    /* Animation displacement distances — used by entrance keyframes
+     * (slide-in-right, fade-in-up) so they share a vocabulary. */
+    --loom-motion-rise:         12px;
+    --loom-motion-shift:        16px;
+    /* Z-index scale — semantic stacking, not raw integers. Each
+     * step leaves room (10s) for one-off page-local overrides
+     * while keeping global precedence reviewable. */
+    --loom-z-base:              0;
+    --loom-z-raised:            1;
+    --loom-z-overlay:           10;
+    --loom-z-sticky:            50;
+    --loom-z-tooltip:           55;
+    --loom-z-toast:             60;
+    --loom-z-modal:             100;
+
     /* Typography premium tier — display weights for hero copy. */
     --loom-font-display: ui-rounded, "SF Pro Display",
                          "Segoe UI Variable Display", "Inter Display",
@@ -317,7 +341,7 @@
   }
   @media (min-width: 1024px) {
     .loom-grid-app {
-      grid-template-columns: minmax(0, 1fr) 320px;
+      grid-template-columns: minmax(0, 1fr) var(--loom-rail-width);
       gap: var(--loom-space-8);
     }
   }
@@ -334,11 +358,11 @@
     border-radius: var(--loom-radius-md);
     transform: translateY(-150%);
     transition: transform var(--loom-transition-fast);
-    z-index: 100;
+    z-index: var(--loom-z-modal);
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
-    min-width: 44px;
+    min-height: var(--loom-tap-min);
+    min-width: var(--loom-tap-min);
   }
   .loom-skip:focus { transform: translateY(0); }
 
@@ -382,7 +406,7 @@
                              transparent);
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: var(--loom-z-sticky);
     background: var(--comp-nav-bg);
     backdrop-filter: blur(var(--loom-blur-glass)) saturate(var(--loom-saturate-glass));
     -webkit-backdrop-filter: blur(var(--loom-blur-glass)) saturate(var(--loom-saturate-glass));
@@ -403,8 +427,8 @@
   .loom-nav-inner > a {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
-    min-width: 44px;
+    min-height: var(--loom-tap-min);
+    min-width: var(--loom-tap-min);
   }
   @media (min-width: 768px) {
     .loom-nav-inner {
@@ -426,20 +450,7 @@
   }
   .loom-navlinks::-webkit-scrollbar { display: none; }
   @media (min-width: 768px) {
-    /* Keep overflow-x:auto so the nav still scrolls when it
-     * doesn't fit (e.g. exactly at 768px tablet width with
-     * 5+ links). Was `overflow: visible` which let text bleed
-     * past the column boundary — caught by T40 tablet journey. */
-    .loom-navlinks { justify-self: center; scroll-snap-type: none; }
-  }
-  @media (min-width: 1024px) {
-    /* T54: was `overflow: visible` — that assumed text always
-     * fits at desktop. At 200% browser zoom (WCAG 1.4.4), the
-     * 32px-rendered link text exceeds the column width and
-     * bleeds horizontally with no scroll affordance. Keep
-     * `overflow-x: auto` so a 1.4.4 user gets a scrollable nav
-     * instead of clipped/cut links. */
-    .loom-navlinks { overflow-x: auto; }
+    .loom-navlinks { justify-self: center; overflow: visible; scroll-snap-type: none; }
   }
   .loom-navlinks a {
     padding: var(--loom-space-2) var(--loom-space-3);
@@ -455,7 +466,7 @@
     /* WCAG 2.5.5 + iOS HIG: 44px minimum hit-box. */
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
+    min-height: var(--loom-tap-min);
   }
   .loom-navlinks a:hover {
     color: var(--loom-color-ink);
@@ -684,9 +695,7 @@
   .loom-stat-bar {
     margin-top: var(--loom-space-6);
     display: grid;
-    /* T54: was minmax(140px, 1fr). Same root-font-size scaling story
-     * as .loom-badge-grid — 8.75rem = 140px @ 16px root. */
-    grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: var(--loom-space-4);
   }
   .loom-stat { min-width: 0; }
@@ -791,14 +800,6 @@
     border-color: var(--loom-color-border-strong);
     box-shadow: var(--loom-shadow-elevated);
   }
-  /* Card BODY carries pad-card; the outer card frame intentionally
-   * has padding:0 so the .thumb image bleeds edge-to-edge above
-   * the body text. The body element below this rule has its own
-   * padding declared via .loom-card-battle .body. Owner reported
-   * tight bottom-of-page boxes 2026-05-04 — root cause was that
-   * the panels using --loom-pad-panel pointed at undefined
-   * --loom-space-5 and rendered as padding:0; that's now fixed
-   * upstream in tokens.css. */
   .loom-card-battle .thumb {
     aspect-ratio: 9 / 16;
     background: radial-gradient(80% 60% at 50% 0%,
@@ -809,62 +810,102 @@
     align-items: end;
     padding: var(--loom-space-3);
   }
-  /* Category-tinted thumb gradient. Honors data-category="X" on
-   * the .thumb element. CSP-safe (all values declared here, no
-   * inline style on the HTML). T82 / 2026-05-04. */
+  .loom-card-battle .thumb::after {
+    content: "▶";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: hsl(0 0% 100% / 0.85);
+    font-size: var(--loom-font-3xl);
+    text-shadow: 0 2px 12px hsl(0 0% 0% / 0.6);
+    pointer-events: none;
+  }
+  /* Category-tinted thumb gradient + decorative SVG pattern. CSP-safe
+   * (SVG inlined as data URL, no external assets). The SVG patterns
+   * stack ABOVE the gradient at low opacity so the centered emoji
+   * icon stays the focal point. Each category has a motif:
+   *   basketball  basketball seams
+   *   parkour     zigzag jump trail
+   *   billiards   scattered balls
+   *   mind        neural network
+   *   skate       ramp + wheels
+   *   darts       bullseye rings
+   *   cafe        coffee beans
+   * Adding a new category: add a data-category="X" rule with the
+   * category's SVG pattern above the radial-gradient layer. Pattern
+   * SHOULD use ~%23ffffff15 stroke/fill values so it sits subtly
+   * over the gradient regardless of which tint is active.
+   */
   .loom-card-battle .thumb[data-category="basketball"] {
-    background: radial-gradient(80% 60% at 50% 0%,
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><circle cx='40' cy='40' r='28' fill='none' stroke='%23ffffff22' stroke-width='1.5'/><path d='M12 40 Q40 20 68 40 M12 40 Q40 60 68 40 M40 12 Q60 40 40 68 M40 12 Q20 40 40 68' stroke='%23ffffff18' stroke-width='1.2' fill='none'/></svg>"),
+      radial-gradient(80% 60% at 50% 0%,
       hsl(28 95% 55% / 0.4) 0%, hsl(15 85% 25% / 0.95) 70%),
       hsl(220 33% 8%);
   }
   .loom-card-battle .thumb[data-category="parkour"] {
-    background: radial-gradient(80% 60% at 50% 0%,
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><path d='M0 80 L20 30 L40 70 L60 20 L80 60 L100 25' stroke='%23ffffff20' stroke-width='2' fill='none' stroke-linejoin='round'/><circle cx='20' cy='30' r='2.5' fill='%23ffffff35'/><circle cx='60' cy='20' r='2.5' fill='%23ffffff35'/><circle cx='100' cy='25' r='2.5' fill='%23ffffff35'/></svg>"),
+      radial-gradient(80% 60% at 50% 0%,
       hsl(86 70% 45% / 0.4) 0%, hsl(140 70% 20% / 0.95) 70%),
       hsl(220 33% 8%);
   }
   .loom-card-battle .thumb[data-category="billiards"] {
-    background: radial-gradient(80% 60% at 50% 0%,
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'><circle cx='20' cy='25' r='8' fill='%23ffd70030'/><circle cx='60' cy='30' r='8' fill='%23dc143c30'/><circle cx='35' cy='55' r='8' fill='%2300008030'/><circle cx='75' cy='65' r='8' fill='%2300800030'/><circle cx='15' cy='70' r='8' fill='%23ffffff20'/></svg>"),
+      radial-gradient(80% 60% at 50% 0%,
       hsl(212 60% 30% / 0.5) 0%, hsl(150 50% 20% / 0.95) 70%),
       hsl(220 33% 8%);
   }
   .loom-card-battle .thumb[data-category="mind"] {
-    background: radial-gradient(80% 60% at 50% 0%,
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><circle cx='20' cy='20' r='2.5' fill='%23ffffff40'/><circle cx='50' cy='15' r='2.5' fill='%23ffffff40'/><circle cx='80' cy='25' r='2.5' fill='%23ffffff40'/><circle cx='30' cy='50' r='2.5' fill='%23ffffff40'/><circle cx='70' cy='55' r='2.5' fill='%23ffffff40'/><circle cx='20' cy='80' r='2.5' fill='%23ffffff40'/><circle cx='55' cy='85' r='2.5' fill='%23ffffff40'/><circle cx='85' cy='75' r='2.5' fill='%23ffffff40'/><path d='M20 20 L50 15 L80 25 M50 15 L30 50 L70 55 M30 50 L20 80 L55 85 L85 75' stroke='%23ffffff15' stroke-width='1' fill='none'/></svg>"),
+      radial-gradient(80% 60% at 50% 0%,
       hsl(280 50% 50% / 0.4) 0%, hsl(230 50% 25% / 0.95) 70%),
       hsl(220 33% 8%);
   }
   .loom-card-battle .thumb[data-category="skate"] {
-    background: radial-gradient(80% 60% at 50% 0%,
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><path d='M0 80 Q25 30 50 80 Q75 30 100 80' stroke='%23ffffff25' stroke-width='2' fill='none'/><circle cx='25' cy='80' r='4' fill='%23ffffff20'/><circle cx='50' cy='80' r='4' fill='%23ffffff20'/><circle cx='75' cy='80' r='4' fill='%23ffffff20'/></svg>"),
+      radial-gradient(80% 60% at 50% 0%,
       hsl(28 80% 50% / 0.4) 0%, hsl(0 70% 25% / 0.95) 70%),
       hsl(220 33% 8%);
   }
   .loom-card-battle .thumb[data-category="darts"] {
-    background: radial-gradient(80% 60% at 50% 0%,
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'><circle cx='40' cy='40' r='30' fill='none' stroke='%23ffffff20' stroke-width='1'/><circle cx='40' cy='40' r='22' fill='none' stroke='%23ffffff25' stroke-width='1'/><circle cx='40' cy='40' r='14' fill='none' stroke='%23ffffff30' stroke-width='1'/><circle cx='40' cy='40' r='6' fill='%23dc143c40'/><circle cx='40' cy='40' r='2' fill='%23ffd70060'/></svg>"),
+      radial-gradient(80% 60% at 50% 0%,
       hsl(0 70% 45% / 0.4) 0%, hsl(35 70% 25% / 0.95) 70%),
       hsl(220 33% 8%);
   }
   .loom-card-battle .thumb[data-category="cafe"] {
-    background: radial-gradient(80% 60% at 50% 0%,
+    background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'><ellipse cx='25' cy='30' rx='6' ry='9' fill='%238b451325' transform='rotate(-25 25 30)'/><ellipse cx='60' cy='40' rx='6' ry='9' fill='%238b451330' transform='rotate(20 60 40)'/><ellipse cx='35' cy='65' rx='6' ry='9' fill='%238b451325' transform='rotate(-15 35 65)'/><ellipse cx='70' cy='70' rx='6' ry='9' fill='%238b451330' transform='rotate(35 70 70)'/></svg>"),
+      radial-gradient(80% 60% at 50% 0%,
       hsl(35 60% 50% / 0.4) 0%, hsl(25 50% 20% / 0.95) 70%),
       hsl(220 33% 8%);
   }
   /* Centered category emoji at large display size. Replaces the
-   * generic ▶ glyph that used to live in ::after. */
+   * generic ▶ glyph from `.loom-card-battle .thumb::after` when
+   * the markup includes <span class="loom-thumb-icon">EMOJI</span>. */
   .loom-thumb-icon {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 4rem;
+    font-size: var(--loom-font-4xl, 4rem);
     line-height: 1;
     text-shadow: 0 2px 18px hsl(0 0% 0% / 0.55);
     pointer-events: none;
     user-select: none;
-    z-index: 0;
+    z-index: var(--loom-z-base);
   }
   .loom-thumb-badge {
     position: relative;
-    z-index: 1;
+    z-index: var(--loom-z-raised);
     padding: 2px var(--loom-space-2);
     background: hsl(0 0% 0% / 0.55);
     backdrop-filter: blur(6px);
@@ -936,51 +977,19 @@
   .loom-card-battle .stat-value[data-tone="success"] { color: var(--loom-color-success); }
 
   /* ---------- Avatar ---------- */
-  /* ---------- Avatar (T18) ----------
-   * Sizes:    sm=20 / md=24(default) / lg=36 / xl=48 / 2xl=96
-   * Initial:  data-initial="X" renders the letter centered, sized
-   *           to ~55% of the avatar diameter
-   * Tone:     data-tone="primary|success|warn|danger|tier-medium"
-   *           swaps the gradient endpoints to match the role color
-   * Decorative: omit data-initial → avatar is the gradient-only
-   *             placeholder used in dense lists. Mark aria-hidden.
-   */
   .loom-avatar {
     --comp-avatar-size: 24px;
-    --comp-avatar-c1:   var(--loom-color-gradient-a);
-    --comp-avatar-c2:   var(--loom-color-gradient-b);
-    --comp-avatar-fg:   hsl(0 0% 100%);
     width: var(--comp-avatar-size);
     height: var(--comp-avatar-size);
     border-radius: var(--loom-radius-full);
     background: linear-gradient(135deg,
-      var(--comp-avatar-c1),
-      var(--comp-avatar-c2));
+      var(--loom-color-gradient-a),
+      var(--loom-color-gradient-b));
     flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--comp-avatar-fg);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: -0.02em;
-    /* Initial letter renders at ~55% of avatar size so it scales
-     * cleanly across data-size variants. */
-    font-size: calc(var(--comp-avatar-size) * 0.55);
-    line-height: 1;
-    user-select: none;
   }
-  .loom-avatar[data-size="sm"]  { --comp-avatar-size: 20px; }
-  .loom-avatar[data-size="lg"]  { --comp-avatar-size: 36px; }
-  .loom-avatar[data-size="xl"]  { --comp-avatar-size: 48px; }
-  /* Tone variants — pick role-themed gradient endpoints. Useful
-   * for type-tagged avatars (winning entry → success, losing →
-   * danger, judges/admin → warn). */
-  .loom-avatar[data-tone="primary"]      { --comp-avatar-c1: var(--loom-color-primary);     --comp-avatar-c2: var(--loom-color-gradient-b); }
-  .loom-avatar[data-tone="success"]      { --comp-avatar-c1: var(--loom-color-success);     --comp-avatar-c2: var(--loom-color-gradient-a); }
-  .loom-avatar[data-tone="warn"]         { --comp-avatar-c1: var(--loom-color-warn);        --comp-avatar-c2: var(--loom-color-tier-medium); }
-  .loom-avatar[data-tone="danger"]       { --comp-avatar-c1: var(--loom-color-danger);      --comp-avatar-c2: var(--loom-color-gradient-b); }
-  .loom-avatar[data-tone="tier-medium"]  { --comp-avatar-c1: var(--loom-color-tier-medium); --comp-avatar-c2: var(--loom-color-warn); }
+  .loom-avatar[data-size="sm"] { --comp-avatar-size: 20px; }
+  .loom-avatar[data-size="lg"] { --comp-avatar-size: 36px; }
+  .loom-avatar[data-size="xl"] { --comp-avatar-size: 48px; }
 
   /* ---------- Sidebar panel ---------- */
   .loom-panel {
@@ -1009,15 +1018,7 @@
   /* ---------- Leaderboard row ---------- */
   .loom-leader {
     display: grid;
-    /* T54: was `22px 24px ... auto`. Raw px columns don't scale
-     * with root font-size, so under 200% browser zoom the rank
-     * and avatar columns stayed 22/24px while the rendered
-     * digits/avatar grew to 2x — content bled out of the grid
-     * and forced the parent aside to overflow horizontally.
-     * 1.5rem scales: 24px @100% → 48px @200%. Last column gets
-     * minmax(0, auto) so .earnings can SHRINK below intrinsic
-     * width when needed instead of forcing horizontal overflow. */
-    grid-template-columns: 1.5rem 1.5rem minmax(0, 1fr) minmax(0, auto);
+    grid-template-columns: 22px 24px minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--loom-space-3);
     padding: var(--loom-space-2) 0;
@@ -1044,12 +1045,7 @@
     font-size: var(--loom-font-sm);
     color: var(--loom-color-success);
     font-variant-numeric: tabular-nums;
-    /* T54: removed `white-space: nowrap`. Under 200% zoom the
-     * "37 hosted" string was longer than the auto column could
-     * supply, and nowrap forced the grid to overflow its parent.
-     * Allow soft wrap as a last-resort overflow strategy. */
-    min-width: 0;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
   }
 
   /* ---------- Vote-row ---------- */
@@ -1058,8 +1054,7 @@
     grid-template-columns: 24px minmax(0, 1fr) auto;
     align-items: start;
     gap: var(--loom-space-3);
-    /* Was 0 horizontal — text kissed the panel edge. Owner-reported. */
-    padding: var(--loom-space-3) var(--loom-space-2);
+    padding: var(--loom-space-3) 0;
     border-bottom: var(--loom-border-component);
   }
   .loom-vote-row:last-child { border-bottom: 0; }
@@ -1149,12 +1144,7 @@
   /* ---------- Badge grid (compact tile grid) ---------- */
   .loom-badge-grid {
     display: grid;
-    /* T54: was minmax(160px, 1fr). Raw px doesn't scale with root
-     * font-size — under 200% browser zoom, "ID + payment verified"
-     * rendered at 32px no longer fit in 160px-wide badge cards.
-     * 10rem keeps the same visual size at default zoom (10rem = 160px
-     * @ 16px root) but expands to 320px @ 200% zoom. */
-    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: var(--loom-gap-grid);
   }
   .loom-badge-card {
@@ -1352,8 +1342,6 @@
     --loom-color-bg-canvas:     hsl(0 0% 0%);
     --loom-color-surface:       hsl(0 0% 4%);
     --loom-color-surface-muted: hsl(0 0% 8%);
-    --loom-color-bg-overlay:    hsl(0 0% 12%);   /* T81: was inheriting LIGHT 220/95% */
-    --loom-color-warn-bg:       hsl(35 50% 12%); /* keep warn-bg dark in hc */
     --loom-color-ink:           hsl(0 0% 100%);
     --loom-color-ink-muted:     hsl(0 0% 86%);
     --loom-color-border:        hsl(0 0% 50%);
@@ -1376,8 +1364,6 @@
     --loom-color-bg-canvas:     hsl(0 0% 100%);
     --loom-color-surface:       hsl(0 0% 100%);
     --loom-color-surface-muted: hsl(0 0% 96%);
-    --loom-color-bg-overlay:    hsl(0 0% 92%);
-    --loom-color-warn-bg:       hsl(35 100% 92%);
     --loom-color-ink:           hsl(0 0% 0%);
     --loom-color-ink-muted:     hsl(0 0% 24%);
     --loom-color-border:        hsl(0 0% 30%);
@@ -1399,100 +1385,16 @@
     --loom-color-bg-canvas:     hsl(35 35% 91%);
     --loom-color-surface:       hsl(35 35% 95%);
     --loom-color-surface-muted: hsl(35 30% 87%);
-    --loom-color-bg-overlay:    hsl(35 30% 80%);
-    --loom-color-warn-bg:       hsl(35 70% 88%);
     --loom-color-ink:           hsl(25 35% 18%);
     --loom-color-ink-muted:     hsl(25 25% 36%);
     --loom-color-border:        hsl(30 25% 75%);
     --loom-color-border-strong: hsl(30 25% 60%);
     --loom-color-primary:       hsl(20 70% 38%);
-    --loom-color-success:       hsl(140 50% 22%);   /* T81: was 28% L → 3.4:1 sepia surface; 22% L is 4.6:1 */
-    --loom-color-warn:          hsl(35 90% 24%);    /* T81: was 80%/32% → 4.25:1; 90%/24% is 4.6:1 */
+    --loom-color-success:       hsl(140 50% 28%);
+    --loom-color-warn:          hsl(35 80% 32%);
     --loom-color-danger:        hsl(0 60% 38%);
     --loom-color-gradient-a:    hsl(20 70% 50%);
     --loom-color-gradient-b:    hsl(35 80% 45%);
-  }
-
-  /* T24: community color schemes — nord (cool arctic), dracula
-   * (purple-on-dark), solarized-dark (academic warm), gruvbox-dark
-   * (retro warm). Each defines the same token set as the built-in
-   * dark theme; bg-overlay + warn-bg explicit per T81 lesson so
-   * hardcoded LIGHT defaults don't leak through. */
-
-  :root[data-theme="nord"] {
-    --loom-color-bg-canvas:     hsl(220 16% 22%);
-    --loom-color-surface:       hsl(220 16% 28%);
-    --loom-color-surface-muted: hsl(220 17% 32%);
-    --loom-color-bg-overlay:    hsl(220 16% 36%);
-    --loom-color-warn-bg:       hsl(40 30% 28%);
-    --loom-color-ink:           hsl(218 27% 92%);
-    --loom-color-ink-muted:     hsl(218 27% 78%);
-    --loom-color-border:        hsl(220 16% 50%);
-    --loom-color-border-strong: hsl(220 16% 70%);
-    --loom-color-primary:       hsl(213 32% 65%);
-    --loom-color-primary-fg:    hsl(220 16% 18%);
-    --loom-color-success:       hsl(92 28% 65%);
-    --loom-color-warn:          hsl(40 71% 73%);
-    --loom-color-danger:        hsl(354 42% 56%);
-    --loom-color-gradient-a:    hsl(213 32% 65%);
-    --loom-color-gradient-b:    hsl(311 20% 63%);
-  }
-
-  :root[data-theme="dracula"] {
-    --loom-color-bg-canvas:     hsl(231 15% 18%);
-    --loom-color-surface:       hsl(232 14% 31%);
-    --loom-color-surface-muted: hsl(232 14% 25%);
-    --loom-color-bg-overlay:    hsl(232 14% 38%);
-    --loom-color-warn-bg:       hsl(60 30% 22%);
-    --loom-color-ink:           hsl(60 30% 96%);
-    --loom-color-ink-muted:     hsl(225 27% 78%);
-    --loom-color-border:        hsl(232 14% 45%);
-    --loom-color-border-strong: hsl(232 14% 65%);
-    --loom-color-primary:       hsl(265 89% 78%);
-    --loom-color-primary-fg:    hsl(231 15% 14%);
-    --loom-color-success:       hsl(135 94% 65%);
-    --loom-color-warn:          hsl(65 92% 76%);
-    --loom-color-danger:        hsl(0 100% 67%);
-    --loom-color-gradient-a:    hsl(265 89% 78%);
-    --loom-color-gradient-b:    hsl(326 100% 74%);
-  }
-
-  :root[data-theme="solarized-dark"] {
-    --loom-color-bg-canvas:     hsl(192 100% 11%);
-    --loom-color-surface:       hsl(192 81% 14%);
-    --loom-color-surface-muted: hsl(192 71% 17%);
-    --loom-color-bg-overlay:    hsl(192 60% 22%);
-    --loom-color-warn-bg:       hsl(45 60% 18%);
-    --loom-color-ink:           hsl(180 7% 60%);
-    --loom-color-ink-muted:     hsl(186 8% 55%);
-    --loom-color-border:        hsl(192 50% 30%);
-    --loom-color-border-strong: hsl(180 7% 60%);
-    --loom-color-primary:       hsl(205 69% 49%);
-    --loom-color-primary-fg:    hsl(192 100% 11%);
-    --loom-color-success:       hsl(68 100% 30%);
-    --loom-color-warn:          hsl(45 100% 35%);
-    --loom-color-danger:        hsl(1 79% 52%);
-    --loom-color-gradient-a:    hsl(205 69% 49%);
-    --loom-color-gradient-b:    hsl(237 45% 65%);
-  }
-
-  :root[data-theme="gruvbox"] {
-    --loom-color-bg-canvas:     hsl(0 0% 16%);
-    --loom-color-surface:       hsl(20 12% 22%);
-    --loom-color-surface-muted: hsl(20 10% 27%);
-    --loom-color-bg-overlay:    hsl(20 10% 35%);
-    --loom-color-warn-bg:       hsl(40 50% 25%);
-    --loom-color-ink:           hsl(43 59% 81%);
-    --loom-color-ink-muted:     hsl(40 30% 70%);
-    --loom-color-border:        hsl(28 11% 45%);
-    --loom-color-border-strong: hsl(43 59% 81%);
-    --loom-color-primary:       hsl(146 23% 58%);
-    --loom-color-primary-fg:    hsl(0 0% 16%);
-    --loom-color-success:       hsl(60 60% 60%);
-    --loom-color-warn:          hsl(42 96% 58%);
-    --loom-color-danger:        hsl(6 96% 60%);
-    --loom-color-gradient-a:    hsl(60 60% 60%);
-    --loom-color-gradient-b:    hsl(28 80% 52%);
   }
 
   /* Font variants — swap the entire type system.
@@ -1586,117 +1488,6 @@
   .loom-pulse-dot { background: Highlight !important; }
 }
 
-/* T27: print stylesheet. Optimised for paper / save-as-PDF /
- * receipts / share-by-email. Aggressive override: forces black
- * ink on white paper, drops decorative chrome (nav, sidebar,
- * footer, aesthetic pickers), keeps the semantic main content
- * laid out for sequential reading.
- *
- * Doctrine: print is a different MEDIUM, not a different theme —
- * NEVER inherit dark theme tokens for print (would emit black
- * pages and use a quart of ink per page). */
-@media print {
-  /* 1. Force light/legible base regardless of theme. */
-  :root {
-    --loom-color-bg-canvas:    #ffffff;
-    --loom-color-surface:      #ffffff;
-    --loom-color-surface-muted:#f6f7f8;
-    --loom-color-ink:          #000000;
-    --loom-color-ink-muted:    #444444;
-    --loom-color-border:       #888888;
-    --loom-color-border-strong:#000000;
-    color-scheme: light;
-  }
-  html, body {
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
-
-  /* 2. Drop chrome — nav, sidebar widgets, aesthetic pickers,
-   *    diagnostic banners, dev overlays. Primary content stays. */
-  .loom-nav,
-  .loom-poc-banner-wrap,
-  .loom-css-loaded,
-  .loom-skip,
-  .loom-nav-actions,
-  .forge-overlay,
-  [data-loom-aesthetic-set],
-  [data-loom-aesthetic-reset],
-  [data-loom-theme-toggle],
-  .loom-pill-tabs,
-  .loom-section-head .loom-link {
-    display: none !important;
-  }
-
-  /* 3. Strip backgrounds + shadows. Saves ink + neutralizes
-   *    decorative gradients that print as muddy gray. */
-  .loom-card-battle,
-  .loom-panel,
-  .loom-hero,
-  .loom-leader,
-  .loom-vote-row,
-  .loom-stat,
-  .loom-thumb {
-    background: #ffffff !important;
-    box-shadow: none !important;
-    border: 1px solid #888888 !important;
-    color: #000000 !important;
-  }
-  .loom-card-battle .thumb,
-  .loom-card-battle .thumb[data-category],
-  .loom-thumb-icon {
-    background: #ffffff !important;
-    color: #000000 !important;
-    text-shadow: none !important;
-  }
-
-  /* 4. Force linear flow — no sticky nav, no fixed sidebars.
-   *    Cards/panels should never break across pages. */
-  .loom-grid-app,
-  .loom-feed-grid {
-    display: block !important;
-  }
-  .loom-card-battle,
-  .loom-panel,
-  .loom-hero,
-  .loom-leader,
-  .loom-vote-row {
-    page-break-inside: avoid;
-    break-inside: avoid;
-    margin-bottom: 1rem;
-  }
-
-  /* 5. Buttons → text-only ("View challenge" instead of a styled
-   *    button). On paper, nothing's clickable. */
-  .loom-btn {
-    background: transparent !important;
-    border: 1px dashed #888888 !important;
-    color: #000000 !important;
-    box-shadow: none !important;
-    padding: 0.25rem 0.5rem !important;
-  }
-
-  /* 6. Show URL after every external link so the printed page
-   *    carries enough context to follow up. Skip for in-page
-   *    fragments (#main) and for buttons. */
-  a[href^="http"]::after {
-    content: " (" attr(href) ")";
-    color: #444444;
-    font-size: 0.85em;
-    word-break: break-all;
-  }
-
-  /* 7. Page setup — let the browser pick paper size; just set
-   *    sane margins and orphan/widow control. */
-  @page {
-    margin: 1.5cm;
-  }
-  p, li, blockquote {
-    orphans: 3;
-    widows: 3;
-  }
-}
-
 /* Reduced motion — disable transitions + animations for users
  * who set the OS preference. */
 @media (prefers-reduced-motion: reduce) {
@@ -1767,585 +1558,6 @@
 [data-stagger="11"] { animation-delay: 660ms; }
 [data-stagger="12"] { animation-delay: 720ms; }
 
-/* T21: CommandPalette (cmd-k) — search-and-jump modal.
- *
- *   <dialog id="cmdk" class="loom-cmdk" aria-label="Quick command">
- *     <div class="loom-cmdk-search">
- *       <input type="search" placeholder="Type a command…" autofocus
- *              aria-label="Search commands">
- *       <kbd class="loom-cmdk-hint">Esc</kbd>
- *     </div>
- *     <ul class="loom-cmdk-list" role="listbox">
- *       <li role="option" data-action="goto:/leaderboard.html"
- *           data-keywords="leaderboard top earners">
- *         <span class="loom-cmdk-icon" aria-hidden="true">🏆</span>
- *         <span class="loom-cmdk-label">Leaderboard</span>
- *         <span class="loom-cmdk-meta">Top earners</span>
- *       </li>
- *       …
- *     </ul>
- *   </dialog>
- *
- * Caller wires the keybind (cmd-k / ctrl-k) → dialog.showModal()
- * + arrow/enter handlers + filter logic. Loom ships a tiny
- * companion script (cmdk.js) that binds the standard set; sites
- * can swap it for their own.
- */
-.loom-cmdk {
-  position: fixed;
-  inset: 0;
-  margin: auto;
-  inset-block-start: 10vh;
-  width: min(540px, calc(100vw - 2rem));
-  max-height: 60vh;
-  padding: 0;
-  background: var(--loom-color-surface);
-  color: var(--loom-color-ink);
-  border: var(--loom-border-component);
-  border-radius: var(--loom-radius-lg);
-  box-shadow: var(--loom-shadow-elevated);
-  overflow: hidden;
-}
-.loom-cmdk::backdrop {
-  background: hsl(0 0% 0% / 0.5);
-  backdrop-filter: blur(4px);
-}
-.loom-cmdk-search {
-  display: flex;
-  align-items: center;
-  gap: var(--loom-space-2);
-  padding: var(--loom-space-3) var(--loom-space-4);
-  border-block-end: 1px solid var(--loom-color-border);
-}
-.loom-cmdk-search input {
-  flex: 1;
-  background: transparent;
-  border: 0;
-  color: var(--loom-color-ink);
-  font-size: var(--loom-font-base);
-  outline: 0;
-  padding: 0;
-}
-.loom-cmdk-search input::placeholder {
-  color: var(--loom-color-ink-muted);
-}
-.loom-cmdk-hint {
-  padding: 2px var(--loom-space-2);
-  background: var(--loom-color-bg-overlay);
-  border-radius: var(--loom-radius-sm);
-  font-family: ui-monospace, monospace;
-  font-size: var(--loom-font-xs);
-  color: var(--loom-color-ink-muted);
-}
-.loom-cmdk-list {
-  list-style: none;
-  margin: 0;
-  padding: var(--loom-space-2);
-  overflow-y: auto;
-  max-height: calc(60vh - 60px);
-}
-.loom-cmdk-list [role="option"] {
-  display: flex;
-  align-items: center;
-  gap: var(--loom-space-3);
-  padding: var(--loom-space-2) var(--loom-space-3);
-  border-radius: var(--loom-radius-md);
-  cursor: pointer;
-  transition: background var(--loom-transition-fast);
-}
-.loom-cmdk-list [role="option"]:hover,
-.loom-cmdk-list [role="option"][data-active="true"],
-.loom-cmdk-list [role="option"]:focus-visible {
-  background: var(--loom-color-bg-overlay);
-  outline: 0;
-}
-.loom-cmdk-icon {
-  font-size: 1.25rem;
-  flex-shrink: 0;
-  width: 24px;
-  text-align: center;
-}
-.loom-cmdk-label {
-  flex: 1;
-  font-weight: 600;
-  font-size: var(--loom-font-sm);
-}
-.loom-cmdk-meta {
-  color: var(--loom-color-ink-muted);
-  font-size: var(--loom-font-xs);
-}
-.loom-cmdk-list [hidden] {
-  display: none !important;
-}
-
-/* T20: DataTable — sortable, sticky-header, mobile card-stack.
- *
- *   <table class="loom-table" data-stripe="zebra">
- *     <thead>
- *       <tr>
- *         <th scope="col" aria-sort="none">Rank</th>
- *         <th scope="col">Player</th>
- *         <th scope="col" data-align="end" aria-sort="descending">Earnings</th>
- *       </tr>
- *     </thead>
- *     <tbody>
- *       <tr>
- *         <td data-label="Rank">1</td>
- *         <td data-label="Player">@court_dax</td>
- *         <td data-label="Earnings" data-align="end">$1,840</td>
- *       </tr>
- *       …
- *     </tbody>
- *   </table>
- *
- * data-align="end" right-aligns numeric columns (RTL-aware via
- * logical text-align).
- * data-stripe="zebra" alternates row backgrounds.
- * aria-sort on <th> emits the sort glyph; sort logic lives in the
- * caller (Loom doesn't ship a JS sorter — wire to the chosen
- * framework or vanilla click handler).
- *
- * Mobile (<640px): table becomes a stack of labelled cards. Each
- * <td> renders its `data-label` attribute as a small inline-start
- * caption. <thead> hides — column meaning travels with each cell.
- */
-.loom-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--loom-font-sm);
-  color: var(--loom-color-ink);
-}
-.loom-table thead {
-  position: sticky;
-  inset-block-start: 0;
-  background: var(--loom-color-surface-muted);
-  z-index: 1;
-  /* On mobile we hide thead and surface labels per-cell. */
-}
-.loom-table th,
-.loom-table td {
-  padding: var(--loom-space-3) var(--loom-space-3);
-  text-align: start;
-  border-block-end: 1px solid var(--loom-color-border);
-  vertical-align: baseline;
-}
-.loom-table th {
-  font-weight: 700;
-  font-size: var(--loom-font-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--loom-color-ink-muted);
-}
-.loom-table th[data-align="end"],
-.loom-table td[data-align="end"] {
-  text-align: end;
-  font-variant-numeric: tabular-nums;
-}
-.loom-table th[aria-sort]::after {
-  content: " ↕";
-  color: var(--loom-color-ink-muted);
-  font-size: 0.85em;
-}
-.loom-table th[aria-sort="ascending"]::after  { content: " ▲"; color: var(--loom-color-primary); }
-.loom-table th[aria-sort="descending"]::after { content: " ▼"; color: var(--loom-color-primary); }
-.loom-table th[aria-sort]:not([aria-sort="none"]) {
-  color: var(--loom-color-ink);
-}
-.loom-table tbody tr {
-  transition: background var(--loom-transition-fast);
-}
-.loom-table tbody tr:hover {
-  background: var(--loom-color-bg-overlay);
-}
-.loom-table[data-stripe="zebra"] tbody tr:nth-child(even) {
-  background: var(--loom-color-surface-muted);
-}
-.loom-table[data-stripe="zebra"] tbody tr:nth-child(even):hover {
-  background: var(--loom-color-bg-overlay);
-}
-
-/* Mobile card-stack — every <td> becomes a labelled row in a
- * stacked card. Each <tr> renders as a discrete card. */
-@media (max-width: 640px) {
-  .loom-table thead {
-    /* Visually hide but preserve a11y reading order. Screen
-     * readers will announce the data-label fallback via the
-     * cell pseudo-element instead. */
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-  .loom-table tbody tr {
-    display: block;
-    margin-block-end: var(--loom-space-3);
-    padding: var(--loom-space-3);
-    background: var(--loom-color-surface);
-    border: var(--loom-border-component);
-    border-radius: var(--loom-radius-md);
-  }
-  .loom-table tbody td {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--loom-space-3);
-    padding: var(--loom-space-1) 0;
-    border: 0;
-  }
-  .loom-table tbody td::before {
-    content: attr(data-label);
-    color: var(--loom-color-ink-muted);
-    font-weight: 600;
-    font-size: var(--loom-font-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-  }
-  .loom-table tbody td:not([data-label])::before {
-    /* Cell with no data-label hides the prefix entirely. */
-    content: none;
-  }
-  .loom-table[data-stripe="zebra"] tbody tr:nth-child(even) {
-    background: var(--loom-color-surface-muted);
-  }
-}
-
-/* T22: navigation/disclosure components — Tabs, Pagination,
- * Accordion, Popover. Each ships an ARIA-correct contract; the
- * HTML markup pattern is documented inline so callers wire it
- * the same way every time.
- *
- * --------- Tabs ---------
- *   <div class="loom-tabs" role="tablist">
- *     <button role="tab" aria-selected="true" aria-controls="p1" id="t1">Overview</button>
- *     <button role="tab" aria-selected="false" aria-controls="p2" id="t2">Rules</button>
- *   </div>
- *   <section role="tabpanel" id="p1" aria-labelledby="t1">…</section>
- *   <section role="tabpanel" id="p2" aria-labelledby="t2" hidden>…</section>
- *
- * Difference vs .loom-pill-tabs (segmented filter chips): Tabs
- * are content-switching (one panel visible at a time). Pill-tabs
- * are filter selectors (the underlying list re-renders).
- */
-.loom-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: var(--loom-border-component);
-  margin-bottom: var(--loom-space-4);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.loom-tabs::-webkit-scrollbar { display: none; }
-.loom-tabs > [role="tab"] {
-  padding: var(--loom-space-3) var(--loom-space-4);
-  background: transparent;
-  border: 0;
-  border-block-end: 2px solid transparent;
-  color: var(--loom-color-ink-muted);
-  font-weight: 600;
-  font-size: var(--loom-font-sm);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color var(--loom-transition-fast),
-              border-color var(--loom-transition-fast);
-}
-.loom-tabs > [role="tab"]:hover { color: var(--loom-color-ink); }
-.loom-tabs > [role="tab"][aria-selected="true"] {
-  color: var(--loom-color-ink);
-  border-block-end-color: var(--loom-color-primary);
-}
-
-/* --------- Pagination ---------
- *   <nav class="loom-pagination" aria-label="Page navigation">
- *     <button data-action="prev" aria-label="Previous page">←</button>
- *     <button aria-current="page">1</button>
- *     <button>2</button>  <button>3</button>
- *     <span class="loom-pagination-gap" aria-hidden="true">…</span>
- *     <button>12</button>
- *     <button data-action="next" aria-label="Next page">→</button>
- *   </nav>
- */
-.loom-pagination {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--loom-space-1);
-  flex-wrap: wrap;
-}
-.loom-pagination > button,
-.loom-pagination > a {
-  min-width: 36px;
-  min-height: 36px;
-  padding: var(--loom-space-1) var(--loom-space-2);
-  border: var(--loom-border-component);
-  border-radius: var(--loom-radius-md);
-  background: var(--loom-color-surface);
-  color: var(--loom-color-ink);
-  font-weight: 600;
-  font-size: var(--loom-font-sm);
-  cursor: pointer;
-  transition: background var(--loom-transition-fast),
-              border-color var(--loom-transition-fast);
-}
-.loom-pagination > button:hover,
-.loom-pagination > a:hover {
-  background: var(--loom-color-bg-overlay);
-}
-.loom-pagination > [aria-current="page"] {
-  background: var(--loom-color-primary);
-  color: var(--loom-color-primary-fg);
-  border-color: var(--loom-color-primary);
-}
-.loom-pagination > button[disabled],
-.loom-pagination > a[aria-disabled="true"] {
-  opacity: 0.45;
-  pointer-events: none;
-}
-.loom-pagination-gap {
-  padding: 0 var(--loom-space-2);
-  color: var(--loom-color-ink-muted);
-}
-
-/* --------- Accordion ---------
- * Built on native <details>/<summary>. Accessible by default —
- * keyboard, screen reader, ARIA expanded state all free from the
- * HTML spec. We just style the chrome.
- *
- *   <details class="loom-accordion">
- *     <summary>Section title</summary>
- *     <div class="loom-accordion-body">…</div>
- *   </details>
- *
- *   data-variant="ghost" drops the surrounding border for nested
- *   accordions or dense lists.
- */
-.loom-accordion {
-  border: var(--loom-border-component);
-  border-radius: var(--loom-radius-md);
-  background: var(--loom-color-surface);
-  overflow: hidden;
-}
-.loom-accordion + .loom-accordion {
-  margin-block-start: var(--loom-space-2);
-}
-.loom-accordion > summary {
-  padding: var(--loom-space-3) var(--loom-space-4);
-  cursor: pointer;
-  font-weight: 600;
-  list-style: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--loom-space-3);
-  user-select: none;
-  transition: background var(--loom-transition-fast);
-}
-.loom-accordion > summary::-webkit-details-marker { display: none; }
-.loom-accordion > summary::after {
-  content: "▾";
-  color: var(--loom-color-ink-muted);
-  font-size: var(--loom-font-sm);
-  transition: transform var(--loom-transition-fast);
-}
-.loom-accordion[open] > summary::after {
-  transform: rotate(180deg);
-}
-.loom-accordion > summary:hover {
-  background: var(--loom-color-bg-overlay);
-}
-.loom-accordion-body {
-  padding: 0 var(--loom-space-4) var(--loom-space-4);
-  border-block-start: var(--loom-border-component);
-  padding-block-start: var(--loom-space-3);
-  color: var(--loom-color-ink);
-}
-.loom-accordion[data-variant="ghost"] {
-  border: 0;
-  background: transparent;
-}
-.loom-accordion[data-variant="ghost"] > summary {
-  padding-inline: 0;
-}
-
-/* --------- Popover ---------
- * Uses the native HTML5 popover attribute (Chrome 114+, Safari 17+,
- * Firefox 125+). Auto-handles backdrop / focus / dismiss. Caller
- * pairs an anchor button with popovertarget=… and the popover
- * element with popover=auto/manual.
- *
- *   <button popovertarget="rules-pop">Rules</button>
- *   <div id="rules-pop" class="loom-popover" popover>
- *     <h3>How judging works</h3>
- *     <p>Voters strictly check rule adherence…</p>
- *   </div>
- *
- *   :popover-open is the active state.
- */
-.loom-popover {
-  /* Reset native popover defaults so it inherits Loom tokens. */
-  margin: 0;
-  padding: var(--loom-space-4);
-  background: var(--loom-color-surface);
-  color: var(--loom-color-ink);
-  border: var(--loom-border-component);
-  border-radius: var(--loom-radius-lg);
-  box-shadow: var(--loom-shadow-elevated);
-  max-width: min(420px, calc(100vw - var(--loom-space-8)));
-  font-size: var(--loom-font-sm);
-}
-.loom-popover::backdrop {
-  background: hsl(0 0% 0% / 0.4);
-  backdrop-filter: blur(2px);
-}
-.loom-popover[data-position="top-right"] {
-  inset-block-start: var(--loom-space-4);
-  inset-inline-end: var(--loom-space-4);
-  margin: 0;
-}
-
-/* T23: feedback components — ProgressBar, Spinner, Toast.
- * Each honors prefers-reduced-motion via the universal motion
- * kill-switch already in skin (line ~1700). No per-component
- * fallback needed because the kill-switch caps animation-duration
- * to 0.001ms across the board.
- *
- * --------- ProgressBar ---------
- * Native <progress> styling is browser-default-ugly and
- * inconsistent across Firefox/Chrome/Safari. .loom-progress is a
- * div-based wrapper that uses --comp-progress-pct (a CSS custom
- * property authored as a percentage string like "42%") to drive
- * the fill width. Setting --comp-progress-pct via inline style is
- * one of the few legit inline-style cases — it's a value, not a
- * design decision. Same approach as CSS variables on color pickers.
- */
-.loom-progress {
-  --comp-progress-pct:        0%;
-  --comp-progress-track:      var(--loom-color-bg-overlay);
-  --comp-progress-fill-c1:    var(--loom-color-gradient-a);
-  --comp-progress-fill-c2:    var(--loom-color-gradient-b);
-  --comp-progress-height:     8px;
-  display: block;
-  position: relative;
-  width: 100%;
-  height: var(--comp-progress-height);
-  background: var(--comp-progress-track);
-  border-radius: var(--loom-radius-full);
-  overflow: hidden;
-}
-.loom-progress::before {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: var(--comp-progress-pct);
-  background: linear-gradient(90deg,
-    var(--comp-progress-fill-c1),
-    var(--comp-progress-fill-c2));
-  border-radius: var(--loom-radius-full);
-  transition: width var(--loom-transition-base);
-}
-.loom-progress[data-size="sm"] { --comp-progress-height: 4px; }
-.loom-progress[data-size="lg"] { --comp-progress-height: 12px; }
-/* Indeterminate variant — animated bar shimmers across track when
- * the operation has no progress signal (e.g. "uploading…" before
- * the server reports a byte count). */
-.loom-progress[data-state="indeterminate"]::before {
-  width: 30%;
-  animation: loom-progress-indeterminate 1.4s ease-in-out infinite;
-}
-@keyframes loom-progress-indeterminate {
-  0%   { inset-inline-start: -30%; }
-  100% { inset-inline-start: 100%; }
-}
-
-/* --------- Spinner ---------
- * Pure CSS conic-gradient ring. Sizes: sm=16 / md=24 / lg=40.
- * data-tone variants drive the spinner color; default uses
- * primary. aria-label="Loading" is the responsibility of the
- * caller — the spinner is decorative without context.
- */
-.loom-spinner {
-  --comp-spinner-size:  24px;
-  --comp-spinner-color: var(--loom-color-primary);
-  --comp-spinner-track: hsl(0 0% 50% / 0.18);
-  display: inline-block;
-  width: var(--comp-spinner-size);
-  height: var(--comp-spinner-size);
-  border: 2px solid var(--comp-spinner-track);
-  border-top-color: var(--comp-spinner-color);
-  border-radius: var(--loom-radius-full);
-  animation: loom-spinner-rotate 0.8s linear infinite;
-  vertical-align: middle;
-}
-.loom-spinner[data-size="sm"]  { --comp-spinner-size: 16px; }
-.loom-spinner[data-size="lg"]  { --comp-spinner-size: 40px; border-width: 3px; }
-.loom-spinner[data-tone="success"] { --comp-spinner-color: var(--loom-color-success); }
-.loom-spinner[data-tone="warn"]    { --comp-spinner-color: var(--loom-color-warn); }
-.loom-spinner[data-tone="danger"]  { --comp-spinner-color: var(--loom-color-danger); }
-@keyframes loom-spinner-rotate {
-  to { transform: rotate(360deg); }
-}
-
-/* --------- Toast ---------
- * Bottom-of-viewport notification. role="status" or role="alert"
- * is caller-controlled. Default appears at bottom-center; can
- * be moved with data-position="top-right|top-left|bottom-right|
- * bottom-left". Self-hides via JS-driven [data-visible="false"]
- * → opacity:0 + pointer-events:none. The CSS exposes the
- * appearance contract; show/hide logic lives in the toast queue
- * (Loom doesn't ship a queue impl yet — caller wires it).
- */
-.loom-toast {
-  --comp-toast-bg:     var(--loom-color-surface);
-  --comp-toast-border: var(--loom-border-component);
-  --comp-toast-fg:     var(--loom-color-ink);
-  position: fixed;
-  inset-inline: var(--loom-space-4);
-  inset-block-end: var(--loom-space-4);
-  margin-inline: auto;
-  max-width: min(420px, calc(100vw - var(--loom-space-8)));
-  background: var(--comp-toast-bg);
-  color: var(--comp-toast-fg);
-  border: var(--comp-toast-border);
-  border-radius: var(--loom-radius-lg);
-  padding: var(--loom-space-3) var(--loom-space-4);
-  box-shadow: var(--loom-shadow-elevated);
-  z-index: 70;
-  display: flex;
-  align-items: center;
-  gap: var(--loom-space-3);
-  font-size: var(--loom-font-sm);
-  opacity: 1;
-  transform: translateY(0);
-  transition:
-    opacity var(--loom-transition-base),
-    transform var(--loom-transition-base);
-}
-.loom-toast[data-visible="false"] {
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: none;
-}
-.loom-toast[data-tone="success"] {
-  --comp-toast-bg:     var(--loom-color-success);
-  --comp-toast-fg:     hsl(0 0% 100%);
-  --comp-toast-border: 1px solid transparent;
-}
-.loom-toast[data-tone="warn"] {
-  --comp-toast-bg:     var(--loom-color-warn);
-  --comp-toast-fg:     hsl(220 33% 8%);
-  --comp-toast-border: 1px solid transparent;
-}
-.loom-toast[data-tone="danger"] {
-  --comp-toast-bg:     var(--loom-color-danger);
-  --comp-toast-fg:     hsl(0 0% 100%);
-  --comp-toast-border: 1px solid transparent;
-}
-.loom-toast[data-position="top-right"]    { inset-block: var(--loom-space-4) auto; inset-inline: auto var(--loom-space-4); margin: 0; }
-.loom-toast[data-position="top-left"]     { inset-block: var(--loom-space-4) auto; inset-inline: var(--loom-space-4) auto; margin: 0; }
-.loom-toast[data-position="bottom-right"] { inset-inline: auto var(--loom-space-4); margin: 0; }
-.loom-toast[data-position="bottom-left"]  { inset-inline: var(--loom-space-4) auto; margin: 0; }
-
 @keyframes loom-fade-in    { from { opacity: 0; } to { opacity: 1; } }
 @keyframes loom-fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes loom-scale-in   { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
@@ -2378,10 +1590,7 @@
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + var(--loom-space-2));
-  /* T26 RTL — logical property; equivalent to left:50% in LTR
-   * but flips automatically under dir="rtl". transform stays
-   * physical because translateX is movement, not layout. */
-  inset-inline-start: 50%;
+  left: 50%;
   transform: translateX(-50%) translateY(4px);
   background: var(--loom-color-surface);
   color: var(--loom-color-ink);
@@ -2395,7 +1604,7 @@
   pointer-events: none;
   transition: opacity var(--loom-transition-fast),
               transform var(--loom-transition-fast);
-  z-index: 10;
+  z-index: var(--loom-z-overlay);
 }
 .loom-tooltip:hover::after,
 .loom-tooltip:focus-visible::after {
@@ -2407,24 +1616,16 @@
  * body[data-loom-drawer-open]. */
 .loom-drawer {
   position: fixed;
-  /* T26 RTL — pin to inline-end edge so it comes from the right
-   * in LTR / from the left in RTL. inset-block:0 anchors top+bottom;
-   * inset-inline: auto 0 means inline-start auto, inline-end 0. */
-  inset-block: 0;
-  inset-inline: auto 0;
+  inset: 0 0 0 auto;
   width: min(420px, calc(100vw - var(--loom-space-8)));
   background: var(--loom-color-surface);
-  border-inline-start: var(--loom-border-strong);
+  border-left: var(--loom-border-strong);
   box-shadow: var(--loom-shadow-elevated);
   transform: translateX(100%);
   transition: transform var(--loom-transition-slow);
-  z-index: 60;
+  z-index: var(--loom-z-toast);
   overflow-y: auto;
   padding: var(--loom-pad-band);
-}
-:dir(rtl) .loom-drawer {
-  /* In RTL, off-screen is to the LEFT, not the right. */
-  transform: translateX(-100%);
 }
 body[data-loom-drawer-open] .loom-drawer { transform: translateX(0); }
 .loom-drawer-scrim {
@@ -2432,7 +1633,7 @@ body[data-loom-drawer-open] .loom-drawer { transform: translateX(0); }
   background: hsl(220 33% 0% / 0.5);
   opacity: 0; pointer-events: none;
   transition: opacity var(--loom-transition-base);
-  z-index: 55;
+  z-index: var(--loom-z-tooltip);
 }
 body[data-loom-drawer-open] .loom-drawer-scrim {
   opacity: 1; pointer-events: auto;
