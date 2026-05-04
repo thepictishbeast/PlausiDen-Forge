@@ -87,6 +87,7 @@
       <div class="loom-nav-actions">
         <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
         <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-up">Sign up</button>
         <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill">Post skill</button>
       </div>
     </div>
@@ -276,7 +277,10 @@
         </section>
 
         <section class="loom-panel" aria-labelledby="vote-title">
-          <h2 id="vote-title" class="loom-panel-title">Open votes · need your eye</h2>
+          <div class="loom-section-head">
+            <h2 id="vote-title" class="loom-panel-title">Open votes · need your eye</h2>
+            <a class="loom-link" href="/votes.html" data-backend="list-open-votes">View all</a>
+          </div>
           <div class="loom-vote-row">
             <span class="loom-avatar" aria-hidden="true"></span>
             <div class="body">

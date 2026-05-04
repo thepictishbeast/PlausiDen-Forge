@@ -357,10 +357,15 @@ phase_phantom_button() {
   for f in "$STATIC"/*.html; do
     [ -e "$f" ] || continue
     local name=$(basename "$f")
-    # Buttons WITH no data-backend (and not theme toggle / submit)
+    # Buttons WITH no data-backend. Skipped if any of:
+    #  - data-backend already declared
+    #  - data-loom-theme-toggle (light/dark client toggle)
+    #  - data-loom-aesthetic-set (theme/font/density picker buttons)
+    #  - data-no-backend="local" (explicit opt-out)
+    #  - type="submit" (form submission, backend wired via the form)
     local unwired
     unwired=$(grep -oE '<button[^>]*>' "$f" \
-              | grep -vE 'data-backend|data-loom-theme-toggle|type="submit"' \
+              | grep -vE 'data-backend|data-loom-theme-toggle|data-loom-aesthetic-set|data-no-backend|type="submit"' \
               | wc -l)
     if [ "$unwired" -gt 0 ]; then
       finding_warn "phantom_button" "$name" "$unwired button(s) with no data-backend (UI not declared in backends.toml)"
@@ -420,6 +425,62 @@ phase_backend_coverage() {
 # itself. Cheap structural sanity. Owner directive: "audit and
 # test and debug loom, cms and builder themselves also".
 # ============================================================
+phase_motion() {
+  # T4: every CSS file with `animation:` / `transition:` / `@keyframes`
+  # MUST also contain a `@media (prefers-reduced-motion: reduce)`
+  # block that disables motion (touches animation-duration AND
+  # transition-duration). Vestibular accessibility is non-negotiable
+  # (WCAG 2.3.3 AAA — but ship-level for any production app).
+  #
+  # Strict-fails any CSS that ships motion without a fallback. The
+  # universal reset (`*, *::before, *::after { animation-duration:
+  # 0.001ms !important; transition-duration: 0.001ms !important; }`)
+  # is the cheapest safe form.
+  phase_header "motion"
+  local hits=0
+  for f in "$STATIC"/*.css; do
+    [ -f "$f" ] || continue
+    local name=$(basename "$f")
+    local has_motion
+    has_motion=$(grep -cE '\b(animation|transition):|@keyframes' "$f")
+    [ "$has_motion" -eq 0 ] && continue
+    # Need: a prm block that addresses BOTH animation-duration and
+    # transition-duration (the cheapest universal kill-switch). A
+    # block that targets only one is incomplete; one that targets
+    # only specific selectors might miss future animations.
+    if ! python3 - <<PY 2>/dev/null
+import re, sys
+src = open("$f").read()
+# Find every @media block whose query mentions prefers-reduced-motion: reduce.
+i = 0
+found = False
+for m in re.finditer(r'@media[^{]*prefers-reduced-motion\s*:\s*reduce[^{]*\{', src, flags=re.I):
+    start = m.end()
+    # Walk to matching close brace.
+    depth = 1
+    j = start
+    while j < len(src) and depth > 0:
+        if src[j] == '{': depth += 1
+        elif src[j] == '}': depth -= 1
+        j += 1
+    block = src[start:j-1]
+    has_anim = re.search(r'animation(?:-duration)?\s*:', block, re.I)
+    has_trans = re.search(r'transition(?:-duration)?\s*:\s*(?:none|0|0s|0ms|0\.001|initial)', block, re.I)
+    has_universal = re.search(r'\*\s*,\s*\*::before\s*,\s*\*::after', block) or re.search(r'\*\s*\{', block)
+    if has_anim and has_trans and has_universal:
+        found = True
+        break
+sys.exit(0 if found else 1)
+PY
+    then
+      finding_strict "motion" "$name" \
+        "has $has_motion motion declaration(s) but no universal '@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:...; transition-duration:... } }' kill-switch (WCAG 2.3.3)"
+      hits=$((hits + 1))
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every CSS with motion has a prefers-reduced-motion fallback"
+}
+
 phase_csp_devmode() {
   # T74 (added 2026-05-04 from owner-bug discovery): the
   # `upgrade-insecure-requests` CSP directive rewrites every http://
@@ -720,6 +781,7 @@ phase_backend_coverage
 phase_unbuilt_route
 phase_external_assets
 phase_viewport_audit
+phase_motion
 phase_csp_devmode
 phase_contrast
 phase_self_check

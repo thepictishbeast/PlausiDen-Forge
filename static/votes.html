@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <title>Open votes — SkillShots</title>
+  <!-- forge:seo:start -->
+  <meta name="description" content="Every open SkillShots challenge currently in voting. Cast your vote on the entries.">
+  <link rel="canonical" href="https://skillshots.example/votes">
+  <meta property="og:title" content="Open votes — SkillShots">
+  <meta property="og:description" content="Every open SkillShots challenge currently in voting. Cast your vote on the entries.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skillshots.example/votes">
+  <meta property="og:image" content="https://skillshots.example/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Open votes — SkillShots">
+  <meta name="twitter:description" content="Every open SkillShots challenge currently in voting. Cast your vote on the entries.">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Open votes — SkillShots","description":"Every open SkillShots challenge currently in voting. Cast your vote on the entries.","url":"https://skillshots.example/votes"}</script>
+  <!-- forge:seo:end -->
+
+  <link rel="stylesheet" href="loom-fallback.css">
+  <link rel="stylesheet" href="loom-tokens.css">
+  <link rel="stylesheet" href="loom-skin.css">
+  <script defer src="/forge-findings.js"></script>
+  <script defer src="/forge-overlay.js"></script>
+  <script defer src="/aesthetic.js"></script>
+  <script defer src="/theme.js"></script>
+</head>
+<body>
+
+  <a class="loom-skip" href="#main">Skip to content</a>
+
+  <header class="loom-nav">
+    <div class="loom-nav-inner">
+      <a class="loom-brand" href="/" aria-label="Skill Shots home">SkillShots</a>
+      <nav class="loom-navlinks" aria-label="Primary">
+        <a href="/" data-backend="list-challenges">Battle Feed</a>
+        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+        <a href="/post-skill.html" data-backend="post-skill">Post a Skill</a>
+        <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
+        <a href="/profile.html" data-backend="view-profile">Profile</a>
+      </nav>
+      <div class="loom-nav-actions">
+        <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
+        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-up">Sign up</button>
+        <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill">Post skill</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="loom-page">
+    <header class="loom-section-head">
+      <h1>Open votes</h1>
+      <p class="loom-text-muted">Every challenge currently in its voting window. Pick one and judge the entries.</p>
+    </header>
+
+    <section class="loom-panel">
+      <div class="loom-vote-row">
+        <span class="loom-avatar" aria-hidden="true"></span>
+        <div class="body">
+          <div class="title">Pool table clear — @9ball_lori</div>
+          <div class="meta">3 entries · 2 innings, no scratch</div>
+        </div>
+        <div class="closes">12m</div>
+        <a class="loom-btn" data-variant="ghost" data-size="sm" href="/challenge.html" data-backend="cast-vote">Vote</a>
+      </div>
+      <div class="loom-vote-row">
+        <span class="loom-avatar" aria-hidden="true"></span>
+        <div class="body">
+          <div class="title">5-stair kickflip — @kickflip_mar</div>
+          <div class="meta">2 entries · kickflip + roll-away</div>
+        </div>
+        <div class="closes">42m</div>
+        <a class="loom-btn" data-variant="ghost" data-size="sm" href="/challenge.html" data-backend="cast-vote">Vote</a>
+      </div>
+      <div class="loom-vote-row">
+        <span class="loom-avatar" aria-hidden="true"></span>
+        <div class="body">
+          <div class="title">9-dart 501 — @oche_riv</div>
+          <div class="meta">4 entries · continuous take</div>
+        </div>
+        <div class="closes">1h 04m</div>
+        <a class="loom-btn" data-variant="ghost" data-size="sm" href="/challenge.html" data-backend="cast-vote">Vote</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="loom-footer" role="contentinfo">
+    <p class="loom-text-muted">Skill Shots · open votes — vote-judged, vote-counted in public.</p>
+  </footer>
+</body>
+</html>
