@@ -39,7 +39,7 @@ impl Phase for SriPhase {
                     continue;
                 }
                 let basename = strip_path(&tag.href);
-                if EXCLUDE.iter().any(|x| basename == *x) {
+                if EXCLUDE.contains(&basename) {
                     continue;
                 }
                 let disk_path = ctx.static_dir.join(basename);

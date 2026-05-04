@@ -71,14 +71,11 @@ pub fn walk_html(static_dir: &Path, phase: &str) -> Result<Vec<HtmlFile>, BuildE
 mod tests {
     use super::*;
 
-    fn td() -> tempdir::TempDir {
-        tempdir::TempDir::new("forge-walk").expect("tempdir create")
-    }
-
-    // The crate doesn't depend on tempdir; for these tests we
-    // create files in a manually-named directory and clean up
-    // after. (Avoiding new dev-deps until we have several test
-    // patterns demanding them.)
+    // These tests create files in a manually-named directory and
+    // clean up after — the crate doesn't depend on the `tempdir`
+    // crate. (A previously-present `td()` helper that wrapped
+    // tempdir was unused dead code; removed so the dep can stay
+    // out of dev-dependencies until a test actually needs it.)
 
     #[test]
     fn empty_dir_returns_empty() {
