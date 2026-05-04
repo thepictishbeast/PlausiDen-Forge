@@ -37,7 +37,36 @@ mimetypes.add_type("font/woff2",                             ".woff2")
 
 
 class ForgeHandler(http.server.SimpleHTTPRequestHandler):
-    """Adds no-cache + nosniff + per-request logging."""
+    """Adds no-cache + nosniff + per-request logging.
+
+    T6: also serves pre-compressed .br / .gz siblings when the
+    request advertises Accept-Encoding. Saves bandwidth + matches
+    production deploys that serve via nginx/Caddy compression.
+    """
+
+    def do_GET(self) -> None:  # noqa: N802
+        # Resolve the path the parent class would serve, then check
+        # for a pre-compressed sibling.
+        path = self.translate_path(self.path)
+        accept = self.headers.get('Accept-Encoding', '')
+        for ext, encoding in (('.br', 'br'), ('.gz', 'gzip')):
+            if encoding in accept and os.path.isfile(path + ext):
+                try:
+                    with open(path + ext, 'rb') as f:
+                        body = f.read()
+                except OSError:
+                    break
+                ctype = mimetypes.guess_type(path)[0] or 'application/octet-stream'
+                self.send_response(200)
+                self.send_header('Content-Type', ctype)
+                self.send_header('Content-Encoding', encoding)
+                self.send_header('Content-Length', str(len(body)))
+                self.send_header('Vary', 'Accept-Encoding')
+                self.end_headers()
+                self.wfile.write(body)
+                return
+        # Fallback to default (uncompressed) handling.
+        super().do_GET()
 
     def end_headers(self):
         # No-cache: the dev case is "I just changed the file, please

@@ -1091,6 +1091,39 @@ phase_contrast
 phase_selfaudit
 phase_self_check
 
+# T6: gzip + brotli pre-compress every text asset so the dev server
+# (and a future production deploy) can serve compressed bytes when
+# the browser advertises Accept-Encoding. Runs AFTER all detection
+# phases so we don't compress versions that will fail strict.
+# Skipped on transient files (forge-findings.js, reports/).
+echo
+echo "${C_BOLD}== compress ==${C_OFF}"
+total_raw=0; total_gz=0; total_br=0; count=0
+for f in "$STATIC"/*.html "$STATIC"/*.css "$STATIC"/*.js; do
+  [ -f "$f" ] || continue
+  case "$(basename "$f")" in
+    forge-findings.js) continue ;;
+  esac
+  raw=$(stat -c%s "$f")
+  total_raw=$((total_raw + raw))
+  count=$((count + 1))
+  gzip -9kf "$f"
+  brotli -fq11 "$f" 2>/dev/null || brotli -f "$f" 2>/dev/null || true
+  if [ -f "$f.gz" ]; then
+    gz=$(stat -c%s "$f.gz")
+    total_gz=$((total_gz + gz))
+  fi
+  if [ -f "$f.br" ]; then
+    br=$(stat -c%s "$f.br")
+    total_br=$((total_br + br))
+  fi
+done
+if [ $count -gt 0 ] && [ $total_raw -gt 0 ]; then
+  pct_gz=$(( total_gz * 100 / total_raw ))
+  pct_br=$(( total_br * 100 / total_raw ))
+  echo "  ${C_GREEN}ok${C_OFF}      $count file(s) compressed: raw $(numfmt --to=iec $total_raw) → gz $(numfmt --to=iec $total_gz) (${pct_gz}%) → br $(numfmt --to=iec $total_br) (${pct_br}%)"
+fi
+
 # T78: auto-refresh SRI hashes on every build. Runs AFTER all
 # detection phases so integrity= reflects the bytes on disk
 # *after* any HTML rewrites the build itself produced (e.g. SEO
