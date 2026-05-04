@@ -226,6 +226,65 @@ PY
 # loudly so the operator notices, not silently ship stale HTML.
 # ============================================================
 # ============================================================
+# Phase: validate_cms — fast schema + URL check on cms/*.json
+# BEFORE the slower render+audit cycle.
+#
+# Why this runs first: phase_cms_render's per-file render takes
+# ~30ms of the ~3s build; validate is ~1ms per file. Catching a
+# schema typo here means a sub-second turnaround on iteration vs
+# waiting for full render. Failed validation = strict (the bridge
+# would fail anyway when render_page hit deserialize; we just
+# surface it earlier and uniformly).
+#
+# REGRESSION-GUARD: do NOT skip when cms/ is empty. The phase is
+# the canary that proves the validator binary is reachable; if it
+# breaks (e.g., loom binary moved), we want forge to fail
+# immediately, not silently miss schema bugs.
+# ============================================================
+phase_validate_cms() {
+  phase_header "validate_cms"
+  if [ ! -d "$ROOT/cms" ]; then
+    echo "  ${C_DIM}skip${C_OFF}    no cms/ directory; nothing to validate"
+    return
+  fi
+  local LOOM_BIN="${LOOM_BIN:-/home/user/cargo-target/release/loom}"
+  if [ ! -x "$LOOM_BIN" ]; then
+    finding_strict "validate_cms" "loom-cli" "loom binary not at $LOOM_BIN — cannot validate; run 'cargo build --release -p loom-cli' in PlausiDen-Loom"
+    return
+  fi
+  local out
+  out=$("$LOOM_BIN" validate --input "$ROOT/cms" 2>&1)
+  local rc=$?
+  if [ $rc -eq 0 ]; then
+    # Print the per-file summary line only (not every 'ok ...' line — too chatty).
+    local summary=$(echo "$out" | grep -E '^loom validate:' | head -1)
+    if [ -n "$summary" ]; then
+      echo "  ${C_GREEN}ok${C_OFF}      $summary"
+    fi
+    return
+  fi
+  # Validation failed — surface one strict per actual file error
+  # (lines starting with '  fail '). Suppress the trailing summary
+  # lines to avoid double-counting the same bug as 3 findings.
+  #
+  # REGRESSION-GUARD: prior version emitted one strict per output
+  # line, including the summary + 'at least one file failed' tail —
+  # a single bad cms/foo.json appeared as 3 strict findings. Strict
+  # count should track problems, not log lines.
+  local first_summary=1
+  while IFS= read -r line; do
+    if echo "$line" | grep -qE '^\s+fail\s'; then
+      local file=$(echo "$line" | grep -oE 'cms/[^:]+' | head -1)
+      finding_strict "validate_cms" "${file:-cms/}" "$line"
+    elif [ "$first_summary" = "1" ]; then
+      # Echo the per-run summary line once at the end (informational).
+      echo "  ${C_DIM}$line${C_OFF}"
+      first_summary=0
+    fi
+  done < <(echo "$out" | grep -E '^\s+fail|^loom validate:')
+}
+
+# ============================================================
 # Phase: image_convert — generate AVIF + WebP siblings for every
 # JPG/PNG under static/assets/. Loom's Picture component emits
 # <picture><source type="image/avif" srcset="...avif"><source
@@ -1648,6 +1707,7 @@ phase_viewport_audit() {
 echo "${C_BOLD}forge build${C_OFF} ${C_DIM}— mode=$MODE — $(date -u)${C_OFF}"
 echo "${C_DIM}strict findings ALWAYS fatal; warn findings fatal in production mode${C_OFF}"
 
+phase_validate_cms
 phase_image_convert
 phase_cms_render
 phase_loom_sync
