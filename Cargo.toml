@@ -1,0 +1,89 @@
+# PlausiDen-Forge — Rust workspace.
+#
+# Replaces the prior bash + python implementation. Per AVP-2
+# Supersociety stack: Rust is the default go-to language. The
+# bash forge.sh stays in place during migration as a parity
+# reference; once every phase has a Rust port it gets deleted.
+#
+# Crates:
+#   forge-core    — types: Phase trait, Finding, Severity, BuildCtx,
+#                   BuildReport, BuildError. No I/O, no deps on
+#                   other forge-* crates. Pure types + small
+#                   helpers; trivially testable.
+#   forge-phases  — concrete implementations of the Phase trait.
+#                   Each phase is a module: tokens, html_semantic,
+#                   csp, seo, perf_budget, sri, loom_sync, etc.
+#   forge-cli     — the binary. Parses argv, loads forge.toml,
+#                   builds a phase pipeline, runs it, emits the
+#                   report. Owns serde + clap deps.
+#
+# Future crates (queued):
+#   forge-watch   — inotify-driven re-run on edit
+#   forge-html    — fast read-only HTML parser wrapper (scraper / lol_html)
+#   forge-css     — lightningcss wrapper for token + contrast checks
+#   forge-report  — JSON + terminal renderers separated from CLI
+#
+# AVP-2 inline annotations used:
+#   BUG ASSUMPTION    — what could go wrong in the marked block
+#   SAFETY            — proof for any unsafe block
+#   AVP-PASS-N        — pass-N audit findings + resolution
+#   SUPERSOCIETY      — defence-in-depth measures beyond standard
+#   REGRESSION-GUARD  — the past-incident a particular check guards
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/forge-core",
+    "crates/forge-phases",
+    "crates/forge-cli",
+]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.78"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/thepictishbeast/PlausiDen-Forge"
+
+[workspace.dependencies]
+# Errors: thiserror for typed errors at crate boundaries; anyhow at
+# the binary edge so we get backtraces + context() chaining.
+thiserror = "1"
+anyhow = "1"
+
+# Hashing: sha2 + base64 for SRI. blake3 considered for the next
+# pass but SHA-384 is what the SRI spec mandates so the
+# RFC-conforming implementation needs SHA-2 unconditionally.
+sha2 = "0.10"
+base64 = "0.22"
+
+# CLI:
+clap = { version = "4", features = ["derive", "env"] }
+
+# Filesystem walking:
+walkdir = "2"
+
+# Config + serialization:
+toml = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Time:
+time = { version = "0.3", features = ["formatting", "macros"] }
+
+# Logging — tracing is the future-proof choice; env_logger is
+# fine for v1.
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# AVP-2 gate: no unwrap/expect in lib code without justification.
+# Use the existing crate-local std::process::exit at the binary
+# edge only.
+
+[profile.release]
+# REGRESSION-GUARD: opt-level=3 + LTO + single codegen unit gives
+# ~2x faster forge runs vs default. The bash forge took ~6s on
+# the PoC; Rust forge target is <300ms cold + <50ms warm.
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols"

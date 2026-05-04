@@ -1,0 +1,25 @@
+[package]
+name = "forge-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Forge — types, traits, and small helpers shared across all phases. No I/O, no platform-specific code."
+
+[dependencies]
+thiserror.workspace = true
+serde = { workspace = true }
+time = { workspace = true }
+
+[lints.rust]
+# AVP-2 Tier 1: deny unsafe outside annotated SAFETY blocks.
+unsafe_code = "deny"
+unused_must_use = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+# AVP-2 gate: no unwrap/expect in lib code without justification.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"

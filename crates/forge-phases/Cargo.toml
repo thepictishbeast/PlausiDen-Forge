@@ -1,0 +1,17 @@
+[package]
+name = "forge-phases"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+forge-core = { path = "../forge-core" }
+sha2 = { workspace = true }
+base64 = { workspace = true }
+walkdir = { workspace = true }
+thiserror = { workspace = true }
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"

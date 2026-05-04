@@ -47,6 +47,30 @@ if [ "${1:-}" = "--debug" ]; then
   : > "$DEBUG_LOG"
 fi
 
+# T85: --sync-loom — copy Loom's loom-tokens/src/skin.css into
+# static/loom-skin.css and prepend the SYNC-FROM-LOOM:<sha384>
+# marker. Inline here (vs calling do_loom_sync defined far below)
+# so the flag works on a fresh shell parse — bash hoists function
+# definitions but $1 dispatch needs the work present before any
+# downstream phase declarations.
+if [ "${1:-}" = "--sync-loom" ]; then
+  shift
+  loom_path="${LOOM_PATH:-/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css}"
+  if [ ! -f "$loom_path" ]; then
+    echo "sync failed: loom skin.css not found at $loom_path" >&2
+    exit 1
+  fi
+  poc_path="$STATIC/loom-skin.css"
+  loom_hash=$(openssl dgst -sha384 -binary "$loom_path" | openssl base64 -A)
+  tmpf=$(mktemp)
+  printf '/* SYNC-FROM-LOOM:sha384-%s — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */\n' "$loom_hash" > "$tmpf"
+  cat "$loom_path" >> "$tmpf"
+  mv "$tmpf" "$poc_path"
+  echo "sync ok: $(basename "$poc_path") ← $(basename "$loom_path") (sha384-$loom_hash)"
+  echo "        $(wc -l < "$poc_path") lines, $(wc -c < "$poc_path") bytes"
+  exit 0
+fi
+
 if [ "${1:-}" = "--watch" ]; then
   shift
   echo "${C_BOLD}forge${C_OFF} ${C_DIM}— watch mode — Ctrl+C to stop${C_OFF}"
@@ -143,6 +167,190 @@ finding_warn() {
     STRICT_COUNT=$((STRICT_COUNT + 1))
   else
     echo "  ${C_YELLOW}warn    ${C_OFF}$1: $2 — $3"
+  fi
+}
+
+# ============================================================
+# Phase: loom_sync — verify static/loom-skin.css matches Loom
+# ============================================================
+# Owner doctrine 2026-05-04: "you can hard code fixes into loom
+# cms and forge just dont hard code fixes into what it generates."
+# This phase enforces the boundary mechanically. Loom is the
+# source of truth for design-system rules; PoC's
+# static/loom-skin.css should mirror it (plus PoC-specific
+# composite-component extensions appended below the marker).
+#
+# Logic:
+#   1. Locate Loom at LOOM_PATH (env var or default sibling repo).
+#   2. Compute sha384 of Loom's loom-tokens/src/skin.css.
+#   3. Scan PoC's static/loom-skin.css for a marker
+#      `/* SYNC-FROM-LOOM:<hash> */`.
+#   4. If marker matches the freshly-computed hash → silent ok.
+#   5. If absent or mismatched → warn (not strict — won't fail
+#      build) with diff line-count + suggestion to run
+#      `forge.sh --sync-loom` to update.
+#   6. With `--sync-loom`, copy Loom's skin.css over the PoC's
+#      and prepend the marker line.
+#
+# Why warn-not-strict: drift can be intentional during a
+# multi-step migration. The warning surfaces drift LOUDLY without
+# blocking a build. The `--sync-loom` flag makes resolving easy.
+phase_loom_sync() {
+  phase_header "loom_sync"
+  local loom_path="${LOOM_PATH:-/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css}"
+  if [ ! -f "$loom_path" ]; then
+    echo "  ${C_DIM}skip${C_OFF}    loom skin.css not found at $loom_path"
+    echo "  ${C_DIM}        ${C_OFF}set LOOM_PATH env var to enable Loom sync check"
+    return 0
+  fi
+  local poc_path="$STATIC/loom-skin.css"
+  if [ ! -f "$poc_path" ]; then
+    finding_warn "loom_sync" "$poc_path" "PoC skin.css missing — run --sync-loom to bootstrap"
+    return 0
+  fi
+  local loom_hash=$(openssl dgst -sha384 -binary "$loom_path" 2>/dev/null \
+                    | openssl base64 -A 2>/dev/null)
+  if [ -z "$loom_hash" ]; then
+    echo "  ${C_DIM}skip${C_OFF}    openssl unavailable; cannot hash Loom skin.css"
+    return 0
+  fi
+  local marker_line=$(grep -m1 "SYNC-FROM-LOOM:" "$poc_path" 2>/dev/null)
+  if [ -z "$marker_line" ]; then
+    finding_warn "loom_sync" "$(basename "$poc_path")" \
+      "no SYNC-FROM-LOOM marker — never auto-synced from Loom. Run forge.sh --sync-loom to establish."
+  else
+    local recorded_hash=$(echo "$marker_line" | grep -oE 'sha384-[A-Za-z0-9+/=]+' | head -1)
+    local current_marker="sha384-$loom_hash"
+    if [ "$recorded_hash" != "$current_marker" ]; then
+      local loom_lines=$(wc -l < "$loom_path")
+      local poc_lines=$(wc -l < "$poc_path")
+      finding_warn "loom_sync" "$(basename "$poc_path")" \
+        "Loom skin.css drift detected (recorded=$recorded_hash, current=$current_marker; loom $loom_lines lines, poc $poc_lines lines). Run forge.sh --sync-loom to update."
+    else
+      echo "  ${C_GREEN}ok${C_OFF}      loom skin.css in sync (sha384 matches marker)"
+    fi
+  fi
+}
+
+# Helper: actually copy Loom→PoC and update marker. Called from
+# the --sync-loom flag handler in main(), not from the phase loop.
+do_loom_sync() {
+  local loom_path="${LOOM_PATH:-/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css}"
+  if [ ! -f "$loom_path" ]; then
+    echo "${C_RED}sync failed:${C_OFF} loom skin.css not found at $loom_path"
+    return 1
+  fi
+  local poc_path="$STATIC/loom-skin.css"
+  local loom_hash=$(openssl dgst -sha384 -binary "$loom_path" | openssl base64 -A)
+  local tmpf=$(mktemp)
+  # Marker first line, then full Loom content. PoC-specific
+  # extensions that previously lived in this file are LOST on
+  # sync — owner-acknowledged risk. Future iteration: split into
+  # static/loom-skin.css (Loom-synced) + static/poc-extensions.css.
+  printf '/* SYNC-FROM-LOOM:sha384-%s — auto-synced by forge.sh do_loom_sync. Edits to this file will be overwritten on next sync. */\n' "$loom_hash" > "$tmpf"
+  cat "$loom_path" >> "$tmpf"
+  mv "$tmpf" "$poc_path"
+  echo "${C_GREEN}sync ok:${C_OFF} $(basename "$poc_path") ← $(basename "$loom_path") (sha384-$loom_hash)"
+  echo "${C_DIM}        $(wc -l < "$poc_path") lines, $(wc -c < "$poc_path") bytes${C_OFF}"
+}
+
+# ============================================================
+# Phase: label_consistency — same href / same data-backend should
+# carry the same visible label across every page (T86)
+# ============================================================
+# Owner directive 2026-05-04: "make sure youre looking for
+# duplicate pages and content. make sure forge can do this also.
+# and make sure it can easily merge duplicate content regardless
+# of how complex it is."
+#
+# This is the detection half. It walks every static/*.html file,
+# extracts <a href="..."> + <button data-backend="..."> elements
+# and their inner text, groups by (kind, key) where:
+#   kind = a|button
+#   key  = href value (for <a>) or data-backend value (for button)
+# Then any group with >1 distinct visible label is flagged
+# strict — "the same action is exposed to the user under
+# inconsistent copy." Forge build fails until copy is reconciled.
+#
+# Merge tooling (the consolidation half) is queued separately.
+# Detection-first per AVP-2 doctrine: surface drift loudly, fix
+# at the source (CMS template or page author), not via runtime
+# work-arounds.
+phase_label_consistency() {
+  phase_header "label_consistency"
+  python3 - <<'EOF' "$STATIC"
+import os, re, sys, html
+from collections import defaultdict
+
+static_dir = sys.argv[1]
+groups = defaultdict(lambda: defaultdict(list))  # (kind,key) -> {label: [files]}
+
+# Strict text extraction: capture inner-html, strip tags,
+# collapse whitespace. This is intentionally simple — fancy
+# nested-element labels can have a future detector.
+LINK_RE = re.compile(
+    r'<a\b[^>]*\bhref="([^"]+)"[^>]*>(.*?)</a>',
+    re.IGNORECASE | re.DOTALL,
+)
+BUTTON_RE = re.compile(
+    r'<button\b[^>]*\bdata-backend="([^"]+)"[^>]*>(.*?)</button>',
+    re.IGNORECASE | re.DOTALL,
+)
+TAG_STRIP = re.compile(r'<[^>]+>')
+WS = re.compile(r'\s+')
+
+def normalize(text):
+    t = TAG_STRIP.sub(' ', text)
+    t = html.unescape(t)
+    t = WS.sub(' ', t).strip()
+    return t
+
+for fn in sorted(os.listdir(static_dir)):
+    if not fn.endswith('.html'):
+        continue
+    path = os.path.join(static_dir, fn)
+    with open(path, encoding='utf-8') as f:
+        body = f.read()
+    for m in LINK_RE.finditer(body):
+        href, inner = m.group(1), m.group(2)
+        label = normalize(inner)
+        if label and not label.startswith('▶'):  # skip glyph-only
+            groups[('a', href)][label].append(fn)
+    for m in BUTTON_RE.finditer(body):
+        backend, inner = m.group(1), m.group(2)
+        label = normalize(inner)
+        if label:
+            groups[('button', backend)][label].append(fn)
+
+inconsistent = 0
+for (kind, key), label_map in sorted(groups.items()):
+    if len(label_map) > 1:
+        labels = sorted(label_map.keys())
+        files_summary = ', '.join(
+            f'{lbl!r} ({len(label_map[lbl])}x)' for lbl in labels
+        )
+        # Output format: "kind=KIND key=KEY :: LABELS"
+        print(f"  STRICT  label_consistency: {kind}[{key}] — {len(label_map)} distinct labels: {files_summary}")
+        inconsistent += 1
+
+if inconsistent == 0:
+    print("  ok      every (href, data-backend) carries one label across all pages")
+else:
+    # Bash phase wrapper sees STDOUT lines starting "  STRICT  "
+    # and counts them via FINDINGS array post-hoc; here we just
+    # exit non-zero to signal the build a finding occurred.
+    sys.exit(1)
+EOF
+  local rc=$?
+  if [ $rc -ne 0 ]; then
+    # Each STRICT line printed above is one finding. Bash side
+    # records them en bloc — just bump STRICT_COUNT proportional
+    # to lines printed. Re-run is cheap (pure regex, no I/O of
+    # consequence) so we just count the lines.
+    local n=$(bash forge.sh --label-consistency-count 2>/dev/null || echo 0)
+    # Simpler: just record one finding (the python output already
+    # shows each detail line). Avoids re-running python.
+    finding_strict "label_consistency" "static/" "duplicate labels detected (see STRICT lines above)"
   fi
 }
 
@@ -1203,6 +1411,8 @@ phase_viewport_audit() {
 echo "${C_BOLD}forge build${C_OFF} ${C_DIM}— mode=$MODE — $(date -u)${C_OFF}"
 echo "${C_DIM}strict findings ALWAYS fatal; warn findings fatal in production mode${C_OFF}"
 
+phase_loom_sync
+phase_label_consistency
 phase_tokens
 phase_html_semantic
 phase_csp

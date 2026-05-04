@@ -1,2 +1,7 @@
 static/*.gz
 static/*.br
+
+# Rust forge — target/ lives at $CARGO_TARGET_DIR (outside repo by
+# project convention) but ignore in case anyone overrides.
+target/
+**/*.rs.bk
