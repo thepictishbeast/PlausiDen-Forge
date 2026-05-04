@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title>Leaderboard — SkillShots</title>
+  <link rel="stylesheet" href="loom-tokens.css">
+  <link rel="stylesheet" href="loom-skin.css">
+  <script defer src="/forge-findings.js"></script>
+  <script defer src="/forge-overlay.js"></script>
+  <script defer src="/theme.js"></script>
+</head>
+<body>
+  <a class="loom-skip" href="#main">Skip to content</a>
+
+  <header class="loom-nav">
+    <div class="loom-nav-inner">
+      <a class="loom-brand" href="/">SkillShots</a>
+      <nav class="loom-navlinks" aria-label="Primary">
+        <a href="/">Battle Feed</a>
+        <a href="/leaderboard.html" aria-current="page">Leaderboard</a>
+        <a href="/post-skill.html">Post a Skill</a>
+        <a href="/my-wins.html">My Wins</a>
+        <a href="/profile.html">Profile</a>
+      </nav>
+      <div class="loom-nav-actions">
+        <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
+        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
+        <button class="loom-btn" data-variant="primary">Post skill</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="loom-page">
+    <div class="loom-section-head">
+      <h2>Top earners — this week</h2>
+      <div class="loom-pill-tabs">
+        <button type="button" aria-pressed="true">All categories</button>
+        <button type="button" aria-pressed="false">Basketball</button>
+        <button type="button" aria-pressed="false">Skate</button>
+        <button type="button" aria-pressed="false">Parkour</button>
+        <button type="button" aria-pressed="false">Mind</button>
+        <button type="button" aria-pressed="false">Cafe</button>
+      </div>
+    </div>
+
+    <div class="loom-grid-app">
+      <section class="loom-panel" aria-label="Top 10">
+        <h2 class="loom-panel-title">Top 10 by earnings</h2>
+        <div class="loom-leader" data-rank="1">
+          <div class="rank">1</div><span class="loom-avatar"></span>
+          <div class="name">@court_dax · Basketball</div><div class="earnings">$1,840</div>
+        </div>
+        <div class="loom-leader" data-rank="2">
+          <div class="rank">2</div><span class="loom-avatar"></span>
+          <div class="name">@vault_kit · Parkour</div><div class="earnings">$1,420</div>
+        </div>
+        <div class="loom-leader" data-rank="3">
+          <div class="rank">3</div><span class="loom-avatar"></span>
+          <div class="name">@9ball_lori · Billiards</div><div class="earnings">$995</div>
+        </div>
+        <div class="loom-leader" data-rank="4">
+          <div class="rank">4</div><span class="loom-avatar"></span>
+          <div class="name">@oche_riv · Darts</div><div class="earnings">$870</div>
+        </div>
+        <div class="loom-leader" data-rank="5">
+          <div class="rank">5</div><span class="loom-avatar"></span>
+          <div class="name">@brew_pia · Cafe</div><div class="earnings">$640</div>
+        </div>
+        <div class="loom-leader" data-rank="6">
+          <div class="rank">6</div><span class="loom-avatar"></span>
+          <div class="name">@cuboid_eli · Mind</div><div class="earnings">$580</div>
+        </div>
+        <div class="loom-leader" data-rank="7">
+          <div class="rank">7</div><span class="loom-avatar"></span>
+          <div class="name">@kickflip_mar · Skate</div><div class="earnings">$415</div>
+        </div>
+        <div class="loom-leader" data-rank="8">
+          <div class="rank">8</div><span class="loom-avatar"></span>
+          <div class="name">@hooper_jen · Basketball</div><div class="earnings">$380</div>
+        </div>
+        <div class="loom-leader" data-rank="9">
+          <div class="rank">9</div><span class="loom-avatar"></span>
+          <div class="name">@arc_kade · Basketball</div><div class="earnings">$310</div>
+        </div>
+        <div class="loom-leader" data-rank="10">
+          <div class="rank">10</div><span class="loom-avatar"></span>
+          <div class="name">@spin_oz · Mind</div><div class="earnings">$285</div>
+        </div>
+      </section>
+
+      <aside>
+        <section class="loom-panel" aria-labelledby="streaks-h">
+          <h2 id="streaks-h" class="loom-panel-title">Win streaks · current</h2>
+          <div class="loom-leader" data-rank="1"><div class="rank">7×</div><span class="loom-avatar"></span><div class="name">@court_dax</div><div class="earnings">7 wins</div></div>
+          <div class="loom-leader"><div class="rank">5×</div><span class="loom-avatar"></span><div class="name">@vault_kit</div><div class="earnings">5 wins</div></div>
+          <div class="loom-leader"><div class="rank">3×</div><span class="loom-avatar"></span><div class="name">@oche_riv</div><div class="earnings">3 wins</div></div>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="hosts-h">
+          <h2 id="hosts-h" class="loom-panel-title">Top creators (most-entered hosts)</h2>
+          <div class="loom-leader" data-rank="1"><div class="rank">1</div><span class="loom-avatar"></span><div class="name">@marcus_h</div><div class="earnings">37 hosted</div></div>
+          <div class="loom-leader"><div class="rank">2</div><span class="loom-avatar"></span><div class="name">@brew_pia</div><div class="earnings">29 hosted</div></div>
+          <div class="loom-leader"><div class="rank">3</div><span class="loom-avatar"></span><div class="name">@arc_kade</div><div class="earnings">22 hosted</div></div>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="how-h">
+          <h2 id="how-h" class="loom-panel-title">How rankings work</h2>
+          <div class="loom-panel-body">
+            <p>Earnings = winner's share after the 12% platform fee, summed over the rolling 7-day window.</p>
+            <p>Streaks reset on first loss. Disqualifications (rule-fail) count as losses.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="loom-footer">
+    <div>Skill Shots · <span class="tag">PoC</span></div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,415 @@
+#!/bin/bash
+# forge.sh — strict-mode build pipeline for the SkillShots PoC.
+#
+# Phase order is fixed in forge.toml; each phase runs in sequence,
+# accumulates findings, and finally prints a structured report.
+#
+# Exit codes:
+#   0 — clean build OR poc-mode + only suppressible findings
+#   1 — strict findings present (always fatal regardless of mode)
+#   2 — usage error / missing dependency
+
+set -uo pipefail
+
+ROOT=${ROOT:-$(cd "$(dirname "$0")" && pwd)}
+STATIC="$ROOT/static"
+REPORT_DIR="$ROOT/reports"
+mkdir -p "$REPORT_DIR"
+
+REPORT_JSON="$REPORT_DIR/build-$(date -u +%Y%m%dT%H%M%SZ).json"
+REPORT_TXT="$REPORT_DIR/latest.txt"
+
+# ANSI palette — owner asked for clear visual feedback.
+if [ -t 1 ]; then
+  C_RED=$'\e[31m'; C_GREEN=$'\e[32m'; C_YELLOW=$'\e[33m'
+  C_BLUE=$'\e[34m'; C_DIM=$'\e[2m'; C_OFF=$'\e[0m'; C_BOLD=$'\e[1m'
+else
+  C_RED=; C_GREEN=; C_YELLOW=; C_BLUE=; C_DIM=; C_OFF=; C_BOLD=
+fi
+
+# Mode: read from forge.toml (poc | production)
+MODE=$(grep -E "^mode\s*=" "$ROOT/forge.toml" 2>/dev/null \
+       | head -1 | awk -F'"' '{print $2}')
+MODE=${MODE:-production}
+
+declare -a FINDINGS=()
+declare -i STRICT_COUNT=0
+declare -i WARN_COUNT=0
+
+phase_header() {
+  echo
+  echo "${C_BLUE}== phase: $1 ==${C_OFF}"
+}
+
+finding_strict() {
+  # $1 = phase, $2 = path, $3 = msg
+  FINDINGS+=("STRICT|$1|$2|$3")
+  STRICT_COUNT=$((STRICT_COUNT + 1))
+  echo "  ${C_RED}STRICT  ${C_OFF}$1: $2 — $3"
+}
+
+finding_warn() {
+  FINDINGS+=("WARN|$1|$2|$3")
+  WARN_COUNT=$((WARN_COUNT + 1))
+  if [ "$MODE" = "production" ]; then
+    echo "  ${C_RED}STRICT  ${C_OFF}$1: $2 — $3 ${C_DIM}[would suppress in poc]${C_OFF}"
+    STRICT_COUNT=$((STRICT_COUNT + 1))
+  else
+    echo "  ${C_YELLOW}warn    ${C_OFF}$1: $2 — $3"
+  fi
+}
+
+# ============================================================
+# Phase: tokens — no raw px / hex / rgb / hsl outside skin.css
+# ============================================================
+phase_tokens() {
+  phase_header "tokens"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    # Inline px (excluding 0px / 1px / 2px which are common
+    # pixel-fragment cases in SVG paths etc.)
+    local px=$(grep -oE '\b[0-9]+px' "$f" | grep -vE '^(0|1|2|3)px$' | sort -u)
+    if [ -n "$px" ]; then
+      finding_strict "tokens" "$name" "raw px values: $(echo $px | tr '\n' ' ')"
+      hits=$((hits + 1))
+    fi
+    # Raw hex outside meta CSP / SVG (none of our HTML should have hex)
+    local hex=$(grep -E '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b' "$f" \
+                | grep -v 'http-equiv' | grep -v 'svg')
+    if [ -n "$hex" ]; then
+      finding_strict "tokens" "$name" "raw hex color in HTML"
+      hits=$((hits + 1))
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      no raw token leaks in HTML"
+}
+
+# ============================================================
+# Phase: html_semantic — no inline style="..."
+# ============================================================
+phase_html_semantic() {
+  phase_header "html_semantic"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    local n=$(grep -cE 'style="[^"]+"' "$f" || true)
+    if [ "$n" -gt 0 ]; then
+      finding_strict "html_semantic" "$name" "$n inline style=\"...\" attribute(s); migrate to skin.css class"
+      hits=$((hits + 1))
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every page is purely semantic"
+}
+
+# ============================================================
+# Phase: csp — every page has strict CSP meta + nosniff
+# ============================================================
+phase_csp() {
+  phase_header "csp"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    if ! grep -q 'http-equiv="Content-Security-Policy"' "$f"; then
+      finding_strict "csp" "$name" "missing Content-Security-Policy meta"
+      hits=$((hits + 1))
+    elif ! grep -q "default-src 'self'" "$f"; then
+      finding_strict "csp" "$name" "CSP missing default-src 'self'"
+      hits=$((hits + 1))
+    fi
+    if ! grep -q 'X-Content-Type-Options.*nosniff' "$f"; then
+      finding_strict "csp" "$name" "missing X-Content-Type-Options nosniff"
+      hits=$((hits + 1))
+    fi
+    if ! grep -q "frame-ancestors 'none'" "$f"; then
+      finding_strict "csp" "$name" "CSP missing frame-ancestors 'none' (clickjacking)"
+      hits=$((hits + 1))
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every page has strict CSP + headers"
+}
+
+# ============================================================
+# Phase: a11y_landmarks
+# ============================================================
+phase_a11y_landmarks() {
+  phase_header "a11y_landmarks"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    grep -q '<main' "$f" || { finding_strict "a11y_landmarks" "$name" "missing <main> landmark"; hits=$((hits+1)); }
+    grep -q '<header' "$f" || { finding_strict "a11y_landmarks" "$name" "missing <header> landmark"; hits=$((hits+1)); }
+    grep -q '<footer' "$f" || { finding_strict "a11y_landmarks" "$name" "missing <footer> landmark"; hits=$((hits+1)); }
+    grep -q '<nav' "$f" || { finding_warn "a11y_landmarks" "$name" "missing <nav> landmark (acceptable on settings pages)"; hits=$((hits+1)); }
+    grep -q 'class="loom-skip"' "$f" || { finding_warn "a11y_landmarks" "$name" "missing skip-link"; hits=$((hits+1)); }
+    grep -q '<html lang=' "$f" || { finding_strict "a11y_landmarks" "$name" "<html> missing lang attribute"; hits=$((hits+1)); }
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every page has full landmark set"
+}
+
+# ============================================================
+# Phase: phantom_button — every <button> and <a> needs a target
+# ------------------------------------------------------------ *
+# Rules:                                                       *
+#   <button>  must have onclick / form / a wired data-action   *
+#   <a href=> must point to an existing built file or fragment *
+# Suppressed in poc mode (warn instead of strict).             *
+# ============================================================
+phase_phantom_button() {
+  phase_header "phantom_button"
+  local hits=0
+  # Pull every declared backend key from backends.toml (lines like
+  # `[backends.sign-in]`).
+  local declared
+  declared=$(grep -oE '^\[backends\.[a-z][a-z0-9-]*\]' "$ROOT/backends.toml" 2>/dev/null \
+             | sed -E 's/^\[backends\.([a-z][a-z0-9-]*)\]$/\1/' | sort -u)
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    # Buttons WITH no data-backend (and not theme toggle / submit)
+    local unwired
+    unwired=$(grep -oE '<button[^>]*>' "$f" \
+              | grep -vE 'data-backend|data-loom-theme-toggle|type="submit"' \
+              | wc -l)
+    if [ "$unwired" -gt 0 ]; then
+      finding_warn "phantom_button" "$name" "$unwired button(s) with no data-backend (UI not declared in backends.toml)"
+      hits=$((hits + 1))
+    fi
+    # Buttons WITH data-backend → verify the backend is declared.
+    local refs
+    refs=$(grep -oE 'data-backend="[a-z][a-z0-9-]*"' "$f" \
+           | sed -E 's/data-backend="([a-z][a-z0-9-]*)"/\1/' | sort -u)
+    for r in $refs; do
+      if ! echo "$declared" | grep -qx "$r"; then
+        finding_strict "phantom_button" "$name" "data-backend=\"$r\" not declared in backends.toml — broken UI"
+        hits=$((hits + 1))
+      fi
+    done
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every interactive has a wired backend"
+}
+
+# ============================================================
+# Phase: backend_coverage — declared but unused; declared but
+# implementation-files empty.
+# ============================================================
+phase_backend_coverage() {
+  phase_header "backend_coverage"
+  if [ ! -f "$ROOT/backends.toml" ]; then
+    finding_warn "backend_coverage" "*" "no backends.toml — UI ↔ backend mapping unverified"
+    return
+  fi
+  local declared
+  declared=$(grep -oE '^\[backends\.[a-z][a-z0-9-]*\]' "$ROOT/backends.toml" \
+             | sed -E 's/^\[backends\.([a-z][a-z0-9-]*)\]$/\1/' | sort -u)
+  local total=$(echo "$declared" | wc -l)
+  local used=0; local unused=0; local stubs=0
+  local all_refs
+  all_refs=$(grep -hoE 'data-backend="[a-z][a-z0-9-]*"' "$STATIC"/*.html 2>/dev/null \
+             | sed -E 's/data-backend="([a-z][a-z0-9-]*)"/\1/' | sort -u)
+  for d in $declared; do
+    if echo "$all_refs" | grep -qx "$d"; then
+      used=$((used + 1))
+    else
+      unused=$((unused + 1))
+      finding_warn "backend_coverage" "backends.toml" "[$d] declared but no UI references it (dead spec)"
+    fi
+    # Stub detection: impl_files = []
+    if grep -A2 "^\[backends\.$d\]" "$ROOT/backends.toml" \
+       | grep -qE 'impl_files\s*=\s*\[\s*\]'; then
+      stubs=$((stubs + 1))
+      finding_warn "backend_coverage" "backends.toml" "[$d] declared but impl_files is empty (PARTIAL — stub)"
+    fi
+  done
+  echo "  ${C_DIM}declared: $total · UI-referenced: $used · unused: $unused · stubs: $stubs${C_OFF}"
+}
+
+# ============================================================
+# Phase: self_check — audit Loom skin.css + cms-store + forge
+# itself. Cheap structural sanity. Owner directive: "audit and
+# test and debug loom, cms and builder themselves also".
+# ============================================================
+phase_self_check() {
+  phase_header "self_check"
+  local hits=0
+  # 1. loom-skin.css must declare the @layer cascade up top.
+  local skin="$STATIC/loom-skin.css"
+  if [ -f "$skin" ]; then
+    if ! head -200 "$skin" | grep -qE '@layer\s+reset,\s*tokens,\s*primitives,\s*components,\s*plugins,\s*utilities'; then
+      finding_strict "self_check" "loom-skin.css" "missing @layer cascade declaration"
+      hits=$((hits + 1))
+    fi
+    # No raw hex / px in skin.css outside the few intentional
+    # decoration spots (we accept hsl() and var() refs).
+    local raw_hex_in_skin
+    raw_hex_in_skin=$(grep -E '#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}' "$skin" \
+                      | grep -v 'auto-generated' | wc -l)
+    if [ "$raw_hex_in_skin" -gt 0 ]; then
+      finding_warn "self_check" "loom-skin.css" "$raw_hex_in_skin raw hex literal(s); should be hsl() or var()"
+      hits=$((hits + 1))
+    fi
+  else
+    finding_strict "self_check" "loom-skin.css" "missing"
+    hits=$((hits + 1))
+  fi
+  # 2. loom-tokens.css must define both light and dark theme.
+  local tokens="$STATIC/loom-tokens.css"
+  if [ -f "$tokens" ]; then
+    grep -q ':root\s*{' "$tokens" || { finding_strict "self_check" "loom-tokens.css" "missing :root {"; hits=$((hits+1)); }
+    grep -q 'data-theme="dark"' "$tokens" || { finding_strict "self_check" "loom-tokens.css" "missing dark-theme override"; hits=$((hits+1)); }
+  fi
+  # 3. CMS pages all have well-formed TOML.
+  local cms_root="$ROOT/cms-store/sites"
+  if [ -d "$cms_root" ]; then
+    while read -r p; do
+      if ! grep -q '^title' "$p"; then
+        finding_strict "self_check" "${p#$ROOT/}" "CMS page missing title"
+        hits=$((hits + 1))
+      fi
+    done < <(find "$cms_root" -name '*.toml' -not -name 'site.toml')
+  fi
+  # 4. Forge itself: every required script present.
+  for required in "$ROOT/forge.sh" "$ROOT/forge.toml" "$ROOT/backends.toml" \
+                  "$STATIC/loom-tokens.css" "$STATIC/loom-skin.css" \
+                  "$STATIC/theme.js" "$STATIC/forge-overlay.js"; do
+    [ -f "$required" ] || { finding_strict "self_check" "$(basename "$required")" "missing required Forge artifact"; hits=$((hits+1)); }
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      Loom + CMS + Forge self-checks pass"
+}
+
+# ============================================================
+# Phase: unbuilt_route — every internal <a href=...> resolves
+# ============================================================
+phase_unbuilt_route() {
+  phase_header "unbuilt_route"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    # Pull every internal href (starts with / or .html)
+    local hrefs=$(grep -oE 'href="(/[^"#]*|\./[^"#]*|[^"#]*\.html)"' "$f" \
+                  | sed -E 's/^href="//; s/"$//' | sort -u)
+    for h in $hrefs; do
+      # Skip same-page fragments, mailto:, tel:
+      case "$h" in
+        \#*|mailto:*|tel:*) continue ;;
+      esac
+      # Map / to /index.html
+      local target="$h"
+      if [ "$target" = "/" ]; then target="/index.html"; fi
+      target=${target#/}
+      if [ ! -e "$STATIC/$target" ]; then
+        finding_warn "unbuilt_route" "$name" "href=\"$h\" — no built page at $target"
+        hits=$((hits + 1))
+      fi
+    done
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every internal href resolves"
+}
+
+# ============================================================
+# Phase: external_assets — strict_no_external_assets gate
+# ============================================================
+phase_external_assets() {
+  phase_header "external_assets"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    local ext=$(grep -oE '(href|src)="https?://[^"]*"' "$f" \
+                | grep -v '"http-equiv' || true)
+    if [ -n "$ext" ]; then
+      finding_strict "external_assets" "$name" "external asset(s): $(echo "$ext" | head -3 | tr '\n' ' ')"
+      hits=$((hits + 1))
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      zero external assets"
+}
+
+# ============================================================
+# Phase: viewport_audit — Crawler hook (stub for now)
+# ============================================================
+phase_viewport_audit() {
+  phase_header "viewport_audit"
+  if command -v node >/dev/null 2>&1; then
+    echo "  ${C_DIM}(crawler journey would screenshot mobile/tablet/desktop here)${C_OFF}"
+    echo "  ${C_DIM}see UNIFIED_BUILDER_PROPOSAL.md §8 for the planned forge audit subcommand${C_OFF}"
+  else
+    finding_warn "viewport_audit" "*" "node not present; skipping crawler journey"
+  fi
+  echo "  ${C_GREEN}ok${C_OFF}      stub (forge audit lands in the Forge crate)"
+}
+
+# ============================================================
+# RUN
+# ============================================================
+
+echo "${C_BOLD}forge build${C_OFF} ${C_DIM}— mode=$MODE — $(date -u)${C_OFF}"
+echo "${C_DIM}strict findings ALWAYS fatal; warn findings fatal in production mode${C_OFF}"
+
+phase_tokens
+phase_html_semantic
+phase_csp
+phase_a11y_landmarks
+phase_phantom_button
+phase_backend_coverage
+phase_unbuilt_route
+phase_external_assets
+phase_viewport_audit
+phase_self_check
+
+# ----- Report -----
+echo
+echo "${C_BOLD}== summary ==${C_OFF}"
+echo "  mode:                $MODE"
+echo "  strict findings:     ${C_RED}$STRICT_COUNT${C_OFF}"
+echo "  suppressible warns:  ${C_YELLOW}$WARN_COUNT${C_OFF}"
+
+# Write JSON report
+emit_report() {
+  echo "{"
+  echo "  \"mode\": \"$MODE\","
+  echo "  \"strict_count\": $STRICT_COUNT,"
+  echo "  \"warn_count\": $WARN_COUNT,"
+  echo "  \"findings\": ["
+  local first=1
+  for f in "${FINDINGS[@]:-}"; do
+    [ -z "$f" ] && continue
+    local sev=${f%%|*}; local rest=${f#*|}
+    local phase=${rest%%|*}; rest=${rest#*|}
+    local path=${rest%%|*}; local msg=${rest#*|}
+    if [ $first -eq 1 ]; then first=0; else echo "    ,"; fi
+    printf '    {"severity":"%s","phase":"%s","path":"%s","message":"%s"}\n' \
+      "$sev" "$phase" "$path" "${msg//\"/\\\"}"
+  done
+  echo "  ]"
+  echo "}"
+}
+emit_report > "$REPORT_JSON"
+
+# Also emit a JS-importable findings file for the in-browser overlay.
+{
+  echo "// auto-generated by forge.sh — do not edit"
+  echo "window.__FORGE_FINDINGS__ = $(cat "$REPORT_JSON");"
+} > "$STATIC/forge-findings.js"
+
+ln -sf "$(basename "$REPORT_JSON")" "$REPORT_DIR/latest.json"
+
+echo
+echo "  report:  $REPORT_JSON"
+echo "  overlay: $STATIC/forge-findings.js  (auto-loaded by forge-overlay.js)"
+echo
+
+if [ $STRICT_COUNT -gt 0 ]; then
+  echo "${C_BOLD}${C_RED}forge build FAILED${C_OFF} ($STRICT_COUNT strict finding(s))"
+  exit 1
+fi
+if [ "$MODE" = "production" ] && [ $WARN_COUNT -gt 0 ]; then
+  echo "${C_BOLD}${C_RED}forge build FAILED${C_OFF} ($WARN_COUNT warn(s) — fatal in production mode)"
+  exit 1
+fi
+echo "${C_BOLD}${C_GREEN}forge build OK${C_OFF}"

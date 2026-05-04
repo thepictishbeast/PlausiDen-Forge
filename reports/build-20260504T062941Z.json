@@ -1,0 +1,18 @@
+{
+  "mode": "poc",
+  "strict_count": 0,
+  "warn_count": 6,
+  "findings": [
+    {"severity":"WARN","phase":"phantom_button","path":"challenge.html","message":"7 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"index.html","message":"8 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"leaderboard.html","message":"8 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"my-wins.html","message":"7 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"post-skill.html","message":"4 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"profile.html","message":"8 button(s) with no data-action / handler"}
+  ]
+}

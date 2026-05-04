@@ -1,0 +1,5 @@
+{
+  "mode": "poc",
+  "strict_count": 4,
+  "warn_count": 10,
+  "findings": [

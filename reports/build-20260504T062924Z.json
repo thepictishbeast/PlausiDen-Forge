@@ -1,0 +1,28 @@
+{
+  "mode": "poc",
+  "strict_count": 1,
+  "warn_count": 10,
+  "findings": [
+    {"severity":"STRICT","phase":"tokens","path":"post-skill.html","message":"raw px values: 120px 20px "}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"challenge.html","message":"7 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"index.html","message":"8 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"leaderboard.html","message":"8 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"my-wins.html","message":"7 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"post-skill.html","message":"4 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"profile.html","message":"8 button(s) with no data-action / handler"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/leaderboard\" — no built page at leaderboard"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/my-wins\" — no built page at my-wins"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/post-skill\" — no built page at post-skill"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/profile\" — no built page at profile"}
+  ]
+}

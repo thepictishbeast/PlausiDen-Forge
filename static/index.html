@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description"
+        content="Skill Shots — real challenges, real stakes, public results.">
+
+  <!-- Strict Content-Security-Policy: zero external resources, no
+       inline scripts, no eval. self only. Repeat in HTTP via a
+       middleware in production. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 style-src 'self';
+                 img-src 'self' data:;
+                 font-src 'self';
+                 script-src 'self';
+                 connect-src 'self';
+                 base-uri 'self';
+                 form-action 'self';
+                 frame-ancestors 'none';
+                 upgrade-insecure-requests">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+
+  <title>Skill Shots — Real challenges. Real stakes. Public results.</title>
+
+  <link rel="stylesheet" href="loom-tokens.css">
+  <link rel="stylesheet" href="loom-skin.css">
+  <script defer src="/forge-findings.js"></script>
+  <script defer src="/forge-overlay.js"></script>
+  <script defer src="/theme.js"></script>
+</head>
+<body>
+
+  <a class="loom-skip" href="#main">Skip to content</a>
+
+  <div class="loom-poc-banner" role="note">
+    PoC built with <code>loom-tokens.css</code> + <code>loom-skin.css</code>
+    + <code>cms init-site / new-page</code> + Crawler audit. No external
+    resources. Strict CSP. Mobile-first.
+  </div>
+
+  <header class="loom-nav">
+    <div class="loom-nav-inner">
+      <a class="loom-brand" href="/" aria-label="Skill Shots home">SkillShots</a>
+      <nav class="loom-navlinks" aria-label="Primary">
+        <a href="/" aria-current="page">Battle Feed</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+        <a href="/post-skill.html">Post a Skill</a>
+        <a href="/my-wins.html">My Wins</a>
+        <a href="/profile.html">Profile</a>
+      </nav>
+      <div class="loom-nav-actions">
+        <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
+        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
+        <button class="loom-btn" data-variant="primary" type="button">Post skill</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="loom-page">
+    <div class="loom-grid-app">
+      <!-- ========== Main column ========== -->
+      <div>
+
+        <!-- Hero: featured live battle -->
+        <section class="loom-hero" aria-labelledby="featured-title">
+          <span class="loom-live-badge">
+            <span class="loom-pulse-dot" aria-hidden="true"></span>
+            Live · Voting open
+          </span>
+          <h1 id="featured-title" class="loom-hero-title">
+            Hit a half-court shot. Sink a single arc, no rebound, no backboard.
+          </h1>
+          <p class="loom-hero-meta">
+            Posted by @marcus_h · Basketball · 3 entries · Voting closes in
+          </p>
+          <div class="loom-stat-bar">
+            <div class="loom-stat">
+              <div class="loom-stat-label">Pot</div>
+              <div class="loom-stat-value" data-tone="success">$240</div>
+            </div>
+            <div class="loom-stat">
+              <div class="loom-stat-label">Entry fee</div>
+              <div class="loom-stat-value">$60</div>
+            </div>
+            <div class="loom-stat">
+              <div class="loom-stat-label">Voting closes</div>
+              <div class="loom-stat-value" data-tone="warn">02:14:08</div>
+            </div>
+            <div class="loom-stat">
+              <div class="loom-stat-label">Top entry</div>
+              <div class="loom-stat-value">@court_dax · 78%</div>
+            </div>
+          </div>
+          <div class="loom-hero-actions">
+            <button class="loom-btn" data-variant="primary" data-size="lg" type="button" data-backend="cast-vote">Watch + vote</button>
+            <button class="loom-btn" data-variant="outline" data-size="lg" type="button" data-backend="enter-challenge">Enter for $60</button>
+          </div>
+        </section>
+
+        <div class="loom-section-head">
+          <h2>Battle feed</h2>
+          <div class="loom-pill-tabs">
+            <button type="button" aria-pressed="true">Live</button>
+            <button type="button" aria-pressed="false">Voting</button>
+            <button type="button" aria-pressed="false">Closing soon</button>
+            <button type="button" aria-pressed="false">By me</button>
+          </div>
+        </div>
+
+        <div class="loom-feed-grid" role="list">
+
+          <article class="loom-card-battle" role="listitem">
+            <div class="thumb"><span class="loom-thumb-badge">Voting · 3h left</span></div>
+            <div class="body">
+              <h3 class="title">One-take parkour line — top of stairwell to ground in under 9s.</h3>
+              <div class="host">
+                <span class="loom-avatar" aria-hidden="true"></span>
+                <span>@vault_kit · Parkour</span>
+              </div>
+              <div class="stats">
+                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$420</div></div>
+                <div><div class="stat-label">Entry</div><div class="stat-value">$45</div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="loom-card-battle" role="listitem">
+            <div class="thumb"><span class="loom-thumb-badge">Live · 5 entries</span></div>
+            <div class="body">
+              <h3 class="title">Pool: clear the table in two innings, no scratches.</h3>
+              <div class="host">
+                <span class="loom-avatar" aria-hidden="true"></span>
+                <span>@9ball_lori · Billiards</span>
+              </div>
+              <div class="stats">
+                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$310</div></div>
+                <div><div class="stat-label">Entry</div><div class="stat-value">$30</div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="loom-card-battle" role="listitem">
+            <div class="thumb"><span class="loom-thumb-badge">Voting · 12h left</span></div>
+            <div class="body">
+              <h3 class="title">Speed-cube: solve a scrambled 3×3 in under 18 seconds, single take.</h3>
+              <div class="host">
+                <span class="loom-avatar" aria-hidden="true"></span>
+                <span>@cuboid_eli · Mind</span>
+              </div>
+              <div class="stats">
+                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$180</div></div>
+                <div><div class="stat-label">Entry</div><div class="stat-value">$20</div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="loom-card-battle" role="listitem">
+            <div class="thumb"><span class="loom-thumb-badge">Live · 2 entries</span></div>
+            <div class="body">
+              <h3 class="title">Skateboard: 5-stair kickflip, land + roll-away, single take.</h3>
+              <div class="host">
+                <span class="loom-avatar" aria-hidden="true"></span>
+                <span>@kickflip_mar · Skate</span>
+              </div>
+              <div class="stats">
+                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$95</div></div>
+                <div><div class="stat-label">Entry</div><div class="stat-value">$15</div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="loom-card-battle" role="listitem">
+            <div class="thumb"><span class="loom-thumb-badge">Voting · 1h left</span></div>
+            <div class="body">
+              <h3 class="title">Darts: 9-dart finish from a fresh 501, recorded continuous.</h3>
+              <div class="host">
+                <span class="loom-avatar" aria-hidden="true"></span>
+                <span>@oche_riv · Darts</span>
+              </div>
+              <div class="stats">
+                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$540</div></div>
+                <div><div class="stat-label">Entry</div><div class="stat-value">$50</div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="loom-card-battle" role="listitem">
+            <div class="thumb"><span class="loom-thumb-badge">Live · 8 entries</span></div>
+            <div class="body">
+              <h3 class="title">Latte art: free-pour swan in one continuous shot, judged by silhouette.</h3>
+              <div class="host">
+                <span class="loom-avatar" aria-hidden="true"></span>
+                <span>@brew_pia · Cafe</span>
+              </div>
+              <div class="stats">
+                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$120</div></div>
+                <div><div class="stat-label">Entry</div><div class="stat-value">$10</div></div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
+      <!-- ========== Sidebar ========== -->
+      <aside aria-label="Side panels">
+
+        <section class="loom-panel" aria-labelledby="leader-title">
+          <h2 id="leader-title" class="loom-panel-title">Top earners · this week</h2>
+          <div class="loom-leader" data-rank="1">
+            <div class="rank">1</div>
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="name">@court_dax</div>
+            <div class="earnings">$1,840</div>
+          </div>
+          <div class="loom-leader" data-rank="2">
+            <div class="rank">2</div>
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="name">@vault_kit</div>
+            <div class="earnings">$1,420</div>
+          </div>
+          <div class="loom-leader" data-rank="3">
+            <div class="rank">3</div>
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="name">@9ball_lori</div>
+            <div class="earnings">$995</div>
+          </div>
+          <div class="loom-leader" data-rank="4">
+            <div class="rank">4</div>
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="name">@oche_riv</div>
+            <div class="earnings">$870</div>
+          </div>
+          <div class="loom-leader" data-rank="5">
+            <div class="rank">5</div>
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="name">@brew_pia</div>
+            <div class="earnings">$640</div>
+          </div>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="vote-title">
+          <h2 id="vote-title" class="loom-panel-title">Open votes · need your eye</h2>
+          <div class="loom-vote-row">
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="body">
+              <div class="title">Pool table clear — @9ball_lori</div>
+              <div class="meta">3 entries · 2 innings, no scratch</div>
+            </div>
+            <div class="closes">12m</div>
+          </div>
+          <div class="loom-vote-row">
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="body">
+              <div class="title">5-stair kickflip — @kickflip_mar</div>
+              <div class="meta">2 entries · kickflip + roll-away</div>
+            </div>
+            <div class="closes">42m</div>
+          </div>
+          <div class="loom-vote-row">
+            <span class="loom-avatar" aria-hidden="true"></span>
+            <div class="body">
+              <div class="title">9-dart 501 — @oche_riv</div>
+              <div class="meta">4 entries · continuous take</div>
+            </div>
+            <div class="closes">1h 04m</div>
+          </div>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="rules-title">
+          <h2 id="rules-title" class="loom-panel-title">House rules</h2>
+          <div class="loom-panel-body">
+            <p>Voters judge entries strictly on adherence to the challenge rules.</p>
+            <p>Popularity ≠ skill. Reports of vote-buying or coordinated voting freeze the pot pending review.</p>
+          </div>
+        </section>
+
+      </aside>
+    </div>
+  </main>
+
+  <footer class="loom-footer">
+    <div>
+      Skill Shots · <span class="tag">PoC</span> · Loom skin layered
+      (reset → tokens → primitives → components → plugins → utilities)
+      · CMS-managed routes · zero external assets
+    </div>
+    <div>Real challenges. Real stakes. Public results.</div>
+  </footer>
+
+</body>
+</html>

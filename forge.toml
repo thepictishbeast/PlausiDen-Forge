@@ -1,0 +1,62 @@
+# forge.toml — build mode + strictness gates
+#
+# CHANGE `mode` FROM "poc" → "production" AND THE BUILD WILL
+# REFUSE TO SHIP UNTIL EVERY PHANTOM BUTTON, EVERY UNBUILT ROUTE,
+# EVERY MISSING BACKEND CALL HAS A REAL TARGET. That's the whole
+# point — the gate is one line.
+#
+# In "poc" mode, these failures still surface:
+#   - in the browser via an "errors-overlay" panel (visible
+#     bottom-right), so they're constantly in your face
+#   - in `forge build` output as warnings, not failures
+#
+# In "production" mode, every gap is a fatal error. Build fails.
+# CI fails. No way to ship a partial UI.
+
+[forge]
+mode = "poc"           # "poc" | "production"
+strict = true          # always strict on tokens / CSP / a11y
+                       # — even in poc mode
+
+[poc]
+# Things the "constant errors" overlay shouts about. Each true
+# means "treat as warning + show in overlay, don't fail build".
+suppress_phantom_button = true
+suppress_unbuilt_route   = true
+suppress_missing_backend = true
+
+# Things we NEVER suppress, even in poc mode. These are the
+# load-bearing quality gates.
+strict_tokens_only       = true   # no raw px / hex / rgb / hsl
+strict_no_inline_styles  = true   # no style="" anywhere
+strict_csp               = true   # every page has CSP meta
+strict_a11y_landmarks    = true   # every page has main / nav / header / footer
+strict_focus_visible     = true   # every interactive has :focus-visible
+strict_no_external_assets = true  # zero third-party fetches
+
+[checks]
+# Each is a phase of `forge build`. Order = execution order.
+phases = [
+  "tokens",
+  "html_semantic",
+  "csp",
+  "a11y_landmarks",
+  "phantom_button",
+  "unbuilt_route",
+  "external_assets",
+  "viewport_audit",
+]
+
+[audit]
+# Crawler integration (when available). Each viewport gets a
+# screenshot; visual diff against last build.
+viewports = [
+  { name = "mobile",  width = 375,  height = 812  },
+  { name = "tablet",  width = 768,  height = 1024 },
+  { name = "desktop", width = 1280, height = 800  },
+]
+
+[paths]
+static_dir = "static"
+dist_dir   = "dist"
+report_dir = "reports"

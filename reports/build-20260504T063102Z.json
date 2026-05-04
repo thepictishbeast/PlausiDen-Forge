@@ -1,0 +1,48 @@
+{
+  "mode": "poc",
+  "strict_count": 0,
+  "warn_count": 21,
+  "findings": [
+    {"severity":"WARN","phase":"phantom_button","path":"challenge.html","message":"7 button(s) with no data-backend (UI not declared in backends.toml)"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"index.html","message":"6 button(s) with no data-backend (UI not declared in backends.toml)"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"leaderboard.html","message":"8 button(s) with no data-backend (UI not declared in backends.toml)"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"my-wins.html","message":"7 button(s) with no data-backend (UI not declared in backends.toml)"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"post-skill.html","message":"4 button(s) with no data-backend (UI not declared in backends.toml)"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"profile.html","message":"8 button(s) with no data-backend (UI not declared in backends.toml)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[cash-out] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[follow] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-challenges] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-leaderboard] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-open-votes] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-touches] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[post-skill] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[report-challenge] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[report-profile] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-in] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-out] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-up] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[upload-entry] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[view-challenge] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[view-profile] declared but no UI references it (dead spec)"}
+  ]
+}

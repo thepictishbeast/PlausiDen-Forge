@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title>Post a skill — SkillShots</title>
+  <link rel="stylesheet" href="loom-tokens.css">
+  <link rel="stylesheet" href="loom-skin.css">
+  <script defer src="/forge-findings.js"></script>
+  <script defer src="/forge-overlay.js"></script>
+  <script defer src="/theme.js"></script>
+</head>
+<body>
+  <a class="loom-skip" href="#main">Skip to content</a>
+
+  <header class="loom-nav">
+    <div class="loom-nav-inner">
+      <a class="loom-brand" href="/">SkillShots</a>
+      <nav class="loom-navlinks" aria-label="Primary">
+        <a href="/">Battle Feed</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+        <a href="/post-skill.html" aria-current="page">Post a Skill</a>
+        <a href="/my-wins.html">My Wins</a>
+        <a href="/profile.html">Profile</a>
+      </nav>
+      <div class="loom-nav-actions">
+        <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
+        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
+        <button class="loom-btn" data-variant="primary">Post skill</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="loom-page">
+    <h1 class="loom-page-title">Post a skill challenge</h1>
+    <p class="loom-page-subtitle" data-mb="xl">Define the rules, drop a proof video, set the pot. Voters decide the winner strictly on rule adherence.</p>
+
+    <div class="step-indicator" aria-label="Form progress">
+      <div class="step" data-state="current"><span class="num">1</span>Rules &amp; category</div>
+      <div class="step" data-state="upcoming"><span class="num">2</span>Upload proof video</div>
+      <div class="step" data-state="upcoming"><span class="num">3</span>Pot &amp; entry fee</div>
+    </div>
+
+    <div class="loom-grid-app">
+      <section class="loom-panel" aria-labelledby="step1-h">
+        <h2 id="step1-h" class="loom-panel-title">Step 1 · Rules &amp; category</h2>
+
+        <div class="loom-stack" data-gap="lg">
+          <div class="form-field">
+            <label for="title">Challenge title</label>
+            <input type="text" id="title" name="title" placeholder="e.g. Half-court shot — single arc, no rebound, no backboard" maxlength="120">
+            <div class="hint">120 chars max. State the SHOT, not the difficulty.</div>
+          </div>
+
+          <div class="form-field">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+              <option>Basketball</option>
+              <option>Skate</option>
+              <option>Parkour</option>
+              <option>Billiards</option>
+              <option>Darts</option>
+              <option>Mind (puzzle / speed)</option>
+              <option>Cafe (latte art / pour)</option>
+              <option>Other (custom)</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="rules">Rules — measurable, observable</label>
+            <textarea id="rules" name="rules" placeholder="Specific rules voters can verify by watching:
+- Single take, no edits
+- Feet behind half-court line at release
+- Ball touches only net (or rim then net)
+- No backboard, no rebound"></textarea>
+            <div class="hint">Voters judge against THIS list. Vague rules → contested votes.</div>
+          </div>
+
+          <div class="form-field">
+            <label for="format">Required video format</label>
+            <input type="text" id="format" name="format" value="720p min · 30s max · single take" readonly>
+            <div class="hint">Set automatically. Edited or sub-720p videos rejected at upload.</div>
+          </div>
+
+          <div class="loom-row" data-justify="between">
+            <button class="loom-btn" data-variant="ghost" type="button">Save draft</button>
+            <button class="loom-btn" data-variant="primary" data-size="lg" type="button">Continue → upload</button>
+          </div>
+        </div>
+      </section>
+
+      <aside>
+        <section class="loom-panel" aria-labelledby="tips-h">
+          <h2 id="tips-h" class="loom-panel-title">Good challenges share these</h2>
+          <div class="loom-panel-body">
+            <p><strong class="loom-emph">One outcome.</strong> "Land kickflip" not "skate well".</p>
+            <p><strong class="loom-emph">One take.</strong> Edits = ban.</p>
+            <p><strong class="loom-emph">Visible context.</strong> Voters need to see start AND end without ambiguity.</p>
+            <p><strong class="loom-emph">No subjective judging.</strong> "Best trick" = bad. "Land 360 flip on 5-stair" = good.</p>
+          </div>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="pot-help-h">
+          <h2 id="pot-help-h" class="loom-panel-title">Pot sizing</h2>
+          <div class="loom-panel-body">
+            <p>Suggested entry: $10–$50 for skill-niche challenges. $50+ for national-prize-tier shots.</p>
+            <p>Higher entry → fewer entries but bigger pot. Most challenges with $20-$30 entries close with 5-12 entries.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="loom-footer">
+    <div>Skill Shots · <span class="tag">PoC</span></div>
+  </footer>
+</body>
+</html>

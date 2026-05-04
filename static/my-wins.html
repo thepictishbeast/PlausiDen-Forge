@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title>My Wins — SkillShots</title>
+  <link rel="stylesheet" href="loom-tokens.css">
+  <link rel="stylesheet" href="loom-skin.css">
+  <script defer src="/forge-findings.js"></script>
+  <script defer src="/forge-overlay.js"></script>
+  <script defer src="/theme.js"></script>
+</head>
+<body>
+  <a class="loom-skip" href="#main">Skip to content</a>
+
+  <header class="loom-nav">
+    <div class="loom-nav-inner">
+      <a class="loom-brand" href="/">SkillShots</a>
+      <nav class="loom-navlinks" aria-label="Primary">
+        <a href="/">Battle Feed</a>
+        <a href="/leaderboard.html">Leaderboard</a>
+        <a href="/post-skill.html">Post a Skill</a>
+        <a href="/my-wins.html" aria-current="page">My Wins</a>
+        <a href="/profile.html">Profile</a>
+      </nav>
+      <div class="loom-nav-actions">
+        <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
+        <button class="loom-btn" data-variant="ghost" type="button">Sign in</button>
+        <button class="loom-btn" data-variant="primary">Post skill</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="loom-page">
+    <div class="loom-row" data-justify="between" data-mb="lg">
+      <div>
+        <h1 class="loom-page-title">My Wins</h1>
+        <p class="loom-page-subtitle">Wallet · earnings · active battles</p>
+      </div>
+      <button class="loom-btn" data-variant="outline">Cash out</button>
+    </div>
+
+    <!-- Wallet hero -->
+    <section class="loom-hero">
+      <span class="loom-live-badge" data-tone="warn">Pending payout · 24h clawback window</span>
+      <div class="loom-stat-bar">
+        <div class="loom-stat"><div class="loom-stat-label">Available balance</div><div class="loom-stat-value" data-tone="success">$842.30</div></div>
+        <div class="loom-stat"><div class="loom-stat-label">Pending</div><div class="loom-stat-value" data-tone="warn">$211.20</div></div>
+        <div class="loom-stat"><div class="loom-stat-label">Lifetime earnings</div><div class="loom-stat-value">$4,180.40</div></div>
+        <div class="loom-stat"><div class="loom-stat-label">Cash-out method</div><div class="loom-stat-value">Stripe Connect</div></div>
+      </div>
+    </section>
+
+    <div class="loom-grid-app">
+      <div class="loom-stack" data-gap="lg">
+        <section>
+          <div class="loom-section-head">
+            <h2>Active challenges</h2>
+            <div class="loom-pill-tabs">
+              <button type="button" aria-pressed="true">In progress</button>
+              <button type="button" aria-pressed="false">Voting</button>
+              <button type="button" aria-pressed="false">Closed</button>
+            </div>
+          </div>
+          <div class="loom-feed-grid">
+            <article class="loom-card-battle">
+              <div class="thumb"><span class="loom-thumb-badge">Voting · 2h 14m</span></div>
+              <div class="body">
+                <h3 class="title">Half-court shot — single arc</h3>
+                <div class="host"><span class="loom-avatar"></span><span>Hosted by @marcus_h</span></div>
+                <div class="stats">
+                  <div><div class="stat-label">Your entry</div><div class="stat-value">$60</div></div>
+                  <div><div class="stat-label">Status</div><div class="stat-value" data-tone="success">Top vote</div></div>
+                </div>
+              </div>
+            </article>
+            <article class="loom-card-battle">
+              <div class="thumb"><span class="loom-thumb-badge">Live · awaiting submit</span></div>
+              <div class="body">
+                <h3 class="title">Pool: clear the table in 2 innings</h3>
+                <div class="host"><span class="loom-avatar"></span><span>Hosted by @9ball_lori</span></div>
+                <div class="stats">
+                  <div><div class="stat-label">Your entry</div><div class="stat-value">$30</div></div>
+                  <div><div class="stat-label">Submit by</div><div class="stat-value" data-tone="warn">22h 11m</div></div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section>
+          <div class="loom-section-head">
+            <h2>Recent battles</h2>
+          </div>
+          <div class="loom-panel">
+            <div class="loom-leader" data-rank="1">
+              <div class="rank" class="loom-emph" data-tone="success">W</div>
+              <span class="loom-avatar"></span>
+              <div class="name">9-dart 501 — @oche_riv</div>
+              <div class="earnings">+$211.20</div>
+            </div>
+            <div class="loom-leader">
+              <div class="rank" class="loom-emph" data-tone="success">W</div>
+              <span class="loom-avatar"></span>
+              <div class="name">5-stair kickflip — @kickflip_mar</div>
+              <div class="earnings">+$78.40</div>
+            </div>
+            <div class="loom-leader">
+              <div class="rank" class="loom-emph" data-tone="danger">L</div>
+              <span class="loom-avatar"></span>
+              <div class="name">Speed-cube sub-18s — @cuboid_eli</div>
+              <div class="earnings" class="loom-emph" data-tone="muted">−$20</div>
+            </div>
+            <div class="loom-leader">
+              <div class="rank" class="loom-emph" data-tone="success">W</div>
+              <span class="loom-avatar"></span>
+              <div class="name">Latte-art swan — @brew_pia</div>
+              <div class="earnings">+$98.40</div>
+            </div>
+            <div class="loom-leader">
+              <div class="rank" class="loom-emph" data-tone="muted">DQ</div>
+              <span class="loom-avatar"></span>
+              <div class="name">Parkour line — @vault_kit</div>
+              <div class="earnings" class="loom-emph" data-tone="muted">$0</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside>
+        <section class="loom-panel" aria-labelledby="payout-h">
+          <h2 id="payout-h" class="loom-panel-title">Cash-out</h2>
+          <div class="loom-panel-body">
+            <p>Connected: <strong class="loom-emph">Stripe Connect · ****4129</strong></p>
+            <p>Funds release T+24h after voting closes. Standard ACH 1-2 business days.</p>
+          </div>
+          <button class="loom-btn" data-variant="primary" type="button" data-block="true">Cash out $842.30</button>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="streak-h">
+          <h2 id="streak-h" class="loom-panel-title">Your stats</h2>
+          <div class="loom-stack" data-gap="sm">
+            <div class="loom-row" data-justify="between"><span>Win rate</span><strong>61%</strong></div>
+            <div class="loom-row" data-justify="between"><span>Current streak</span><strong class="loom-emph" data-tone="success">3 W</strong></div>
+            <div class="loom-row" data-justify="between"><span>Longest streak</span><strong>7 W</strong></div>
+            <div class="loom-row" data-justify="between"><span>DQ rate</span><strong class="loom-emph" data-tone="warn">8%</strong></div>
+          </div>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="dispute-h">
+          <h2 id="dispute-h" class="loom-panel-title">Open disputes</h2>
+          <div class="loom-panel-body">
+            <p>None active. The 9-dart payout cleared its 24h clawback window without a report.</p>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="loom-footer">
+    <div>Skill Shots · <span class="tag">PoC</span></div>
+  </footer>
+</body>
+</html>

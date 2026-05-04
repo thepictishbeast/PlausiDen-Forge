@@ -1,0 +1,1238 @@
+/* ===================================================================
+ * loom-skin.css — semantic component layer for the Loom design system
+ * ===================================================================
+ *
+ * ARCHITECTURE
+ * ------------
+ * This file is organized into named CSS @layer blocks. The cascade
+ * order is fixed once at the top — later layers always win over
+ * earlier ones, regardless of source order or specificity. This
+ * gives plugin authors a predictable extension point and removes
+ * specificity-war footguns.
+ *
+ * Cascade (lowest precedence first):
+ *
+ *   reset       universal box-sizing + zero defaults
+ *   tokens      surfaces design tokens as CSS custom properties on :root
+ *               (also re-exported as component-scoped --comp-* tokens
+ *               via inheritance)
+ *   primitives  layout primitives (.loom-page, .loom-stack, .loom-row)
+ *   components  composite components (.loom-card-battle, .loom-leader,
+ *               .loom-hero, .loom-nav, etc.)
+ *   plugins     OPEN — downstream apps drop overrides here. Empty
+ *               by default. Overrides land via @layer plugins { ... }
+ *               in a separate stylesheet imported AFTER this one.
+ *   utilities   single-purpose helpers (.loom-sr-only) — wins over
+ *               components by design (utilities should be the final
+ *               override knob)
+ *
+ * COMPOSITION MODEL ("mixins / traits / inheritance" in CSS)
+ * ----------------------------------------------------------
+ * 1. CSS custom properties as MIXINS — any component declares its own
+ *    --comp-* tokens that downstream rules can override. E.g.:
+ *      .loom-card { --comp-card-pad: var(--loom-space-5); padding: var(--comp-card-pad); }
+ *      .loom-panel.is-roomy { --comp-card-pad: var(--loom-space-8); }
+ *
+ * 2. Attribute-driven VARIANTS — components dispatch on
+ *    `data-variant`, `data-tone`, `data-size`, `aria-current`,
+ *    `aria-pressed` etc. instead of stacked class names. The
+ *    attribute is the schema; the rendered HTML is unambiguous.
+ *
+ * 3. INHERITANCE via custom-property cascade — parent components
+ *    can set --comp-* tokens that children inherit automatically
+ *    (CSS custom properties inherit by default).
+ *
+ * 4. PLUGIN extension — the @layer plugins block is intentionally
+ *    empty here. A site that wants a different brand voice writes
+ *    its own @layer plugins { .loom-brand { ... } } in a separate
+ *    file imported after this one. No specificity war.
+ *
+ * STRICT INVARIANTS (enforced by `loom lint`)
+ * -------------------------------------------
+ * - No raw color literals (hex / rgb / hsl) outside this file's
+ *   tokens layer. Every paint reads through var(--loom-color-*) or
+ *   a component-scoped --comp-* alias.
+ * - No raw px / em values for spacing, type, or radii. Every
+ *   measurement reads through var(--loom-space-*), var(--loom-font-*),
+ *   var(--loom-radius-*).
+ * - All margins / padding / borders compose from the spacing
+ *   token scale.
+ * - Every text element gets `overflow-wrap: anywhere` from the
+ *   reset layer. Every container gets `min-width: 0` so flex/grid
+ *   children don't blow out.
+ * - All animations honor `prefers-reduced-motion`.
+ * - Mobile-first: breakpoints scale up only.
+ *
+ * MOBILE-FIRST + STRICT OVERFLOW
+ * ------------------------------
+ * Default rules target a 320 px viewport. `@media (min-width: …)`
+ * upgrades layouts as space grows. The page never produces
+ * horizontal scroll: `html { overflow-x: clip; }` and every
+ * potentially-long string has `text-overflow: ellipsis` or
+ * `overflow-wrap: anywhere`.
+ *
+ * WHY THIS LAYERING (vs the old flat sheet)
+ * -----------------------------------------
+ * Plain CSS resolves rules by source-order + specificity. With
+ * many contributors + plugin extensions, both become unreliable
+ * fast — a deep selector accidentally wins; a later import
+ * silently shadows. `@layer` makes the precedence ladder explicit
+ * and reviewable. A reviewer reads the layer order at the top and
+ * knows the truth without grep'ing the whole sheet.
+ * =================================================================== */
+
+@layer reset, tokens, primitives, components, plugins, utilities;
+
+/* ============================================================ *
+ * @layer reset                                                  *
+ * ============================================================ */
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; padding: 0; min-width: 0; }
+
+  html, body {
+    overflow-x: clip;
+    max-width: 100%;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    font-family: var(--loom-font-body, -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Roboto, system-ui, sans-serif);
+    font-size: var(--loom-font-base);
+    line-height: var(--loom-leading-base, 1.5);
+    color: var(--loom-color-ink);
+    background:
+      /* Subtle ambient gradient — gives flat dark a sense of light source. */
+      radial-gradient(1200px 600px at 80% -10%,
+        hsl(218 83% 65% / 0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%,
+        hsl(272 84% 65% / 0.06), transparent 60%),
+      var(--loom-color-bg-canvas);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11", "cv02";
+  }
+
+  img, video, svg, canvas, picture {
+    max-width: 100%; height: auto; display: block;
+  }
+
+  /* Universal long-content protections. Every text element wraps. */
+  p, h1, h2, h3, h4, h5, h6, span, a, button, li, td, th, label,
+  blockquote, dt, dd, figcaption {
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+  pre, code, kbd, samp { overflow-x: auto; max-width: 100%; }
+
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+
+  :focus-visible {
+    outline: 2px solid var(--loom-color-primary);
+    outline-offset: 2px;
+    border-radius: var(--loom-radius-sm);
+  }
+
+  /* Hide content from sighted users without removing from a11y tree. */
+  [hidden] { display: none !important; }
+}
+
+/* ============================================================ *
+ * @layer tokens                                                 *
+ * ------------------------------------------------------------ *
+ * loom-tokens.css already declared every base token under :root.
+ * This layer adds COMPONENT-SCOPED tokens — "trait" defaults that
+ * components compose. Children that want to retune a component
+ * override these on their own scope without changing the global
+ * design token table.                                            *
+ * ============================================================ */
+
+@layer tokens {
+  :root {
+    /* Component-trait tokens. Downstream overrides land here. */
+    --loom-radius-component:    var(--loom-radius-lg);
+    --loom-border-component:    1px solid var(--loom-color-border);
+    --loom-border-strong:       1px solid var(--loom-color-border-strong);
+
+    /* Layered shadow stack — premium depth.
+     * Three rays at different distances + a soft ambient =
+     * convincing volume without looking heavy. */
+    --loom-shadow-flat:
+      0 1px 0 hsl(220 33% 0% / 0.06);
+    --loom-shadow-soft:
+      0 1px 2px hsl(220 33% 0% / 0.10),
+      0 4px 12px hsl(220 33% 0% / 0.10);
+    --loom-shadow-elevated:
+      0 1px 2px hsl(220 33% 0% / 0.18),
+      0 8px 20px hsl(220 33% 0% / 0.30),
+      0 24px 48px hsl(220 33% 0% / 0.20);
+    --loom-shadow-cta:
+      0 4px 16px hsl(220 90% 28% / 0.35),
+      0 1px 2px hsl(220 33% 0% / 0.40);
+    --loom-shadow-glow-accent:
+      0 0 0 1px hsl(218 83% 65% / 0.35),
+      0 8px 32px hsl(218 83% 65% / 0.20);
+
+    --loom-pad-card:            var(--loom-space-4);
+    --loom-pad-panel:           var(--loom-space-5);
+    --loom-pad-band:            var(--loom-space-6);
+    --loom-gap-stack:           var(--loom-space-4);
+    --loom-gap-row:             var(--loom-space-3);
+    --loom-gap-grid:            var(--loom-space-4);
+    --loom-blur-glass:          16px;
+    --loom-saturate-glass:      160%;
+
+    /* Motion — premium curves. The "out" curve is what ships
+     * everywhere by default; the "spring" curve is for delight
+     * moments (button-press release, reveal). */
+    --loom-ease-out:            cubic-bezier(.16, 1, .3, 1);
+    --loom-ease-spring:         cubic-bezier(.34, 1.56, .64, 1);
+    --loom-transition-fast:     180ms var(--loom-ease-out);
+    --loom-transition-base:     280ms var(--loom-ease-out);
+    --loom-transition-slow:     520ms var(--loom-ease-out);
+    --loom-stroke-thin:         1px;
+    --loom-stroke-strong:       2px;
+
+    /* Typography premium tier — display weights for hero copy. */
+    --loom-font-display: ui-rounded, "SF Pro Display",
+                         "Segoe UI Variable Display", "Inter Display",
+                         "Inter", system-ui, -apple-system, sans-serif;
+    --loom-font-body:    -apple-system, BlinkMacSystemFont,
+                         "Inter", "Segoe UI", Roboto,
+                         "Helvetica Neue", system-ui, sans-serif;
+    --loom-font-mono:    ui-monospace, "JetBrains Mono", "Fira Code",
+                         "SF Mono", Menlo, Consolas, monospace;
+    --loom-track-tight:  -0.025em;
+    --loom-track-snug:   -0.015em;
+    --loom-track-loose:  0.06em;
+    --loom-leading-tight: 1.1;
+    --loom-leading-snug:  1.3;
+    --loom-leading-base:  1.5;
+  }
+  @media (min-width: 768px) {
+    :root {
+      --loom-pad-card:  var(--loom-space-5);
+      --loom-pad-panel: var(--loom-space-6);
+      --loom-pad-band:  var(--loom-space-8);
+    }
+  }
+}
+
+/* ============================================================ *
+ * @layer primitives                                             *
+ * ============================================================ */
+
+@layer primitives {
+  .loom-page {
+    width: 100%;
+    max-width: var(--loom-break-xl);
+    margin: 0 auto;
+    padding: var(--loom-pad-band);
+  }
+
+  .loom-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-gap-stack);
+  }
+  .loom-stack[data-gap="sm"] { gap: var(--loom-space-2); }
+  .loom-stack[data-gap="md"] { gap: var(--loom-space-4); }
+  .loom-stack[data-gap="lg"] { gap: var(--loom-space-8); }
+
+  .loom-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--loom-gap-row);
+    align-items: center;
+  }
+  .loom-row[data-justify="between"] { justify-content: space-between; }
+  .loom-row[data-justify="end"]     { justify-content: flex-end; }
+  .loom-row[data-justify="center"]  { justify-content: center; }
+
+  .loom-grid-app {
+    display: grid;
+    gap: var(--loom-space-6);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) {
+    .loom-grid-app {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: var(--loom-space-8);
+    }
+  }
+
+  /* Skip-link target — accessibility primitive. */
+  .loom-skip {
+    position: absolute;
+    inset-inline-start: var(--loom-space-2);
+    inset-block-start: var(--loom-space-2);
+    padding: var(--loom-space-2) var(--loom-space-3);
+    background: var(--loom-color-surface);
+    color: var(--loom-color-ink);
+    border-radius: var(--loom-radius-md);
+    transform: translateY(-150%);
+    transition: transform var(--loom-transition-fast);
+    z-index: 100;
+  }
+  .loom-skip:focus { transform: translateY(0); }
+}
+
+/* ============================================================ *
+ * @layer components                                             *
+ * ============================================================ */
+
+@layer components {
+
+  /* ---------- Brand wordmark ---------- */
+  .loom-brand {
+    --comp-brand-size: var(--loom-font-lg);
+    font-size: var(--comp-brand-size);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    background: linear-gradient(
+      110deg,
+      var(--loom-color-gradient-a),
+      var(--loom-color-gradient-b)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (min-width: 768px) {
+    .loom-brand { --comp-brand-size: var(--loom-font-xl); }
+  }
+  .loom-brand[data-size="lg"]  { --comp-brand-size: var(--loom-font-2xl); }
+  .loom-brand[data-size="xl"]  { --comp-brand-size: var(--loom-font-3xl); }
+
+  /* ---------- Top nav ---------- */
+  .loom-nav {
+    /* Themed surface — auto-adapts to light + dark via tokens. */
+    --comp-nav-bg: color-mix(in oklab,
+                             var(--loom-color-bg-canvas) 70%,
+                             transparent);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--comp-nav-bg);
+    backdrop-filter: blur(var(--loom-blur-glass)) saturate(var(--loom-saturate-glass));
+    -webkit-backdrop-filter: blur(var(--loom-blur-glass)) saturate(var(--loom-saturate-glass));
+    border-bottom: var(--loom-border-component);
+  }
+  .loom-nav-inner {
+    max-width: var(--loom-break-xl);
+    margin: 0 auto;
+    padding: var(--loom-space-3) var(--loom-space-4);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: var(--loom-space-4);
+  }
+  @media (min-width: 768px) {
+    .loom-nav-inner {
+      grid-template-columns: auto 1fr auto;
+      padding: var(--loom-space-3) var(--loom-space-6);
+      gap: var(--loom-space-8);
+    }
+  }
+
+  .loom-navlinks {
+    display: flex;
+    gap: 2px;
+    justify-self: end;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    max-width: 100%;
+  }
+  .loom-navlinks::-webkit-scrollbar { display: none; }
+  @media (min-width: 768px) {
+    .loom-navlinks { justify-self: center; overflow: visible; scroll-snap-type: none; }
+  }
+  .loom-navlinks a {
+    padding: var(--loom-space-2) var(--loom-space-3);
+    border-radius: var(--loom-radius-md);
+    color: var(--loom-color-ink-muted);
+    font-size: var(--loom-font-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    transition: color var(--loom-transition-fast),
+                background var(--loom-transition-fast);
+  }
+  .loom-navlinks a:hover {
+    color: var(--loom-color-ink);
+    background: var(--loom-color-bg-overlay);
+  }
+  .loom-navlinks a[aria-current="page"] {
+    color: var(--loom-color-ink);
+    background: var(--loom-color-bg-overlay);
+  }
+
+  .loom-nav-actions {
+    display: none;
+    gap: var(--loom-space-2);
+    align-items: center;
+  }
+  @media (min-width: 768px) { .loom-nav-actions { display: flex; } }
+
+  /* ---------- Buttons ---------- */
+  .loom-btn {
+    --comp-btn-pad-x:  var(--loom-space-4);
+    --comp-btn-pad-y:  var(--loom-space-2);
+    --comp-btn-size:   var(--loom-font-sm);
+    --comp-btn-radius: var(--loom-radius-md);
+    --comp-btn-bg:     transparent;
+    --comp-btn-fg:     var(--loom-color-ink);
+    --comp-btn-border: 0;
+    --comp-btn-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--loom-space-2);
+    padding: var(--comp-btn-pad-y) var(--comp-btn-pad-x);
+    border-radius: var(--comp-btn-radius);
+    font-size: var(--comp-btn-size);
+    font-weight: 600;
+    background: var(--comp-btn-bg);
+    color: var(--comp-btn-fg);
+    border: var(--comp-btn-border);
+    box-shadow: var(--comp-btn-shadow);
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: filter var(--loom-transition-fast),
+                transform var(--loom-transition-fast),
+                background var(--loom-transition-fast);
+    user-select: none;
+  }
+  .loom-btn:hover  { filter: brightness(1.08); }
+  .loom-btn:active { transform: translateY(1px); }
+  .loom-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+  .loom-btn[data-variant="primary"] {
+    --comp-btn-bg: linear-gradient(110deg,
+      var(--loom-color-gradient-a),
+      var(--loom-color-gradient-b));
+    --comp-btn-fg: var(--loom-color-primary-fg);
+    --comp-btn-shadow: var(--loom-shadow-cta);
+    position: relative;
+    overflow: hidden;
+  }
+  /* Sheen sweep on hover — premium interaction polish. */
+  .loom-btn[data-variant="primary"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg,
+      transparent 30%,
+      hsl(0 0% 100% / 0.20) 50%,
+      transparent 70%);
+    transform: translateX(-100%);
+    transition: transform var(--loom-transition-slow);
+    pointer-events: none;
+  }
+  .loom-btn[data-variant="primary"]:hover::before { transform: translateX(100%); }
+  .loom-btn[data-variant="ghost"]   {
+    --comp-btn-fg: var(--loom-color-ink-muted);
+  }
+  .loom-btn[data-variant="ghost"]:hover {
+    --comp-btn-bg: var(--loom-color-bg-overlay);
+    --comp-btn-fg: var(--loom-color-ink);
+  }
+  .loom-btn[data-variant="outline"] {
+    --comp-btn-border: var(--loom-stroke-thin) solid var(--loom-color-border-strong);
+    --comp-btn-fg: var(--loom-color-ink);
+  }
+  .loom-btn[data-variant="outline"]:hover {
+    --comp-btn-bg: var(--loom-color-bg-overlay);
+  }
+
+  .loom-btn[data-size="sm"] {
+    --comp-btn-pad-x: var(--loom-space-3);
+    --comp-btn-pad-y: var(--loom-space-1);
+    --comp-btn-size:  var(--loom-font-xs);
+  }
+  .loom-btn[data-size="lg"] {
+    --comp-btn-pad-x: var(--loom-space-6);
+    --comp-btn-pad-y: var(--loom-space-3);
+    --comp-btn-size:  var(--loom-font-base);
+  }
+
+  /* ---------- Live badge ---------- */
+  .loom-live-badge {
+    --comp-badge-bg:     hsl(218 83% 65% / 0.15);
+    --comp-badge-border: hsl(218 83% 65% / 0.4);
+    --comp-badge-fg:     var(--loom-color-accent-glow);
+    --comp-badge-dot-bg: var(--loom-color-success);
+    --comp-badge-dot-pulse-ring-color: hsl(160 84% 55% / 0.7);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--loom-space-2);
+    padding: var(--loom-space-1) var(--loom-space-3);
+    background: var(--comp-badge-bg);
+    border: var(--loom-stroke-thin) solid var(--comp-badge-border);
+    border-radius: var(--loom-radius-full);
+    color: var(--comp-badge-fg);
+    font-size: var(--loom-font-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .loom-live-badge[data-tone="warn"] {
+    --comp-badge-bg:     hsl(33 100% 66% / 0.12);
+    --comp-badge-border: hsl(33 100% 66% / 0.4);
+    --comp-badge-fg:     var(--loom-color-warn);
+    --comp-badge-dot-bg: var(--loom-color-warn);
+    --comp-badge-dot-pulse-ring-color: hsl(33 100% 66% / 0.6);
+  }
+  .loom-live-badge[data-tone="danger"] {
+    --comp-badge-bg:     hsl(0 72% 65% / 0.12);
+    --comp-badge-border: hsl(0 72% 65% / 0.4);
+    --comp-badge-fg:     var(--loom-color-danger);
+    --comp-badge-dot-bg: var(--loom-color-danger);
+    --comp-badge-dot-pulse-ring-color: hsl(0 72% 65% / 0.6);
+  }
+
+  .loom-pulse-dot {
+    width: 6px; height: 6px;
+    border-radius: var(--loom-radius-full);
+    background: var(--comp-badge-dot-bg);
+    flex-shrink: 0;
+    animation: loom-pulse 1.6s infinite;
+  }
+  @keyframes loom-pulse {
+    0%   { box-shadow: 0 0 0 0   var(--comp-badge-dot-pulse-ring-color); }
+    70%  { box-shadow: 0 0 0 8px transparent; }
+    100% { box-shadow: 0 0 0 0   transparent; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loom-pulse-dot { animation: none; }
+  }
+
+  /* ---------- Hero band ---------- */
+  .loom-hero {
+    --comp-hero-pad: var(--loom-pad-band);
+    position: relative;
+    padding: var(--comp-hero-pad);
+    border-radius: var(--loom-radius-xl);
+    background:
+      /* Top-right glow */
+      radial-gradient(900px 320px at 100% -10%,
+        hsl(218 83% 65% / 0.30),
+        transparent 60%),
+      /* Bottom-left bloom */
+      radial-gradient(700px 320px at -5% 110%,
+        hsl(272 84% 65% / 0.18),
+        transparent 60%),
+      /* Underlying surface tint */
+      linear-gradient(135deg,
+        hsl(218 83% 65% / 0.10),
+        hsl(272 84% 65% / 0.06) 60%,
+        transparent),
+      var(--loom-color-surface-muted);
+    border: var(--loom-border-strong);
+    overflow: hidden;
+    margin-bottom: var(--loom-pad-band);
+    box-shadow: var(--loom-shadow-elevated);
+  }
+  .loom-hero::before {
+    /* Subtle grid pattern overlay — design-system signature. */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, hsl(0 0% 100% / 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(0 0% 100% / 0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    mask-image: linear-gradient(to bottom, black, transparent 70%);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 70%);
+  }
+  .loom-hero-title {
+    margin-top: var(--loom-space-3);
+    font-family: var(--loom-font-display, var(--loom-font-body));
+    font-size: var(--loom-font-2xl);
+    font-weight: 800;
+    letter-spacing: var(--loom-track-tight, -0.025em);
+    line-height: var(--loom-leading-tight, 1.1);
+    /* Subtle gradient on the title itself for richness. */
+    background: linear-gradient(180deg,
+      var(--loom-color-ink) 0%,
+      color-mix(in oklab, var(--loom-color-ink) 75%, var(--loom-color-accent-glow)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  @media (min-width: 768px)  { .loom-hero-title { font-size: var(--loom-font-3xl); } }
+  @media (min-width: 1024px) { .loom-hero-title { font-size: var(--loom-font-4xl); } }
+  .loom-hero-meta {
+    margin-top: var(--loom-space-2);
+    color: var(--loom-color-ink-muted);
+    font-size: var(--loom-font-sm);
+  }
+  .loom-hero-actions {
+    margin-top: var(--loom-space-6);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--loom-space-3);
+  }
+
+  /* ---------- Stat bar ---------- */
+  .loom-stat-bar {
+    margin-top: var(--loom-space-6);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--loom-space-4);
+  }
+  .loom-stat { min-width: 0; }
+  .loom-stat-label {
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .loom-stat-value {
+    font-size: var(--loom-font-xl);
+    font-weight: 800;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (min-width: 768px) { .loom-stat-value { font-size: var(--loom-font-2xl); } }
+  .loom-stat-value[data-tone="success"] { color: var(--loom-color-success); }
+  .loom-stat-value[data-tone="warn"]    { color: var(--loom-color-warn); }
+  .loom-stat-value[data-tone="danger"]  { color: var(--loom-color-danger); }
+
+  /* ---------- Section head + pill tabs ---------- */
+  .loom-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--loom-space-3);
+    margin-bottom: var(--loom-space-4);
+  }
+  .loom-section-head h2 {
+    font-size: var(--loom-font-lg);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 768px) { .loom-section-head h2 { font-size: var(--loom-font-xl); } }
+
+  .loom-pill-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--loom-color-surface-muted);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-full);
+    padding: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    max-width: 100%;
+  }
+  .loom-pill-tabs::-webkit-scrollbar { display: none; }
+  .loom-pill-tabs button {
+    padding: 6px var(--loom-space-3);
+    border-radius: var(--loom-radius-full);
+    color: var(--loom-color-ink-muted);
+    font-size: var(--loom-font-xs);
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: color var(--loom-transition-fast),
+                background var(--loom-transition-fast);
+  }
+  .loom-pill-tabs button:hover { color: var(--loom-color-ink); }
+  .loom-pill-tabs button[aria-pressed="true"] {
+    background: var(--loom-color-bg-overlay);
+    color: var(--loom-color-ink);
+  }
+
+  /* ---------- Feed grid + battle card ---------- */
+  .loom-feed-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--loom-gap-grid);
+  }
+  @media (min-width: 480px) {
+    .loom-feed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (min-width: 768px) {
+    .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  .loom-card-battle {
+    --comp-card-radius: var(--loom-radius-component);
+    --comp-card-bg:
+      linear-gradient(180deg,
+        color-mix(in oklab, var(--loom-color-surface-muted) 100%, white 4%) 0%,
+        var(--loom-color-surface-muted) 60%);
+    --comp-card-border: var(--loom-border-component);
+    background: var(--comp-card-bg);
+    border: var(--comp-card-border);
+    border-radius: var(--comp-card-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--loom-shadow-soft);
+    transition: transform var(--loom-transition-base),
+                border-color var(--loom-transition-base),
+                box-shadow var(--loom-transition-base);
+  }
+  .loom-card-battle:hover {
+    transform: translateY(-3px);
+    border-color: var(--loom-color-border-strong);
+    box-shadow: var(--loom-shadow-elevated);
+  }
+  .loom-card-battle .thumb {
+    aspect-ratio: 9 / 16;
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(220 24% 18%) 0%,
+      hsl(220 33% 8%) 70%);
+    position: relative;
+    display: flex;
+    align-items: end;
+    padding: var(--loom-space-3);
+  }
+  .loom-card-battle .thumb::after {
+    content: "▶";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: hsl(0 0% 100% / 0.85);
+    font-size: var(--loom-font-3xl);
+    text-shadow: 0 2px 12px hsl(0 0% 0% / 0.6);
+    pointer-events: none;
+  }
+  .loom-thumb-badge {
+    position: relative;
+    z-index: 1;
+    padding: 2px var(--loom-space-2);
+    background: hsl(0 0% 0% / 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: var(--loom-radius-sm);
+    font-size: var(--loom-font-xs);
+    font-weight: 700;
+    color: var(--loom-color-ink);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    max-width: calc(100% - var(--loom-space-2));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .loom-card-battle .body {
+    padding: var(--loom-pad-card);
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-3);
+    flex: 1;
+  }
+  .loom-card-battle .title {
+    font-size: var(--loom-font-base);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .loom-card-battle .host {
+    display: flex;
+    align-items: center;
+    gap: var(--loom-space-2);
+  }
+  .loom-card-battle .host span {
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-ink-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .loom-card-battle .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--loom-space-3);
+    padding-top: var(--loom-space-3);
+    border-top: var(--loom-border-component);
+    margin-top: auto;
+  }
+  .loom-card-battle .stat-label {
+    font-size: 10px;
+    color: var(--loom-color-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .loom-card-battle .stat-value {
+    font-size: var(--loom-font-base);
+    font-weight: 700;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .loom-card-battle .stat-value[data-tone="success"] { color: var(--loom-color-success); }
+
+  /* ---------- Avatar ---------- */
+  .loom-avatar {
+    --comp-avatar-size: 24px;
+    width: var(--comp-avatar-size);
+    height: var(--comp-avatar-size);
+    border-radius: var(--loom-radius-full);
+    background: linear-gradient(135deg,
+      var(--loom-color-gradient-a),
+      var(--loom-color-gradient-b));
+    flex-shrink: 0;
+  }
+  .loom-avatar[data-size="sm"] { --comp-avatar-size: 20px; }
+  .loom-avatar[data-size="lg"] { --comp-avatar-size: 36px; }
+  .loom-avatar[data-size="xl"] { --comp-avatar-size: 48px; }
+
+  /* ---------- Sidebar panel ---------- */
+  .loom-panel {
+    --comp-panel-pad: var(--loom-pad-panel);
+    background: var(--loom-color-surface-muted);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-component);
+    padding: var(--comp-panel-pad);
+    margin-bottom: var(--loom-space-4);
+  }
+  .loom-panel-title {
+    font-size: var(--loom-font-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--loom-color-ink-muted);
+    font-weight: 700;
+    margin-bottom: var(--loom-space-3);
+  }
+  .loom-panel-body {
+    font-size: var(--loom-font-sm);
+    color: var(--loom-color-ink-muted);
+    line-height: 1.55;
+  }
+  .loom-panel-body p + p { margin-top: var(--loom-space-2); }
+
+  /* ---------- Leaderboard row ---------- */
+  .loom-leader {
+    display: grid;
+    grid-template-columns: 22px 24px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--loom-space-3);
+    padding: var(--loom-space-2) 0;
+    border-bottom: var(--loom-border-component);
+  }
+  .loom-leader:last-child { border-bottom: 0; }
+  .loom-leader .rank {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    font-size: var(--loom-font-sm);
+    color: var(--loom-color-ink-muted);
+  }
+  .loom-leader[data-rank="1"] .rank { color: var(--loom-color-tier-medium); }
+  .loom-leader .name {
+    font-weight: 600;
+    font-size: var(--loom-font-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .loom-leader .earnings {
+    font-weight: 700;
+    font-size: var(--loom-font-sm);
+    color: var(--loom-color-success);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ---------- Vote-row ---------- */
+  .loom-vote-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--loom-space-3);
+    padding: var(--loom-space-3) 0;
+    border-bottom: var(--loom-border-component);
+  }
+  .loom-vote-row:last-child { border-bottom: 0; }
+  .loom-vote-row .body { min-width: 0; }
+  .loom-vote-row .body .title {
+    font-weight: 600;
+    font-size: var(--loom-font-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .loom-vote-row .body .meta {
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-ink-muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .loom-vote-row .closes {
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-warn);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ---------- Page title (h1 at top of view) ---------- */
+  .loom-page-title {
+    font-size: var(--loom-font-2xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  @media (min-width: 768px) {
+    .loom-page-title { font-size: var(--loom-font-3xl); }
+  }
+  .loom-page-title + .loom-page-subtitle {
+    color: var(--loom-color-ink-muted);
+    margin-top: var(--loom-space-1);
+    font-size: var(--loom-font-base);
+  }
+
+  /* Spacing modifier for any block. data-mb / data-mt set margin
+   * from the spacing token scale. Prefer a parent stack with
+   * data-gap; this is for the rare "I need a margin between
+   * stacked sections" case. */
+  [data-mb="sm"] { margin-bottom: var(--loom-space-2); }
+  [data-mb="md"] { margin-bottom: var(--loom-space-4); }
+  [data-mb="lg"] { margin-bottom: var(--loom-space-6); }
+  [data-mb="xl"] { margin-bottom: var(--loom-space-8); }
+
+  /* ---------- Breadcrumb ---------- */
+  .loom-breadcrumb {
+    margin-bottom: var(--loom-space-4);
+    font-size: var(--loom-font-sm);
+    color: var(--loom-color-ink-muted);
+  }
+  .loom-breadcrumb a:hover { color: var(--loom-color-ink); }
+
+  /* ---------- Profile-shaped hero header ---------- */
+  .loom-profile-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--loom-space-6);
+    align-items: center;
+  }
+
+  /* Avatar — extra sizes. */
+  .loom-avatar[data-size="2xl"] { --comp-avatar-size: 96px; }
+
+  /* ---------- Result rank chips (W / L / DQ) ---------- */
+  .loom-leader[data-result="win"]  .rank { color: var(--loom-color-success); }
+  .loom-leader[data-result="loss"] .rank { color: var(--loom-color-danger); }
+  .loom-leader[data-result="dq"]   .rank { color: var(--loom-color-ink-muted); }
+  .loom-leader[data-result="loss"] .earnings,
+  .loom-leader[data-result="dq"]   .earnings {
+    color: var(--loom-color-ink-muted);
+  }
+
+  /* ---------- Thumb badge tones (won / lost) ---------- */
+  .loom-thumb-badge[data-tone="success"] {
+    background: hsl(160 84% 30% / 0.7);
+  }
+  .loom-thumb-badge[data-tone="danger"] {
+    background: hsl(0 72% 51% / 0.7);
+  }
+
+  /* ---------- Badge grid (compact tile grid) ---------- */
+  .loom-badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--loom-gap-grid);
+  }
+  .loom-badge-card {
+    background: var(--loom-color-surface-muted);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-component);
+    padding: var(--loom-space-4);
+    text-align: center;
+  }
+  .loom-badge-card .glyph {
+    font-size: var(--loom-font-3xl);
+    line-height: 1;
+  }
+  .loom-badge-card .label {
+    font-weight: 700;
+    margin-top: var(--loom-space-2);
+  }
+  .loom-badge-card .desc {
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-ink-muted);
+    margin-top: 2px;
+  }
+
+  /* ---------- Form primitives (used in post-skill etc.) ---------- */
+  .loom-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-2);
+  }
+  .loom-form-field label {
+    font-size: var(--loom-font-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--loom-color-ink-muted);
+    font-weight: 700;
+  }
+  .loom-form-field input,
+  .loom-form-field textarea,
+  .loom-form-field select {
+    font: inherit;
+    color: inherit;
+    background: var(--loom-color-bg-canvas);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-md);
+    padding: var(--loom-space-3) var(--loom-space-4);
+    width: 100%;
+    max-width: 100%;
+    transition: border-color var(--loom-transition-fast);
+  }
+  .loom-form-field input:focus,
+  .loom-form-field textarea:focus,
+  .loom-form-field select:focus {
+    outline: 0;
+    border-color: var(--loom-color-primary);
+  }
+  .loom-form-field textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  .loom-form-field .hint {
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-ink-muted);
+  }
+
+  /* ---------- Step indicator (multi-step forms) ---------- */
+  .loom-step-indicator {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--loom-space-2);
+    margin-bottom: var(--loom-space-6);
+  }
+  @media (min-width: 768px) {
+    .loom-step-indicator {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+  }
+  .loom-step-indicator .step {
+    padding: var(--loom-space-3);
+    background: var(--loom-color-surface-muted);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-md);
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-ink-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--loom-space-2);
+  }
+  .loom-step-indicator .step[data-state="current"] {
+    border-color: var(--loom-color-primary);
+    color: var(--loom-color-ink);
+  }
+  .loom-step-indicator .step[data-state="done"] {
+    border-color: var(--loom-color-success);
+    color: var(--loom-color-ink-muted);
+  }
+  .loom-step-indicator .num {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--loom-radius-full);
+    background: var(--loom-color-bg-overlay);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .loom-step-indicator .step[data-state="current"] .num {
+    background: var(--loom-color-primary);
+    color: var(--loom-color-primary-fg);
+  }
+
+  /* ---------- Block button (full-width modifier) ---------- */
+  .loom-btn[data-block="true"] {
+    width: 100%;
+    margin-top: var(--loom-space-3);
+  }
+
+  /* ---------- Inline strong (used in panel-body emphasis) ---------- */
+  .loom-emph { color: var(--loom-color-ink); font-weight: 700; }
+  .loom-emph[data-tone="success"] { color: var(--loom-color-success); }
+  .loom-emph[data-tone="warn"]    { color: var(--loom-color-warn); }
+  .loom-emph[data-tone="danger"]  { color: var(--loom-color-danger); }
+  .loom-emph[data-tone="muted"]   { color: var(--loom-color-ink-muted); }
+
+  /* ---------- KV row (label : value pair, used in stats panels) ---------- */
+  .loom-kv {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--loom-space-3);
+    font-size: var(--loom-font-sm);
+  }
+  .loom-kv .label { color: var(--loom-color-ink-muted); }
+  .loom-kv .value { font-weight: 700; }
+
+  /* ---------- Footer ---------- */
+  .loom-footer {
+    border-top: var(--loom-border-component);
+    padding: var(--loom-space-8) var(--loom-space-4);
+    color: var(--loom-color-ink-muted);
+    font-size: var(--loom-font-xs);
+    text-align: center;
+  }
+  .loom-footer .tag {
+    color: var(--loom-color-ink);
+    font-weight: 600;
+  }
+
+  /* ---------- PoC banner ---------- */
+  .loom-poc-banner {
+    background: linear-gradient(110deg,
+      hsl(218 83% 65% / 0.15),
+      hsl(272 84% 65% / 0.12));
+    border-bottom: var(--loom-border-component);
+    padding: var(--loom-space-2) var(--loom-space-4);
+    text-align: center;
+    font-size: var(--loom-font-xs);
+    color: var(--loom-color-ink-muted);
+  }
+  .loom-poc-banner code {
+    background: var(--loom-color-bg-overlay);
+    padding: 0 6px;
+    border-radius: var(--loom-radius-sm);
+    color: var(--loom-color-ink);
+    font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+    font-size: var(--loom-font-xs);
+  }
+}
+
+/* ============================================================ *
+ * @layer plugins                                                *
+ * ------------------------------------------------------------ *
+ * INTENTIONALLY EMPTY. Downstream apps drop component overrides
+ * here. Example (in a separate stylesheet imported AFTER this
+ * file):
+ *
+ *   @layer plugins {
+ *     .loom-brand { --comp-brand-size: var(--loom-font-3xl); }
+ *     .loom-card-battle { --comp-card-radius: var(--loom-radius-md); }
+ *   }
+ *
+ * Plugins NEVER override the base @layer components rules
+ * directly — they tune component-scoped --comp-* tokens only.
+ * That keeps the design system responsive to a single audit.
+ * ============================================================ */
+
+@layer plugins { /* empty — populated by downstream apps */ }
+
+/* ============================================================ *
+ * @layer utilities                                              *
+ * ============================================================ */
+
+@layer utilities {
+  .loom-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  /* Display utilities — last word in the cascade. Use sparingly. */
+  .loom-hidden       { display: none !important; }
+  .loom-show-md      { display: none; }
+  @media (min-width: 768px) { .loom-show-md { display: revert; } }
+}
+
+/* ============================================================ *
+ * Accessibility — applied across all layers                    *
+ * ------------------------------------------------------------ *
+ * Honors user-system preferences. Always-on, no opt-in, no JS  *
+ * required for the core a11y pillars.                          *
+ * ============================================================ */
+
+/* Forced-colors mode (Windows High Contrast). All decorative
+ * gradients fall back to system tokens; component shapes
+ * preserved. */
+@media (forced-colors: active) {
+  .loom-brand,
+  .loom-btn[data-variant="primary"],
+  .loom-card-battle .thumb {
+    background: ButtonFace !important;
+    color: ButtonText !important;
+    -webkit-text-fill-color: currentColor !important;
+  }
+  .loom-card-battle:hover {
+    border-color: Highlight !important;
+  }
+  .loom-pulse-dot { background: Highlight !important; }
+}
+
+/* Reduced motion — disable transitions + animations for users
+ * who set the OS preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Increased-contrast — bump border + text contrast when the OS
+ * preference is set. */
+@media (prefers-contrast: more) {
+  :root {
+    --loom-color-border:        var(--loom-color-border-strong);
+    --loom-color-ink-muted:     var(--loom-color-ink);
+  }
+  .loom-card-battle, .loom-panel, .loom-hero {
+    border-width: 2px;
+  }
+}
+
+/* Larger touch targets on coarse pointers (touch / pen). */
+@media (pointer: coarse) {
+  .loom-btn {
+    --comp-btn-pad-x: var(--loom-space-5);
+    --comp-btn-pad-y: var(--loom-space-3);
+  }
+  .loom-navlinks a {
+    padding: var(--loom-space-3) var(--loom-space-4);
+  }
+}
