@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-XJs8ZIsfgebDHce1QmVmTK18zvo7/8KI7ouydpAWIXqVEZnAulOz5Q9UAWoU5k+D — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-6FAXj7DgvNu0dsW1ltrBnQE/WyP2OdWN0icunArXgJ5/IMQLK3DJWAwqlEfnXDyE — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -775,6 +775,92 @@
   }
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* ============================================================ *
+   * Sidebar + Panel                                               *
+   * ----------                                                    *
+   * Right-rail aside containing a stack of typed panels.          *
+   * Panel body shapes: List ({label, value, href?}) or Text       *
+   * (paragraphs).                                                 *
+   * ============================================================ */
+  .loom-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-4);
+  }
+  .loom-panel {
+    background: var(--loom-color-surface);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-component);
+    padding: var(--loom-space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-3);
+  }
+  .loom-panel__title {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-base);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    line-height: 1.2;
+    margin: 0;
+  }
+  .loom-panel__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-2);
+  }
+  .loom-panel__list-item {
+    display: flex;
+    align-items: center;
+  }
+  .loom-panel__list-link {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--loom-space-3);
+    padding: var(--loom-space-2);
+    border-radius: var(--loom-radius-sm);
+    color: var(--loom-color-ink);
+    text-decoration: none;
+    min-height: var(--loom-tap-min);
+  }
+  .loom-panel__list-link:hover,
+  .loom-panel__list-link:focus-visible {
+    background: var(--loom-color-surface-muted);
+  }
+  .loom-panel__list-link[data-invalid="true"] {
+    outline: var(--loom-stroke-strong) dashed var(--loom-color-warning, currentColor);
+    outline-offset: var(--loom-stroke-thin);
+  }
+  .loom-panel__list-label {
+    flex: 1 1 auto;
+    color: var(--loom-color-ink);
+    font-size: var(--loom-font-sm, 0.875rem);
+    line-height: 1.4;
+  }
+  .loom-panel__list-value {
+    flex: 0 0 auto;
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    font-size: var(--loom-font-sm, 0.875rem);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .loom-panel__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-2);
+  }
+  .loom-panel__paragraph {
+    font-size: var(--loom-font-sm, 0.875rem);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    line-height: 1.5;
+    margin: 0;
   }
 
   /* ============================================================ *

@@ -1,373 +1,578 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="color-scheme" content="dark light">
-  <meta name="description"
-        content="Skill Shots — real challenges, real stakes, public results.">
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'sha256-jd9sEWperK45mwB2+yYiEi4kI1qU7fY/nISOneqQ0ns='; script-src 'self' 'unsafe-hashes' 'sha256-1gCRPrLeOTpqhFgQmbyPytpWgjiZf+TQOM3j/vjn+M4='; frame-ancestors 'none'">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkillShots — voted skill battles</title>
+<meta name="description" content="Skill battles, voted by your crew. Pots split at round close.">
+<link rel="canonical" href="/">
+<style>/* SYNC-FROM-LOOM:sha384-6FAXj7DgvNu0dsW1ltrBnQE/WyP2OdWN0icunArXgJ5/IMQLK3DJWAwqlEfnXDyE — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* ===================================================================
+ * loom-skin.css — semantic component layer for the Loom design system
+ * ===================================================================
+ *
+ * ARCHITECTURE
+ * ------------
+ * This file is organized into named CSS @layer blocks. The cascade
+ * order is fixed once at the top — later layers always win over
+ * earlier ones, regardless of source order or specificity. This
+ * gives plugin authors a predictable extension point and removes
+ * specificity-war footguns.
+ *
+ * Cascade (lowest precedence first):
+ *
+ *   reset       universal box-sizing + zero defaults
+ *   tokens      surfaces design tokens as CSS custom properties on :root
+ *               (also re-exported as component-scoped --comp-* tokens
+ *               via inheritance)
+ *   primitives  layout primitives (.loom-page, .loom-stack, .loom-row)
+ *   components  composite components (.loom-card-battle, .loom-leader,
+ *               .loom-hero, .loom-nav, etc.)
+ *   plugins     OPEN — downstream apps drop overrides here. Empty
+ *               by default. Overrides land via an unwrapped block
+ *               in a separate stylesheet imported AFTER this one.
+ *   utilities   single-purpose helpers (.loom-sr-only) — wins over
+ *               components by design (utilities should be the final
+ *               override knob)
+ *
+ * COMPOSITION MODEL ("mixins / traits / inheritance" in CSS)
+ * ----------------------------------------------------------
+ * 1. CSS custom properties as MIXINS — any component declares its own
+ *    --comp-* tokens that downstream rules can override. E.g.:
+ *      .loom-card { --comp-card-pad: var(--loom-space-5); padding: var(--comp-card-pad); }
+ *      .loom-panel.is-roomy { --comp-card-pad: var(--loom-space-8); }
+ *
+ * 2. Attribute-driven VARIANTS — components dispatch on
+ *    `data-variant`, `data-tone`, `data-size`, `aria-current`,
+ *    `aria-pressed` etc. instead of stacked class names. The
+ *    attribute is the schema; the rendered HTML is unambiguous.
+ *
+ * 3. INHERITANCE via custom-property cascade — parent components
+ *    can set --comp-* tokens that children inherit automatically
+ *    (CSS custom properties inherit by default).
+ *
+ * 4. PLUGIN extension — the @layer plugins block is intentionally
+ *    empty here. A site that wants a different brand voice writes
+ *    its own unwrapped block (e.g. ".loom-brand { ... }") in a
+ *    separate file imported after this one. No specificity war.
+ *
+ * STRICT INVARIANTS (enforced by `loom lint`)
+ * -------------------------------------------
+ * - No raw color literals (hex / rgb / hsl) outside this file's
+ *   tokens layer. Every paint reads through var(--loom-color-*) or
+ *   a component-scoped --comp-* alias.
+ * - No raw px / em values for spacing, type, or radii. Every
+ *   measurement reads through var(--loom-space-*), var(--loom-font-*),
+ *   var(--loom-radius-*).
+ * - All margins / padding / borders compose from the spacing
+ *   token scale.
+ * - Every text element gets `overflow-wrap: anywhere` from the
+ *   reset layer. Every container gets `min-width: 0` so flex/grid
+ *   children don't blow out.
+ * - All animations honor `prefers-reduced-motion`.
+ * - Mobile-first: breakpoints scale up only.
+ *
+ * MOBILE-FIRST + STRICT OVERFLOW
+ * ------------------------------
+ * Default rules target a 320 px viewport. `@media (min-width: …)`
+ * upgrades layouts as space grows. The page never produces
+ * horizontal scroll: `html { overflow-x: clip; }` and every
+ * potentially-long string has `text-overflow: ellipsis` or
+ * `overflow-wrap: anywhere`.
+ *
+ * WHY THIS LAYERING (vs the old flat sheet)
+ * -----------------------------------------
+ * Plain CSS resolves rules by source-order + specificity. With
+ * many contributors + plugin extensions, both become unreliable
+ * fast — a deep selector accidentally wins; a later import
+ * silently shadows. `@layer` makes the precedence ladder explicit
+ * and reviewable. A reviewer reads the layer order at the top and
+ * knows the truth without grep'ing the whole sheet.
+ * =================================================================== */
 
-  <!-- Strict Content-Security-Policy: zero external resources, no
-       inline scripts, no eval. self only. Repeat in HTTP via a
-       middleware in production. -->
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self';
-                 style-src 'self';
-                 img-src 'self' data:;
-                 font-src 'self';
-                 script-src 'self';
-                 connect-src 'self';
-                 base-uri 'self';
-                 form-action 'self';
-                 frame-ancestors 'none'">
-  <!-- NOTE: upgrade-insecure-requests REMOVED. This directive
-       rewrites every http:// subresource URL to https:// — fine
-       in production behind TLS, fatal for an HTTP dev server
-       (browser tries https://localhost:8123/loom-skin.css, no cert,
-       all CSS dies, page renders unstyled). The fix should land
-       at the production HTTP-header level, never in the meta CSP. -->
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+/* @layer cascade dropped for older-browser compat */
+/* ============================================================ *
+ * @layer reset                                                  *
+ * ============================================================ */
 
-  <title>Skill Shots — Real challenges. Real stakes. Public results.</title>
-  <!-- forge:seo:start -->
-  <meta name="description" content="SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.">
-  <link rel="canonical" href="https://skillshots.example/">
-  <meta property="og:title" content="SkillShots — Real challenges. Real stakes. Public results.">
-  <meta property="og:description" content="SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://skillshots.example/">
-  <meta property="og:image" content="https://skillshots.example/og-image.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SkillShots">
-  <meta name="twitter:description" content="SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"SkillShots — Real challenges. Real stakes. Public results.","description":"SkillShots — vote-judged skill challenges with real cash pots. Submit, watch, vote, win.","url":"https://skillshots.example/"}</script>
-  <!-- forge:seo:end -->
+/* unwrapped @layer */
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  * { margin: 0; padding: 0; min-width: 0; }
 
 
-  <link rel="stylesheet" href="loom-fallback.css" integrity="sha384-Ve8xpma5bkBRMGqiP6HCENajTMQm3VZznZ71P4PPHiCpbJeDGkKs4sY5awzaSAfI" crossorigin="anonymous" integrity="sha384-Ve8xpma5bkBRMGqiP6HCENajTMQm3VZznZ71P4PPHiCpbJeDGkKs4sY5awzaSAfI" crossorigin="anonymous">
-  <link rel="stylesheet" href="loom-tokens.css" integrity="sha384-Sa89M7KHi4lJ672NQAj83F8SL1o2zgzgqc8eq2CEbWFFD1VVETvoMTFzjC8Q33sJ" crossorigin="anonymous">
-  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-VLoqVGvC7f1G+oXe9E/PHFxB4jHV1EpJYU+35UkzMkLN+PXHmkkRPCUO0u5btzPk" crossorigin="anonymous">
-  <script defer src="/forge-findings.js"></script>
-  <script defer src="/forge-overlay.js" integrity="sha384-pgZq14j8YeA7F0+hj5AWxh+rscSX27K3M/OzGEOqH75wFc8pLnfZj6oFKMFG0oDZ" crossorigin="anonymous"></script>
-  <script defer src="/aesthetic.js" integrity="sha384-7SqKnkMkWBalLzGAlZ86aFUM4rg647OhvB3fMivitJKw+9A6XpsgmLPUwhQfz95/" crossorigin="anonymous"></script>
-  <script defer src="/theme.js" integrity="sha384-la1FRCOIyWYmSbU0w25Mh1vSNViF8u+h9Do/bjqVu/ARPPwXfPXxrNRJtSz1ZFXD" crossorigin="anonymous"></script>
+  /* Diagnostic: the "CSS NOT LOADING" yellow banner in pages is
+   * styled with `.loom-css-loaded`. If skin.css applies, the banner
+   * disappears. If owner sees the banner, the bug is "browser
+   * didn't apply CSS" — verifiable from a single screenshot. */
+  .loom-css-loaded { display: none !important; }
+
+
+  /* WCAG 2.5.5 + iOS HIG floor for every interactive element on
+   * mobile-friendly layouts. Pages can opt out per-element via
+   * data-tap="compact" for hover-driven desktop UIs (e.g. dense
+   * data tables). Anything that wants to be smaller MUST justify
+   * itself with that attribute. */
+  @media (pointer: coarse), (max-width: 1024px) {
+    button:not([data-tap="compact"]),
+    a:not([data-tap="compact"]),
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([data-tap="compact"]),
+    select:not([data-tap="compact"]),
+    textarea:not([data-tap="compact"]),
+    [role="button"]:not([data-tap="compact"]),
+    [role="link"]:not([data-tap="compact"]),
+    summary:not([data-tap="compact"]) {
+      min-height: var(--loom-tap-min);
+      min-width: var(--loom-tap-min);
+    }
+    /* Inputs and selects also need width — typing inside a 0-pad
+     * box makes content scroll mid-character. */
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([data-tap="compact"]),
+    select:not([data-tap="compact"]),
+    textarea:not([data-tap="compact"]) {
+      min-width: var(--loom-tap-min);
+      padding: var(--loom-space-2) var(--loom-space-3);
+    }
+  }
+
+
+  html, body {
+    overflow-x: clip;
+    max-width: 100%;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html {
+    /* Set bg on html so body's gradient overlays cleanly + the
+     * canvas behind any centered .loom-page max-width still
+     * reads as the themed surface (was rendering white in
+     * crawler screenshots). */
+    background: var(--loom-color-bg-canvas);
+    color: var(--loom-color-ink);
+    color-scheme: light dark;
+    min-height: 100%;
+  }
+
+  /* Honor OS preference when no explicit data-theme is set. */
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme]) {
+      color-scheme: dark;
+    }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+
+  body {
+    font-family: var(--loom-font-body, -apple-system, BlinkMacSystemFont,
+                 "Segoe UI", Roboto, system-ui, sans-serif);
+    font-size: var(--loom-font-base);
+    line-height: var(--loom-leading-base, 1.5);
+    color: var(--loom-color-ink);
+    background:
+      /* Subtle ambient gradient — gives flat dark a sense of light source. */
+      radial-gradient(1200px 600px at 80% -10%,
+        hsl(218 83% 65% / 0.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 20%,
+        hsl(272 84% 65% / 0.06), transparent 60%),
+      var(--loom-color-bg-canvas);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11", "cv02";
+  }
+
+
+  img, video, svg, canvas, picture {
+    max-width: 100%; height: auto; display: block;
+  }
+
+
+  /* Universal long-content protections. Every text element wraps. */
+  p, h1, h2, h3, h4, h5, h6, span, a, button, li, td, th, label,
+  blockquote, dt, dd, figcaption {
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  pre, code, kbd, samp { overflow-x: auto; max-width: 100%; }
+
+
+  a { color: inherit; text-decoration: none; }
+
+  button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+
+
+  :focus-visible {
+    outline: 2px solid var(--loom-color-primary);
+    outline-offset: 2px;
+    border-radius: var(--loom-radius-sm);
+  }
+
+
+  /* Hide content from sighted users without removing from a11y tree. */
+  [hidden] { display: none !important; }
+
+
+
+/* ============================================================ *
+ * @layer tokens                                                 *
+ * ------------------------------------------------------------ *
+ * loom-tokens.css already declared every base token under :root.
+ * This layer adds COMPONENT-SCOPED tokens — "trait" defaults that
+ * components compose. Children that want to retune a component
+ * override these on their own scope without changing the global
+ * design token table.                                            *
+ * ============================================================ */
+
+/* unwrapped @layer */
+
+  :root {
+    /* Component-trait tokens. Downstream overrides land here. */
+    --loom-radius-component:    var(--loom-radius-lg);
+    --loom-border-component:    1px solid var(--loom-color-border);
+    --loom-border-strong:       1px solid var(--loom-color-border-strong);
+
+    /* Layered shadow stack — premium depth.
+     * Three rays at different distances + a soft ambient =
+     * convincing volume without looking heavy. */
+    --loom-shadow-flat:
+      0 1px 0 hsl(220 33% 0% / 0.06);
+    --loom-shadow-soft:
+      0 1px 2px hsl(220 33% 0% / 0.10),
+      0 4px 12px hsl(220 33% 0% / 0.10);
+    --loom-shadow-elevated:
+      0 1px 2px hsl(220 33% 0% / 0.18),
+      0 8px 20px hsl(220 33% 0% / 0.30),
+      0 24px 48px hsl(220 33% 0% / 0.20);
+    --loom-shadow-cta:
+      0 4px 16px hsl(220 90% 28% / 0.35),
+      0 1px 2px hsl(220 33% 0% / 0.40);
+    --loom-shadow-glow-accent:
+      0 0 0 1px hsl(218 83% 65% / 0.35),
+      0 8px 32px hsl(218 83% 65% / 0.20);
+
+    --loom-pad-card:            var(--loom-space-4);
+    --loom-pad-panel:           var(--loom-space-5);
+    --loom-pad-band:            var(--loom-space-6);
+    --loom-gap-stack:           var(--loom-space-4);
+    --loom-gap-row:             var(--loom-space-3);
+    --loom-gap-grid:            var(--loom-space-4);
+    --loom-blur-glass:          16px;
+    --loom-saturate-glass:      160%;
+
+    /* Motion — premium curves. The "out" curve is what ships
+     * everywhere by default; the "spring" curve is for delight
+     * moments (button-press release, reveal). */
+    --loom-ease-out:            cubic-bezier(.16, 1, .3, 1);
+    --loom-ease-spring:         cubic-bezier(.34, 1.56, .64, 1);
+    --loom-transition-fast:     180ms var(--loom-ease-out);
+    --loom-transition-base:     280ms var(--loom-ease-out);
+    --loom-transition-slow:     520ms var(--loom-ease-out);
+    --loom-stroke-thin:         1px;
+    --loom-stroke-strong:       2px;
+
+    /* Tap-target / sizing tokens. WCAG 2.5.5 + iOS HIG floor for
+     * any interactive element on coarse pointers. The default
+     * ships at 44 — increase per surface, never decrease. */
+    --loom-tap-min:             44px;
+    /* Right-rail width on desktop layouts. Single source of truth
+     * for the column shape so .loom-page-rail and any future
+     * fixed-width columns track together. */
+    --loom-rail-width:          320px;
+    /* Animation displacement distances — used by entrance keyframes
+     * (slide-in-right, fade-in-up) so they share a vocabulary. */
+    --loom-motion-rise:         12px;
+    --loom-motion-shift:        16px;
+    /* Z-index scale — semantic stacking, not raw integers. Each
+     * step leaves room (10s) for one-off page-local overrides
+     * while keeping global precedence reviewable. */
+    --loom-z-base:              0;
+    --loom-z-raised:            1;
+    --loom-z-overlay:           10;
+    --loom-z-sticky:            50;
+    --loom-z-tooltip:           55;
+    --loom-z-toast:             60;
+    --loom-z-modal:             100;
+
+    /* Typography premium tier — display weights for hero copy. */
+    --loom-font-display: ui-rounded, "SF Pro Display",
+                         "Segoe UI Variable Display", "Inter Display",
+                         "Inter", system-ui, -apple-system, sans-serif;
+    --loom-font-body:    -apple-system, BlinkMacSystemFont,
+                         "Inter", "Segoe UI", Roboto,
+                         "Helvetica Neue", system-ui, sans-serif;
+    --loom-font-mono:    ui-monospace, "JetBrains Mono", "Fira Code",
+                         "SF Mono", Menlo, Consolas, monospace;
+    --loom-track-tight:  -0.025em;
+    --loom-track-snug:   -0.015em;
+    --loom-track-loose:  0.06em;
+    --loom-leading-tight: 1.1;
+    --loom-leading-snug:  1.3;
+    --loom-leading-base:  1.5;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --loom-pad-card:  var(--loom-space-5);
+      --loom-pad-panel: var(--loom-space-6);
+      --loom-pad-band:  var(--loom-space-8);
+    }
+  }
+
+
+
+/* ============================================================ *
+ * @layer primitives                                             *
+ * ============================================================ */
+
+/* unwrapped @layer */
+
+  .loom-page {
+    width: 100%;
+    max-width: var(--loom-break-xl);
+    margin: 0 auto;
+    padding: var(--loom-pad-band);
+  }
+
+
+  /* Skip-link target — accessibility primitive.
+   * 44×44 minimum hit-box per WCAG 2.5.5 + iOS HIG. */
+  .loom-skip {
+    position: absolute;
+    inset-inline-start: var(--loom-space-2);
+    inset-block-start: var(--loom-space-2);
+    padding: var(--loom-space-2) var(--loom-space-3);
+    background: var(--loom-color-surface);
+    color: var(--loom-color-ink);
+    border-radius: var(--loom-radius-md);
+    transform: translateY(-150%);
+    transition: transform var(--loom-transition-fast);
+    z-index: var(--loom-z-modal);
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--loom-tap-min);
+    min-width: var(--loom-tap-min);
+  }
+
+  .loom-skip:focus { transform: translateY(0); }
+
+
+  /* ---------- Page title (h1 at top of view) ---------- */
+  .loom-page-title {
+    font-size: var(--loom-font-2xl);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  @media (min-width: 768px) {
+    .loom-page-title { font-size: var(--loom-font-3xl); }
+  }
+
+  .loom-page-title + .loom-page-subtitle {
+    color: var(--loom-color-ink-muted);
+    margin-top: var(--loom-space-1);
+    font-size: var(--loom-font-base);
+  }
+
+
+
+/* ============================================================ *
+ * @layer plugins                                                *
+ * ------------------------------------------------------------ *
+ * Sanctioned aesthetic + font variants. Each is opt-in via an
+ * HTML attribute:
+ *
+ *   <html data-theme="dark|light|hc-dark|hc-light|sepia">
+ *   <html data-font="display|serif|mono">
+ *   <html data-density="comfortable|compact|spacious">
+ *
+ * All layered into @layer plugins so downstream apps can still
+ * override on top via their own @layer plugins blocks (CSS @layer
+ * permits cumulative additions — multiple stylesheets all
+ * @layer plugins-name compose).
+ *
+ * Adding a new theme: append a `:root[data-theme="<name>"] { ... }`
+ * block here, listing every base token it overrides. Adding a
+ * font variant: append a `:root[data-font="<name>"] { ... }` block
+ * with --loom-font-display / --loom-font-body / --loom-font-mono.
+ * ============================================================ */
+
+/* unwrapped @layer */
+
+  /* High-contrast dark — bumps borders, text, removes
+   * decorative gradients on title that lower contrast. */
+  :root[data-theme="hc-dark"] {
+    --loom-color-bg-canvas:     hsl(0 0% 0%);
+    --loom-color-surface:       hsl(0 0% 4%);
+    --loom-color-surface-muted: hsl(0 0% 8%);
+    --loom-color-ink:           hsl(0 0% 100%);
+    --loom-color-ink-muted:     hsl(0 0% 86%);
+    --loom-color-border:        hsl(0 0% 50%);
+    --loom-color-border-strong: hsl(0 0% 70%);
+    --loom-color-primary:       hsl(220 100% 75%);
+    --loom-color-success:       hsl(140 100% 60%);
+    --loom-color-warn:          hsl(35 100% 70%);
+    --loom-color-danger:        hsl(0 100% 70%);
+  }
+
+  :root[data-theme="hc-dark"] .loom-hero-title {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: var(--loom-color-ink);
+  }
+
+
+  /* High-contrast light — for users with low-vision who need
+   * AAA on a light background. */
+  :root[data-theme="hc-light"] {
+    --loom-color-bg-canvas:     hsl(0 0% 100%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(0 0% 96%);
+    --loom-color-ink:           hsl(0 0% 0%);
+    --loom-color-ink-muted:     hsl(0 0% 24%);
+    --loom-color-border:        hsl(0 0% 30%);
+    --loom-color-border-strong: hsl(0 0% 10%);
+    --loom-color-primary:       hsl(220 100% 30%);
+    --loom-color-success:       hsl(140 100% 22%);
+    --loom-color-warn:          hsl(35 100% 32%);
+    --loom-color-danger:        hsl(0 100% 35%);
+  }
+
+  :root[data-theme="hc-light"] .loom-hero-title {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: var(--loom-color-ink);
+  }
+
+
+  /* Sepia — warm low-strain reading variant. */
+  :root[data-theme="sepia"] {
+    --loom-color-bg-canvas:     hsl(35 35% 91%);
+    --loom-color-surface:       hsl(35 35% 95%);
+    --loom-color-surface-muted: hsl(35 30% 87%);
+    --loom-color-ink:           hsl(25 35% 18%);
+    --loom-color-ink-muted:     hsl(25 25% 36%);
+    --loom-color-border:        hsl(30 25% 75%);
+    --loom-color-border-strong: hsl(30 25% 60%);
+    --loom-color-primary:       hsl(20 70% 38%);
+    --loom-color-success:       hsl(140 50% 28%);
+    --loom-color-warn:          hsl(35 80% 32%);
+    --loom-color-danger:        hsl(0 60% 38%);
+    --loom-color-gradient-a:    hsl(20 70% 50%);
+    --loom-color-gradient-b:    hsl(35 80% 45%);
+  }
+
+
+  /* Font variants — swap the entire type system.
+   * data-font="display" is the default (already set in tokens layer). */
+  :root[data-font="serif"] {
+    --loom-font-display: ui-serif, Georgia, Cambria, "Times New Roman",
+                         Times, serif;
+    --loom-font-body:    ui-serif, Georgia, Cambria, "Times New Roman",
+                         Times, serif;
+  }
+
+  :root[data-font="mono"] {
+    --loom-font-display: ui-monospace, "JetBrains Mono", "SF Mono",
+                         Menlo, Consolas, monospace;
+    --loom-font-body:    ui-monospace, "JetBrains Mono", "SF Mono",
+                         Menlo, Consolas, monospace;
+    --loom-track-tight:  -0.01em;
+  }
+
+  :root[data-font="rounded"] {
+    --loom-font-display: ui-rounded, "SF Pro Rounded",
+                         "Hiragino Maru Gothic ProN", "Quicksand",
+                         system-ui, sans-serif;
+    --loom-font-body:    ui-rounded, "SF Pro Rounded",
+                         "Hiragino Maru Gothic ProN", "Quicksand",
+                         system-ui, sans-serif;
+  }
+
+
+  /* Density variants — swap the spacing scale globally.
+   * data-density="comfortable" is the default. */
+  :root[data-density="compact"] {
+    --loom-pad-card:   var(--loom-space-3);
+    --loom-pad-panel:  var(--loom-space-4);
+    --loom-pad-band:   var(--loom-space-5);
+    --loom-gap-stack:  var(--loom-space-3);
+    --loom-gap-row:    var(--loom-space-2);
+    --loom-gap-grid:   var(--loom-space-3);
+  }
+
+  :root[data-density="spacious"] {
+    --loom-pad-card:   var(--loom-space-6);
+    --loom-pad-panel:  var(--loom-space-8);
+    --loom-pad-band:   var(--loom-space-12);
+    --loom-gap-stack:  var(--loom-space-6);
+    --loom-gap-row:    var(--loom-space-4);
+    --loom-gap-grid:   var(--loom-space-6);
+  }
+
+
+/* Reduced motion — disable transitions + animations for users
+ * who set the OS preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* Increased-contrast — bump border + text contrast when the OS
+ * preference is set. */
+@media (prefers-contrast: more) {
+  :root {
+    --loom-color-border:        var(--loom-color-border-strong);
+    --loom-color-ink-muted:     var(--loom-color-ink);
+  }
+  .loom-card-battle, .loom-panel, .loom-hero {
+    border-width: 2px;
+  }
+}
+
+body[data-loom-drawer-open] .loom-drawer { transform: translateX(0); }
+
+body[data-loom-drawer-open] .loom-drawer-scrim {
+  opacity: 1; pointer-events: auto;
+}
+</style>
+  <link rel="stylesheet" href="/loom-skin.css" media="print" onload="this.media='all';this.removeAttribute('onload')" integrity="sha384-rjXre9KaBj7r/drM/aWZDelo2W1Ah4zKX/Ks0MVIIfwwP04StW7PBdtDCOZDrjS8" crossorigin="anonymous">
+  <noscript><link rel="stylesheet" href="/loom-skin.css" integrity="sha384-rjXre9KaBj7r/drM/aWZDelo2W1Ah4zKX/Ks0MVIIfwwP04StW7PBdtDCOZDrjS8" crossorigin="anonymous"></noscript>
 </head>
 <body>
-
-  <!-- BUG ASSUMPTION: owner reported "no CSS" repeatedly while
-       headless renderers showed full styling. This banner is
-       pure HTML and is styled by loom-fallback.css (loaded first).
-       If loom-skin.css applies, .loom-css-loaded { display:none }
-       hides it. If skin.css fails, the banner stays visible. -->
-  <div class="loom-css-loaded">
-    ⚠ <strong>CSS NOT LOADING</strong> — if you see this yellow bar,
-    your browser failed to apply <code>loom-skin.css</code>.
-    Check DevTools → Network tab. Expected 200 OK, text/css, ~52 KB.
-  </div>
-
-  <a class="loom-skip" href="#main">Skip to content</a>
-
-  <aside class="loom-poc-banner-wrap" aria-label="PoC notice"><div class="loom-poc-banner" role="note">
-    PoC built with <code>loom-tokens.css</code> + <code>loom-skin.css</code>
-    + <code>cms init-site / new-page</code> + Crawler audit. No external
-    resources. Strict CSP. Mobile-first.
-  </div></aside>
-
-  <header class="loom-nav">
-    <div class="loom-nav-inner">
-      <a class="loom-brand" href="/" aria-label="Skill Shots home">SkillShots</a>
-      <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/" data-loom-poly-action="true" aria-current="page" data-backend="list-challenges">Battle Feed</a>
-        <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
-        <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
-        <a href="/profile.html" data-backend="view-profile">Profile</a>
-      </nav>
-      <div class="loom-nav-actions">
-        <button class="loom-btn" data-variant="ghost" type="button" data-loom-theme-toggle aria-pressed="false">Light mode</button>
-        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
-        <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-up">Sign up</button>
-        <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill" data-loom-poly-action="true">Post skill</button>
-      </div>
-    </div>
-  </header>
-
-  <main id="main" class="loom-page">
-    <div class="loom-grid-app">
-      <!-- ========== Main column ========== -->
-      <div>
-
-        <!-- Hero: featured live battle -->
-        <section class="loom-hero" aria-labelledby="featured-title">
-          <span class="loom-live-badge">
-            <span class="loom-pulse-dot" aria-hidden="true"></span>
-            Live · Voting open
-          </span>
-          <h1 id="featured-title" class="loom-hero-title">
-            Hit a half-court shot. Sink a single arc, no rebound, no backboard.
-          </h1>
-          <p class="loom-hero-meta">
-            Posted by @marcus_h · Basketball · 3 entries · Voting closes in
-          </p>
-          <div class="loom-stat-bar">
-            <div class="loom-stat">
-              <div class="loom-stat-label">Pot</div>
-              <div class="loom-stat-value" data-tone="success">$240</div>
-            </div>
-            <div class="loom-stat">
-              <div class="loom-stat-label">Entry fee</div>
-              <div class="loom-stat-value">$60</div>
-            </div>
-            <div class="loom-stat">
-              <div class="loom-stat-label">Voting closes</div>
-              <div class="loom-stat-value" data-tone="warn">02:14:08</div>
-            </div>
-            <div class="loom-stat">
-              <div class="loom-stat-label">Top entry</div>
-              <div class="loom-stat-value">@court_dax · 78%</div>
-            </div>
-          </div>
-          <div class="loom-hero-actions">
-            <button class="loom-btn" data-variant="primary" data-size="lg" type="button" data-backend="cast-vote" data-loom-poly-action="true">Watch + vote</button>
-            <button class="loom-btn" data-variant="outline" data-size="lg" type="button" data-backend="enter-challenge">Enter for $60</button>
-          </div>
-        </section>
-
-        <div class="loom-section-head">
-          <h2>Battle feed</h2>
-          <div class="loom-pill-tabs">
-            <button type="button" aria-pressed="true" data-backend="list-challenges" data-loom-poly-action="true">Live</button>
-            <button type="button" aria-pressed="false" data-backend="list-challenges" data-loom-poly-action="true">Voting</button>
-            <button type="button" aria-pressed="false" data-backend="list-challenges" data-loom-poly-action="true">Closing soon</button>
-            <button type="button" aria-pressed="false" data-backend="list-challenges" data-loom-poly-action="true">By me</button>
-          </div>
-        </div>
-
-        <div class="loom-feed-grid">
-
-          <article class="loom-card-battle">
-            <div class="thumb" data-category="parkour"><span class="loom-thumb-icon" aria-hidden="true">🤸</span><span class="loom-thumb-badge">Voting · 3h left</span></div>
-            <div class="body">
-              <h3 class="title">One-take parkour line — top of stairwell to ground in under 9s.</h3>
-              <div class="host">
-                <span class="loom-avatar" aria-hidden="true" data-initial="V">V</span>
-                <span>@vault_kit · Parkour</span>
-              </div>
-              <div class="stats">
-                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$420</div></div>
-                <div><div class="stat-label">Entry</div><div class="stat-value">$45</div></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="loom-card-battle">
-            <div class="thumb" data-category="billiards"><span class="loom-thumb-icon" aria-hidden="true">🎱</span><span class="loom-thumb-badge">Live · 5 entries</span></div>
-            <div class="body">
-              <h3 class="title">Pool: clear the table in two innings, no scratches.</h3>
-              <div class="host">
-                <span class="loom-avatar" aria-hidden="true" data-initial="9">9</span>
-                <span>@9ball_lori · Billiards</span>
-              </div>
-              <div class="stats">
-                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$310</div></div>
-                <div><div class="stat-label">Entry</div><div class="stat-value">$30</div></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="loom-card-battle">
-            <div class="thumb" data-category="mind"><span class="loom-thumb-icon" aria-hidden="true">🧠</span><span class="loom-thumb-badge">Voting · 12h left</span></div>
-            <div class="body">
-              <h3 class="title">Speed-cube: solve a scrambled 3×3 in under 18 seconds, single take.</h3>
-              <div class="host">
-                <span class="loom-avatar" aria-hidden="true" data-initial="C">C</span>
-                <span>@cuboid_eli · Mind</span>
-              </div>
-              <div class="stats">
-                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$180</div></div>
-                <div><div class="stat-label">Entry</div><div class="stat-value">$20</div></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="loom-card-battle">
-            <div class="thumb" data-category="skate"><span class="loom-thumb-icon" aria-hidden="true">🛹</span><span class="loom-thumb-badge">Live · 2 entries</span></div>
-            <div class="body">
-              <h3 class="title">Skateboard: 5-stair kickflip, land + roll-away, single take.</h3>
-              <div class="host">
-                <span class="loom-avatar" aria-hidden="true" data-initial="K">K</span>
-                <span>@kickflip_mar · Skate</span>
-              </div>
-              <div class="stats">
-                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$95</div></div>
-                <div><div class="stat-label">Entry</div><div class="stat-value">$15</div></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="loom-card-battle">
-            <div class="thumb" data-category="darts"><span class="loom-thumb-icon" aria-hidden="true">🎯</span><span class="loom-thumb-badge">Voting · 1h left</span></div>
-            <div class="body">
-              <h3 class="title">Darts: 9-dart finish from a fresh 501, recorded continuous.</h3>
-              <div class="host">
-                <span class="loom-avatar" aria-hidden="true" data-initial="O">O</span>
-                <span>@oche_riv · Darts</span>
-              </div>
-              <div class="stats">
-                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$540</div></div>
-                <div><div class="stat-label">Entry</div><div class="stat-value">$50</div></div>
-              </div>
-            </div>
-          </article>
-
-          <article class="loom-card-battle">
-            <div class="thumb" data-category="cafe"><span class="loom-thumb-icon" aria-hidden="true">☕</span><span class="loom-thumb-badge">Live · 8 entries</span></div>
-            <div class="body">
-              <h3 class="title">Latte art: free-pour swan in one continuous shot, judged by silhouette.</h3>
-              <div class="host">
-                <span class="loom-avatar" aria-hidden="true" data-initial="B">B</span>
-                <span>@brew_pia · Cafe</span>
-              </div>
-              <div class="stats">
-                <div><div class="stat-label">Pot</div><div class="stat-value" data-tone="success">$120</div></div>
-                <div><div class="stat-label">Entry</div><div class="stat-value">$10</div></div>
-              </div>
-            </div>
-          </article>
-
-        </div>
-      </div>
-
-      <!-- ========== Sidebar ========== -->
-      <aside aria-label="Side panels">
-
-        <section class="loom-panel" aria-labelledby="leader-title">
-          <h2 id="leader-title" class="loom-panel-title">Top earners · this week</h2>
-          <div class="loom-leader" data-rank="1">
-            <div class="rank">1</div>
-            <span class="loom-avatar" aria-hidden="true" data-initial="C">C</span>
-            <div class="name">@court_dax</div>
-            <div class="earnings">$1,840</div>
-          </div>
-          <div class="loom-leader" data-rank="2">
-            <div class="rank">2</div>
-            <span class="loom-avatar" aria-hidden="true" data-initial="V">V</span>
-            <div class="name">@vault_kit</div>
-            <div class="earnings">$1,420</div>
-          </div>
-          <div class="loom-leader" data-rank="3">
-            <div class="rank">3</div>
-            <span class="loom-avatar" aria-hidden="true" data-initial="9">9</span>
-            <div class="name">@9ball_lori</div>
-            <div class="earnings">$995</div>
-          </div>
-          <div class="loom-leader" data-rank="4">
-            <div class="rank">4</div>
-            <span class="loom-avatar" aria-hidden="true" data-initial="O">O</span>
-            <div class="name">@oche_riv</div>
-            <div class="earnings">$870</div>
-          </div>
-          <div class="loom-leader" data-rank="5">
-            <div class="rank">5</div>
-            <span class="loom-avatar" aria-hidden="true" data-initial="B">B</span>
-            <div class="name">@brew_pia</div>
-            <div class="earnings">$640</div>
-          </div>
-        </section>
-
-        <section class="loom-panel" aria-labelledby="vote-title">
-          <div class="loom-section-head">
-            <h2 id="vote-title" class="loom-panel-title">Open votes · need your eye</h2>
-            <a class="loom-link" href="/votes.html" data-backend="list-open-votes">View all</a>
-          </div>
-          <div class="loom-vote-row">
-            <span class="loom-avatar" aria-hidden="true" data-initial="9">9</span>
-            <div class="body">
-              <div class="title">Pool table clear — @9ball_lori</div>
-              <div class="meta">3 entries · 2 innings, no scratch</div>
-            </div>
-            <div class="closes">12m</div>
-          </div>
-          <div class="loom-vote-row">
-            <span class="loom-avatar" aria-hidden="true" data-initial="K">K</span>
-            <div class="body">
-              <div class="title">5-stair kickflip — @kickflip_mar</div>
-              <div class="meta">2 entries · kickflip + roll-away</div>
-            </div>
-            <div class="closes">42m</div>
-          </div>
-          <div class="loom-vote-row">
-            <span class="loom-avatar" aria-hidden="true" data-initial="O">O</span>
-            <div class="body">
-              <div class="title">9-dart 501 — @oche_riv</div>
-              <div class="meta">4 entries · continuous take</div>
-            </div>
-            <div class="closes">1h 04m</div>
-          </div>
-        </section>
-
-        <section class="loom-panel" aria-labelledby="rules-title">
-          <h2 id="rules-title" class="loom-panel-title">House rules</h2>
-          <div class="loom-panel-body">
-            <p>Voters judge entries strictly on adherence to the challenge rules.</p>
-            <p>Popularity ≠ skill. Reports of vote-buying or coordinated voting freeze the pot pending review.</p>
-          </div>
-        </section>
-
-        <section class="loom-panel" aria-labelledby="aesthetic-h">
-          <h2 id="aesthetic-h" class="loom-panel-title">Aesthetic · live swap</h2>
-          <div class="loom-panel-body" data-mb="md">Swap theme, font, density. Persists to localStorage.</div>
-          <div class="loom-aesthetic-row">
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:dark">Dark</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:light">Light</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:hc-dark">HC dark</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:hc-light">HC light</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:sepia">Sepia</button>
-          </div>
-          <div class="loom-aesthetic-row">
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:display">Sans</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:serif">Serif</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:mono">Mono</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:rounded">Rounded</button>
-          </div>
-          <div class="loom-aesthetic-row">
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:compact">Compact</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:comfortable">Comfortable</button>
-            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:spacious">Spacious</button>
-          </div>
-          <button class="loom-btn" data-variant="ghost" data-size="sm" type="button" data-loom-aesthetic-reset data-mt="md" data-backend="view-profile" data-loom-poly-action="true">Reset all</button>
-        </section>
-
-      </aside>
-    </div>
-  </main>
-
-  <footer class="loom-footer">
-    <div>
-      Skill Shots · <span class="tag">PoC</span> · Loom skin layered
-      (reset → tokens → primitives → components → plugins → utilities)
-      · CMS-managed routes · zero external assets
-    </div>
-    <div>Real challenges. Real stakes. Public results.</div>
-  </footer>
-
-
-  <!-- T21: CommandPalette (cmd-k). Press Ctrl/Cmd+K to open. -->
-  <dialog id="cmdk" class="loom-cmdk" aria-label="Quick command">
-    <div class="loom-cmdk-search">
-      <input type="search" placeholder="Type a command…" aria-label="Search commands">
-      <kbd class="loom-cmdk-hint">Esc</kbd>
-    </div>
-    <ul class="loom-cmdk-list" role="listbox">
-      <li role="option" data-action="goto:/" data-keywords="home feed battles"><span class="loom-cmdk-icon" aria-hidden="true">🏠</span><span class="loom-cmdk-label">Battle Feed</span><span class="loom-cmdk-meta">Home</span></li>
-      <li role="option" data-action="goto:/leaderboard.html" data-keywords="leaderboard top earners standings"><span class="loom-cmdk-icon" aria-hidden="true">🏆</span><span class="loom-cmdk-label">Leaderboard</span><span class="loom-cmdk-meta">Top earners</span></li>
-      <li role="option" data-action="goto:/post-skill.html" data-keywords="post submit new challenge"><span class="loom-cmdk-icon" aria-hidden="true">➕</span><span class="loom-cmdk-label">Post skill</span><span class="loom-cmdk-meta">New challenge</span></li>
-      <li role="option" data-action="goto:/my-wins.html" data-keywords="wins history cash out earnings"><span class="loom-cmdk-icon" aria-hidden="true">💰</span><span class="loom-cmdk-label">My Wins</span><span class="loom-cmdk-meta">Cash out</span></li>
-      <li role="option" data-action="goto:/profile.html" data-keywords="profile account settings"><span class="loom-cmdk-icon" aria-hidden="true">👤</span><span class="loom-cmdk-label">Profile</span><span class="loom-cmdk-meta">Account</span></li>
-      <li role="option" data-action="goto:/votes.html" data-keywords="open votes voting judge"><span class="loom-cmdk-icon" aria-hidden="true">👀</span><span class="loom-cmdk-label">Open votes</span><span class="loom-cmdk-meta">Voting now</span></li>
-      <li role="option" data-action="toggle:loom-theme" data-keywords="theme dark light mode"><span class="loom-cmdk-icon" aria-hidden="true">🎨</span><span class="loom-cmdk-label">Toggle theme</span><span class="loom-cmdk-meta">Dark / Light</span></li>
-    </ul>
-  </dialog>
-
+<a class="loom-skip" href="#content">Skip to content</a>
+<header class="loom-page-header" role="banner">
+<nav class="loom-page-nav" aria-label="Primary">
+<a class="loom-page-brand" href="/">SkillShots</a>
+      <a class="loom-page-nav-link" href="/" data-backend="list-challenges" aria-current="page">Battle Feed</a>
+      <a class="loom-page-nav-link" href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
+      <a class="loom-page-nav-link" href="/my-wins.html" data-backend="list-touches">My Wins</a>
+      <a class="loom-page-nav-link" href="/profile.html" data-backend="view-profile">Profile</a>
+</nav>
+<h1 class="loom-page-title">SkillShots — voted skill battles</h1>
+</header>
+<div id="content">
+<main class="loom-page" data-cms-path="/"><section class="loom-section-hero" data-loom-hero><span class="loom-section-hero__eyebrow">Featured</span><h2 class="loom-section-hero__title">Half-court shot — single arc</h2><p class="loom-section-hero__lede">Hosted by @marcus_h · 3 entries · pot $240 · vote closes 4d.</p><a class="loom-section-hero__cta" href="/c/half-court-arc" data-backend="view-challenge">Watch + vote</a></section><section class="loom-composer" data-loom-composer data-size="comfortable" aria-label="Compose"><div class="loom-composer__row"><div class="loom-composer__avatar" data-avatar="initials" aria-hidden="true">DA</div><a class="loom-composer__prompt" href="/post-skill" data-backend="post-skill">What did you nail today?</a></div><nav class="loom-composer__actions" aria-label="Quick actions"><a class="loom-composer__action" href="/post-skill" data-backend="post-skill" aria-label="Upload clip"><span class="loom-composer__action-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span><span class="loom-composer__action-label">Upload clip</span></a><a class="loom-composer__action" href="/post-skill" data-backend="challenge-create" aria-label="Challenge"><span class="loom-composer__action-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15 8.5 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 9 8.5 12 2"/></svg></span><span class="loom-composer__action-label">Challenge</span></a><a class="loom-composer__action" href="/post-skill" data-backend="live-start" aria-label="Live"><span class="loom-composer__action-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg></span><span class="loom-composer__action-label">Live</span></a></nav></section><section class="loom-card-feed" data-loom-card-feed><h2 class="loom-card-feed__heading">Battle feed</h2><article class="loom-card-feed-item" data-loom-card><a class="loom-card-feed-item__link" href="/c/parkour-stairwell" data-backend="view-challenge"><div class="loom-card-feed-item__avatar" data-avatar="initials" aria-hidden="true">PK</div><div class="loom-card-feed-item__body"><span class="loom-card-feed-item__tag">Parkour</span><h3 class="loom-card-feed-item__title">One-take parkour line — top of stairwell to ground in under 9s.</h3><p class="loom-card-feed-item__host">@vault_kit · 4d left</p><ul class="loom-card-feed-item__stats" aria-label="Stats"><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Votes</span><span class="loom-card-feed-item__stat-value">78%</span></li><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Pot</span><span class="loom-card-feed-item__stat-value">$240</span></li></ul></div></a></article><article class="loom-card-feed-item" data-loom-card><a class="loom-card-feed-item__link" href="/c/pool-clear-9lori" data-backend="view-challenge"><div class="loom-card-feed-item__avatar" data-avatar="initials" aria-hidden="true">9B</div><div class="loom-card-feed-item__body"><span class="loom-card-feed-item__tag">Billiards</span><h3 class="loom-card-feed-item__title">Pool: clear the table in two innings, no scratches.</h3><p class="loom-card-feed-item__host">@9ball_lori · 12m left</p><ul class="loom-card-feed-item__stats" aria-label="Stats"><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Votes</span><span class="loom-card-feed-item__stat-value">62%</span></li><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Pot</span><span class="loom-card-feed-item__stat-value">$120</span></li></ul></div></a></article><article class="loom-card-feed-item" data-loom-card><a class="loom-card-feed-item__link" href="/c/cube-sub18" data-backend="view-challenge"><div class="loom-card-feed-item__avatar" data-avatar="initials" aria-hidden="true">SC</div><div class="loom-card-feed-item__body"><span class="loom-card-feed-item__tag">Mind</span><h3 class="loom-card-feed-item__title">Speed-cube: solve a scrambled 3×3 in under 18 seconds, single take.</h3><p class="loom-card-feed-item__host">@dax · 2d left</p><ul class="loom-card-feed-item__stats" aria-label="Stats"><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Votes</span><span class="loom-card-feed-item__stat-value">55%</span></li><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Pot</span><span class="loom-card-feed-item__stat-value">$180</span></li></ul></div></a></article><article class="loom-card-feed-item" data-loom-card><a class="loom-card-feed-item__link" href="/c/kickflip-5stair" data-backend="view-challenge"><div class="loom-card-feed-item__avatar" data-avatar="initials" aria-hidden="true">SK</div><div class="loom-card-feed-item__body"><span class="loom-card-feed-item__tag">Skate</span><h3 class="loom-card-feed-item__title">Skateboard: 5-stair kickflip, land + roll-away, single take.</h3><p class="loom-card-feed-item__host">@kickflip_mar · 42m left</p><ul class="loom-card-feed-item__stats" aria-label="Stats"><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Votes</span><span class="loom-card-feed-item__stat-value">48%</span></li><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Pot</span><span class="loom-card-feed-item__stat-value">$95</span></li></ul></div></a></article><article class="loom-card-feed-item" data-loom-card><a class="loom-card-feed-item__link" href="/c/9dart-501" data-backend="view-challenge"><div class="loom-card-feed-item__avatar" data-avatar="initials" aria-hidden="true">DT</div><div class="loom-card-feed-item__body"><span class="loom-card-feed-item__tag">Darts</span><h3 class="loom-card-feed-item__title">Darts: 9-dart finish from a fresh 501, recorded continuous.</h3><p class="loom-card-feed-item__host">@oche_riv · 1h 04m left</p><ul class="loom-card-feed-item__stats" aria-label="Stats"><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Votes</span><span class="loom-card-feed-item__stat-value">41%</span></li><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Pot</span><span class="loom-card-feed-item__stat-value">$140</span></li></ul></div></a></article><article class="loom-card-feed-item" data-loom-card><a class="loom-card-feed-item__link" href="/c/latte-swan" data-backend="view-challenge"><div class="loom-card-feed-item__avatar" data-avatar="initials" aria-hidden="true">LA</div><div class="loom-card-feed-item__body"><span class="loom-card-feed-item__tag">Cafe</span><h3 class="loom-card-feed-item__title">Latte art: free-pour swan in one continuous shot, judged by silhouette.</h3><p class="loom-card-feed-item__host">@brew_pia · 6h left</p><ul class="loom-card-feed-item__stats" aria-label="Stats"><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Votes</span><span class="loom-card-feed-item__stat-value">33%</span></li><li class="loom-card-feed-item__stat"><span class="loom-card-feed-item__stat-label">Pot</span><span class="loom-card-feed-item__stat-value">$45</span></li></ul></div></a></article></section><aside class="loom-sidebar" aria-label="Side panels"><section class="loom-panel"><h2 class="loom-panel__title">Top earners · this week</h2><ul class="loom-panel__list"><li class="loom-panel__list-item"><a class="loom-panel__list-link" href="/u/court_dax" data-backend="view-profile"><span class="loom-panel__list-label">@court_dax · Basketball</span><span class="loom-panel__list-value">$1,840</span></a></li><li class="loom-panel__list-item"><a class="loom-panel__list-link" href="/u/vault_kit" data-backend="view-profile"><span class="loom-panel__list-label">@vault_kit · Parkour</span><span class="loom-panel__list-value">$1,420</span></a></li><li class="loom-panel__list-item"><a class="loom-panel__list-link" href="/u/9ball_lori" data-backend="view-profile"><span class="loom-panel__list-label">@9ball_lori · Billiards</span><span class="loom-panel__list-value">$995</span></a></li></ul></section><section class="loom-panel"><h2 class="loom-panel__title">Open votes · need your eye</h2><ul class="loom-panel__list"><li class="loom-panel__list-item"><a class="loom-panel__list-link" href="/c/pool-clear-9lori" data-backend="view-challenge"><span class="loom-panel__list-label">Pool table clear — 12m</span><span class="loom-panel__list-value">Vote</span></a></li><li class="loom-panel__list-item"><a class="loom-panel__list-link" href="/c/kickflip-5stair" data-backend="view-challenge"><span class="loom-panel__list-label">5-stair kickflip — 42m</span><span class="loom-panel__list-value">Vote</span></a></li><li class="loom-panel__list-item"><a class="loom-panel__list-link" href="/c/9dart-501" data-backend="view-challenge"><span class="loom-panel__list-label">9-dart 501 — 1h 04m</span><span class="loom-panel__list-value">Vote</span></a></li></ul></section><section class="loom-panel"><h2 class="loom-panel__title">House rules</h2><div class="loom-panel__body"><p class="loom-panel__paragraph">One single take. No edits. Voted by the crew.</p><p class="loom-panel__paragraph">Pot splits at round close. Disputes go to a re-vote.</p></div></section></aside></main>
+</div>
+<footer class="loom-page-footer" role="contentinfo">
+<small>SkillShots — voted skill battles.</small>
+</footer>
 </body>
 </html>
