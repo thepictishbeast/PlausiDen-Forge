@@ -127,6 +127,11 @@ jobs:
         run: |
           npm run audit -- --journey journeys/skillshots-poc-first-time.json
 
+      - name: crawler-audit-keyboard
+        working-directory: _crawler
+        run: |
+          npm run audit -- --journey journeys/skillshots-poc-keyboard.json
+
       # --------------------------------------------------------
       # 4. Upload reports + screenshots so the diff is reviewable
       #    even when the run was green.
