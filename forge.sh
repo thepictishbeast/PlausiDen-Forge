@@ -343,13 +343,18 @@ else:
 EOF
   local rc=$?
   if [ $rc -ne 0 ]; then
-    # Each STRICT line printed above is one finding. Bash side
-    # records them en bloc — just bump STRICT_COUNT proportional
-    # to lines printed. Re-run is cheap (pure regex, no I/O of
-    # consequence) so we just count the lines.
-    local n=$(bash forge.sh --label-consistency-count 2>/dev/null || echo 0)
-    # Simpler: just record one finding (the python output already
-    # shows each detail line). Avoids re-running python.
+    # Each STRICT line printed above is one finding. The python
+    # block exits non-zero when it prints any STRICT line; we
+    # record one finding here per phase invocation. (The python
+    # output already shows each detail line on stdout.)
+    #
+    # REGRESSION-GUARD: previous code re-execed `bash forge.sh
+    # --label-consistency-count` here, but no such flag handler
+    # exists in this script — the re-exec ran the FULL forge
+    # phase suite, which includes this phase, which re-execed
+    # forge.sh again, ad infinitum. Result: 57 000+ forked bash
+    # processes after a few cron ticks. Removed the recursive
+    # call entirely; one finding per phase is sufficient.
     finding_strict "label_consistency" "static/" "duplicate labels detected (see STRICT lines above)"
   fi
 }
