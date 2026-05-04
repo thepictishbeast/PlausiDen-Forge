@@ -1,0 +1,67 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "About SkillShots",
+  "description": "How SkillShots works: voted skill battles, single-take video proof, crew-decided pots.",
+  "path": "/about.html",
+  "nav_links": [
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": false
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": false
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": false
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": false
+    }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": null,
+      "title": "About SkillShots",
+      "lede": "Voted skill battles. Single-take video. Pots split by your crew.",
+      "cta": null
+    },
+    {
+      "kind": "group",
+      "title": "How it works",
+      "body": [
+        "A challenge declares a measurable skill (half-court shot, 5-stair kickflip, sub-18 cube solve).",
+        "Players upload one continuous take. No edits, no second chances.",
+        "Voters compare entries and pick a winner. The pot splits at round close."
+      ]
+    },
+    {
+      "kind": "group",
+      "title": "Rules of the game",
+      "body": [
+        "Every entry is one continuous take. Cuts disqualify.",
+        "720p minimum video. Sub-720p rejected at upload.",
+        "Spec disputes go to a re-vote. Repeat offenders get rate-limited."
+      ]
+    },
+    {
+      "kind": "group",
+      "title": "Why we built this",
+      "body": [
+        "Skill is performable. Performance should be voted, not algorithmically rewarded.",
+        "No engagement loops. No infinite scroll. Just: post a take, get judged, split a pot."
+      ]
+    }
+  ]
+}
