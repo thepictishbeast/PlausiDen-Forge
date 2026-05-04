@@ -929,19 +929,51 @@
   .loom-card-battle .stat-value[data-tone="success"] { color: var(--loom-color-success); }
 
   /* ---------- Avatar ---------- */
+  /* ---------- Avatar (T18) ----------
+   * Sizes:    sm=20 / md=24(default) / lg=36 / xl=48 / 2xl=96
+   * Initial:  data-initial="X" renders the letter centered, sized
+   *           to ~55% of the avatar diameter
+   * Tone:     data-tone="primary|success|warn|danger|tier-medium"
+   *           swaps the gradient endpoints to match the role color
+   * Decorative: omit data-initial → avatar is the gradient-only
+   *             placeholder used in dense lists. Mark aria-hidden.
+   */
   .loom-avatar {
     --comp-avatar-size: 24px;
+    --comp-avatar-c1:   var(--loom-color-gradient-a);
+    --comp-avatar-c2:   var(--loom-color-gradient-b);
+    --comp-avatar-fg:   hsl(0 0% 100%);
     width: var(--comp-avatar-size);
     height: var(--comp-avatar-size);
     border-radius: var(--loom-radius-full);
     background: linear-gradient(135deg,
-      var(--loom-color-gradient-a),
-      var(--loom-color-gradient-b));
+      var(--comp-avatar-c1),
+      var(--comp-avatar-c2));
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--comp-avatar-fg);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    /* Initial letter renders at ~55% of avatar size so it scales
+     * cleanly across data-size variants. */
+    font-size: calc(var(--comp-avatar-size) * 0.55);
+    line-height: 1;
+    user-select: none;
   }
-  .loom-avatar[data-size="sm"] { --comp-avatar-size: 20px; }
-  .loom-avatar[data-size="lg"] { --comp-avatar-size: 36px; }
-  .loom-avatar[data-size="xl"] { --comp-avatar-size: 48px; }
+  .loom-avatar[data-size="sm"]  { --comp-avatar-size: 20px; }
+  .loom-avatar[data-size="lg"]  { --comp-avatar-size: 36px; }
+  .loom-avatar[data-size="xl"]  { --comp-avatar-size: 48px; }
+  /* Tone variants — pick role-themed gradient endpoints. Useful
+   * for type-tagged avatars (winning entry → success, losing →
+   * danger, judges/admin → warn). */
+  .loom-avatar[data-tone="primary"]      { --comp-avatar-c1: var(--loom-color-primary);     --comp-avatar-c2: var(--loom-color-gradient-b); }
+  .loom-avatar[data-tone="success"]      { --comp-avatar-c1: var(--loom-color-success);     --comp-avatar-c2: var(--loom-color-gradient-a); }
+  .loom-avatar[data-tone="warn"]         { --comp-avatar-c1: var(--loom-color-warn);        --comp-avatar-c2: var(--loom-color-tier-medium); }
+  .loom-avatar[data-tone="danger"]       { --comp-avatar-c1: var(--loom-color-danger);      --comp-avatar-c2: var(--loom-color-gradient-b); }
+  .loom-avatar[data-tone="tier-medium"]  { --comp-avatar-c1: var(--loom-color-tier-medium); --comp-avatar-c2: var(--loom-color-warn); }
 
   /* ---------- Sidebar panel ---------- */
   .loom-panel {
