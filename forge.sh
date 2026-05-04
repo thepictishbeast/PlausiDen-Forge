@@ -275,9 +275,11 @@ phase_asset_optimization() {
 # Phase: perf_budget — file sizes against budget.
 # ============================================================
 phase_perf_budget() {
+  # T46: per-file size budgets. Production mode treats overruns as
+  # ship-blocking (strict); poc mode warns so dev velocity isn't
+  # blocked by intermediate tweaks. Total payload always logged.
   phase_header "perf_budget"
   local hits=0
-  # Per-file budgets (bytes; raw, pre-gzip)
   local budget_html=20480       # 20 KB HTML
   local budget_css=65536        # 64 KB CSS — bumped 2026-05-04 from 50K to fit 44px
                                 # tap-target rule + 5 themes + 4 fonts + 3 densities. T49
@@ -285,13 +287,22 @@ phase_perf_budget() {
   local budget_js=8192          # 8 KB JS each (we're at <3 KB)
   local total_kb=0
 
+  # T46 helper: emit at the right severity for current MODE.
+  _budget_emit() {
+    if [ "$MODE" = "production" ]; then
+      finding_strict "perf_budget" "$1" "$2"
+    else
+      finding_warn "perf_budget" "$1" "$2"
+    fi
+  }
+
   for f in "$STATIC"/*.html; do
     [ -e "$f" ] || continue
     local sz=$(stat -c%s "$f")
     total_kb=$((total_kb + sz))
     local name=$(basename "$f")
     if [ "$sz" -gt "$budget_html" ]; then
-      finding_warn "perf_budget" "$name" "$(numfmt --to=iec $sz) HTML > $(numfmt --to=iec $budget_html) budget — audit blocks / split route"
+      _budget_emit "$name" "$(numfmt --to=iec $sz) HTML > $(numfmt --to=iec $budget_html) budget — audit blocks / split route"
       hits=$((hits + 1))
     fi
   done
@@ -301,7 +312,7 @@ phase_perf_budget() {
     total_kb=$((total_kb + sz))
     local name=$(basename "$f")
     if [ "$sz" -gt "$budget_css" ]; then
-      finding_warn "perf_budget" "$name" "$(numfmt --to=iec $sz) CSS > $(numfmt --to=iec $budget_css) budget — split into per-route bundles"
+      _budget_emit "$name" "$(numfmt --to=iec $sz) CSS > $(numfmt --to=iec $budget_css) budget — split into per-route bundles"
       hits=$((hits + 1))
     fi
   done
@@ -311,11 +322,11 @@ phase_perf_budget() {
     total_kb=$((total_kb + sz))
     local name=$(basename "$f")
     if [ "$sz" -gt "$budget_js" ]; then
-      finding_warn "perf_budget" "$name" "$(numfmt --to=iec $sz) JS > $(numfmt --to=iec $budget_js) budget — code-split or tree-shake"
+      _budget_emit "$name" "$(numfmt --to=iec $sz) JS > $(numfmt --to=iec $budget_js) budget — code-split or tree-shake"
       hits=$((hits + 1))
     fi
   done
-  echo "  ${C_DIM}total static payload: $(numfmt --to=iec $total_kb)${C_OFF}"
+  echo "  ${C_DIM}total static payload: $(numfmt --to=iec $total_kb) (mode=$MODE; production-strict)${C_OFF}"
   [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every file within perf budget"
 }
 

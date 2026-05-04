@@ -82,10 +82,20 @@ jobs:
           npm run audit -- --journey journeys/skillshots-poc-mobile.json
           # Will exit non-zero if any axis regressed.
 
+      - name: crawler-audit-tablet
+        working-directory: _crawler
+        run: |
+          npm run audit -- --journey journeys/skillshots-poc-tablet.json
+
       - name: crawler-audit-desktop
         working-directory: _crawler
         run: |
           npm run audit -- --journey journeys/skillshots-poc.json --viewport 1280x800
+
+      - name: crawler-audit-ultrawide
+        working-directory: _crawler
+        run: |
+          npm run audit -- --journey journeys/skillshots-poc-ultrawide.json
 
       # --------------------------------------------------------
       # 4. Upload reports + screenshots so the diff is reviewable

@@ -426,7 +426,15 @@
   }
   .loom-navlinks::-webkit-scrollbar { display: none; }
   @media (min-width: 768px) {
-    .loom-navlinks { justify-self: center; overflow: visible; scroll-snap-type: none; }
+    /* Keep overflow-x:auto so the nav still scrolls when it
+     * doesn't fit (e.g. exactly at 768px tablet width with
+     * 5+ links). Was `overflow: visible` which let text bleed
+     * past the column boundary — caught by T40 tablet journey. */
+    .loom-navlinks { justify-self: center; scroll-snap-type: none; }
+  }
+  @media (min-width: 1024px) {
+    /* Above 1024px we have room for the nav to lay flat. */
+    .loom-navlinks { overflow: visible; }
   }
   .loom-navlinks a {
     padding: var(--loom-space-2) var(--loom-space-3);
