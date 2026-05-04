@@ -322,6 +322,86 @@ phase_image_convert() {
   fi
 }
 
+# ============================================================
+# Phase: path_consistency — every cms/<name>.json's `path` field
+# must resolve to a real static/<file>. Catches the mismatch
+# class T11 surfaced (compose.json declared /compose but file
+# lived at /compose.html) at build time, before the crawler's
+# auto-journey discovers it via 404.
+#
+# Mapping rules:
+#   page.path "/"            → static/index.html
+#   page.path "/foo.html"    → static/foo.html
+#   page.path "/foo"         → static/foo.html (HTML-suffix fallback)
+#   page.path "/foo/"        → static/foo/index.html (dir-suffix fallback)
+#
+# Strict if any cms/*.json points at a missing file.
+#
+# REGRESSION-GUARD: do NOT broaden the mapping rules. If a CMS
+# author wants a path that doesn't follow these conventions,
+# the right fix is renaming the file or adjusting CmsPage.path —
+# not relaxing the audit.
+# ============================================================
+phase_path_consistency() {
+  phase_header "path_consistency"
+  if [ ! -d "$ROOT/cms" ]; then
+    echo "  ${C_DIM}skip${C_OFF}    no cms/ directory; nothing to check"
+    return
+  fi
+  local hits=0
+  local checked=0
+  for j in "$ROOT/cms"/*.json; do
+    [ -e "$j" ] || continue
+    checked=$((checked + 1))
+    local name=$(basename "$j" .json)
+    # Pull the path field via python (jq isn't always present).
+    local path=$(python3 -c "
+import json, sys
+try:
+    print(json.load(open(sys.argv[1])).get('path', ''))
+except Exception:
+    pass
+" "$j")
+    if [ -z "$path" ]; then
+      finding_strict "path_consistency" "$name.json" "missing or unreadable 'path' field"
+      hits=$((hits + 1))
+      continue
+    fi
+    # The CmsPage.path is the URL visitors use. python's
+    # http.server (and most static servers) serve files
+    # literally — no .html-stripping. So path MUST include the
+    # .html suffix unless it's "/" (root → index.html).
+    #
+    # Anything else (e.g., '/compose' for a file named
+    # 'compose.html') is a real bug: visitors typing the URL get
+    # 404. Auto-derived journeys catch this via the 404; this
+    # phase catches it at build time.
+    local candidate=""
+    local violation=""
+    case "$path" in
+      "/")
+        candidate="$STATIC/index.html"
+        ;;
+      *.html)
+        candidate="$STATIC$path"
+        ;;
+      *)
+        violation="path=$path → must end in .html or be '/' (visitors hit 404 on ambiguous path; static server doesn't strip .html)"
+        ;;
+    esac
+    if [ -n "$violation" ]; then
+      finding_strict "path_consistency" "$name.json" "$violation"
+      hits=$((hits + 1))
+    elif [ ! -f "$candidate" ]; then
+      finding_strict "path_consistency" "$name.json" "path=$path → expected file at ${candidate#$ROOT/} but it doesn't exist"
+      hits=$((hits + 1))
+    fi
+  done
+  if [ $hits -eq 0 ] && [ $checked -gt 0 ]; then
+    echo "  ${C_GREEN}ok${C_OFF}      $checked cms/*.json path field(s) resolve to real static/ files"
+  fi
+}
+
 phase_cms_render() {
   phase_header "cms_render"
   if [ ! -d "$ROOT/cms" ]; then
@@ -1710,6 +1790,7 @@ echo "${C_DIM}strict findings ALWAYS fatal; warn findings fatal in production mo
 phase_validate_cms
 phase_image_convert
 phase_cms_render
+phase_path_consistency
 phase_loom_sync
 phase_label_consistency
 phase_tokens
