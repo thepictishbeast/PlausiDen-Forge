@@ -21,6 +21,7 @@ use forge_core::{BuildCtx, BuildMode, BuildReport, Finding, Phase, Severity};
 use forge_phases::a11y_landmarks::A11yLandmarksPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
 use forge_phases::backend_coverage::BackendCoveragePhase;
+use forge_phases::contrast::ContrastPhase;
 use forge_phases::csp::CspPhase;
 use forge_phases::csp_devmode::CspDevmodePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
@@ -141,6 +142,7 @@ fn run() -> Result<ExitCode> {
         Box::new(UnbuiltRoutePhase),
         Box::new(LabelConsistencyPhase),
         Box::new(MotionPhase),
+        Box::new(ContrastPhase),
     ];
 
     let mut report = BuildReport {
