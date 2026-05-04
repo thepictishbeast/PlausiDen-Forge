@@ -425,6 +425,87 @@ phase_backend_coverage() {
 # itself. Cheap structural sanity. Owner directive: "audit and
 # test and debug loom, cms and builder themselves also".
 # ============================================================
+phase_sri() {
+  # T13: every <link rel="stylesheet"> + <script src=> to a same-origin
+  # asset MUST carry an integrity= SHA-384 attribute. Defense in
+  # depth — even local files benefit (cache poisoning, build-artifact
+  # tampering, compromised disk write).
+  #
+  # In poc mode this is WARN (informational, lets dev velocity stay
+  # high). In production mode it's STRICT.
+  #
+  # The companion inject_sri.py auto-computes and inserts the hashes;
+  # this phase verifies the attribute exists and (when present) the
+  # value matches the on-disk asset bytes.
+  phase_header "sri"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -f "$f" ] || continue
+    local name=$(basename "$f")
+    # Use Python to walk tags + verify hashes.
+    local out
+    out=$(python3 - <<PY 2>/dev/null
+import base64, hashlib, os, re, sys
+src = open("$f").read()
+STATIC = "$STATIC"
+fail = []
+
+def sri_for(disk_path):
+    try:
+        with open(disk_path, "rb") as f:
+            return "sha384-" + base64.b64encode(hashlib.sha384(f.read()).digest()).decode()
+    except FileNotFoundError:
+        return None
+
+LINK = re.compile(r'<link\b[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>', re.I)
+SCRIPT = re.compile(r'<script\b[^>]*src="([^"]+)"[^>]*>', re.I)
+
+EXCLUDE = {"forge-findings.js"}  # regenerated each build; SRI stale by design
+for kind, regex in (("link", LINK), ("script", SCRIPT)):
+    for m in regex.finditer(src):
+        href = m.group(1)
+        if href.startswith(("http://", "https://", "//")):
+            continue
+        if os.path.basename(href.lstrip("/")) in EXCLUDE:
+            continue
+        full_tag = m.group(0)
+        local = href.lstrip("/")
+        disk = os.path.join(STATIC, local)
+        if not os.path.exists(disk):
+            continue  # unbuilt_route catches this
+        if "integrity=" not in full_tag:
+            fail.append(f"{kind} src/href={href} missing integrity=")
+            continue
+        # Validate that the integrity value matches the file bytes.
+        im = re.search(r'integrity="(sha384-[A-Za-z0-9+/=]+)"', full_tag)
+        if not im:
+            fail.append(f"{kind} src/href={href} integrity= present but not parseable")
+            continue
+        expected = sri_for(disk)
+        if expected is None:
+            continue
+        if im.group(1) != expected:
+            fail.append(f"{kind} src/href={href} integrity HASH MISMATCH (file changed since inject)")
+
+for line in fail:
+    print(line)
+PY
+)
+    if [ -n "$out" ]; then
+      while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        if [ "$MODE" = "production" ]; then
+          finding_strict "sri" "$name" "$line"
+        else
+          finding_warn "sri" "$name" "$line"
+        fi
+        hits=$((hits + 1))
+      done <<< "$out"
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every same-origin asset carries valid SRI"
+}
+
 phase_link_check() {
   # T5: every <a href> with a fragment must resolve to an existing
   # id= or name= in the target file. unbuilt_route covers file
@@ -858,6 +939,7 @@ phase_unbuilt_route
 phase_external_assets
 phase_viewport_audit
 phase_link_check
+phase_sri
 phase_motion
 phase_csp_devmode
 phase_contrast
