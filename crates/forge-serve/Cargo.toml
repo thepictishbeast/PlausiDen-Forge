@@ -1,0 +1,28 @@
+[package]
+name = "forge-serve"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Forge — dev server. Replaces the prior serve.py with a typed Rust impl on tokio + hyper. Per-request timing, slow-request alert, mtime-guarded pre-compressed sibling serving (.br/.gz), no-cache headers, nosniff, strict MIME types, CSS self-test on startup."
+
+[[bin]]
+name = "forge-serve"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+mime_guess = "2"
+
+# Async runtime + HTTP. Pinning to tokio 1.x + hyper 1.x for the
+# stable surface; AVP-2 dep churn audit easier with stable APIs.
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "io-util", "fs", "signal", "time"] }
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio", "server", "server-auto"] }
+http-body-util = "0.1"
+bytes = "1"
+
+tracing.workspace = true
+tracing-subscriber.workspace = true
+time.workspace = true
