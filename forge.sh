@@ -32,6 +32,52 @@ MODE=$(grep -E "^mode\s*=" "$ROOT/forge.toml" 2>/dev/null \
        | head -1 | awk -F'"' '{print $2}')
 MODE=${MODE:-production}
 
+# T9: --watch — re-run forge on every change to static/, backends.toml,
+# or forge.toml. Uses inotifywait when present (event-driven, ~zero
+# CPU when idle); falls back to find-newer polling otherwise. Placed
+# AFTER the palette + MODE setup so error messages render with color.
+if [ "${1:-}" = "--watch" ]; then
+  shift
+  echo "${C_BOLD}forge${C_OFF} ${C_DIM}— watch mode — Ctrl+C to stop${C_OFF}"
+  echo "${C_DIM}watching: $STATIC, $ROOT/backends.toml, $ROOT/forge.toml${C_OFF}"
+  echo "${C_DIM}note: each user edit triggers ~2 builds — the second is forge's"
+  echo "${C_DIM}      own SRI refresh writing HTML. Stabilises immediately.${C_OFF}"
+  bash "$0" "$@" || true
+  if command -v inotifywait >/dev/null 2>&1; then
+    # `attrib` covers `touch` / mtime-only edits; `close_write` is the
+    # canonical "editor saved the file" signal across editors.
+    #
+    # Exclusions:
+    #   forge-findings.js — rewritten by forge each build → would
+    #                       cause an infinite re-trigger loop.
+    #   .gz / .br         — pre-compressed artifacts (T6 future).
+    #   build-*.json      — per-run report files in reports/, but
+    #                       safe-guard if anyone moves reports inside
+    #                       static. Pattern is anchored on filename.
+    while inotifywait -qq -r -e modify,attrib,close_write,create,delete,move \
+          --exclude '(forge-findings\.js$|\.gz$|\.br$|/build-[0-9TZ]+\.json$|/latest\.json$)' \
+          "$STATIC" "$ROOT/backends.toml" "$ROOT/forge.toml" 2>/dev/null; do
+      echo
+      echo "${C_DIM}─── change detected $(date -u +%H:%M:%S) ───${C_OFF}"
+      bash "$0" "$@" || true
+    done
+  else
+    POLL_MARKER=$(mktemp)
+    while true; do
+      changed=$(find "$STATIC" "$ROOT/backends.toml" "$ROOT/forge.toml" \
+                  -newer "$POLL_MARKER" 2>/dev/null | head -1)
+      if [ -n "$changed" ]; then
+        touch "$POLL_MARKER"
+        echo
+        echo "${C_DIM}─── change detected (polled) $(date -u +%H:%M:%S) ───${C_OFF}"
+        bash "$0" "$@" || true
+      fi
+      sleep 2
+    done
+  fi
+  exit 0
+fi
+
 declare -a FINDINGS=()
 declare -i STRICT_COUNT=0
 declare -i WARN_COUNT=0
