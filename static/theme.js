@@ -33,19 +33,29 @@
     }
   }
 
+  // Known palette set. theme.js owns light/dark; aesthetic.js owns
+  // hc-dark/hc-light/sepia (and any future extension via plugin
+  // CSS). If aesthetic.js set one of those before us, DON'T touch
+  // it — that was a deliberate user override (URL param or stored
+  // pref) and theme.js stomping it caused per-theme contrast bugs
+  // on the leaderboard sidebar (T81 root cause).
+  var EXTENDED_THEMES = ["hc-dark", "hc-light", "sepia"];
+
   // Precedence:
-  //   1. user's saved choice (localStorage) — always wins
-  //   2. existing data-theme attribute on <html> (page-level pref)
-  //   3. OS prefers-color-scheme
-  // This avoids stomping on a hard-coded data-theme set inline.
+  //   1. extended theme already on <html> (set by aesthetic.js) — DON'T touch
+  //   2. user's saved choice (localStorage loom-theme) — always wins for light/dark
+  //   3. existing data-theme attribute on <html> (page-level pref)
+  //   4. OS prefers-color-scheme
   function initialTheme() {
+    var attr = root.getAttribute("data-theme");
+    if (attr && EXTENDED_THEMES.indexOf(attr) >= 0) return null; // signal: don't touch
     var saved = load();
     if (saved === "light" || saved === "dark") return saved;
-    var attr = root.getAttribute("data-theme");
     if (attr === "light" || attr === "dark") return attr;
     return preferred();
   }
-  apply(initialTheme());
+  var initial = initialTheme();
+  if (initial) apply(initial);
 
   // Wire up toggles after DOM ready.
   function ready(fn) {
