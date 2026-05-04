@@ -97,6 +97,22 @@
     text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
   }
+  html {
+    /* Set bg on html so body's gradient overlays cleanly + the
+     * canvas behind any centered .loom-page max-width still
+     * reads as the themed surface (was rendering white in
+     * crawler screenshots). */
+    background: var(--loom-color-bg-canvas);
+    color: var(--loom-color-ink);
+    color-scheme: light dark;
+    min-height: 100%;
+  }
+  /* Honor OS preference when no explicit data-theme is set. */
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme]) {
+      color-scheme: dark;
+    }
+  }
   html { scroll-behavior: smooth; }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }

@@ -33,8 +33,19 @@
     }
   }
 
-  // Apply on first paint.
-  apply(load() || preferred());
+  // Precedence:
+  //   1. user's saved choice (localStorage) — always wins
+  //   2. existing data-theme attribute on <html> (page-level pref)
+  //   3. OS prefers-color-scheme
+  // This avoids stomping on a hard-coded data-theme set inline.
+  function initialTheme() {
+    var saved = load();
+    if (saved === "light" || saved === "dark") return saved;
+    var attr = root.getAttribute("data-theme");
+    if (attr === "light" || attr === "dark") return attr;
+    return preferred();
+  }
+  apply(initialTheme());
 
   // Wire up toggles after DOM ready.
   function ready(fn) {
