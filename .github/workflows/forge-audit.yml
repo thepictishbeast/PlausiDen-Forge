@@ -122,6 +122,11 @@ jobs:
         run: |
           npm run audit -- --journey journeys/skillshots-poc-zoom-200.json
 
+      - name: crawler-audit-first-time
+        working-directory: _crawler
+        run: |
+          npm run audit -- --journey journeys/skillshots-poc-first-time.json
+
       # --------------------------------------------------------
       # 4. Upload reports + screenshots so the diff is reviewable
       #    even when the run was green.
