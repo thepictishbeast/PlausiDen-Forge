@@ -776,6 +776,14 @@
     border-color: var(--loom-color-border-strong);
     box-shadow: var(--loom-shadow-elevated);
   }
+  /* Card BODY carries pad-card; the outer card frame intentionally
+   * has padding:0 so the .thumb image bleeds edge-to-edge above
+   * the body text. The body element below this rule has its own
+   * padding declared via .loom-card-battle .body. Owner reported
+   * tight bottom-of-page boxes 2026-05-04 — root cause was that
+   * the panels using --loom-pad-panel pointed at undefined
+   * --loom-space-5 and rendered as padding:0; that's now fixed
+   * upstream in tokens.css. */
   .loom-card-battle .thumb {
     aspect-ratio: 9 / 16;
     background: radial-gradient(80% 60% at 50% 0%,
@@ -949,7 +957,8 @@
     grid-template-columns: 24px minmax(0, 1fr) auto;
     align-items: start;
     gap: var(--loom-space-3);
-    padding: var(--loom-space-3) 0;
+    /* Was 0 horizontal — text kissed the panel edge. Owner-reported. */
+    padding: var(--loom-space-3) var(--loom-space-2);
     border-bottom: var(--loom-border-component);
   }
   .loom-vote-row:last-child { border-bottom: 0; }

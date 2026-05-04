@@ -20,8 +20,8 @@
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Post a skill — SkillShots","description":"Post a skill challenge on SkillShots. Set a pot, define rules, accept entries.","url":"https://skillshots.example/post-skill.html"}</script>
   <!-- forge:seo:end -->
 
-  <link rel="stylesheet" href="loom-tokens.css" integrity="sha384-zmatyrkz1lnfh5gQIB/ItAFsnMeT3oS3IQ1LAV64a9tvVGVoobt0sYKdsw6qYCTY" crossorigin="anonymous">
-  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-WWZgq8dYhFR4OlW8oUe5PRUvCluKOxSIR2HcZxBvgcCPx8JZ4oP6LhEMEiKmkXVP" crossorigin="anonymous">
+  <link rel="stylesheet" href="loom-tokens.css" integrity="sha384-U1M1ztfIUOO1XHNVpKed45V8YoNPZ8RUlM1fiYyZ9PICtnUCBwC2ebl1rnAjdnet" crossorigin="anonymous">
+  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-DMgEg3bFl75HnNoMbDkTol4juQX3zE7aG1XQFnrqfpFOm2EVe3sGP33oijGkYW5u" crossorigin="anonymous">
   <script defer src="/forge-findings.js"></script>
   <script defer src="/forge-overlay.js" integrity="sha384-lbZ2HXLC+XEHVwcZTBkpKUUxjSWpngOz0EYE90gOAa+6fziCGRY7Q8qxbOYO/HBF" crossorigin="anonymous"></script>
   <script defer src="/aesthetic.js" integrity="sha384-tJdFLtEOwoBz84nlRZJyKzKsRUR8RO/grBMysHMGG8wq1dn30eh7EsWMh302icsn" crossorigin="anonymous"></script>
@@ -53,7 +53,7 @@
     <h1 class="loom-page-title">Post a skill challenge</h1>
     <p class="loom-page-subtitle" data-mb="xl">Define the rules, drop a proof video, set the pot. Voters decide the winner strictly on rule adherence.</p>
 
-    <div class="step-indicator" aria-label="Form progress">
+    <div class="loom-step-indicator" aria-label="Form progress">
       <div class="step" data-state="current"><span class="num">1</span>Rules &amp; category</div>
       <div class="step" data-state="upcoming"><span class="num">2</span>Upload proof video</div>
       <div class="step" data-state="upcoming"><span class="num">3</span>Pot &amp; entry fee</div>
@@ -64,13 +64,13 @@
         <h2 id="step1-h" class="loom-panel-title">Step 1 · Rules &amp; category</h2>
 
         <div class="loom-stack" data-gap="lg">
-          <div class="form-field">
+          <div class="loom-form-field">
             <label for="title">Challenge title</label>
             <input type="text" id="title" name="title" placeholder="e.g. Half-court shot — single arc, no rebound, no backboard" maxlength="120" aria-label="e.g. Half-court shot — single arc, no rebound, no backboard">
             <div class="hint">120 chars max. State the SHOT, not the difficulty.</div>
           </div>
 
-          <div class="form-field">
+          <div class="loom-form-field">
             <label for="category">Category</label>
             <select id="category" name="category" aria-label="Category">
               <option>Basketball</option>
@@ -84,7 +84,7 @@
             </select>
           </div>
 
-          <div class="form-field">
+          <div class="loom-form-field">
             <label for="rules">Rules — measurable, observable</label>
             <textarea id="rules" name="rules" placeholder="Specific rules voters can verify by watching:
 - Single take, no edits
@@ -98,7 +98,7 @@
             <div class="hint">Voters judge against THIS list. Vague rules → contested votes.</div>
           </div>
 
-          <div class="form-field">
+          <div class="loom-form-field">
             <label for="format">Required video format</label>
             <input type="text" id="format" name="format" value="720p min · 30s max · single take" readonly aria-label="Format">
             <div class="hint">Set automatically. Edited or sub-720p videos rejected at upload.</div>
