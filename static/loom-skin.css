@@ -1742,6 +1742,117 @@
 [data-stagger="11"] { animation-delay: 660ms; }
 [data-stagger="12"] { animation-delay: 720ms; }
 
+/* T21: CommandPalette (cmd-k) — search-and-jump modal.
+ *
+ *   <dialog id="cmdk" class="loom-cmdk" aria-label="Quick command">
+ *     <div class="loom-cmdk-search">
+ *       <input type="search" placeholder="Type a command…" autofocus
+ *              aria-label="Search commands">
+ *       <kbd class="loom-cmdk-hint">Esc</kbd>
+ *     </div>
+ *     <ul class="loom-cmdk-list" role="listbox">
+ *       <li role="option" data-action="goto:/leaderboard.html"
+ *           data-keywords="leaderboard top earners">
+ *         <span class="loom-cmdk-icon" aria-hidden="true">🏆</span>
+ *         <span class="loom-cmdk-label">Leaderboard</span>
+ *         <span class="loom-cmdk-meta">Top earners</span>
+ *       </li>
+ *       …
+ *     </ul>
+ *   </dialog>
+ *
+ * Caller wires the keybind (cmd-k / ctrl-k) → dialog.showModal()
+ * + arrow/enter handlers + filter logic. Loom ships a tiny
+ * companion script (cmdk.js) that binds the standard set; sites
+ * can swap it for their own.
+ */
+.loom-cmdk {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  inset-block-start: 10vh;
+  width: min(540px, calc(100vw - 2rem));
+  max-height: 60vh;
+  padding: 0;
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border: var(--loom-border-component);
+  border-radius: var(--loom-radius-lg);
+  box-shadow: var(--loom-shadow-elevated);
+  overflow: hidden;
+}
+.loom-cmdk::backdrop {
+  background: hsl(0 0% 0% / 0.5);
+  backdrop-filter: blur(4px);
+}
+.loom-cmdk-search {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-3) var(--loom-space-4);
+  border-block-end: 1px solid var(--loom-color-border);
+}
+.loom-cmdk-search input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--loom-color-ink);
+  font-size: var(--loom-font-base);
+  outline: 0;
+  padding: 0;
+}
+.loom-cmdk-search input::placeholder {
+  color: var(--loom-color-ink-muted);
+}
+.loom-cmdk-hint {
+  padding: 2px var(--loom-space-2);
+  background: var(--loom-color-bg-overlay);
+  border-radius: var(--loom-radius-sm);
+  font-family: ui-monospace, monospace;
+  font-size: var(--loom-font-xs);
+  color: var(--loom-color-ink-muted);
+}
+.loom-cmdk-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--loom-space-2);
+  overflow-y: auto;
+  max-height: calc(60vh - 60px);
+}
+.loom-cmdk-list [role="option"] {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-3);
+  padding: var(--loom-space-2) var(--loom-space-3);
+  border-radius: var(--loom-radius-md);
+  cursor: pointer;
+  transition: background var(--loom-transition-fast);
+}
+.loom-cmdk-list [role="option"]:hover,
+.loom-cmdk-list [role="option"][data-active="true"],
+.loom-cmdk-list [role="option"]:focus-visible {
+  background: var(--loom-color-bg-overlay);
+  outline: 0;
+}
+.loom-cmdk-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+.loom-cmdk-label {
+  flex: 1;
+  font-weight: 600;
+  font-size: var(--loom-font-sm);
+}
+.loom-cmdk-meta {
+  color: var(--loom-color-ink-muted);
+  font-size: var(--loom-font-xs);
+}
+.loom-cmdk-list [hidden] {
+  display: none !important;
+}
+
 /* T20: DataTable — sortable, sticky-header, mobile card-stack.
  *
  *   <table class="loom-table" data-stripe="zebra">

@@ -47,7 +47,7 @@
 
   <link rel="stylesheet" href="loom-fallback.css" integrity="sha384-Ve8xpma5bkBRMGqiP6HCENajTMQm3VZznZ71P4PPHiCpbJeDGkKs4sY5awzaSAfI" crossorigin="anonymous" integrity="sha384-Ve8xpma5bkBRMGqiP6HCENajTMQm3VZznZ71P4PPHiCpbJeDGkKs4sY5awzaSAfI" crossorigin="anonymous">
   <link rel="stylesheet" href="loom-tokens.css" integrity="sha384-Sa89M7KHi4lJ672NQAj83F8SL1o2zgzgqc8eq2CEbWFFD1VVETvoMTFzjC8Q33sJ" crossorigin="anonymous">
-  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-gstDpVRrl0OWLjywHZLo3oTSFzBlXsXvBTLTbhX6STeImDj3B/QPWwFuk3IfJrGU" crossorigin="anonymous">
+  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-0dw9PcM25sVYLJ8hohnCT6LFqgDtnlFmByxvtRtuGmOoiANpfv2acNvgdOSEeWSx" crossorigin="anonymous">
   <script defer src="/forge-findings.js"></script>
   <script defer src="/forge-overlay.js" integrity="sha384-lbZ2HXLC+XEHVwcZTBkpKUUxjSWpngOz0EYE90gOAa+6fziCGRY7Q8qxbOYO/HBF" crossorigin="anonymous"></script>
   <script defer src="/aesthetic.js" integrity="sha384-TGKxkiat5/kgGFLM/1k68BHjouV2uU0kFjESrwpZN4pKNOmd7XO+EWmcOfpcBecO" crossorigin="anonymous"></script>
@@ -351,6 +351,24 @@
     </div>
     <div>Real challenges. Real stakes. Public results.</div>
   </footer>
+
+
+  <!-- T21: CommandPalette (cmd-k). Press Ctrl/Cmd+K to open. -->
+  <dialog id="cmdk" class="loom-cmdk" aria-label="Quick command">
+    <div class="loom-cmdk-search">
+      <input type="search" placeholder="Type a command…" aria-label="Search commands">
+      <kbd class="loom-cmdk-hint">Esc</kbd>
+    </div>
+    <ul class="loom-cmdk-list" role="listbox">
+      <li role="option" data-action="goto:/" data-keywords="home feed battles"><span class="loom-cmdk-icon" aria-hidden="true">🏠</span><span class="loom-cmdk-label">Battle Feed</span><span class="loom-cmdk-meta">Home</span></li>
+      <li role="option" data-action="goto:/leaderboard.html" data-keywords="leaderboard top earners standings"><span class="loom-cmdk-icon" aria-hidden="true">🏆</span><span class="loom-cmdk-label">Leaderboard</span><span class="loom-cmdk-meta">Top earners</span></li>
+      <li role="option" data-action="goto:/post-skill.html" data-keywords="post submit new challenge"><span class="loom-cmdk-icon" aria-hidden="true">➕</span><span class="loom-cmdk-label">Post a Skill</span><span class="loom-cmdk-meta">New challenge</span></li>
+      <li role="option" data-action="goto:/my-wins.html" data-keywords="wins history cash out earnings"><span class="loom-cmdk-icon" aria-hidden="true">💰</span><span class="loom-cmdk-label">My Wins</span><span class="loom-cmdk-meta">Cash out</span></li>
+      <li role="option" data-action="goto:/profile.html" data-keywords="profile account settings"><span class="loom-cmdk-icon" aria-hidden="true">👤</span><span class="loom-cmdk-label">Profile</span><span class="loom-cmdk-meta">Account</span></li>
+      <li role="option" data-action="goto:/votes.html" data-keywords="open votes voting judge"><span class="loom-cmdk-icon" aria-hidden="true">👀</span><span class="loom-cmdk-label">Open votes</span><span class="loom-cmdk-meta">Voting now</span></li>
+      <li role="option" data-action="toggle:loom-theme" data-keywords="theme dark light mode"><span class="loom-cmdk-icon" aria-hidden="true">🎨</span><span class="loom-cmdk-label">Toggle theme</span><span class="loom-cmdk-meta">Dark / Light</span></li>
+    </ul>
+  </dialog>
 
 </body>
 </html>
