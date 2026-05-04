@@ -1356,6 +1356,88 @@
     --loom-color-gradient-b:    hsl(35 80% 45%);
   }
 
+  /* T24: community color schemes — nord (cool arctic), dracula
+   * (purple-on-dark), solarized-dark (academic warm), gruvbox-dark
+   * (retro warm). Each defines the same token set as the built-in
+   * dark theme; bg-overlay + warn-bg explicit per T81 lesson so
+   * hardcoded LIGHT defaults don't leak through. */
+
+  :root[data-theme="nord"] {
+    --loom-color-bg-canvas:     hsl(220 16% 22%);
+    --loom-color-surface:       hsl(220 16% 28%);
+    --loom-color-surface-muted: hsl(220 17% 32%);
+    --loom-color-bg-overlay:    hsl(220 16% 36%);
+    --loom-color-warn-bg:       hsl(40 30% 28%);
+    --loom-color-ink:           hsl(218 27% 92%);
+    --loom-color-ink-muted:     hsl(218 27% 78%);
+    --loom-color-border:        hsl(220 16% 50%);
+    --loom-color-border-strong: hsl(220 16% 70%);
+    --loom-color-primary:       hsl(213 32% 65%);
+    --loom-color-primary-fg:    hsl(220 16% 18%);
+    --loom-color-success:       hsl(92 28% 65%);
+    --loom-color-warn:          hsl(40 71% 73%);
+    --loom-color-danger:        hsl(354 42% 56%);
+    --loom-color-gradient-a:    hsl(213 32% 65%);
+    --loom-color-gradient-b:    hsl(311 20% 63%);
+  }
+
+  :root[data-theme="dracula"] {
+    --loom-color-bg-canvas:     hsl(231 15% 18%);
+    --loom-color-surface:       hsl(232 14% 31%);
+    --loom-color-surface-muted: hsl(232 14% 25%);
+    --loom-color-bg-overlay:    hsl(232 14% 38%);
+    --loom-color-warn-bg:       hsl(60 30% 22%);
+    --loom-color-ink:           hsl(60 30% 96%);
+    --loom-color-ink-muted:     hsl(225 27% 78%);
+    --loom-color-border:        hsl(232 14% 45%);
+    --loom-color-border-strong: hsl(232 14% 65%);
+    --loom-color-primary:       hsl(265 89% 78%);
+    --loom-color-primary-fg:    hsl(231 15% 14%);
+    --loom-color-success:       hsl(135 94% 65%);
+    --loom-color-warn:          hsl(65 92% 76%);
+    --loom-color-danger:        hsl(0 100% 67%);
+    --loom-color-gradient-a:    hsl(265 89% 78%);
+    --loom-color-gradient-b:    hsl(326 100% 74%);
+  }
+
+  :root[data-theme="solarized-dark"] {
+    --loom-color-bg-canvas:     hsl(192 100% 11%);
+    --loom-color-surface:       hsl(192 81% 14%);
+    --loom-color-surface-muted: hsl(192 71% 17%);
+    --loom-color-bg-overlay:    hsl(192 60% 22%);
+    --loom-color-warn-bg:       hsl(45 60% 18%);
+    --loom-color-ink:           hsl(180 7% 60%);
+    --loom-color-ink-muted:     hsl(186 8% 55%);
+    --loom-color-border:        hsl(192 50% 30%);
+    --loom-color-border-strong: hsl(180 7% 60%);
+    --loom-color-primary:       hsl(205 69% 49%);
+    --loom-color-primary-fg:    hsl(192 100% 11%);
+    --loom-color-success:       hsl(68 100% 30%);
+    --loom-color-warn:          hsl(45 100% 35%);
+    --loom-color-danger:        hsl(1 79% 52%);
+    --loom-color-gradient-a:    hsl(205 69% 49%);
+    --loom-color-gradient-b:    hsl(237 45% 65%);
+  }
+
+  :root[data-theme="gruvbox"] {
+    --loom-color-bg-canvas:     hsl(0 0% 16%);
+    --loom-color-surface:       hsl(20 12% 22%);
+    --loom-color-surface-muted: hsl(20 10% 27%);
+    --loom-color-bg-overlay:    hsl(20 10% 35%);
+    --loom-color-warn-bg:       hsl(40 50% 25%);
+    --loom-color-ink:           hsl(43 59% 81%);
+    --loom-color-ink-muted:     hsl(40 30% 70%);
+    --loom-color-border:        hsl(28 11% 45%);
+    --loom-color-border-strong: hsl(43 59% 81%);
+    --loom-color-primary:       hsl(146 23% 58%);
+    --loom-color-primary-fg:    hsl(0 0% 16%);
+    --loom-color-success:       hsl(60 60% 60%);
+    --loom-color-warn:          hsl(42 96% 58%);
+    --loom-color-danger:        hsl(6 96% 60%);
+    --loom-color-gradient-a:    hsl(60 60% 60%);
+    --loom-color-gradient-b:    hsl(28 80% 52%);
+  }
+
   /* Font variants — swap the entire type system.
    * data-font="display" is the default (already set in tokens layer). */
   :root[data-font="serif"] {

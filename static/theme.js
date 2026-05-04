@@ -39,7 +39,13 @@
   // it — that was a deliberate user override (URL param or stored
   // pref) and theme.js stomping it caused per-theme contrast bugs
   // on the leaderboard sidebar (T81 root cause).
-  var EXTENDED_THEMES = ["hc-dark", "hc-light", "sepia"];
+  // Any theme aesthetic.js may set that theme.js does NOT own.
+  // Adding a new community theme: append the data-theme value here
+  // AND its :root[data-theme="..."] rule in skin.css.
+  var EXTENDED_THEMES = [
+    "hc-dark", "hc-light", "sepia",
+    "nord", "dracula", "solarized-dark", "gruvbox",
+  ];
 
   // Precedence:
   //   1. extended theme already on <html> (set by aesthetic.js) — DON'T touch
