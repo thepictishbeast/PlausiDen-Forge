@@ -63,12 +63,34 @@
       setActive(0);
     }
 
+    // Same-origin path validation for goto: actions.
+    // SECURITY: a malicious or tampered data-action value (e.g.
+    // "goto://evil.example.com" or "goto:javascript:alert(1)")
+    // would otherwise navigate the visitor off-site or execute
+    // script. Accept only paths that look like a same-origin
+    // application route: a leading "/" followed by NOT another "/"
+    // (which would be protocol-relative), no "://" anywhere, no
+    // CR/LF / control chars. Anything else logs + ignores.
+    function isSafeAppPath(p) {
+      if (typeof p !== "string" || p.length === 0) return false;
+      if (p.charAt(0) !== "/") return false;       // must be path-relative
+      if (p.charAt(1) === "/") return false;       // no protocol-relative //evil
+      if (p.indexOf("://") !== -1) return false;   // belt-and-braces scheme check
+      if (/[\x00-\x1f]/.test(p)) return false;     // CR/LF/control → URL smuggling
+      return true;
+    }
+
     function fire(option) {
       var action = (option.getAttribute("data-action") || "").trim();
       dbg("fire", action);
       dialog.close();
       if (action.indexOf("goto:") === 0) {
-        window.location.href = action.slice(5);
+        var dest = action.slice(5);
+        if (isSafeAppPath(dest)) {
+          window.location.href = dest;
+        } else {
+          dbg("blocked unsafe goto", dest);
+        }
       } else if (action === "back") {
         history.back();
       } else if (action.indexOf("toggle:") === 0) {
