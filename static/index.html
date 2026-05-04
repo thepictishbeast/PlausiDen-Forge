@@ -26,6 +26,7 @@
 
   <title>Skill Shots — Real challenges. Real stakes. Public results.</title>
 
+  <link rel="stylesheet" href="loom-fallback.css">
   <link rel="stylesheet" href="loom-tokens.css">
   <link rel="stylesheet" href="loom-skin.css">
   <script defer src="/forge-findings.js"></script>
@@ -37,11 +38,10 @@
 
   <!-- BUG ASSUMPTION: owner reported "no CSS" repeatedly while
        headless renderers showed full styling. This banner is
-       pure HTML and IS visible if loom-skin.css fails to load.
-       skin.css contains `.loom-css-loaded { display: none; }`,
-       so when CSS works, this disappears entirely. -->
-  <div class="loom-css-loaded" role="alert"
-       style="position:fixed;top:0;left:0;right:0;background:#fef3c7;color:#78350f;padding:8px 12px;font-family:system-ui,sans-serif;font-size:13px;text-align:center;border-bottom:2px solid #f59e0b;z-index:9999;">
+       pure HTML and is styled by loom-fallback.css (loaded first).
+       If loom-skin.css applies, .loom-css-loaded { display:none }
+       hides it. If skin.css fails, the banner stays visible. -->
+  <div class="loom-css-loaded">
     ⚠ <strong>CSS NOT LOADING</strong> — if you see this yellow bar,
     your browser failed to apply <code>loom-skin.css</code>.
     Check DevTools → Network tab. Expected 200 OK, text/css, ~52 KB.

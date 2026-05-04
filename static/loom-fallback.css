@@ -1,0 +1,33 @@
+/* loom-fallback.css — minimal styles that ensure even when the
+ * full Loom skin fails to load, critical user-feedback (the
+ * "CSS NOT LOADING" banner) still has visual urgency.
+ *
+ * Loaded BEFORE loom-skin.css. If skin.css applies, the
+ * .loom-css-loaded display:none rule wins by source order.
+ *
+ * Hex literals + px values are intentional here — this file's
+ * job is to be a no-dependency fallback. Forge exempts it
+ * from the token-strictness gate.
+ */
+
+.loom-css-loaded {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #fef3c7;
+  color: #78350f;
+  padding: 8px 12px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 13px;
+  text-align: center;
+  border-bottom: 2px solid #f59e0b;
+  z-index: 9999;
+}
+.loom-css-loaded code {
+  font-family: ui-monospace, "SF Mono", monospace;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.loom-css-loaded strong { font-weight: 700; }

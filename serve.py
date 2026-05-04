@@ -23,7 +23,7 @@ Differences from `python -m http.server`:
 Usage:  python3 serve.py [--port 8123] [--root static]
 """
 
-import argparse, http.server, mimetypes, os, socket, socketserver, sys, time, urllib.request
+import argparse, http.server, mimetypes, os, socket, socketserver, sys, threading, time, urllib.request
 
 
 # --- mime tightening ------------------------------------------------
@@ -100,8 +100,16 @@ def main():
     ap.add_argument("--root", default="static")
     args = ap.parse_args()
     os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), args.root))
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", args.port), ForgeHandler) as httpd:
+    # Threaded server: SimpleHTTPServer is one-request-at-a-time, which
+    # caused owner-visible "halfway loaded" hangs whenever the crawler
+    # audit ran in parallel (it issues many requests, blocking owner's
+    # browser). ThreadingTCPServer handles each request in its own
+    # thread so concurrent clients don't queue.
+    class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+        daemon_threads = True
+        allow_reuse_address = True
+
+    with ThreadedTCPServer(("", args.port), ForgeHandler) as httpd:
         host = socket.gethostname()
         print(f"[serve.py] root={os.getcwd()} port={args.port}")
         print(f"[serve.py] http://localhost:{args.port}/")
