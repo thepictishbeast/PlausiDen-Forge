@@ -236,13 +236,35 @@ phase_cms_render() {
     finding_strict "cms_render" "loom-cli" "loom binary not at $LOOM_BIN — run 'cargo build --release -p loom-cli' in PlausiDen-Loom"
     return
   fi
+  # T49.1: extract critical CSS once per build before rendering.
+  # The critical block ships inline in every page-shell so first
+  # paint blocks only on ~20KB instead of the full ~70KB skin.
+  local CRIT_PATH="$STATIC/loom-critical.css"
+  if [ -f "$STATIC/loom-skin.css" ]; then
+    if "$LOOM_BIN" critical-css --input "$STATIC/loom-skin.css" --out "$CRIT_PATH" 2>/tmp/forge-critical-err; then
+      local crit_bytes=$(wc -c < "$CRIT_PATH")
+      local full_bytes=$(wc -c < "$STATIC/loom-skin.css")
+      local pct=$(( crit_bytes * 100 / full_bytes ))
+      echo "  ${C_DIM}critical:${C_OFF} ${crit_bytes} of ${full_bytes} bytes (${pct}%)"
+    else
+      finding_warn "cms_render" "loom-skin.css" "critical-css extraction failed: $(cat /tmp/forge-critical-err | head -1)"
+      CRIT_PATH=""
+    fi
+    rm -f /tmp/forge-critical-err
+  else
+    CRIT_PATH=""
+  fi
   local hits=0
   local rendered=0
   for j in "$ROOT/cms"/*.json; do
     [ -e "$j" ] || continue
     local name=$(basename "$j" .json)
     local out="$STATIC/$name.html"
-    if ! "$LOOM_BIN" cms-render --input "$j" --out "$out" --css-href "/loom-skin.css" 2>/tmp/forge-cms-render-err; then
+    local extra_args=""
+    if [ -n "$CRIT_PATH" ] && [ -f "$CRIT_PATH" ]; then
+      extra_args="--critical-css $CRIT_PATH"
+    fi
+    if ! "$LOOM_BIN" cms-render --input "$j" --out "$out" --css-href "/loom-skin.css" $extra_args 2>/tmp/forge-cms-render-err; then
       local err=$(cat /tmp/forge-cms-render-err 2>/dev/null | head -1)
       finding_strict "cms_render" "$name.json" "render failed: $err"
       hits=$((hits + 1))
@@ -456,7 +478,22 @@ phase_tokens() {
     local name=$(basename "$f")
     # Inline px (excluding 0px / 1px / 2px which are common
     # pixel-fragment cases in SVG paths etc.)
-    local px=$(grep -oE '\b[0-9]+px' "$f" | grep -vE '^(0|1|2|3)px$' | sort -u)
+    #
+    # REGRESSION-GUARD: T49.1 inlines critical CSS as <style>
+    # blocks. Those bytes come from the canonical skin.css source
+    # (where px is defined as tokens like --loom-tap-min: 44px) —
+    # they're trustable design-system bytes, NOT inline-style
+    # attribute violations. Strip <style>...</style> blocks
+    # before running the px-in-attribute audit so the inlined
+    # critical CSS doesn't trip a false positive.
+    local stripped=$(python3 -c '
+import re, sys
+src = open(sys.argv[1], "r", encoding="utf-8", errors="replace").read()
+# Strip <style>...</style> spans (any whitespace + attributes
+# allowed inside the open tag).
+print(re.sub(r"<style\b[^>]*>.*?</style>", "", src, flags=re.DOTALL), end="")
+' "$f")
+    local px=$(echo "$stripped" | grep -oE '\b[0-9]+px' | grep -vE '^(0|1|2|3)px$' | sort -u)
     if [ -n "$px" ]; then
       finding_strict "tokens" "$name" "raw px values: $(echo $px | tr '\n' ' ')"
       hits=$((hits + 1))
