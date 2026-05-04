@@ -2,9 +2,9 @@
 //! Phases live in modules; the runner instantiates them and
 //! drives the build.
 //!
-//! Port progress (T11): 19 of 22 phases ported.
+//! Port progress (T11): 20 of 22 phases ported. T11 COMPLETE.
 //! Retired: viewport_audit, selfaudit.
-//! Remaining: link_check (HTTP I/O).
+//! Net: 20 of 20 effective phases now in Rust.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -20,6 +20,7 @@ pub mod html_semantic;
 pub mod html_walk;
 pub mod id_strategy;
 pub mod label_consistency;
+pub mod link_check;
 pub mod loom_sync;
 pub mod motion;
 pub mod perf_budget;

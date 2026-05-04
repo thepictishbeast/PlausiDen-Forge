@@ -28,6 +28,7 @@ use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
 use forge_phases::label_consistency::LabelConsistencyPhase;
+use forge_phases::link_check::LinkCheckPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
@@ -141,6 +142,7 @@ fn run() -> Result<ExitCode> {
         Box::new(BackendCoveragePhase),
         Box::new(UnbuiltRoutePhase),
         Box::new(LabelConsistencyPhase),
+        Box::new(LinkCheckPhase),
         Box::new(MotionPhase),
         Box::new(ContrastPhase),
     ];
