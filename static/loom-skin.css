@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-9QI6DFNunQvY6DNZgpghagsw5/E352MN6JL1CHW4ARkH9DWXgD6quSGVvGT7Ax8Z — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-g04KaqKON0VfQeC5JW0ND89WgLl29BJVY2t9z0kzpCO1Fa2VTIiRYFlviFIYu5YN — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -775,6 +775,106 @@
   }
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* ============================================================ *
+   * Section: Hero                                                 *
+   * ----------                                                    *
+   * Top-of-page band: optional eyebrow pill, h2 title, optional   *
+   * lede paragraph, optional primary CTA button. Loom-namespaced  *
+   * (no Tailwind), composes from existing tokens. Used by         *
+   * cms-render's CmsSection::Hero.                                *
+   * ============================================================ */
+  .loom-section-hero {
+    padding: var(--loom-space-8) var(--loom-space-5);
+    border-radius: var(--loom-radius-component);
+    background:
+      radial-gradient(800px 400px at 80% -10%,
+        color-mix(in oklab, var(--loom-color-primary, currentColor) 15%, transparent) 0%,
+        transparent 60%),
+      var(--loom-color-surface);
+    border: var(--loom-border-component);
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-3);
+  }
+  .loom-section-hero__eyebrow {
+    display: inline-block;
+    align-self: flex-start;
+    padding: var(--loom-space-1) var(--loom-space-3);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--loom-color-primary, currentColor) 12%, transparent);
+    color: var(--loom-color-primary, currentColor);
+    font-size: var(--loom-font-sm, 0.875rem);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .loom-section-hero__title {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-3xl, 1.875rem);
+    font-weight: 700;
+    color: var(--loom-color-ink);
+    line-height: 1.15;
+    letter-spacing: var(--loom-track-tight);
+    margin: 0;
+  }
+  .loom-section-hero__lede {
+    font-size: var(--loom-font-lg, 1.125rem);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    line-height: 1.5;
+    max-width: 60ch;
+    margin: 0;
+  }
+  .loom-section-hero__cta {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    padding: var(--loom-space-3) var(--loom-space-5);
+    border-radius: var(--loom-radius-sm);
+    background: var(--loom-color-primary, var(--loom-color-ink));
+    color: var(--loom-color-primary-fg, var(--loom-color-surface));
+    text-decoration: none;
+    font-weight: 600;
+    min-height: var(--loom-tap-min);
+    transition: filter var(--loom-transition-fast, 150ms ease);
+  }
+  .loom-section-hero__cta:hover,
+  .loom-section-hero__cta:focus-visible {
+    filter: brightness(1.05);
+  }
+  .loom-section-hero__cta[data-invalid="true"] {
+    outline: var(--loom-stroke-strong) dashed var(--loom-color-warning, currentColor);
+    outline-offset: var(--loom-stroke-thin);
+  }
+
+  /* ============================================================ *
+   * Section: Group                                                *
+   * ----------                                                    *
+   * Heading + paragraph(s) framed as a card. Used for explainer   *
+   * blocks (rules, FAQs, "how it works").                         *
+   * ============================================================ */
+  .loom-section-group {
+    padding: var(--loom-space-5);
+    border-radius: var(--loom-radius-component);
+    background: var(--loom-color-surface);
+    border: var(--loom-border-component);
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-3);
+  }
+  .loom-section-group__title {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-xl, 1.25rem);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    line-height: 1.2;
+    margin: 0;
+  }
+  .loom-section-group__body {
+    font-size: var(--loom-font-base);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    line-height: 1.6;
+    margin: 0;
   }
 
   /* ============================================================ *

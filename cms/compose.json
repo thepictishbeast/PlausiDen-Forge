@@ -4,6 +4,17 @@
   "path": "/compose",
   "sections": [
     {
+      "kind": "hero",
+      "eyebrow": "New",
+      "title": "What did you nail today?",
+      "lede": "Post your clip. Your crew votes. Pot splits at round end.",
+      "cta": {
+        "label": "Upload a clip",
+        "href": "/post-skill",
+        "data_backend": "post-skill"
+      }
+    },
+    {
       "kind": "composer",
       "prompt": "What did you nail today?",
       "submit_endpoint": "/post-skill",
@@ -12,22 +23,19 @@
       "size": "comfortable"
     },
     {
-      "kind": "heading",
-      "text": "How posting works",
-      "level": 2
+      "kind": "group",
+      "title": "How posting works",
+      "body": [
+        "One single take, judged on the rules in the challenge.",
+        "Your crew votes; the pot splits at the end of the round."
+      ]
     },
     {
-      "kind": "paragraph",
-      "text": "One single take, judged on the rules in the challenge. Your crew votes; the pot splits at the end of the round."
-    },
-    {
-      "kind": "heading",
-      "text": "Get the rules right",
-      "level": 3
-    },
-    {
-      "kind": "paragraph",
-      "text": "Read the challenge spec before you film. Common reasons entries get rejected: cut takes, off-spec props, missing time stamps."
+      "kind": "group",
+      "title": "Get the rules right",
+      "body": [
+        "Read the challenge spec before you film. Common reasons entries get rejected: cut takes, off-spec props, missing time stamps."
+      ]
     }
   ]
 }
