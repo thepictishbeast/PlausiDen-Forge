@@ -20,7 +20,8 @@
  *   components  composite components (.loom-card-battle, .loom-leader,
  *               .loom-hero, .loom-nav, etc.)
  *   plugins     OPEN — downstream apps drop overrides here. Empty
- *               by default. Overrides land via @layer plugins { ... }
+ *               by default. Overrides land via /* unwrapped @layer */
+ ... 
  *               in a separate stylesheet imported AFTER this one.
  *   utilities   single-purpose helpers (.loom-sr-only) — wins over
  *               components by design (utilities should be the final
@@ -44,7 +45,8 @@
  *
  * 4. PLUGIN extension — the @layer plugins block is intentionally
  *    empty here. A site that wants a different brand voice writes
- *    its own @layer plugins { .loom-brand { ... } } in a separate
+ *    its own /* unwrapped @layer */
+ .loom-brand { ... }  in a separate
  *    file imported after this one. No specificity war.
  *
  * STRICT INVARIANTS (enforced by `loom lint`)
@@ -81,13 +83,13 @@
  * knows the truth without grep'ing the whole sheet.
  * =================================================================== */
 
-@layer reset, tokens, primitives, components, plugins, utilities;
-
+/* @layer cascade dropped for older-browser compat */
 /* ============================================================ *
  * @layer reset                                                  *
  * ============================================================ */
 
-@layer reset {
+/* unwrapped @layer */
+
   *, *::before, *::after { box-sizing: border-box; }
   * { margin: 0; padding: 0; min-width: 0; }
 
@@ -161,7 +163,7 @@
 
   /* Hide content from sighted users without removing from a11y tree. */
   [hidden] { display: none !important; }
-}
+
 
 /* ============================================================ *
  * @layer tokens                                                 *
@@ -173,7 +175,8 @@
  * design token table.                                            *
  * ============================================================ */
 
-@layer tokens {
+/* unwrapped @layer */
+
   :root {
     /* Component-trait tokens. Downstream overrides land here. */
     --loom-radius-component:    var(--loom-radius-lg);
@@ -242,13 +245,14 @@
       --loom-pad-band:  var(--loom-space-8);
     }
   }
-}
+
 
 /* ============================================================ *
  * @layer primitives                                             *
  * ============================================================ */
 
-@layer primitives {
+/* unwrapped @layer */
+
   .loom-page {
     width: 100%;
     max-width: var(--loom-break-xl);
@@ -301,13 +305,14 @@
     z-index: 100;
   }
   .loom-skip:focus { transform: translateY(0); }
-}
+
 
 /* ============================================================ *
  * @layer components                                             *
  * ============================================================ */
 
-@layer components {
+/* unwrapped @layer */
+
 
   /* ---------- Brand wordmark ---------- */
   .loom-brand {
@@ -1152,7 +1157,7 @@
     font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
     font-size: var(--loom-font-xs);
   }
-}
+
 
 /* ============================================================ *
  * @layer plugins                                                *
@@ -1175,7 +1180,8 @@
  * with --loom-font-display / --loom-font-body / --loom-font-mono.
  * ============================================================ */
 
-@layer plugins {
+/* unwrapped @layer */
+
   /* High-contrast dark — bumps borders, text, removes
    * decorative gradients on title that lower contrast. */
   :root[data-theme="hc-dark"] {
@@ -1279,13 +1285,14 @@
     --loom-gap-row:    var(--loom-space-4);
     --loom-gap-grid:   var(--loom-space-6);
   }
-}
+
 
 /* ============================================================ *
  * @layer utilities                                              *
  * ============================================================ */
 
-@layer utilities {
+/* unwrapped @layer */
+
   .loom-sr-only {
     position: absolute;
     width: 1px;
@@ -1301,7 +1308,7 @@
   .loom-hidden       { display: none !important; }
   .loom-show-md      { display: none; }
   @media (min-width: 768px) { .loom-show-md { display: revert; } }
-}
+
 
 /* ============================================================ *
  * Accessibility — applied across all layers                    *
