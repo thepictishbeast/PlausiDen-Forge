@@ -1742,6 +1742,149 @@
 [data-stagger="11"] { animation-delay: 660ms; }
 [data-stagger="12"] { animation-delay: 720ms; }
 
+/* T23: feedback components — ProgressBar, Spinner, Toast.
+ * Each honors prefers-reduced-motion via the universal motion
+ * kill-switch already in skin (line ~1700). No per-component
+ * fallback needed because the kill-switch caps animation-duration
+ * to 0.001ms across the board.
+ *
+ * --------- ProgressBar ---------
+ * Native <progress> styling is browser-default-ugly and
+ * inconsistent across Firefox/Chrome/Safari. .loom-progress is a
+ * div-based wrapper that uses --comp-progress-pct (a CSS custom
+ * property authored as a percentage string like "42%") to drive
+ * the fill width. Setting --comp-progress-pct via inline style is
+ * one of the few legit inline-style cases — it's a value, not a
+ * design decision. Same approach as CSS variables on color pickers.
+ */
+.loom-progress {
+  --comp-progress-pct:        0%;
+  --comp-progress-track:      var(--loom-color-bg-overlay);
+  --comp-progress-fill-c1:    var(--loom-color-gradient-a);
+  --comp-progress-fill-c2:    var(--loom-color-gradient-b);
+  --comp-progress-height:     8px;
+  display: block;
+  position: relative;
+  width: 100%;
+  height: var(--comp-progress-height);
+  background: var(--comp-progress-track);
+  border-radius: var(--loom-radius-full);
+  overflow: hidden;
+}
+.loom-progress::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--comp-progress-pct);
+  background: linear-gradient(90deg,
+    var(--comp-progress-fill-c1),
+    var(--comp-progress-fill-c2));
+  border-radius: var(--loom-radius-full);
+  transition: width var(--loom-transition-base);
+}
+.loom-progress[data-size="sm"] { --comp-progress-height: 4px; }
+.loom-progress[data-size="lg"] { --comp-progress-height: 12px; }
+/* Indeterminate variant — animated bar shimmers across track when
+ * the operation has no progress signal (e.g. "uploading…" before
+ * the server reports a byte count). */
+.loom-progress[data-state="indeterminate"]::before {
+  width: 30%;
+  animation: loom-progress-indeterminate 1.4s ease-in-out infinite;
+}
+@keyframes loom-progress-indeterminate {
+  0%   { inset-inline-start: -30%; }
+  100% { inset-inline-start: 100%; }
+}
+
+/* --------- Spinner ---------
+ * Pure CSS conic-gradient ring. Sizes: sm=16 / md=24 / lg=40.
+ * data-tone variants drive the spinner color; default uses
+ * primary. aria-label="Loading" is the responsibility of the
+ * caller — the spinner is decorative without context.
+ */
+.loom-spinner {
+  --comp-spinner-size:  24px;
+  --comp-spinner-color: var(--loom-color-primary);
+  --comp-spinner-track: hsl(0 0% 50% / 0.18);
+  display: inline-block;
+  width: var(--comp-spinner-size);
+  height: var(--comp-spinner-size);
+  border: 2px solid var(--comp-spinner-track);
+  border-top-color: var(--comp-spinner-color);
+  border-radius: var(--loom-radius-full);
+  animation: loom-spinner-rotate 0.8s linear infinite;
+  vertical-align: middle;
+}
+.loom-spinner[data-size="sm"]  { --comp-spinner-size: 16px; }
+.loom-spinner[data-size="lg"]  { --comp-spinner-size: 40px; border-width: 3px; }
+.loom-spinner[data-tone="success"] { --comp-spinner-color: var(--loom-color-success); }
+.loom-spinner[data-tone="warn"]    { --comp-spinner-color: var(--loom-color-warn); }
+.loom-spinner[data-tone="danger"]  { --comp-spinner-color: var(--loom-color-danger); }
+@keyframes loom-spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* --------- Toast ---------
+ * Bottom-of-viewport notification. role="status" or role="alert"
+ * is caller-controlled. Default appears at bottom-center; can
+ * be moved with data-position="top-right|top-left|bottom-right|
+ * bottom-left". Self-hides via JS-driven [data-visible="false"]
+ * → opacity:0 + pointer-events:none. The CSS exposes the
+ * appearance contract; show/hide logic lives in the toast queue
+ * (Loom doesn't ship a queue impl yet — caller wires it).
+ */
+.loom-toast {
+  --comp-toast-bg:     var(--loom-color-surface);
+  --comp-toast-border: var(--loom-border-component);
+  --comp-toast-fg:     var(--loom-color-ink);
+  position: fixed;
+  inset-inline: var(--loom-space-4);
+  inset-block-end: var(--loom-space-4);
+  margin-inline: auto;
+  max-width: min(420px, calc(100vw - var(--loom-space-8)));
+  background: var(--comp-toast-bg);
+  color: var(--comp-toast-fg);
+  border: var(--comp-toast-border);
+  border-radius: var(--loom-radius-lg);
+  padding: var(--loom-space-3) var(--loom-space-4);
+  box-shadow: var(--loom-shadow-elevated);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-3);
+  font-size: var(--loom-font-sm);
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--loom-transition-base),
+    transform var(--loom-transition-base);
+}
+.loom-toast[data-visible="false"] {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+.loom-toast[data-tone="success"] {
+  --comp-toast-bg:     var(--loom-color-success);
+  --comp-toast-fg:     hsl(0 0% 100%);
+  --comp-toast-border: 1px solid transparent;
+}
+.loom-toast[data-tone="warn"] {
+  --comp-toast-bg:     var(--loom-color-warn);
+  --comp-toast-fg:     hsl(220 33% 8%);
+  --comp-toast-border: 1px solid transparent;
+}
+.loom-toast[data-tone="danger"] {
+  --comp-toast-bg:     var(--loom-color-danger);
+  --comp-toast-fg:     hsl(0 0% 100%);
+  --comp-toast-border: 1px solid transparent;
+}
+.loom-toast[data-position="top-right"]    { inset-block: var(--loom-space-4) auto; inset-inline: auto var(--loom-space-4); margin: 0; }
+.loom-toast[data-position="top-left"]     { inset-block: var(--loom-space-4) auto; inset-inline: var(--loom-space-4) auto; margin: 0; }
+.loom-toast[data-position="bottom-right"] { inset-inline: auto var(--loom-space-4); margin: 0; }
+.loom-toast[data-position="bottom-left"]  { inset-inline: var(--loom-space-4) auto; margin: 0; }
+
 @keyframes loom-fade-in    { from { opacity: 0; } to { opacity: 1; } }
 @keyframes loom-fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes loom-scale-in   { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
