@@ -1,10 +1,21 @@
 //! `label_consistency` — every (kind, key) pair (where kind is
 //! `a` keyed on `href` or `button` keyed on `data-backend`) must
-//! carry exactly one distinct visible label across the whole site.
+//! carry exactly one distinct visible label across the whole
+//! site, UNLESS every element in the group declares
+//! `data-loom-poly-action="true"` to opt out (T513).
 //!
 //! Bash parity: `phase_label_consistency`. Owner-surfaced bug it
 //! catches: nav link said "Post a Skill" while CTA button said
 //! "Post skill" — same destination, two labels.
+//!
+//! T513 polymorphism doctrine:
+//!
+//! * **All elements opt-out** → silent. Intentional polymorphic
+//!   action (e.g. one `data-backend="list-challenges"` wired to
+//!   N filter buttons whose labels are filter modifiers).
+//! * **Partial opt-out** → `Warn`. Annotation is incomplete; the
+//!   author meant to declare polymorphism but missed an element.
+//! * **No opt-out** → `Strict`. Real label-drift bug.
 
 use std::collections::BTreeMap;
 
@@ -16,6 +27,14 @@ use crate::html_walk::walk_html;
 #[derive(Debug, Default)]
 pub struct LabelConsistencyPhase;
 
+/// One captured element (anchor or button) with the data we need
+/// for grouping + opt-out decisions.
+struct ElementHit {
+    label: String,
+    file: String,
+    has_poly_optout: bool,
+}
+
 impl Phase for LabelConsistencyPhase {
     fn name(&self) -> &'static str {
         "label_consistency"
@@ -23,24 +42,23 @@ impl Phase for LabelConsistencyPhase {
 
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
         let files = walk_html(&ctx.static_dir, self.name())?;
-        // (kind, key) -> {label: [files]}
-        let mut groups: BTreeMap<(&'static str, String), BTreeMap<String, Vec<String>>> =
-            BTreeMap::new();
+        // (kind, key) -> Vec<ElementHit>. Keep Vec not BTreeMap so
+        // we can compute opt-out coverage later.
+        let mut groups: BTreeMap<(&'static str, String), Vec<ElementHit>> = BTreeMap::new();
 
         for file in &files {
-            for (href, inner) in extract_anchor(&file.body) {
+            for (href, inner, optout) in extract_anchor(&file.body) {
                 let label = normalize_label(&inner);
                 if label.is_empty() || label.starts_with('▶') {
                     continue;
                 }
-                groups
-                    .entry(("a", href))
-                    .or_default()
-                    .entry(label)
-                    .or_default()
-                    .push(file.name.clone());
+                groups.entry(("a", href)).or_default().push(ElementHit {
+                    label,
+                    file: file.name.clone(),
+                    has_poly_optout: optout,
+                });
             }
-            for (backend, inner) in extract_button(&file.body) {
+            for (backend, inner, optout) in extract_button(&file.body) {
                 let label = normalize_label(&inner);
                 if label.is_empty() {
                     continue;
@@ -48,35 +66,54 @@ impl Phase for LabelConsistencyPhase {
                 groups
                     .entry(("button", backend))
                     .or_default()
-                    .entry(label)
-                    .or_default()
-                    .push(file.name.clone());
+                    .push(ElementHit {
+                        label,
+                        file: file.name.clone(),
+                        has_poly_optout: optout,
+                    });
             }
         }
 
         let mut findings = Vec::new();
-        for ((kind, key), label_map) in &groups {
-            if label_map.len() > 1 {
-                let summary: Vec<String> = label_map
-                    .iter()
-                    .map(|(label, files)| format!("\"{label}\" ({}x)", files.len()))
-                    .collect();
-                // T11.3.2 / 2026-05-04: severity is Warn pending the
-                // polymorphic-action opt-out design (T513). The
-                // current detector flags every (kind, key) with
-                // multiple labels — but legitimate polymorphism
-                // exists (e.g. one data-backend="list-challenges"
-                // wired to many filter buttons whose labels are
-                // the filter modifier, not the action). Once the
-                // design system declares an opt-out attribute
-                // (e.g. data-loom-poly-action), this becomes
-                // Strict on the residual non-opted-out cases.
+        for ((kind, key), hits) in &groups {
+            // Distinct labels.
+            let mut label_counts: BTreeMap<&str, usize> = BTreeMap::new();
+            for h in hits {
+                *label_counts.entry(h.label.as_str()).or_insert(0) += 1;
+            }
+            if label_counts.len() <= 1 {
+                continue; // single label — clean
+            }
+            // Opt-out coverage: how many elements declared the attribute.
+            let opted: usize = hits.iter().filter(|h| h.has_poly_optout).count();
+            let total = hits.len();
+            let summary: Vec<String> = label_counts
+                .iter()
+                .map(|(label, count)| format!("\"{label}\" ({count}x)"))
+                .collect();
+
+            if opted == total {
+                // Fully annotated polymorphic action — silent. We
+                // could still emit an INFO log here for visibility;
+                // for now silence is the contract.
+                continue;
+            } else if opted > 0 {
                 findings.push(Finding::warn(
                     self.name(),
                     "static/",
                     format!(
-                        "{kind}[{key}] — {} distinct labels: {} — declare data-loom-poly-action if intentional polymorphism (T513)",
-                        label_map.len(),
+                        "{kind}[{key}] — {} distinct labels with PARTIAL data-loom-poly-action ({opted}/{total} elements opted out): {} — annotate the remaining elements OR remove the attribute on all",
+                        label_counts.len(),
+                        summary.join(", ")
+                    ),
+                ));
+            } else {
+                findings.push(Finding::strict(
+                    self.name(),
+                    "static/",
+                    format!(
+                        "{kind}[{key}] — {} distinct labels: {} — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
+                        label_counts.len(),
                         summary.join(", ")
                     ),
                 ));
@@ -86,13 +123,14 @@ impl Phase for LabelConsistencyPhase {
     }
 }
 
-/// Extract every `<a href="..."> INNER </a>` as (href, inner_html).
-fn extract_anchor(body: &str) -> Vec<(String, String)> {
+/// Extract every `<a href="..."> INNER </a>` as
+/// `(href, inner_html, has_data_loom_poly_action)`.
+fn extract_anchor(body: &str) -> Vec<(String, String, bool)> {
     extract_pair(body, "<a", "href=\"", "</a>")
 }
 
 /// Extract every `<button data-backend="..."> INNER </button>`.
-fn extract_button(body: &str) -> Vec<(String, String)> {
+fn extract_button(body: &str) -> Vec<(String, String, bool)> {
     extract_pair(body, "<button", "data-backend=\"", "</button>")
 }
 
@@ -101,7 +139,7 @@ fn extract_pair(
     open_tag: &str,
     attr_prefix: &str,
     close_tag: &str,
-) -> Vec<(String, String)> {
+) -> Vec<(String, String, bool)> {
     let mut out = Vec::new();
     let mut search = body;
     while let Some(open_idx) = search.find(open_tag) {
@@ -115,11 +153,21 @@ fn extract_pair(
             search = after_open;
             continue;
         };
+        // T513: detect the opt-out attribute. Accepts both
+        // `data-loom-poly-action="true"` and the bare attribute
+        // form `data-loom-poly-action`. Anything other than
+        // "false" counts as opted-out.
+        let optout_val = extract_attr(tag_open, "data-loom-poly-action=\"");
+        let optout = match optout_val.as_deref() {
+            Some("false") | Some("0") => false,
+            Some(_) => true,
+            None => tag_open.contains("data-loom-poly-action"),
+        };
         let Some(close_idx) = after_open.find(close_tag) else {
             break;
         };
         let inner = &after_open[..close_idx];
-        out.push((key, inner.to_owned()));
+        out.push((key, inner.to_owned(), optout));
         search = &after_open[close_idx + close_tag.len()..];
     }
     out
@@ -144,7 +192,6 @@ fn normalize_label(inner_html: &str) -> String {
             _ => {}
         }
     }
-    // Cheap entity decode (only common ones).
     let decoded = out
         .replace("&amp;", "&")
         .replace("&lt;", "<")
@@ -152,7 +199,6 @@ fn normalize_label(inner_html: &str) -> String {
         .replace("&quot;", "\"")
         .replace("&#39;", "'")
         .replace("&nbsp;", " ");
-    // Collapse whitespace.
     let mut result = String::with_capacity(decoded.len());
     let mut last_was_space = false;
     for c in decoded.chars() {
@@ -187,17 +233,45 @@ mod tests {
     }
 
     #[test]
-    fn extract_anchor_pulls_label() {
+    fn extract_anchor_pulls_label_no_optout() {
         let body = r#"<a href="/x.html">Foo</a><a href="/y.html"><span>Bar</span></a>"#;
         let pairs = extract_anchor(body);
         assert_eq!(pairs.len(), 2);
-        assert_eq!(pairs[0], ("/x.html".to_owned(), "Foo".to_owned()));
+        assert_eq!(pairs[0].0, "/x.html");
+        assert_eq!(pairs[0].1, "Foo");
+        assert!(!pairs[0].2);
+    }
+
+    #[test]
+    fn extract_anchor_detects_polyaction_optout() {
+        let body =
+            r#"<a href="/" data-loom-poly-action="true">Home</a><a href="/">Logo</a>"#;
+        let pairs = extract_anchor(body);
+        assert_eq!(pairs.len(), 2);
+        assert!(pairs[0].2, "first <a> has data-loom-poly-action");
+        assert!(!pairs[1].2, "second <a> has no opt-out");
+    }
+
+    #[test]
+    fn extract_anchor_polyaction_false_is_not_optout() {
+        let body = r#"<a href="/x" data-loom-poly-action="false">x</a>"#;
+        let pairs = extract_anchor(body);
+        assert!(!pairs[0].2, "explicit false must NOT count as opt-out");
+    }
+
+    #[test]
+    fn extract_button_polyaction_bare_attribute() {
+        let body = r#"<button data-backend="x" data-loom-poly-action>Click</button>"#;
+        let pairs = extract_button(body);
+        assert!(pairs[0].2, "bare attribute counts as opt-out");
     }
 
     #[test]
     fn extract_button_pulls_label() {
         let body = r#"<button data-backend="foo">Click</button>"#;
         let pairs = extract_button(body);
-        assert_eq!(pairs, vec![("foo".to_owned(), "Click".to_owned())]);
+        assert_eq!(pairs.len(), 1);
+        assert_eq!(pairs[0].0, "foo");
+        assert_eq!(pairs[0].1, "Click");
     }
 }
