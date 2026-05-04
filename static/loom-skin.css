@@ -1742,6 +1742,139 @@
 [data-stagger="11"] { animation-delay: 660ms; }
 [data-stagger="12"] { animation-delay: 720ms; }
 
+/* T20: DataTable — sortable, sticky-header, mobile card-stack.
+ *
+ *   <table class="loom-table" data-stripe="zebra">
+ *     <thead>
+ *       <tr>
+ *         <th scope="col" aria-sort="none">Rank</th>
+ *         <th scope="col">Player</th>
+ *         <th scope="col" data-align="end" aria-sort="descending">Earnings</th>
+ *       </tr>
+ *     </thead>
+ *     <tbody>
+ *       <tr>
+ *         <td data-label="Rank">1</td>
+ *         <td data-label="Player">@court_dax</td>
+ *         <td data-label="Earnings" data-align="end">$1,840</td>
+ *       </tr>
+ *       …
+ *     </tbody>
+ *   </table>
+ *
+ * data-align="end" right-aligns numeric columns (RTL-aware via
+ * logical text-align).
+ * data-stripe="zebra" alternates row backgrounds.
+ * aria-sort on <th> emits the sort glyph; sort logic lives in the
+ * caller (Loom doesn't ship a JS sorter — wire to the chosen
+ * framework or vanilla click handler).
+ *
+ * Mobile (<640px): table becomes a stack of labelled cards. Each
+ * <td> renders its `data-label` attribute as a small inline-start
+ * caption. <thead> hides — column meaning travels with each cell.
+ */
+.loom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--loom-font-sm);
+  color: var(--loom-color-ink);
+}
+.loom-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  background: var(--loom-color-surface-muted);
+  z-index: 1;
+  /* On mobile we hide thead and surface labels per-cell. */
+}
+.loom-table th,
+.loom-table td {
+  padding: var(--loom-space-3) var(--loom-space-3);
+  text-align: start;
+  border-block-end: 1px solid var(--loom-color-border);
+  vertical-align: baseline;
+}
+.loom-table th {
+  font-weight: 700;
+  font-size: var(--loom-font-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--loom-color-ink-muted);
+}
+.loom-table th[data-align="end"],
+.loom-table td[data-align="end"] {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.loom-table th[aria-sort]::after {
+  content: " ↕";
+  color: var(--loom-color-ink-muted);
+  font-size: 0.85em;
+}
+.loom-table th[aria-sort="ascending"]::after  { content: " ▲"; color: var(--loom-color-primary); }
+.loom-table th[aria-sort="descending"]::after { content: " ▼"; color: var(--loom-color-primary); }
+.loom-table th[aria-sort]:not([aria-sort="none"]) {
+  color: var(--loom-color-ink);
+}
+.loom-table tbody tr {
+  transition: background var(--loom-transition-fast);
+}
+.loom-table tbody tr:hover {
+  background: var(--loom-color-bg-overlay);
+}
+.loom-table[data-stripe="zebra"] tbody tr:nth-child(even) {
+  background: var(--loom-color-surface-muted);
+}
+.loom-table[data-stripe="zebra"] tbody tr:nth-child(even):hover {
+  background: var(--loom-color-bg-overlay);
+}
+
+/* Mobile card-stack — every <td> becomes a labelled row in a
+ * stacked card. Each <tr> renders as a discrete card. */
+@media (max-width: 640px) {
+  .loom-table thead {
+    /* Visually hide but preserve a11y reading order. Screen
+     * readers will announce the data-label fallback via the
+     * cell pseudo-element instead. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .loom-table tbody tr {
+    display: block;
+    margin-block-end: var(--loom-space-3);
+    padding: var(--loom-space-3);
+    background: var(--loom-color-surface);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-md);
+  }
+  .loom-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--loom-space-3);
+    padding: var(--loom-space-1) 0;
+    border: 0;
+  }
+  .loom-table tbody td::before {
+    content: attr(data-label);
+    color: var(--loom-color-ink-muted);
+    font-weight: 600;
+    font-size: var(--loom-font-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .loom-table tbody td:not([data-label])::before {
+    /* Cell with no data-label hides the prefix entirely. */
+    content: none;
+  }
+  .loom-table[data-stripe="zebra"] tbody tr:nth-child(even) {
+    background: var(--loom-color-surface-muted);
+  }
+}
+
 /* T22: navigation/disclosure components — Tabs, Pagination,
  * Accordion, Popover. Each ships an ARIA-correct contract; the
  * HTML markup pattern is documented inline so callers wire it
