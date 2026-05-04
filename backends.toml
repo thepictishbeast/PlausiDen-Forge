@@ -66,6 +66,27 @@ path     = "/challenges"
 purpose  = "operator publishes a new challenge"
 impl_files = []
 
+# Composer (T528) prompt-bar action wires. Stubs declared here so
+# phase_phantom_button doesn't fire strict on the new Composer-
+# emitted markup before backend impl lands.
+[backends.challenge-create]
+method   = "POST"
+path     = "/challenges/new"
+purpose  = "user opens the challenge-creation flow from the feed-top composer"
+impl_files = []
+
+[backends.live-start]
+method   = "POST"
+path     = "/live/start"
+purpose  = "user starts a live skill stream from the feed-top composer"
+impl_files = []
+
+[backends.post-photo]
+method   = "POST"
+path     = "/posts/photo"
+purpose  = "user posts an image-only entry from the feed-top composer"
+impl_files = []
+
 [backends.enter-challenge]
 method   = "POST"
 path     = "/challenges/:id/entries"
