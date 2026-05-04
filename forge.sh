@@ -323,6 +323,51 @@ phase_image_convert() {
 }
 
 # ============================================================
+# Phase: audit_bridge — assert every CmsSection variant has its
+# matching .loom-* selector(s) in skin.css. Closes the silent-
+# unstyled-page failure mode T13 caught (paragraph + heading
+# variants had no skin rules through 13 ticks of work).
+#
+# Strict on any missing selector — the bridge↔skin contract is
+# load-bearing for every CMS-driven page's visual fidelity.
+#
+# REGRESSION-GUARD: do NOT downgrade to warn. The audit catches
+# a class of drift that's INVISIBLE in dev (browser falls back
+# to default <p> / <h2> styles) but breaks the design system.
+# Strict-fail is the only severity that prevents this from
+# silently shipping.
+# ============================================================
+phase_audit_bridge() {
+  phase_header "audit_bridge"
+  local LOOM_BIN="${LOOM_BIN:-/home/user/cargo-target/release/loom}"
+  if [ ! -x "$LOOM_BIN" ]; then
+    finding_warn "audit_bridge" "loom-cli" "loom binary not at $LOOM_BIN — bridge↔skin coverage not verified"
+    return
+  fi
+  if [ ! -f "$STATIC/loom-skin.css" ]; then
+    finding_warn "audit_bridge" "static/loom-skin.css" "skin.css missing — coverage not verified"
+    return
+  fi
+  local out
+  out=$("$LOOM_BIN" audit-bridge --skin "$STATIC/loom-skin.css" 2>&1)
+  local rc=$?
+  if [ $rc -eq 0 ]; then
+    local summary=$(echo "$out" | grep -E '^loom audit-bridge:' | head -1)
+    if [ -n "$summary" ]; then
+      echo "  ${C_GREEN}ok${C_OFF}      $summary"
+    fi
+    return
+  fi
+  # Surface every fail line as STRICT.
+  while IFS= read -r line; do
+    if echo "$line" | grep -qE '^\s+fail\s'; then
+      local var=$(echo "$line" | grep -oE 'variant=[a-z_]+' | head -1)
+      finding_strict "audit_bridge" "${var:-skin}" "$line"
+    fi
+  done < <(echo "$out")
+}
+
+# ============================================================
 # Phase: path_consistency — every cms/<name>.json's `path` field
 # must resolve to a real static/<file>. Catches the mismatch
 # class T11 surfaced (compose.json declared /compose but file
@@ -1791,6 +1836,7 @@ phase_validate_cms
 phase_image_convert
 phase_cms_render
 phase_path_consistency
+phase_audit_bridge
 phase_loom_sync
 phase_label_consistency
 phase_tokens
