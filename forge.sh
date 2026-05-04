@@ -418,6 +418,43 @@ phase_backend_coverage() {
 # itself. Cheap structural sanity. Owner directive: "audit and
 # test and debug loom, cms and builder themselves also".
 # ============================================================
+phase_csp_devmode() {
+  # T74 (added 2026-05-04 from owner-bug discovery): the
+  # `upgrade-insecure-requests` CSP directive rewrites every http://
+  # subresource URL to https:// in the browser. On a HTTP dev server
+  # this kills every CSS/JS load and the page renders unstyled.
+  # Production should set it via an HTTP header behind TLS, NEVER
+  # via the meta CSP that ships with the static HTML.
+  #
+  # Owner saw this twice. forge now strict-fails any HTML with both
+  # http:// serving (dev) AND `upgrade-insecure-requests` in meta.
+  phase_header "csp_devmode"
+  local hits=0
+  # Detection extracts the meta CSP attribute value via Python so
+  # we look at the directive list itself, not at HTML comments
+  # that happen to mention the keyword (false-positive trap I hit
+  # 2026-05-04 — the comment "REMOVED upgrade-insecure-requests"
+  # tripped the grep version of this check).
+  for h in "$STATIC"/*.html; do
+    [ -f "$h" ] || continue
+    if python3 -c "
+import re, sys
+src = open(sys.argv[1]).read()
+for m in re.finditer(r'<meta[^>]*http-equiv=\"Content-Security-Policy\"[^>]*content=\"([^\"]+)\"', src, re.IGNORECASE | re.DOTALL):
+    if 'upgrade-insecure-requests' in m.group(1):
+        sys.exit(0)
+sys.exit(1)
+" "$h" 2>/dev/null; then
+      finding_strict "csp_devmode" "$(basename "$h")" \
+        "meta CSP contains 'upgrade-insecure-requests' — every CSS/JS subresource will be rewritten to https://, breaking the dev server. Move to a production HTTP header behind TLS."
+      hits=$((hits + 1))
+    fi
+  done
+  if [ "$hits" -eq 0 ]; then
+    echo "  ${C_GREEN}ok${C_OFF}      csp_devmode: no upgrade-insecure-requests in meta CSP"
+  fi
+}
+
 phase_contrast() {
   # T3: WCAG 2.1 contrast — every (color, bg) token pair from
   # loom-tokens.css gets relative-luminance computed; pairs that
@@ -650,6 +687,7 @@ phase_backend_coverage
 phase_unbuilt_route
 phase_external_assets
 phase_viewport_audit
+phase_csp_devmode
 phase_contrast
 phase_self_check
 

@@ -19,8 +19,13 @@
                  connect-src 'self';
                  base-uri 'self';
                  form-action 'self';
-                 frame-ancestors 'none';
-                 upgrade-insecure-requests">
+                 frame-ancestors 'none'">
+  <!-- NOTE: upgrade-insecure-requests REMOVED. This directive
+       rewrites every http:// subresource URL to https:// — fine
+       in production behind TLS, fatal for an HTTP dev server
+       (browser tries https://localhost:8123/loom-skin.css, no cert,
+       all CSS dies, page renders unstyled). The fix should land
+       at the production HTTP-header level, never in the meta CSP. -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 
