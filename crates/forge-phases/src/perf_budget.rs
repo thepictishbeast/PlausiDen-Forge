@@ -35,9 +35,36 @@ impl Phase for PerfBudgetPhase {
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
         let mut findings = Vec::new();
         let mut total: u64 = 0;
-        check_class(&ctx.static_dir, "html", BUDGET_HTML, "HTML", "audit blocks / split route", &mut findings, &mut total, self.name())?;
-        check_class(&ctx.static_dir, "css", BUDGET_CSS, "CSS", "split into per-route bundles", &mut findings, &mut total, self.name())?;
-        check_class(&ctx.static_dir, "js", BUDGET_JS, "JS", "code-split or tree-shake", &mut findings, &mut total, self.name())?;
+        check_class(
+            &ctx.static_dir,
+            "html",
+            BUDGET_HTML,
+            "HTML",
+            "audit blocks / split route",
+            &mut findings,
+            &mut total,
+            self.name(),
+        )?;
+        check_class(
+            &ctx.static_dir,
+            "css",
+            BUDGET_CSS,
+            "CSS",
+            "split into per-route bundles",
+            &mut findings,
+            &mut total,
+            self.name(),
+        )?;
+        check_class(
+            &ctx.static_dir,
+            "js",
+            BUDGET_JS,
+            "JS",
+            "code-split or tree-shake",
+            &mut findings,
+            &mut total,
+            self.name(),
+        )?;
         // Project-wide info (not a finding).
         // BUG ASSUMPTION: total here only includes top-level
         // static/*.html|css|js — not nested directories. Forge
@@ -93,12 +120,7 @@ fn check_class(
             findings.push(Finding::warn(
                 phase,
                 name,
-                format!(
-                    "{} {} > {} budget — {hint}",
-                    iec(sz),
-                    label,
-                    iec(budget)
-                ),
+                format!("{} {} > {} budget — {hint}", iec(sz), label, iec(budget)),
             ));
         }
     }

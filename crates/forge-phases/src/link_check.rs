@@ -24,7 +24,7 @@ use std::collections::BTreeSet;
 
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 
-use crate::html_walk::{walk_html, HtmlFile};
+use crate::html_walk::walk_html;
 
 /// `link_check` phase.
 #[derive(Debug, Default)]

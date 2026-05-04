@@ -103,7 +103,11 @@ pub struct Finding {
 impl Finding {
     /// Make a strict finding without ceremony.
     #[must_use]
-    pub fn strict(phase: impl Into<String>, path: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn strict(
+        phase: impl Into<String>,
+        path: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Self {
         Self {
             phase: phase.into(),
             path: path.into(),
@@ -114,7 +118,11 @@ impl Finding {
 
     /// Make a warn finding without ceremony.
     #[must_use]
-    pub fn warn(phase: impl Into<String>, path: impl Into<String>, message: impl Into<String>) -> Self {
+    pub fn warn(
+        phase: impl Into<String>,
+        path: impl Into<String>,
+        message: impl Into<String>,
+    ) -> Self {
         Self {
             phase: phase.into(),
             path: path.into(),

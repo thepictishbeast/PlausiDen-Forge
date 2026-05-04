@@ -27,24 +27,42 @@ impl Phase for A11yLandmarksPhase {
             let n = file.name.clone();
 
             if !body.contains("<main") {
-                findings.push(Finding::strict(self.name(), n.clone(), "missing <main> landmark"));
+                findings.push(Finding::strict(
+                    self.name(),
+                    n.clone(),
+                    "missing <main> landmark",
+                ));
             }
             if !body.contains("<header") {
-                findings.push(Finding::strict(self.name(), n.clone(), "missing <header> landmark"));
+                findings.push(Finding::strict(
+                    self.name(),
+                    n.clone(),
+                    "missing <header> landmark",
+                ));
             }
             if !body.contains("<footer") {
-                findings.push(Finding::strict(self.name(), n.clone(), "missing <footer> landmark"));
+                findings.push(Finding::strict(
+                    self.name(),
+                    n.clone(),
+                    "missing <footer> landmark",
+                ));
             }
             if !body.contains("<nav") {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    "missing <nav> landmark (acceptable on settings pages)"));
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    "missing <nav> landmark (acceptable on settings pages)",
+                ));
             }
             if !body.contains(r#"class="loom-skip""#) {
                 findings.push(Finding::warn(self.name(), n.clone(), "missing skip-link"));
             }
             if !body.contains("<html lang=") {
-                findings.push(Finding::strict(self.name(), n.clone(),
-                    "<html> missing lang attribute"));
+                findings.push(Finding::strict(
+                    self.name(),
+                    n.clone(),
+                    "<html> missing lang attribute",
+                ));
             }
         }
 

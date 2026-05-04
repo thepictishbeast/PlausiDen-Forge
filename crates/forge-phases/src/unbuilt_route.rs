@@ -102,9 +102,7 @@ fn normalize_href(href: &str) -> Option<String> {
     if path == "/" {
         return Some("index.html".to_owned());
     }
-    let stripped = path
-        .trim_start_matches("./")
-        .trim_start_matches('/');
+    let stripped = path.trim_start_matches("./").trim_start_matches('/');
     if stripped.is_empty() {
         return None;
     }

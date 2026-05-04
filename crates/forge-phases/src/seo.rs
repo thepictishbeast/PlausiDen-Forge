@@ -28,84 +28,129 @@ impl Phase for SeoPhase {
 
             // Meta description.
             if !body.contains(r#"<meta name="description""#) {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    r#"missing <meta name="description">"#));
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    r#"missing <meta name="description">"#,
+                ));
             }
             // Open Graph (any of the 5 listed).
-            if !any_of(body, &[
-                r#"<meta property="og:title""#,
-                r#"<meta property="og:description""#,
-                r#"<meta property="og:type""#,
-                r#"<meta property="og:url""#,
-                r#"<meta property="og:image""#,
-            ]) {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    "missing Open Graph tags (og:title/description/type/url/image)"));
+            if !any_of(
+                body,
+                &[
+                    r#"<meta property="og:title""#,
+                    r#"<meta property="og:description""#,
+                    r#"<meta property="og:type""#,
+                    r#"<meta property="og:url""#,
+                    r#"<meta property="og:image""#,
+                ],
+            ) {
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    "missing Open Graph tags (og:title/description/type/url/image)",
+                ));
             }
             // Twitter Card.
-            if !any_of(body, &[
-                r#"<meta name="twitter:card""#,
-                r#"<meta name="twitter:title""#,
-                r#"<meta name="twitter:description""#,
-            ]) {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    "missing Twitter Card tags"));
+            if !any_of(
+                body,
+                &[
+                    r#"<meta name="twitter:card""#,
+                    r#"<meta name="twitter:title""#,
+                    r#"<meta name="twitter:description""#,
+                ],
+            ) {
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    "missing Twitter Card tags",
+                ));
             }
             // Canonical link.
             if !body.contains(r#"<link rel="canonical""#) {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    r#"missing <link rel="canonical">"#));
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    r#"missing <link rel="canonical">"#,
+                ));
             }
             // H1 count.
             let h1 = count_open_tag(body, "h1");
             if h1 == 0 {
                 findings.push(Finding::strict(self.name(), n.clone(), "no <h1> on page"));
             } else if h1 > 1 {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    format!("{h1} <h1> tags (should be exactly 1)")));
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    format!("{h1} <h1> tags (should be exactly 1)"),
+                ));
             }
             // Heading skip h1 → h3 without h2.
             if has_open_tag(body, "h3") && !has_open_tag(body, "h2") {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    "heading skip: <h3> present without <h2> (breaks reader navigation)"));
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    "heading skip: <h3> present without <h2> (breaks reader navigation)",
+                ));
             }
             // JSON-LD.
             if !body.contains("application/ld+json") {
-                findings.push(Finding::warn(self.name(), n.clone(),
-                    "no JSON-LD structured data"));
+                findings.push(Finding::warn(
+                    self.name(),
+                    n.clone(),
+                    "no JSON-LD structured data",
+                ));
             }
             // <html lang=...>.
             if !html_has_lang(body) {
-                findings.push(Finding::strict(self.name(), n.clone(),
-                    "<html> missing lang attribute (also a11y)"));
+                findings.push(Finding::strict(
+                    self.name(),
+                    n.clone(),
+                    "<html> missing lang attribute (also a11y)",
+                ));
             }
             // Title length 20-70 chars (warn outside this band).
             if let Some(title) = extract_title(body) {
                 let tlen = title.chars().count();
                 if tlen < 20 {
-                    findings.push(Finding::warn(self.name(), n.clone(),
-                        format!("title too short ({tlen} chars; aim 30-60 for SERP)")));
+                    findings.push(Finding::warn(
+                        self.name(),
+                        n.clone(),
+                        format!("title too short ({tlen} chars; aim 30-60 for SERP)"),
+                    ));
                 } else if tlen > 70 {
-                    findings.push(Finding::warn(self.name(), n.clone(),
-                        format!("title too long ({tlen} chars; truncated in SERP at ~60)")));
+                    findings.push(Finding::warn(
+                        self.name(),
+                        n.clone(),
+                        format!("title too long ({tlen} chars; truncated in SERP at ~60)"),
+                    ));
                 }
             }
             // Img without alt.
             let no_alt = count_img_without_alt(body);
             if no_alt > 0 {
-                findings.push(Finding::strict(self.name(), n.clone(),
-                    format!("{no_alt} <img> without alt (a11y + SEO)")));
+                findings.push(Finding::strict(
+                    self.name(),
+                    n.clone(),
+                    format!("{no_alt} <img> without alt (a11y + SEO)"),
+                ));
             }
         }
 
         // Project-wide checks.
         if !ctx.static_dir.join("sitemap.xml").exists() {
-            findings.push(Finding::warn(self.name(), "sitemap.xml",
-                "missing sitemap.xml — search-engine crawl coverage suffers"));
+            findings.push(Finding::warn(
+                self.name(),
+                "sitemap.xml",
+                "missing sitemap.xml — search-engine crawl coverage suffers",
+            ));
         }
         if !ctx.static_dir.join("robots.txt").exists() {
-            findings.push(Finding::warn(self.name(), "robots.txt",
-                "missing robots.txt — crawler hint missing"));
+            findings.push(Finding::warn(
+                self.name(),
+                "robots.txt",
+                "missing robots.txt — crawler hint missing",
+            ));
         }
 
         Ok(findings)

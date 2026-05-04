@@ -30,9 +30,7 @@ impl Phase for HtmlSemanticPhase {
                 findings.push(Finding::strict(
                     self.name(),
                     file.name.clone(),
-                    format!(
-                        "{count} inline style=\"...\" attribute(s); migrate to skin.css class"
-                    ),
+                    format!("{count} inline style=\"...\" attribute(s); migrate to skin.css class"),
                 ));
             }
         }

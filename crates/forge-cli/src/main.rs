@@ -40,7 +40,11 @@ use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
 
 #[derive(Parser, Debug)]
-#[command(name = "forge", version, about = "PlausiDen-Forge — typed, audited build pipeline.")]
+#[command(
+    name = "forge",
+    version,
+    about = "PlausiDen-Forge — typed, audited build pipeline."
+)]
 struct Args {
     /// Project root. Defaults to CWD.
     #[arg(long, env = "FORGE_ROOT")]
@@ -100,7 +104,9 @@ fn run() -> Result<ExitCode> {
 
     let root = match args.root {
         Some(p) => p,
-        None => std::env::current_dir().context("forge needs a project root and CWD is unreadable")?,
+        None => {
+            std::env::current_dir().context("forge needs a project root and CWD is unreadable")?
+        }
     };
     let static_dir = root.join("static");
 

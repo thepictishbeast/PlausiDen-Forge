@@ -82,10 +82,7 @@ mod tests {
 
     #[test]
     fn empty_dir_returns_empty() {
-        let tmp = std::env::temp_dir().join(format!(
-            "forge-walk-empty-{}",
-            std::process::id()
-        ));
+        let tmp = std::env::temp_dir().join(format!("forge-walk-empty-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&tmp);
         std::fs::create_dir_all(&tmp).unwrap();
         let result = walk_html(&tmp, "test").expect("walk_html should succeed");
@@ -103,10 +100,7 @@ mod tests {
 
     #[test]
     fn returns_html_in_lexicographic_order() {
-        let tmp = std::env::temp_dir().join(format!(
-            "forge-walk-order-{}",
-            std::process::id()
-        ));
+        let tmp = std::env::temp_dir().join(format!("forge-walk-order-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&tmp);
         std::fs::create_dir_all(&tmp).unwrap();
         std::fs::write(tmp.join("z.html"), "<p>z</p>").unwrap();

@@ -182,7 +182,10 @@ mod tests {
     fn extract_attr_finds() {
         let tag = r#"<link rel="stylesheet" href="x.css" integrity="sha384-abc">"#;
         assert_eq!(extract_attr(tag, "href=\""), Some("x.css".to_owned()));
-        assert_eq!(extract_attr(tag, "integrity=\""), Some("sha384-abc".to_owned()));
+        assert_eq!(
+            extract_attr(tag, "integrity=\""),
+            Some("sha384-abc".to_owned())
+        );
     }
 
     #[test]

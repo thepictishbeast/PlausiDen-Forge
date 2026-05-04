@@ -78,9 +78,7 @@ impl Phase for MotionPhase {
 
 /// True if the file declares motion in some form.
 fn has_motion(css: &str) -> bool {
-    has_decl(css, "animation:")
-        || has_decl(css, "transition:")
-        || css.contains("@keyframes")
+    has_decl(css, "animation:") || has_decl(css, "transition:") || css.contains("@keyframes")
 }
 
 fn has_decl(css: &str, key: &str) -> bool {

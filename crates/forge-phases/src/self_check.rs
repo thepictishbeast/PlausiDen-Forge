@@ -111,7 +111,14 @@ fn has_layer_cascade(head: &str) -> bool {
         };
         let directive = &rest[..end];
         let lower = directive.to_ascii_lowercase();
-        let want = ["reset", "tokens", "primitives", "components", "plugins", "utilities"];
+        let want = [
+            "reset",
+            "tokens",
+            "primitives",
+            "components",
+            "plugins",
+            "utilities",
+        ];
         if want.iter().all(|w| lower.contains(w)) {
             return true;
         }

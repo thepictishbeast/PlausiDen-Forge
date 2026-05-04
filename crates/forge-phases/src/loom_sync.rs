@@ -151,7 +151,8 @@ fn parse_marker(css: &str) -> Option<String> {
     let rest = &after[needle_idx..];
     // Stop on whitespace or `*` (end-of-comment). Base64 alphabet
     // never contains either, so this safely bounds the digest.
-    let end = rest.find(|c: char| c.is_whitespace() || c == '*' || c == ',' || c == ';')
+    let end = rest
+        .find(|c: char| c.is_whitespace() || c == '*' || c == ',' || c == ';')
         .unwrap_or(rest.len());
     Some(rest[..end].to_owned())
 }
@@ -195,6 +196,9 @@ mod tests {
         // base64-encodes to the value below. Verifies sha2 + base64
         // crates are integrated correctly.
         let h = sha384_b64(b"");
-        assert_eq!(h, "OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb");
+        assert_eq!(
+            h,
+            "OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb"
+        );
     }
 }

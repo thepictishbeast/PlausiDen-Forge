@@ -6,7 +6,7 @@
 //! pixel exclusion list (0px / 1px / 2px / 3px are SVG path
 //! fragments), same hex skip-list (`http-equiv`, `svg`).
 //!
-//! AVP-2: returns Vec<Finding> with one entry per offending file
+//! AVP-2: returns `Vec<Finding>` with one entry per offending file
 //! per category, severity Strict.
 
 use forge_core::{BuildCtx, BuildError, Finding, Phase};

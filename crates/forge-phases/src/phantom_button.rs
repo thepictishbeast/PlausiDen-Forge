@@ -2,7 +2,7 @@
 //!
 //! Bash parity: walks `backends.toml` for `[backends.NAME]` keys,
 //! then per HTML page:
-//!   1. Counts <button> tags lacking `data-backend=` (and not in
+//!   1. Counts `<button>` tags lacking `data-backend=` (and not in
 //!      the opt-out allowlist) — emit Warn.
 //!   2. Each declared `data-backend="X"` must match a key in
 //!      backends.toml — strict on miss.
@@ -64,9 +64,7 @@ impl Phase for PhantomButtonPhase {
                     findings.push(Finding::strict(
                         self.name(),
                         n.clone(),
-                        format!(
-                            "data-backend=\"{key}\" not declared in backends.toml — broken UI"
-                        ),
+                        format!("data-backend=\"{key}\" not declared in backends.toml — broken UI"),
                     ));
                 }
             }
@@ -95,7 +93,9 @@ fn read_declared_backends(root: &Path, phase: &str) -> Result<BTreeSet<String>, 
         if let Some(rest) = line.strip_prefix("[backends.") {
             if let Some(name) = rest.strip_suffix(']') {
                 if !name.is_empty()
-                    && name.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+                    && name
+                        .chars()
+                        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
                 {
                     out.insert(name.to_owned());
                 }
@@ -141,7 +141,9 @@ fn extract_data_backends(body: &str) -> BTreeSet<String> {
         if let Some(end) = after.find('"') {
             let val = &after[..end];
             if !val.is_empty()
-                && val.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+                && val
+                    .chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
             {
                 out.insert(val.to_owned());
             }
@@ -159,7 +161,8 @@ mod tests {
 
     #[test]
     fn extract_backends_basic() {
-        let body = r#"<button data-backend="sign-in">x</button> <a data-backend="post-skill">y</a>"#;
+        let body =
+            r#"<button data-backend="sign-in">x</button> <a data-backend="post-skill">y</a>"#;
         let s = extract_data_backends(body);
         assert!(s.contains("sign-in"));
         assert!(s.contains("post-skill"));

@@ -43,7 +43,11 @@ impl Phase for AssetOptimizationPhase {
         let mut paths: Vec<std::path::PathBuf> = Vec::new();
         for entry in entries {
             let entry = entry.map_err(|e| BuildError::Io {
-                context: format!("{}: dir entry under {}", self.name(), ctx.static_dir.display()),
+                context: format!(
+                    "{}: dir entry under {}",
+                    self.name(),
+                    ctx.static_dir.display()
+                ),
                 source: e,
             })?;
             paths.push(entry.path());
