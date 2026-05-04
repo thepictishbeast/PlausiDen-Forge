@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="loom-skin.css">
   <script defer src="/forge-findings.js"></script>
   <script defer src="/forge-overlay.js"></script>
+  <script defer src="/aesthetic.js"></script>
   <script defer src="/theme.js"></script>
 </head>
 <body>
@@ -277,6 +278,30 @@
             <p>Voters judge entries strictly on adherence to the challenge rules.</p>
             <p>Popularity ≠ skill. Reports of vote-buying or coordinated voting freeze the pot pending review.</p>
           </div>
+        </section>
+
+        <section class="loom-panel" aria-labelledby="aesthetic-h">
+          <h2 id="aesthetic-h" class="loom-panel-title">Aesthetic · live swap</h2>
+          <div class="loom-panel-body" style="margin-bottom: var(--loom-space-3);">Swap theme, font, density. Persists to localStorage.</div>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--loom-space-2); margin-bottom: var(--loom-space-3);">
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:dark">Dark</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:light">Light</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:hc-dark">HC dark</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:hc-light">HC light</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="theme:sepia">Sepia</button>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--loom-space-2); margin-bottom: var(--loom-space-3);">
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:display">Sans</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:serif">Serif</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:mono">Mono</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="font:rounded">Rounded</button>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--loom-space-2);">
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:compact">Compact</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:comfortable">Comfortable</button>
+            <button class="loom-btn" data-variant="outline" data-size="sm" type="button" data-loom-aesthetic-set="density:spacious">Spacious</button>
+          </div>
+          <button class="loom-btn" data-variant="ghost" data-size="sm" type="button" data-loom-aesthetic-reset style="margin-top: var(--loom-space-3);">Reset all</button>
         </section>
 
       </aside>
