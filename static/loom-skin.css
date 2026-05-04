@@ -1742,7 +1742,10 @@
   content: attr(data-tooltip);
   position: absolute;
   bottom: calc(100% + var(--loom-space-2));
-  left: 50%;
+  /* T26 RTL — logical property; equivalent to left:50% in LTR
+   * but flips automatically under dir="rtl". transform stays
+   * physical because translateX is movement, not layout. */
+  inset-inline-start: 50%;
   transform: translateX(-50%) translateY(4px);
   background: var(--loom-color-surface);
   color: var(--loom-color-ink);
@@ -1768,16 +1771,24 @@
  * body[data-loom-drawer-open]. */
 .loom-drawer {
   position: fixed;
-  inset: 0 0 0 auto;
+  /* T26 RTL — pin to inline-end edge so it comes from the right
+   * in LTR / from the left in RTL. inset-block:0 anchors top+bottom;
+   * inset-inline: auto 0 means inline-start auto, inline-end 0. */
+  inset-block: 0;
+  inset-inline: auto 0;
   width: min(420px, calc(100vw - var(--loom-space-8)));
   background: var(--loom-color-surface);
-  border-left: var(--loom-border-strong);
+  border-inline-start: var(--loom-border-strong);
   box-shadow: var(--loom-shadow-elevated);
   transform: translateX(100%);
   transition: transform var(--loom-transition-slow);
   z-index: 60;
   overflow-y: auto;
   padding: var(--loom-pad-band);
+}
+:dir(rtl) .loom-drawer {
+  /* In RTL, off-screen is to the LEFT, not the right. */
+  transform: translateX(-100%);
 }
 body[data-loom-drawer-open] .loom-drawer { transform: translateX(0); }
 .loom-drawer-scrim {

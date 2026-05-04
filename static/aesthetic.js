@@ -74,6 +74,22 @@
     if (saved) apply(dim, saved);
   }
 
+  // T26 RTL: ?dir=rtl|ltr URL param sets the document direction.
+  // dir is a real HTML attribute (not data-*), so it goes on the
+  // <html> element directly without a 'data-' prefix.
+  var dirParam = readQueryParam("dir");
+  if (dirParam === "rtl" || dirParam === "ltr") {
+    root.setAttribute("dir", dirParam);
+    try { localStorage.setItem("loom-dir", dirParam); } catch (e) {}
+  } else {
+    try {
+      var savedDir = localStorage.getItem("loom-dir");
+      if (savedDir === "rtl" || savedDir === "ltr") {
+        root.setAttribute("dir", savedDir);
+      }
+    } catch (e) {}
+  }
+
   function ready(fn) {
     if (document.readyState !== "loading") fn();
     else document.addEventListener("DOMContentLoaded", fn);

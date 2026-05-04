@@ -1200,7 +1200,11 @@ for f in "$STATIC"/*.html "$STATIC"/*.css "$STATIC"/*.js; do
   total_raw=$((total_raw + raw))
   count=$((count + 1))
   gzip -9kf "$f"
-  brotli -fq11 "$f" 2>/dev/null || brotli -f "$f" 2>/dev/null || true
+  # Brotli flag syntax differs across versions; -f is force-overwrite,
+  # --quality=11 is unambiguous (vs the legacy -q11 form which broke
+  # silently on this distro and left stale .br files behind every
+  # build → recurring SRI mismatch). Don't swallow stderr.
+  brotli -f --quality=11 "$f" || brotli -f "$f"
   if [ -f "$f.gz" ]; then
     gz=$(stat -c%s "$f.gz")
     total_gz=$((total_gz + gz))
