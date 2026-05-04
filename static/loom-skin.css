@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-G2rX24GppufuyqpdeNWwTyFh5y8eJ6FJ1TMPCue4htPyznjNFWZQ1Lu1quM6oqeW — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-z1srH071ZS3zXSkZgfAx+cUeKJBznp+t6epEHJktYKCU46z6N8gYacndLMejFtVQ — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -776,6 +776,30 @@
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
+
+  /* ============================================================ *
+   * Picture                                                       *
+   * ----------                                                    *
+   * Responsive image base. Component renders <picture> with       *
+   * AVIF / WebP / JPG sources; the <img> always carries           *
+   * .loom-picture so we can normalize layout behavior here.       *
+   * Modifiers: --cover (object-fit:cover), --contain.             *
+   * Size of the box is determined by intrinsic width/height (set  *
+   * as attributes for CLS prevention) plus any ancestor sizing.   *
+   * ============================================================ */
+  .loom-picture {
+    /* Width/height attrs reserve aspect ratio; let the box adapt
+     * to its container width and scale height proportionally. */
+    max-width: 100%;
+    height: auto;
+    display: block;
+    /* Soft asset-load shimmer so a slow JPEG is visibly loading
+     * rather than appearing as a flash of empty box. Uses an
+     * existing token color so it inherits the active theme. */
+    background-color: var(--loom-color-surface-muted);
+  }
+  .loom-picture--cover    { object-fit: cover; height: 100%; width: 100%; }
+  .loom-picture--contain  { object-fit: contain; height: 100%; width: 100%; }
 
   .loom-card-battle {
     --comp-card-radius: var(--loom-radius-component);
