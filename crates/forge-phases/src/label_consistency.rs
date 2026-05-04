@@ -244,8 +244,7 @@ mod tests {
 
     #[test]
     fn extract_anchor_detects_polyaction_optout() {
-        let body =
-            r#"<a href="/" data-loom-poly-action="true">Home</a><a href="/">Logo</a>"#;
+        let body = r#"<a href="/" data-loom-poly-action="true">Home</a><a href="/">Logo</a>"#;
         let pairs = extract_anchor(body);
         assert_eq!(pairs.len(), 2);
         assert!(pairs[0].2, "first <a> has data-loom-poly-action");

@@ -52,7 +52,11 @@ fn main() -> Result<()> {
     };
     let reports_dir = root.join("reports");
 
-    println!("forge-replay {} root={}", env!("CARGO_PKG_VERSION"), root.display());
+    println!(
+        "forge-replay {} root={}",
+        env!("CARGO_PKG_VERSION"),
+        root.display()
+    );
 
     // --- Load build history (Rust forge JSON only; bash format
     //     skipped on parse error). ---
@@ -60,7 +64,10 @@ fn main() -> Result<()> {
     history.sort_by(|a, b| a.path.cmp(&b.path)); // chronological by filename
     let total = history.len();
     if total == 0 {
-        println!("\nno parseable build reports found in {}", reports_dir.display());
+        println!(
+            "\nno parseable build reports found in {}",
+            reports_dir.display()
+        );
     } else {
         render_trend_table(&history, args.last);
         render_churn(&history);
@@ -87,10 +94,7 @@ fn load_reports(reports_dir: &Path) -> Result<Vec<StoredReport>> {
         Ok(it) => it,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(out),
         Err(e) => {
-            return Err(anyhow::anyhow!(
-                "read_dir {}: {e}",
-                reports_dir.display()
-            ));
+            return Err(anyhow::anyhow!("read_dir {}: {e}", reports_dir.display()));
         }
     };
     for entry in entries.flatten() {
@@ -116,15 +120,24 @@ fn load_reports(reports_dir: &Path) -> Result<Vec<StoredReport>> {
 fn render_trend_table(history: &[StoredReport], last: usize) {
     let n = history.len().min(last);
     let slice = &history[history.len() - n..];
-    println!("\n=== build trend (last {} of {} reports) ===", n, history.len());
-    println!("  {:<32} {:>6} {:>6} {:>10}", "report", "strict", "warn", "duration");
-    println!("  {} {} {} {}", "-".repeat(32), "-".repeat(6), "-".repeat(6), "-".repeat(10));
+    println!(
+        "\n=== build trend (last {} of {} reports) ===",
+        n,
+        history.len()
+    );
+    println!(
+        "  {:<32} {:>6} {:>6} {:>10}",
+        "report", "strict", "warn", "duration"
+    );
+    println!(
+        "  {} {} {} {}",
+        "-".repeat(32),
+        "-".repeat(6),
+        "-".repeat(6),
+        "-".repeat(10)
+    );
     for s in slice {
-        let stem = s
-            .path
-            .file_stem()
-            .and_then(|x| x.to_str())
-            .unwrap_or("?");
+        let stem = s.path.file_stem().and_then(|x| x.to_str()).unwrap_or("?");
         println!(
             "  {:<32} {:>6} {:>6} {:>9}ms",
             stem, s.report.strict_count, s.report.warn_count, s.report.duration_ms
@@ -183,8 +196,8 @@ fn render_slow_hotspots(slow_log: &Path) -> Result<()> {
         );
         return Ok(());
     }
-    let text = fs::read_to_string(slow_log)
-        .with_context(|| format!("read {}", slow_log.display()))?;
+    let text =
+        fs::read_to_string(slow_log).with_context(|| format!("read {}", slow_log.display()))?;
 
     // Parse format: `<ts> METHOD path STATUS BYTESb MSms`
     // (forge-serve uses time-prefix bracketed; tolerate both).
@@ -207,17 +220,14 @@ fn render_slow_hotspots(slow_log: &Path) -> Result<()> {
             continue;
         };
         // Heuristic: find the GET/POST/HEAD/etc token, the path is the next.
-        let method_idx = parts.iter().position(|t| {
-            matches!(*t, "GET" | "POST" | "HEAD" | "PUT" | "DELETE" | "PATCH")
-        });
+        let method_idx = parts
+            .iter()
+            .position(|t| matches!(*t, "GET" | "POST" | "HEAD" | "PUT" | "DELETE" | "PATCH"));
         let path_token = match method_idx {
             Some(i) if i + 1 < parts.len() => parts[i + 1].to_owned(),
             _ => continue,
         };
-        by_url
-            .entry(path_token)
-            .or_default()
-            .push(Hit { ms });
+        by_url.entry(path_token).or_default().push(Hit { ms });
     }
 
     if by_url.is_empty() {
@@ -240,15 +250,33 @@ fn render_slow_hotspots(slow_log: &Path) -> Result<()> {
     println!("\n=== slow URL hotspots ===");
     summarized.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
     println!("  top 5 by mean ms:");
-    println!("  {:<40} {:>8} {:>8} {:>6}", "url", "mean ms", "max ms", "count");
-    println!("  {} {} {} {}", "-".repeat(40), "-".repeat(8), "-".repeat(8), "-".repeat(6));
+    println!(
+        "  {:<40} {:>8} {:>8} {:>6}",
+        "url", "mean ms", "max ms", "count"
+    );
+    println!(
+        "  {} {} {} {}",
+        "-".repeat(40),
+        "-".repeat(8),
+        "-".repeat(8),
+        "-".repeat(6)
+    );
     for (url, mean, max, count) in summarized.iter().take(5) {
         println!("  {:<40} {:>8.0} {:>8} {:>6}", url, mean, max, count);
     }
     summarized.sort_by(|a, b| b.2.cmp(&a.2));
     println!("\n  top 5 by max ms:");
-    println!("  {:<40} {:>8} {:>8} {:>6}", "url", "mean ms", "max ms", "count");
-    println!("  {} {} {} {}", "-".repeat(40), "-".repeat(8), "-".repeat(8), "-".repeat(6));
+    println!(
+        "  {:<40} {:>8} {:>8} {:>6}",
+        "url", "mean ms", "max ms", "count"
+    );
+    println!(
+        "  {} {} {} {}",
+        "-".repeat(40),
+        "-".repeat(8),
+        "-".repeat(8),
+        "-".repeat(6)
+    );
     for (url, mean, max, count) in summarized.iter().take(5) {
         println!("  {:<40} {:>8.0} {:>8} {:>6}", url, mean, max, count);
     }

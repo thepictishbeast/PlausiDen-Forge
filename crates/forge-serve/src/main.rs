@@ -112,12 +112,18 @@ async fn main() -> Result<()> {
         root: Arc::new(root.clone()),
     };
 
-    info!("forge-serve {} root={} bind={}", env!("CARGO_PKG_VERSION"), root.display(), addr);
+    info!(
+        "forge-serve {} root={} bind={}",
+        env!("CARGO_PKG_VERSION"),
+        root.display(),
+        addr
+    );
     if !args.lan {
         info!("loopback-only; pass --lan to expose on the LAN");
     }
 
-    let listener = TcpListener::bind(addr).await
+    let listener = TcpListener::bind(addr)
+        .await
         .with_context(|| format!("could not bind {addr}"))?;
 
     // Self-test runs in background after a small delay.
@@ -279,7 +285,8 @@ async fn resolve_and_serve(
     }
 
     if let Some((sib_path, encoding)) = chosen {
-        let body = fs::read(&sib_path).await
+        let body = fs::read(&sib_path)
+            .await
             .with_context(|| format!("read {}", sib_path.display()))?;
         let mut builder = Response::builder()
             .status(200)
@@ -289,13 +296,18 @@ async fn resolve_and_serve(
             .header("vary", "Accept-Encoding");
         builder = decorate_headers(builder);
         let resp = builder
-            .body(if head_only { Full::new(Bytes::new()) } else { Full::new(Bytes::from(body)) })
+            .body(if head_only {
+                Full::new(Bytes::new())
+            } else {
+                Full::new(Bytes::from(body))
+            })
             .context("response build")?;
         return Ok(resp);
     }
 
     // Uncompressed path.
-    let body = fs::read(&full_path).await
+    let body = fs::read(&full_path)
+        .await
         .with_context(|| format!("read {}", full_path.display()))?;
     let mut builder = Response::builder()
         .status(200)
@@ -303,7 +315,11 @@ async fn resolve_and_serve(
         .header("content-length", body.len().to_string());
     builder = decorate_headers(builder);
     let resp = builder
-        .body(if head_only { Full::new(Bytes::new()) } else { Full::new(Bytes::from(body)) })
+        .body(if head_only {
+            Full::new(Bytes::new())
+        } else {
+            Full::new(Bytes::from(body))
+        })
         .context("response build")?;
     Ok(resp)
 }
@@ -341,12 +357,14 @@ fn plain_response(status: StatusCode, body: &'static str) -> Response<Full<Bytes
         .header("content-type", "text/plain; charset=utf-8")
         .header("content-length", body.len().to_string());
     builder = decorate_headers(builder);
-    builder.body(Full::new(Bytes::from(body))).unwrap_or_else(|_| {
-        // SAFETY: response builder cannot fail on these
-        // hard-coded headers; this branch is unreachable. Keep
-        // the panic-free property by returning a manual default.
-        Response::new(Full::new(Bytes::new()))
-    })
+    builder
+        .body(Full::new(Bytes::from(body)))
+        .unwrap_or_else(|_| {
+            // SAFETY: response builder cannot fail on these
+            // hard-coded headers; this branch is unreachable. Keep
+            // the panic-free property by returning a manual default.
+            Response::new(Full::new(Bytes::new()))
+        })
 }
 
 /// Decorate every response with cache + security headers. Same
@@ -422,11 +440,16 @@ async fn self_test_css_present(cfg: &ServerCfg, port: u16) {
     };
     let html = String::from_utf8_lossy(&body);
     if !html.contains(r#"<link rel="stylesheet""#) && !html.contains("<link rel='stylesheet'") {
-        warn!("[self-test] FAIL: GET / has no <link rel=\"stylesheet\">. Page WILL render unstyled.");
+        warn!(
+            "[self-test] FAIL: GET / has no <link rel=\"stylesheet\">. Page WILL render unstyled."
+        );
         return;
     }
     let mut sheets: Vec<String> = Vec::new();
-    for prefix in &[r#"<link rel="stylesheet" href=""#, "<link rel='stylesheet' href='"] {
+    for prefix in &[
+        r#"<link rel="stylesheet" href=""#,
+        "<link rel='stylesheet' href='",
+    ] {
         let mut search = html.as_ref();
         while let Some(idx) = search.find(prefix) {
             let after = &search[idx + prefix.len()..];
@@ -452,7 +475,11 @@ async fn self_test_css_present(cfg: &ServerCfg, port: u16) {
             Err(e) => warn!("[self-test] FAIL {} ({})", href, e),
         }
     }
-    info!("[self-test] {} of {} stylesheet(s) reachable", ok, sheets.len());
+    info!(
+        "[self-test] {} of {} stylesheet(s) reachable",
+        ok,
+        sheets.len()
+    );
 }
 
 /// Tiny HTTP/1.1 GET — no extra deps. Used only for the loopback
@@ -464,16 +491,11 @@ async fn http_get(url: &str, timeout: std::time::Duration) -> Result<Vec<u8>> {
         .context("only http:// URLs supported in self-test")?;
     let (host_port, path) = parsed.split_once('/').unwrap_or((parsed, ""));
     let path = format!("/{path}");
-    let req = format!(
-        "GET {path} HTTP/1.0\r\nHost: {host_port}\r\nConnection: close\r\n\r\n"
-    );
-    let stream = tokio::time::timeout(
-        timeout,
-        tokio::net::TcpStream::connect(host_port),
-    )
-    .await
-    .context("self-test connect timed out")?
-    .context("self-test connect")?;
+    let req = format!("GET {path} HTTP/1.0\r\nHost: {host_port}\r\nConnection: close\r\n\r\n");
+    let stream = tokio::time::timeout(timeout, tokio::net::TcpStream::connect(host_port))
+        .await
+        .context("self-test connect timed out")?
+        .context("self-test connect")?;
     let mut stream = stream;
     stream.write_all(req.as_bytes()).await.context("write")?;
     let mut buf = Vec::with_capacity(8192);
