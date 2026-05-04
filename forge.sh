@@ -418,6 +418,64 @@ phase_backend_coverage() {
 # itself. Cheap structural sanity. Owner directive: "audit and
 # test and debug loom, cms and builder themselves also".
 # ============================================================
+phase_contrast() {
+  # T3: WCAG 2.1 contrast — every (color, bg) token pair from
+  # loom-tokens.css gets relative-luminance computed; pairs that
+  # carry body text fail strict if < 4.5:1 (AA), pairs that carry
+  # UI elements fail warn if < 3.0:1 (AA-large floor).
+  #
+  # Implementation lives in forge_contrast.py — bash math for HSL
+  # is too painful. The script emits structured JSON to stdout
+  # and human-readable lines to stderr; we mirror its findings
+  # into our own emit_strict / emit_warn channels.
+  phase_header "contrast"
+  local tokens="$STATIC/loom-tokens.css"
+  if [ ! -f "$tokens" ]; then
+    finding_warn "contrast" "loom-tokens.css" "tokens.css missing — skipping contrast phase"
+    return
+  fi
+  local contrast_json="${REPORT_DIR}/contrast.json"
+  if ! python3 "$ROOT/forge_contrast.py" "$tokens" \
+        > "$contrast_json" 2>/tmp/forge_contrast.stderr; then
+    # Strict count > 0 → exit 1.
+    :
+  fi
+  # Parse the JSON for findings and re-emit through the unified
+  # channel so they appear in the build report alongside other phases.
+  local strict warn
+  strict=$(python3 -c "import json; print(json.load(open('$contrast_json'))['strict_findings'])" 2>/dev/null)
+  warn=$(python3 -c "import json; print(json.load(open('$contrast_json'))['warn_findings'])" 2>/dev/null)
+  if [ -z "$strict" ] || [ -z "$warn" ]; then
+    finding_warn "contrast" "loom-tokens.css" "contrast detector emitted no parseable JSON"
+    return
+  fi
+  if [ "$strict" -gt 0 ] || [ "$warn" -gt 0 ]; then
+    # Walk the findings array and emit each one.
+    while IFS= read -r line; do
+      [ -z "$line" ] && continue
+      local sev=$(echo "$line" | cut -d'|' -f1)
+      local theme=$(echo "$line" | cut -d'|' -f2)
+      local fg=$(echo "$line" | cut -d'|' -f3)
+      local bg=$(echo "$line" | cut -d'|' -f4)
+      local ratio=$(echo "$line" | cut -d'|' -f5)
+      local label=$(echo "$line" | cut -d'|' -f6)
+      local msg="${theme} theme: ${fg} on ${bg} = ${ratio}:1 (${label})"
+      if [ "$sev" = "strict" ]; then
+        finding_strict "contrast" "loom-tokens.css" "$msg"
+      else
+        finding_warn "contrast" "loom-tokens.css" "$msg"
+      fi
+    done < <(python3 -c "
+import json
+d = json.load(open('$contrast_json'))
+for f in d['findings']:
+    print(f'{f[\"severity\"]}|{f[\"theme\"]}|{f[\"fg_token\"]}|{f[\"bg_token\"]}|{f[\"ratio\"]}|{f[\"label\"]}')
+" 2>/dev/null)
+  else
+    echo "  ${C_GREEN}ok${C_OFF}      contrast: all checked token pairs pass WCAG AA"
+  fi
+}
+
 phase_self_check() {
   phase_header "self_check"
   local hits=0
@@ -592,6 +650,7 @@ phase_backend_coverage
 phase_unbuilt_route
 phase_external_assets
 phase_viewport_audit
+phase_contrast
 phase_self_check
 
 # ----- Report -----
