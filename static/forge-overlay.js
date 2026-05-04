@@ -104,6 +104,10 @@
     toggle.type = "button";
     toggle.textContent = "▾";
     toggle.setAttribute("aria-label", "Toggle Forge overlay");
+    // Dev-tool, not user-facing — opt out of the 44px tap-target floor.
+    toggle.setAttribute("data-tap", "compact");
+    toggle.style.minWidth = "32px";
+    toggle.style.minHeight = "32px";
     hdr.appendChild(label);
     hdr.appendChild(spacer);
     hdr.appendChild(chip);

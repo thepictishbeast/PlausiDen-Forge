@@ -91,6 +91,33 @@
   *, *::before, *::after { box-sizing: border-box; }
   * { margin: 0; padding: 0; min-width: 0; }
 
+  /* WCAG 2.5.5 + iOS HIG floor for every interactive element on
+   * mobile-friendly layouts. Pages can opt out per-element via
+   * data-tap="compact" for hover-driven desktop UIs (e.g. dense
+   * data tables). Anything that wants to be smaller MUST justify
+   * itself with that attribute. */
+  @media (pointer: coarse), (max-width: 1024px) {
+    button:not([data-tap="compact"]),
+    a:not([data-tap="compact"]),
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([data-tap="compact"]),
+    select:not([data-tap="compact"]),
+    textarea:not([data-tap="compact"]),
+    [role="button"]:not([data-tap="compact"]),
+    [role="link"]:not([data-tap="compact"]),
+    summary:not([data-tap="compact"]) {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    /* Inputs and selects also need width — typing inside a 0-pad
+     * box makes content scroll mid-character. */
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([data-tap="compact"]),
+    select:not([data-tap="compact"]),
+    textarea:not([data-tap="compact"]) {
+      min-width: 44px;
+      padding: var(--loom-space-2) var(--loom-space-3);
+    }
+  }
+
   html, body {
     overflow-x: clip;
     max-width: 100%;
@@ -289,7 +316,8 @@
     }
   }
 
-  /* Skip-link target — accessibility primitive. */
+  /* Skip-link target — accessibility primitive.
+   * 44×44 minimum hit-box per WCAG 2.5.5 + iOS HIG. */
   .loom-skip {
     position: absolute;
     inset-inline-start: var(--loom-space-2);
@@ -301,6 +329,10 @@
     transform: translateY(-150%);
     transition: transform var(--loom-transition-fast);
     z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
   }
   .loom-skip:focus { transform: translateY(0); }
 
@@ -359,6 +391,15 @@
     align-items: center;
     gap: var(--loom-space-4);
   }
+  /* The brand wordmark is usually wrapped in an <a> for the home
+   * link; ensure that anchor honors the 44px hit-box even when the
+   * inner glyph is short. */
+  .loom-nav-inner > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
   @media (min-width: 768px) {
     .loom-nav-inner {
       grid-template-columns: auto 1fr auto;
@@ -392,6 +433,10 @@
     flex-shrink: 0;
     transition: color var(--loom-transition-fast),
                 background var(--loom-transition-fast);
+    /* WCAG 2.5.5 + iOS HIG: 44px minimum hit-box. */
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
   .loom-navlinks a:hover {
     color: var(--loom-color-ink);
