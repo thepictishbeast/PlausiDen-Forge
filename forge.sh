@@ -1034,6 +1034,18 @@ phase_contrast
 phase_selfaudit
 phase_self_check
 
+# T78: auto-refresh SRI hashes on every build. Runs AFTER all
+# detection phases so integrity= reflects the bytes on disk
+# *after* any HTML rewrites the build itself produced (e.g. SEO
+# inject, sitemap regen). Without this, CSS/JS edits between
+# builds strand stale hashes and the browser refuses the asset.
+# Quiet on success; the inject script prints what it changed.
+if [ -x "$(command -v python3)" ] && [ -f "$ROOT/inject_sri.py" ]; then
+  echo
+  echo "${C_BOLD}== sri-refresh ==${C_OFF}"
+  python3 "$ROOT/inject_sri.py" 2>&1 | sed 's/^/  /'
+fi
+
 # ----- Report -----
 echo
 echo "${C_BOLD}== summary ==${C_OFF}"

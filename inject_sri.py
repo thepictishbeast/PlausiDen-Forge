@@ -71,16 +71,19 @@ def inject_one(html: str) -> tuple[str, int]:
             return full
         # If integrity= is already present AND matches the disk
         # hash, no change. If it's present but stale (file changed
-        # since last inject), REPLACE it. Critical 2026-05-04: not
-        # refreshing stale hashes makes the browser refuse the asset
-        # and the page renders unstyled.
-        existing = re.search(r'integrity="(sha384-[A-Za-z0-9+/=]+)"', full)
+        # since last inject) OR malformed (anything not matching
+        # current sha384-base64), REPLACE it. The match has to
+        # accept ANY value between the quotes (not just well-formed
+        # hashes) — earlier I bug-tested with a non-base64 placeholder
+        # and the strict regex skipped it, ADDING a second integrity=
+        # attribute alongside the bad one. Browsers use the first,
+        # so the bad hash kept winning.
+        existing = re.search(r'integrity="([^"]*)"', full)
         if existing:
             if existing.group(1) == h:
                 return full
-            # Replace stale integrity with fresh one.
             updated = re.sub(
-                r'integrity="sha384-[A-Za-z0-9+/=]+"',
+                r'integrity="[^"]*"',
                 f'integrity="{h}"',
                 full,
             )
