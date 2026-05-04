@@ -36,6 +36,17 @@ MODE=${MODE:-production}
 # or forge.toml. Uses inotifywait when present (event-driven, ~zero
 # CPU when idle); falls back to find-newer polling otherwise. Placed
 # AFTER the palette + MODE setup so error messages render with color.
+# T35: --debug flag — surface per-phase timing + findings delta
+# into reports/debug-<ts>.log. Passes through other flags so
+# --debug --watch etc. compose correctly.
+if [ "${1:-}" = "--debug" ]; then
+  shift
+  FORGE_DEBUG=1
+  DEBUG_LOG="$REPORT_DIR/debug-$(date -u +%Y%m%dT%H%M%SZ).log"
+  echo "${C_DIM}[debug] writing per-phase log → $DEBUG_LOG${C_OFF}"
+  : > "$DEBUG_LOG"
+fi
+
 if [ "${1:-}" = "--watch" ]; then
   shift
   echo "${C_BOLD}forge${C_OFF} ${C_DIM}— watch mode — Ctrl+C to stop${C_OFF}"
@@ -82,9 +93,39 @@ declare -a FINDINGS=()
 declare -i STRICT_COUNT=0
 declare -i WARN_COUNT=0
 
+# T35: debug mode. Activated by --debug flag OR FORGE_DEBUG=1.
+# When on, phase_header records start time + finding count; the next
+# phase_header (or end-of-build) computes the delta and writes to
+# reports/debug-<ts>.log so triage of slow / chatty phases is one
+# tail away.
+#
+# CRITICAL: the --debug flag handler at the top of the file ran
+# BEFORE this block and may have set FORGE_DEBUG / DEBUG_LOG. Use
+# ${VAR:-default} for ALL of these so the prior assignment isn't
+# wiped by an unconditional `VAR=""` reset.
+FORGE_DEBUG=${FORGE_DEBUG:-0}
+DEBUG_LOG=${DEBUG_LOG:-}
+DEBUG_PHASE=${DEBUG_PHASE:-}
+DEBUG_PHASE_START=${DEBUG_PHASE_START:-0}
+DEBUG_PHASE_FINDING_BASE=${DEBUG_PHASE_FINDING_BASE:-0}
+
 phase_header() {
+  # Close out the previous phase's debug record, if any.
+  if [ "$FORGE_DEBUG" = "1" ] && [ -n "$DEBUG_PHASE" ]; then
+    local now=$(date +%s%N)
+    local dur_ms=$(( (now - DEBUG_PHASE_START) / 1000000 ))
+    local findings_delta=$(( ${#FINDINGS[@]} - DEBUG_PHASE_FINDING_BASE ))
+    printf '[phase=%-18s duration=%6dms findings=%2d]\n' \
+      "$DEBUG_PHASE" "$dur_ms" "$findings_delta" \
+      >> "$DEBUG_LOG"
+  fi
   echo
   echo "${C_BLUE}== phase: $1 ==${C_OFF}"
+  if [ "$FORGE_DEBUG" = "1" ]; then
+    DEBUG_PHASE="$1"
+    DEBUG_PHASE_START=$(date +%s%N)
+    DEBUG_PHASE_FINDING_BASE=${#FINDINGS[@]}
+  fi
 }
 
 finding_strict() {
@@ -1218,6 +1259,22 @@ if [ $count -gt 0 ] && [ $total_raw -gt 0 ]; then
   pct_gz=$(( total_gz * 100 / total_raw ))
   pct_br=$(( total_br * 100 / total_raw ))
   echo "  ${C_GREEN}ok${C_OFF}      $count file(s) compressed: raw $(numfmt --to=iec $total_raw) → gz $(numfmt --to=iec $total_gz) (${pct_gz}%) → br $(numfmt --to=iec $total_br) (${pct_br}%)"
+fi
+
+# T35: close the final phase debug record + total summary.
+if [ "$FORGE_DEBUG" = "1" ] && [ -n "$DEBUG_PHASE" ]; then
+  now=$(date +%s%N)
+  dur_ms=$(( (now - DEBUG_PHASE_START) / 1000000 ))
+  findings_delta=$(( ${#FINDINGS[@]} - DEBUG_PHASE_FINDING_BASE ))
+  printf '[phase=%-18s duration=%6dms findings=%2d]\n' \
+    "$DEBUG_PHASE" "$dur_ms" "$findings_delta" \
+    >> "$DEBUG_LOG"
+  printf '[total findings: strict=%d warn=%d]\n' \
+    "$STRICT_COUNT" "$WARN_COUNT" \
+    >> "$DEBUG_LOG"
+  echo
+  echo "${C_DIM}[debug] phase log:${C_OFF}"
+  cat "$DEBUG_LOG"
 fi
 
 # T78: auto-refresh SRI hashes on every build. Runs AFTER all
