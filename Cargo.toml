@@ -37,6 +37,7 @@ members = [
     "crates/forge-phases",
     "crates/forge-cli",
     "crates/forge-serve",
+    "crates/forge-replay",
 ]
 
 [workspace.package]

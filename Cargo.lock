@@ -242,6 +242,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "forge-replay"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "forge-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "forge-serve"
 version = "0.1.0"
 dependencies = [

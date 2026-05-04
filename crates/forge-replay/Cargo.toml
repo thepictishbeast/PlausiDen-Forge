@@ -1,0 +1,27 @@
+[package]
+name = "forge-replay"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Forge — log replay tool. Walks the build-*.json history + the dev-server slow log to surface anomalies: strict/warn count trends, findings churn, slow-URL hotspots. AVP-2 Tier 6 meta-validation surface — every finding the build pipeline produced lives here for triage."
+
+[[bin]]
+name = "forge-replay"
+path = "src/main.rs"
+
+[dependencies]
+forge-core = { path = "../forge-core" }
+clap.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints.rust]
+unsafe_code = "deny"
+unused_must_use = "deny"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"

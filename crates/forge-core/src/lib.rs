@@ -36,8 +36,10 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "snake_case")]
 pub enum Severity {
     /// Fails the build. Default for security / a11y / link-rot.
+    #[serde(alias = "STRICT")]
     Strict,
     /// Suppressible in PoC; escalates to strict in production.
+    #[serde(alias = "WARN")]
     Warn,
 }
 
@@ -225,17 +227,26 @@ pub enum BuildError {
 ///
 /// Serializable so `reports/build-<ts>.json` round-trips for
 /// log replay (T38) and trend analysis.
+///
+/// `#[serde(default)]` on `duration_ms` so bash-era reports
+/// (which never emitted that field) deserialize cleanly and
+/// can be replayed alongside Rust-era reports.
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct BuildReport {
     /// Build mode at run time.
     pub mode: String,
     /// All findings, in phase-order.
+    #[serde(default)]
     pub findings: Vec<Finding>,
     /// Strict-finding count (excluding warns).
+    #[serde(default)]
     pub strict_count: usize,
     /// Warn-finding count.
+    #[serde(default)]
     pub warn_count: usize,
-    /// Total wall time across all phases (ms).
+    /// Total wall time across all phases (ms). Bash-era reports
+    /// don't have this — defaults to 0 on those.
+    #[serde(default)]
     pub duration_ms: u64,
 }
 
