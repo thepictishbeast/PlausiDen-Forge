@@ -21,7 +21,7 @@
   <!-- forge:seo:end -->
 
   <link rel="stylesheet" href="loom-tokens.css" integrity="sha384-Sa89M7KHi4lJ672NQAj83F8SL1o2zgzgqc8eq2CEbWFFD1VVETvoMTFzjC8Q33sJ" crossorigin="anonymous">
-  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-0dw9PcM25sVYLJ8hohnCT6LFqgDtnlFmByxvtRtuGmOoiANpfv2acNvgdOSEeWSx" crossorigin="anonymous">
+  <link rel="stylesheet" href="loom-skin.css" integrity="sha384-VLoqVGvC7f1G+oXe9E/PHFxB4jHV1EpJYU+35UkzMkLN+PXHmkkRPCUO0u5btzPk" crossorigin="anonymous">
   <script defer src="/forge-findings.js"></script>
   <script defer src="/forge-overlay.js" integrity="sha384-pgZq14j8YeA7F0+hj5AWxh+rscSX27K3M/OzGEOqH75wFc8pLnfZj6oFKMFG0oDZ" crossorigin="anonymous"></script>
   <script defer src="/aesthetic.js" integrity="sha384-7SqKnkMkWBalLzGAlZ86aFUM4rg647OhvB3fMivitJKw+9A6XpsgmLPUwhQfz95/" crossorigin="anonymous"></script>
@@ -34,9 +34,9 @@
     <div class="loom-nav-inner">
       <a class="loom-brand" href="/">SkillShots</a>
       <nav class="loom-navlinks" aria-label="Primary">
-        <a href="/" data-backend="list-challenges">Battle Feed</a>
+        <a href="/" data-loom-poly-action="true" data-backend="list-challenges">Battle Feed</a>
         <a href="/leaderboard.html" data-backend="list-leaderboard">Leaderboard</a>
-        <a href="/post-skill.html" data-backend="post-skill">Post a Skill</a>
+        <a href="/post-skill.html" data-backend="post-skill">Post skill</a>
         <a href="/my-wins.html" data-backend="list-touches">My Wins</a>
         <a href="/profile.html" aria-current="page" data-backend="view-profile">Profile</a>
       </nav>
@@ -45,7 +45,7 @@
         <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-in">Sign in</button>
         <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-up">Sign up</button>
         <button class="loom-btn" data-variant="ghost" type="button" data-backend="sign-out">Sign out</button>
-        <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill">Post skill</button>
+        <button class="loom-btn" data-variant="primary" type="button" data-backend="post-skill" data-loom-poly-action="true">Post skill</button>
       </div>
     </div>
   </header>
@@ -66,7 +66,7 @@
         <div class="loom-stat"><div class="loom-stat-label">Lifetime earnings</div><div class="loom-stat-value" data-tone="success">$8,240</div></div>
       </div>
       <div class="loom-hero-actions">
-        <button class="loom-btn" data-variant="primary" data-size="lg" type="button" data-backend="post-skill">Challenge @court_dax</button>
+        <button class="loom-btn" data-variant="primary" data-size="lg" type="button" data-backend="post-skill" data-loom-poly-action="true">Challenge @court_dax</button>
         <button class="loom-btn" data-variant="outline" data-size="lg" type="button" data-backend="follow">Follow</button>
       </div>
     </section>
@@ -113,9 +113,9 @@
           <div class="loom-section-head">
             <h2>Recent battles</h2>
             <div class="loom-pill-tabs">
-              <button type="button" aria-pressed="true" data-backend="view-profile">All</button>
-              <button type="button" aria-pressed="false" data-backend="view-profile">Wins</button>
-              <button type="button" aria-pressed="false" data-backend="view-profile">Losses</button>
+              <button type="button" aria-pressed="true" data-backend="view-profile" data-loom-poly-action="true">All</button>
+              <button type="button" aria-pressed="false" data-backend="view-profile" data-loom-poly-action="true">Wins</button>
+              <button type="button" aria-pressed="false" data-backend="view-profile" data-loom-poly-action="true">Losses</button>
             </div>
           </div>
           <div class="loom-feed-grid">
