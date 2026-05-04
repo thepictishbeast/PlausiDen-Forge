@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-MrRbz3gO8Ry3xh5dEU+nOhABLX78dF4yOymmn4VgEdD4T0WvpytQprqpno9W5D1K — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-xmgJ8aqD/SdtY6aTz8nhCzDBhJTmoLg8BOL9vpJ4CfmXELs28oR4ZOid4bcbs68y — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -385,14 +385,36 @@
     outline-offset: var(--loom-stroke-thin);
   }
 
-  /* Page-shell chrome elements (brand + nav-links): explicit
-   * outline on :focus so the runtime-focus detector sees a
-   * change even under programmatic .focus() — the
-   * :focus:not(:focus-visible) global suppresses the default
-   * outline for mouse focus, but these chrome elements need to
-   * remain detectable by the audit infrastructure under any
-   * focus-trigger path. The trade-off (a brief ring on mouse
-   * click) is acceptable for top-level navigation. */
+  /* Page-shell chrome (brand + nav-links).
+   *
+   * BASE: every chrome anchor enforces the WCAG 2.5.5 / iOS HIG
+   * 44×44 tap-target floor REGARDLESS of pointer type. The
+   * generic reset rule guards this only under
+   * `@media (pointer: coarse), (max-width: 1024px)` — top-of-page
+   * navigation runs on every device, every viewport, and every
+   * pointer type, so it ALWAYS needs the floor.
+   *
+   * REGRESSION-GUARD: the crawler ui-overflow detector flagged 5
+   * elements per page at 19px height (text-baseline). The reset
+   * rule's media-query gating made the 44px rule invisible on
+   * desktop. The fix is targeted to chrome elements (brand + nav)
+   * rather than dropping the gating entirely — body content can
+   * still trust the gating on desktop without dropping density. */
+  .loom-page-brand,
+  .loom-page-nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--loom-tap-min);
+    min-width: var(--loom-tap-min);
+    padding: var(--loom-space-2) var(--loom-space-3);
+  }
+
+  /* Chrome focus ring — explicit outline on :focus so the
+   * runtime-focus detector sees a change even under programmatic
+   * .focus(). The :focus:not(:focus-visible) global suppresses
+   * the default outline for mouse focus, but these chrome
+   * elements need to remain detectable under any focus-trigger
+   * path. */
   .loom-page-brand:focus,
   .loom-page-nav-link:focus {
     outline: var(--loom-stroke-strong) solid var(--loom-color-primary);
