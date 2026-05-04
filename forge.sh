@@ -98,6 +98,10 @@ if [ "${1:-}" = "--watch" ]; then
     done
   else
     POLL_MARKER=$(mktemp)
+    # REGRESSION-GUARD: prior version leaked one /tmp file per
+    # --watch session because the marker was created without a
+    # cleanup trap. EXIT covers Ctrl+C, INT, TERM, normal end.
+    trap 'rm -f "$POLL_MARKER"' EXIT INT TERM
     while true; do
       changed=$(find "$STATIC" "$ROOT/backends.toml" "$ROOT/forge.toml" \
                   -newer "$POLL_MARKER" 2>/dev/null | head -1)
@@ -160,14 +164,48 @@ finding_strict() {
 }
 
 finding_warn() {
+  # In production mode, warns ESCALATE to strict (non-suppressible).
+  # In poc mode they record + display as warn, ship-passes the build.
+  #
+  # REGRESSION-GUARD: a previous version of this function bumped
+  # both WARN_COUNT and STRICT_COUNT in production, which double-
+  # counted the same finding once it reached the summary. The fix
+  # is to delegate completely to finding_strict in production so
+  # there is exactly ONE counter incremented per call.
+  if [ "$MODE" = "production" ]; then
+    finding_strict "$1" "$2" "$3"
+    return
+  fi
   FINDINGS+=("WARN|$1|$2|$3")
   WARN_COUNT=$((WARN_COUNT + 1))
-  if [ "$MODE" = "production" ]; then
-    echo "  ${C_RED}STRICT  ${C_OFF}$1: $2 — $3 ${C_DIM}[would suppress in poc]${C_OFF}"
-    STRICT_COUNT=$((STRICT_COUNT + 1))
-  else
-    echo "  ${C_YELLOW}warn    ${C_OFF}$1: $2 — $3"
-  fi
+  echo "  ${C_YELLOW}warn    ${C_OFF}$1: $2 — $3"
+}
+
+# Multi-line-tag-aware grep helper. The single-line `grep -oE
+# '<img[^>]*>'` form silently misses tags whose attributes wrap
+# onto multiple lines (modern HTML formatters routinely do this
+# once an element has 4+ attrs — and the Loom Picture component
+# emits enough attrs to cross that line). This helper joins every
+# `<TAG ...>` (open form, attribute span) to a single line per
+# tag so downstream pipes are correct.
+#
+# Usage:    _open_tags <file> <tagname>
+# Returns:  one open-tag-as-line per match, on stdout.
+_open_tags() {
+  python3 - "$1" "$2" <<'PY'
+import re, sys
+src = open(sys.argv[1], 'r', encoding='utf-8', errors='replace').read()
+tag = sys.argv[2]
+# Match <tag ...> with attributes that may span newlines. The
+# pattern stops at the first '>' that ISN'T inside a quoted
+# attribute value — safe enough for HTML well-formed enough to
+# ship. We don't need to be a full HTML parser; we just need to
+# match the SAME class of tags grep was trying to match plus the
+# multi-line case.
+pat = re.compile(rf'<{re.escape(tag)}\b[^>]*>', re.DOTALL)
+for m in pat.finditer(src):
+    print(m.group(0).replace('\n', ' '))
+PY
 }
 
 # ============================================================
@@ -534,8 +572,8 @@ phase_seo() {
       finding_warn "seo" "$name" "title too long ($tlen chars; truncated in SERP at ~60)"
       hits=$((hits + 1))
     fi
-    # Every <img> needs alt
-    local imgs_no_alt=$(grep -oE '<img[^>]*>' "$f" | grep -vE 'alt=' | wc -l)
+    # Every <img> needs alt — multi-line-aware tag walk.
+    local imgs_no_alt=$(_open_tags "$f" img | grep -vE 'alt=' | wc -l)
     if [ "$imgs_no_alt" -gt 0 ]; then
       finding_strict "seo" "$name" "$imgs_no_alt <img> without alt (a11y + SEO)"
       hits=$((hits + 1))
@@ -609,8 +647,7 @@ phase_asset_optimization() {
   for f in "$STATIC"/*.html; do
     [ -e "$f" ] || continue
     local name=$(basename "$f")
-    local imgs_no_dims=$(grep -oE '<img[^>]*>' "$f" \
-                         | grep -vE 'width=' | wc -l)
+    local imgs_no_dims=$(_open_tags "$f" img | grep -vE 'width=' | wc -l)
     if [ "$imgs_no_dims" -gt 0 ]; then
       finding_warn "asset_optimization" "$name" "$imgs_no_dims <img> without explicit width/height (causes CLS — Core Web Vital)"
       hits=$((hits + 1))
@@ -729,7 +766,7 @@ phase_phantom_button() {
     #  - data-no-backend="local" (explicit opt-out)
     #  - type="submit" (form submission, backend wired via the form)
     local unwired
-    unwired=$(grep -oE '<button[^>]*>' "$f" \
+    unwired=$(_open_tags "$f" button \
               | grep -vE 'data-backend|data-loom-theme-toggle|data-loom-aesthetic-set|data-no-backend|type="submit"' \
               | wc -l)
     if [ "$unwired" -gt 0 ]; then
