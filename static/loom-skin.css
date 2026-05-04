@@ -802,17 +802,58 @@
     align-items: end;
     padding: var(--loom-space-3);
   }
-  .loom-card-battle .thumb::after {
-    content: "▶";
+  /* Category-tinted thumb gradient. Honors data-category="X" on
+   * the .thumb element. CSP-safe (all values declared here, no
+   * inline style on the HTML). T82 / 2026-05-04. */
+  .loom-card-battle .thumb[data-category="basketball"] {
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(28 95% 55% / 0.4) 0%, hsl(15 85% 25% / 0.95) 70%),
+      hsl(220 33% 8%);
+  }
+  .loom-card-battle .thumb[data-category="parkour"] {
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(86 70% 45% / 0.4) 0%, hsl(140 70% 20% / 0.95) 70%),
+      hsl(220 33% 8%);
+  }
+  .loom-card-battle .thumb[data-category="billiards"] {
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(212 60% 30% / 0.5) 0%, hsl(150 50% 20% / 0.95) 70%),
+      hsl(220 33% 8%);
+  }
+  .loom-card-battle .thumb[data-category="mind"] {
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(280 50% 50% / 0.4) 0%, hsl(230 50% 25% / 0.95) 70%),
+      hsl(220 33% 8%);
+  }
+  .loom-card-battle .thumb[data-category="skate"] {
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(28 80% 50% / 0.4) 0%, hsl(0 70% 25% / 0.95) 70%),
+      hsl(220 33% 8%);
+  }
+  .loom-card-battle .thumb[data-category="darts"] {
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(0 70% 45% / 0.4) 0%, hsl(35 70% 25% / 0.95) 70%),
+      hsl(220 33% 8%);
+  }
+  .loom-card-battle .thumb[data-category="cafe"] {
+    background: radial-gradient(80% 60% at 50% 0%,
+      hsl(35 60% 50% / 0.4) 0%, hsl(25 50% 20% / 0.95) 70%),
+      hsl(220 33% 8%);
+  }
+  /* Centered category emoji at large display size. Replaces the
+   * generic ▶ glyph that used to live in ::after. */
+  .loom-thumb-icon {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: hsl(0 0% 100% / 0.85);
-    font-size: var(--loom-font-3xl);
-    text-shadow: 0 2px 12px hsl(0 0% 0% / 0.6);
+    font-size: 4rem;
+    line-height: 1;
+    text-shadow: 0 2px 18px hsl(0 0% 0% / 0.55);
     pointer-events: none;
+    user-select: none;
+    z-index: 0;
   }
   .loom-thumb-badge {
     position: relative;
