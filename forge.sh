@@ -425,6 +425,82 @@ phase_backend_coverage() {
 # itself. Cheap structural sanity. Owner directive: "audit and
 # test and debug loom, cms and builder themselves also".
 # ============================================================
+phase_link_check() {
+  # T5: every <a href> with a fragment must resolve to an existing
+  # id= or name= in the target file. unbuilt_route covers file
+  # existence; this catches the second-class bug — file exists but
+  # the anchor is dead. Also catches typos in skip-link targets,
+  # cross-page jumps to renamed sections, etc.
+  #
+  # External (http://, https://) hrefs are SKIPPED — link-rot
+  # detection across the open web is too flaky for CI; that lives
+  # in the (separate) periodic-link-checker job.
+  phase_header "link_check"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -f "$f" ] || continue
+    local name=$(basename "$f")
+    # Walk every <a href="..."> in the file. Use Python to handle
+    # the parsing robustly (regex on raw HTML mishandles attribute
+    # values with embedded quotes).
+    while IFS= read -r href; do
+      [ -z "$href" ] && continue
+      # Skip absolute URLs, mailto, tel, javascript:, and hash-only
+      # fragments to the same page (those are validated as a
+      # special case below).
+      case "$href" in
+        http://*|https://*|//*|mailto:*|tel:*|javascript:*) continue ;;
+      esac
+
+      # Resolve target file + fragment.
+      # Same-page #frag → abs_target is the source file directly
+      # (don't re-prepend $STATIC). Cross-page /a.html#frag → split.
+      local target_file=""
+      local fragment=""
+      local abs_target=""
+      case "$href" in
+        \#*)
+          fragment="${href#\#}"
+          abs_target="$f"
+          target_file="$(basename "$f")"
+          ;;
+        *\#*)
+          target_file="${href%%\#*}"
+          fragment="${href#*#}"
+          target_file="${target_file#/}"
+          [ -z "$target_file" ] && target_file="index.html"
+          abs_target="$STATIC/$target_file"
+          ;;
+        *)
+          target_file="${href#/}"
+          [ -z "$target_file" ] && target_file="index.html"
+          abs_target="$STATIC/$target_file"
+          fragment=""
+          ;;
+      esac
+      # The unbuilt_route phase already handles the no-such-file
+      # case; we only verify the fragment if a fragment is present
+      # AND the file exists.
+      [ -z "$fragment" ] && continue
+      if [ ! -f "$abs_target" ]; then
+        # unbuilt_route will report this; skip to avoid double-reporting.
+        continue
+      fi
+      if ! grep -qE "id=\"$fragment\"|name=\"$fragment\"" "$abs_target"; then
+        finding_strict "link_check" "$name" \
+          "href=\"$href\" — fragment '#$fragment' not found in $target_file"
+        hits=$((hits + 1))
+      fi
+    done < <(python3 -c "
+import re, sys
+src = open('$f').read()
+for m in re.finditer(r'<a\\s[^>]*href=\"([^\"]+)\"', src, re.I):
+    print(m.group(1))
+")
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every internal anchor resolves"
+}
+
 phase_motion() {
   # T4: every CSS file with `animation:` / `transition:` / `@keyframes`
   # MUST also contain a `@media (prefers-reduced-motion: reduce)`
@@ -781,6 +857,7 @@ phase_backend_coverage
 phase_unbuilt_route
 phase_external_assets
 phase_viewport_audit
+phase_link_check
 phase_motion
 phase_csp_devmode
 phase_contrast
