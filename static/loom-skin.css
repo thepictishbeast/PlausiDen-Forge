@@ -91,6 +91,12 @@
   *, *::before, *::after { box-sizing: border-box; }
   * { margin: 0; padding: 0; min-width: 0; }
 
+  /* Diagnostic: the "CSS NOT LOADING" yellow banner in pages is
+   * styled with `.loom-css-loaded`. If skin.css applies, the banner
+   * disappears. If owner sees the banner, the bug is "browser
+   * didn't apply CSS" — verifiable from a single screenshot. */
+  .loom-css-loaded { display: none !important; }
+
   /* WCAG 2.5.5 + iOS HIG floor for every interactive element on
    * mobile-friendly layouts. Pages can opt out per-element via
    * data-tap="compact" for hover-driven desktop UIs (e.g. dense
