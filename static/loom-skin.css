@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-z1srH071ZS3zXSkZgfAx+cUeKJBznp+t6epEHJktYKCU46z6N8gYacndLMejFtVQ — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-9QI6DFNunQvY6DNZgpghagsw5/E352MN6JL1CHW4ARkH9DWXgD6quSGVvGT7Ax8Z — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -775,6 +775,122 @@
   }
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* ============================================================ *
+   * Composer (feed-top FB-style)                                  *
+   * ----------                                                    *
+   * Tokens it consumes:                                           *
+   *   --loom-color-surface           outer card bg                *
+   *   --loom-color-surface-muted     prompt + avatar bg           *
+   *   --loom-color-ink-muted         prompt placeholder color     *
+   *   --loom-radius-component        card radius                 *
+   *   --loom-space-{2,3,4,5}         density-tunable gaps + pads  *
+   *   --loom-border-component        outer border                 *
+   * Modifiers:                                                    *
+   *   [data-size="compact"]          dense (header use)           *
+   *   [data-size="comfortable"]      default feed-top size        *
+   *   [data-invalid="true"]          surfaces a build-time error  *
+   * ============================================================ */
+  .loom-composer {
+    --comp-composer-pad: var(--loom-space-4);
+    --comp-composer-gap: var(--loom-space-3);
+    --comp-composer-prompt-pad: var(--loom-space-3) var(--loom-space-4);
+    background: var(--loom-color-surface);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-component);
+    padding: var(--comp-composer-pad);
+    display: flex;
+    flex-direction: column;
+    gap: var(--comp-composer-gap);
+  }
+  .loom-composer[data-size="compact"] {
+    --comp-composer-pad: var(--loom-space-2);
+    --comp-composer-gap: var(--loom-space-2);
+    --comp-composer-prompt-pad: var(--loom-space-2) var(--loom-space-3);
+  }
+  .loom-composer[data-invalid="true"] {
+    /* Visible build-error state. The phantom_button forge phase
+     * also flags an invalid endpoint at build time; this is a
+     * fallback for cases the build missed. */
+    outline: var(--loom-stroke-strong) dashed var(--loom-color-warning, currentColor);
+    outline-offset: var(--loom-stroke-thin);
+  }
+  .loom-composer__row {
+    display: flex;
+    align-items: center;
+    gap: var(--comp-composer-gap);
+  }
+  .loom-composer__avatar {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--loom-color-surface-muted);
+    color: var(--loom-color-ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--loom-font-sm, 0.875rem);
+    overflow: hidden;
+  }
+  .loom-composer__prompt {
+    flex: 1 1 auto;
+    display: block;
+    padding: var(--comp-composer-prompt-pad);
+    background: var(--loom-color-surface-muted);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    border-radius: 999px;
+    text-decoration: none;
+    min-height: var(--loom-tap-min);
+    line-height: 1.4;
+    transition: background var(--loom-transition-fast, 150ms ease);
+  }
+  .loom-composer__prompt:hover,
+  .loom-composer__prompt:focus-visible {
+    background: color-mix(in oklab, var(--loom-color-surface-muted) 92%, var(--loom-color-ink) 8%);
+    color: var(--loom-color-ink);
+  }
+  .loom-composer__actions {
+    display: flex;
+    align-items: stretch;
+    gap: var(--loom-space-2);
+    padding-top: var(--loom-space-2);
+    border-top: var(--loom-border-component);
+  }
+  .loom-composer__action {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--loom-space-2);
+    padding: var(--loom-space-2) var(--loom-space-3);
+    border-radius: var(--loom-radius-sm);
+    color: var(--loom-color-ink);
+    text-decoration: none;
+    min-height: var(--loom-tap-min);
+    transition: background var(--loom-transition-fast, 150ms ease);
+  }
+  .loom-composer__action:hover,
+  .loom-composer__action:focus-visible {
+    background: var(--loom-color-surface-muted);
+  }
+  .loom-composer__action-icon {
+    display: inline-flex;
+    align-items: center;
+    width: 24px;
+    height: 24px;
+    color: var(--loom-color-primary, currentColor);
+  }
+  .loom-composer__action-label {
+    font-size: var(--loom-font-sm, 0.875rem);
+    font-weight: 500;
+  }
+  /* Compact action layout: icon-only on tight viewports. */
+  @media (max-width: 540px) {
+    .loom-composer__action-label { display: none; }
+    .loom-composer__action { gap: 0; }
   }
 
   /* ============================================================ *
