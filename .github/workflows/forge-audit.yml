@@ -1,0 +1,111 @@
+name: forge-audit
+
+# T15: every push to PlausiDen-Forge must pass forge build (zero
+# strict findings) AND the Crawler audit against skillshots-poc
+# (zero NEW regressions across all 8 detection axes). Reports
+# upload as artifacts so the diff vs prior run is reviewable.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: forge build + crawler diff
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout-forge
+        uses: actions/checkout@v4
+
+      - name: checkout-crawler
+        uses: actions/checkout@v4
+        with:
+          repository: thepictishbeast/PlausiDen-Crawler
+          # PlausiDen-Crawler tracks `master` (history diverged from
+          # `main` 2026-04ish; reconverge is queued separately).
+          # Pin explicitly so this CI sees the same branch local
+          # development pushes to.
+          ref: master
+          path: _crawler
+
+      - name: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # --------------------------------------------------------
+      # 1. Forge build: every detection phase strict-clean.
+      # --------------------------------------------------------
+      - name: forge-build
+        run: |
+          bash forge.sh
+          # forge.sh exits non-zero on strict findings; failure here
+          # blocks the merge before crawler even runs.
+
+      # --------------------------------------------------------
+      # 2. Crawler deps + Playwright browsers.
+      # --------------------------------------------------------
+      - name: crawler-install
+        working-directory: _crawler
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      # --------------------------------------------------------
+      # 3. Start serve.py + run mobile + desktop journeys.
+      # --------------------------------------------------------
+      - name: serve-skillshots
+        run: |
+          python3 serve.py --port 8123 > /tmp/serve.log 2>&1 &
+          # Wait for port to bind (up to 10s).
+          for i in $(seq 1 20); do
+            if curl -fsSo /dev/null http://127.0.0.1:8123/; then
+              echo "[ci] serve.py is up"; break
+            fi
+            sleep 0.5
+          done
+
+      - name: crawler-audit-mobile
+        working-directory: _crawler
+        run: |
+          npm run audit -- --journey journeys/skillshots-poc-mobile.json
+          # Will exit non-zero if any axis regressed.
+
+      - name: crawler-audit-desktop
+        working-directory: _crawler
+        run: |
+          npm run audit -- --journey journeys/skillshots-poc.json --viewport 1280x800
+
+      # --------------------------------------------------------
+      # 4. Upload reports + screenshots so the diff is reviewable
+      #    even when the run was green.
+      # --------------------------------------------------------
+      - name: upload-forge-report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-report
+          path: |
+            reports/build-*.json
+            reports/latest.json
+          if-no-files-found: warn
+
+      - name: upload-crawler-runs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crawler-runs
+          path: _crawler/runs/
+          if-no-files-found: warn
+          retention-days: 7
