@@ -1,12 +1,33 @@
 {
-  "title": "Leaderboard — SkillShots",
+  "$schema": "../cms-schema.json",
+  "title": "Leaderboard \u2014 SkillShots",
   "description": "Top earners this week. Voted by your crew.",
   "path": "/leaderboard.html",
   "nav_links": [
-    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
-    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": true  },
-    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
-    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": false
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": true
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": false
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": false
+    }
   ],
   "sections": [
     {
@@ -19,11 +40,111 @@
       "kind": "card_feed",
       "heading": "Standings",
       "items": [
-        { "avatar": { "kind": "initials", "letters": "CD" }, "title": "@court_dax",   "host": "Basketball", "stats": [{ "label": "Earnings", "value": "$1,840" }, { "label": "Rank", "value": "1" }], "href": "/u/court_dax",   "data_backend": "view-profile", "tag": "Basketball" },
-        { "avatar": { "kind": "initials", "letters": "VK" }, "title": "@vault_kit",   "host": "Parkour",    "stats": [{ "label": "Earnings", "value": "$1,420" }, { "label": "Rank", "value": "2" }], "href": "/u/vault_kit",   "data_backend": "view-profile", "tag": "Parkour" },
-        { "avatar": { "kind": "initials", "letters": "9B" }, "title": "@9ball_lori",  "host": "Billiards",  "stats": [{ "label": "Earnings", "value": "$995" },   { "label": "Rank", "value": "3" }], "href": "/u/9ball_lori",  "data_backend": "view-profile", "tag": "Billiards" },
-        { "avatar": { "kind": "initials", "letters": "OR" }, "title": "@oche_riv",    "host": "Darts",      "stats": [{ "label": "Earnings", "value": "$870" },   { "label": "Rank", "value": "4" }], "href": "/u/oche_riv",    "data_backend": "view-profile", "tag": "Darts" },
-        { "avatar": { "kind": "initials", "letters": "BP" }, "title": "@brew_pia",    "host": "Cafe",       "stats": [{ "label": "Earnings", "value": "$640" },   { "label": "Rank", "value": "5" }], "href": "/u/brew_pia",    "data_backend": "view-profile", "tag": "Cafe" }
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "CD"
+          },
+          "title": "@court_dax",
+          "host": "Basketball",
+          "stats": [
+            {
+              "label": "Earnings",
+              "value": "$1,840"
+            },
+            {
+              "label": "Rank",
+              "value": "1"
+            }
+          ],
+          "href": "/u/court_dax",
+          "data_backend": "view-profile",
+          "tag": "Basketball"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "VK"
+          },
+          "title": "@vault_kit",
+          "host": "Parkour",
+          "stats": [
+            {
+              "label": "Earnings",
+              "value": "$1,420"
+            },
+            {
+              "label": "Rank",
+              "value": "2"
+            }
+          ],
+          "href": "/u/vault_kit",
+          "data_backend": "view-profile",
+          "tag": "Parkour"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "9B"
+          },
+          "title": "@9ball_lori",
+          "host": "Billiards",
+          "stats": [
+            {
+              "label": "Earnings",
+              "value": "$995"
+            },
+            {
+              "label": "Rank",
+              "value": "3"
+            }
+          ],
+          "href": "/u/9ball_lori",
+          "data_backend": "view-profile",
+          "tag": "Billiards"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "OR"
+          },
+          "title": "@oche_riv",
+          "host": "Darts",
+          "stats": [
+            {
+              "label": "Earnings",
+              "value": "$870"
+            },
+            {
+              "label": "Rank",
+              "value": "4"
+            }
+          ],
+          "href": "/u/oche_riv",
+          "data_backend": "view-profile",
+          "tag": "Darts"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "BP"
+          },
+          "title": "@brew_pia",
+          "host": "Cafe",
+          "stats": [
+            {
+              "label": "Earnings",
+              "value": "$640"
+            },
+            {
+              "label": "Rank",
+              "value": "5"
+            }
+          ],
+          "href": "/u/brew_pia",
+          "data_backend": "view-profile",
+          "tag": "Cafe"
+        }
       ]
     }
   ]

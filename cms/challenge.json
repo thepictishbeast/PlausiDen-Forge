@@ -1,20 +1,45 @@
 {
-  "title": "Half-court shot — challenge — SkillShots",
-  "description": "Single arc, no rebound, no backboard. 3 entries · vote open · pot $240.",
+  "$schema": "../cms-schema.json",
+  "title": "Half-court shot \u2014 challenge \u2014 SkillShots",
+  "description": "Single arc, no rebound, no backboard. 3 entries \u00b7 vote open \u00b7 pot $240.",
   "path": "/challenge.html",
   "nav_links": [
-    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": true  },
-    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
-    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
-    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": true
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": false
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": false
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": false
+    }
   ],
   "sections": [
     {
       "kind": "hero",
       "eyebrow": "Open battle",
-      "title": "Half-court shot — single arc, no rebound, no backboard",
-      "lede": "Hosted by @marcus_h · 3 entries · vote closes 4d · pot $240.",
-      "cta": { "label": "Enter this challenge", "href": "/c/half-court-arc/enter", "data_backend": "enter-challenge" }
+      "title": "Half-court shot \u2014 single arc, no rebound, no backboard",
+      "lede": "Hosted by @marcus_h \u00b7 3 entries \u00b7 vote closes 4d \u00b7 pot $240.",
+      "cta": {
+        "label": "Enter this challenge",
+        "href": "/c/half-court-arc/enter",
+        "data_backend": "enter-challenge"
+      }
     },
     {
       "kind": "group",
@@ -22,44 +47,71 @@
       "body": [
         "One single take. No edits. Backboard or rim contact disqualifies.",
         "Voters compare entries side-by-side. Top vote takes the pot at round close.",
-        "Sub-720p video or visible cuts → entry rejected at upload."
+        "Sub-720p video or visible cuts \u2192 entry rejected at upload."
       ]
     },
     {
       "kind": "card_feed",
-      "heading": "Entries · 3",
+      "heading": "Entries \u00b7 3",
       "items": [
         {
-          "avatar": { "kind": "initials", "letters": "CD" },
+          "avatar": {
+            "kind": "initials",
+            "letters": "CD"
+          },
           "title": "@court_dax",
           "host": "Clean swish, single arc, feet visibly behind line.",
           "stats": [
-            { "label": "Vote share", "value": "78%" },
-            { "label": "Take",       "value": "1 of 1" }
+            {
+              "label": "Vote share",
+              "value": "78%"
+            },
+            {
+              "label": "Take",
+              "value": "1 of 1"
+            }
           ],
           "href": "/c/half-court-arc/e/court_dax",
           "data_backend": "view-challenge",
           "tag": "Top vote"
         },
         {
-          "avatar": { "kind": "initials", "letters": "HJ" },
+          "avatar": {
+            "kind": "initials",
+            "letters": "HJ"
+          },
           "title": "@hooper_jen",
           "host": "Grazes rim then in. Continuous take.",
           "stats": [
-            { "label": "Vote share", "value": "18%" },
-            { "label": "Take",       "value": "1 of 1" }
+            {
+              "label": "Vote share",
+              "value": "18%"
+            },
+            {
+              "label": "Take",
+              "value": "1 of 1"
+            }
           ],
           "href": "/c/half-court-arc/e/hooper_jen",
           "data_backend": "view-challenge",
           "tag": "In play"
         },
         {
-          "avatar": { "kind": "initials", "letters": "AK" },
+          "avatar": {
+            "kind": "initials",
+            "letters": "AK"
+          },
           "title": "@arc_kade",
-          "host": "Feet on the line at release — borderline.",
+          "host": "Feet on the line at release \u2014 borderline.",
           "stats": [
-            { "label": "Vote share", "value": "4%" },
-            { "label": "Take",       "value": "1 of 1" }
+            {
+              "label": "Vote share",
+              "value": "4%"
+            },
+            {
+              "label": "Take",
+              "value": "1 of 1"
+            }
           ],
           "href": "/c/half-court-arc/e/arc_kade",
           "data_backend": "view-challenge",

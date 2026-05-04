@@ -1,4 +1,5 @@
 {
+  "$schema": "../cms-schema.json",
   "title": "SkillShots \u2014 voted skill battles",
   "description": "Skill battles, voted by your crew. Pots split at round close.",
   "path": "/",

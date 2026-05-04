@@ -1,0 +1,1212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "CmsAvatar": {
+      "description": "Wire form of [`ComposerAvatar`].",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "No avatar slot.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "none"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Display 1-3 letters.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "initials"
+              ],
+              "type": "string"
+            },
+            "letters": {
+              "description": "Letters.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "letters"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Display an image.",
+          "properties": {
+            "alt": {
+              "description": "Required alt.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "image"
+              ],
+              "type": "string"
+            },
+            "src": {
+              "description": "Image src.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "src"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "CmsBannerTone": {
+      "description": "Banner tone — closed enum mirroring the standard color roles. Each maps to a `data-tone` attribute the skin styles.",
+      "oneOf": [
+        {
+          "description": "Neutral, primary-tinted (default).",
+          "enum": [
+            "info"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Yellow-tinted; use for time-sensitive / actionable notices.",
+          "enum": [
+            "warn"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Green-tinted; use for confirmations.",
+          "enum": [
+            "success"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Red-tinted; use for errors / critical alerts.",
+          "enum": [
+            "danger"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CmsCard": {
+      "additionalProperties": false,
+      "description": "One feed card inside a [`CmsSection::CardFeed`]. Self-contained; no further nesting allowed in v1.",
+      "properties": {
+        "avatar": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/CmsAvatar"
+            }
+          ],
+          "description": "Avatar slot. Uses the same shape as the Composer avatar so downstream Loom CSS can share the circle treatment."
+        },
+        "data_backend": {
+          "description": "Backend key (verified by phase_phantom_button at build time).",
+          "type": "string"
+        },
+        "host": {
+          "description": "Optional sub-line (e.g. \"@court_dax · 4d left\"). Rendered as `<p>` below the title.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "href": {
+          "description": "Primary card link target. Validated by `is_safe_url`.",
+          "type": "string"
+        },
+        "stats": {
+          "default": [],
+          "description": "Stats grid below the body. Empty → no grid emitted.",
+          "items": {
+            "$ref": "#/definitions/CmsCardStat"
+          },
+          "type": "array"
+        },
+        "tag": {
+          "description": "Optional category tag (small badge above the title).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "description": "Card title (rendered as h3).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "avatar",
+        "data_backend",
+        "href",
+        "title"
+      ],
+      "type": "object"
+    },
+    "CmsCardStat": {
+      "additionalProperties": false,
+      "description": "One {label, value} pair inside a [`CmsCard`]'s stats grid.",
+      "properties": {
+        "label": {
+          "description": "Caption text (e.g. \"Votes\").",
+          "type": "string"
+        },
+        "value": {
+          "description": "Value text (e.g. \"78%\").",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "CmsComposerSize": {
+      "description": "Mirror of [`ComposerSize`].",
+      "oneOf": [
+        {
+          "description": "Compact density.",
+          "enum": [
+            "compact"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Comfortable density.",
+          "enum": [
+            "comfortable"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CmsFit": {
+      "description": "Mirror of [`PictureFit`].",
+      "oneOf": [
+        {
+          "description": "Default.",
+          "enum": [
+            "default"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Cover.",
+          "enum": [
+            "cover"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Contain.",
+          "enum": [
+            "contain"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CmsFormField": {
+      "description": "Typed form field. Closed enum — adding a variant requires a renderer arm + test.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Single-line text input.",
+          "properties": {
+            "hint": {
+              "description": "Optional hint paragraph below the input.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "label": {
+              "description": "Visible label.",
+              "type": "string"
+            },
+            "max_length": {
+              "description": "`maxlength` attribute (None → unbounded).",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "`name` attribute (form-data key).",
+              "type": "string"
+            },
+            "placeholder": {
+              "description": "Optional placeholder text.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "`required` attribute.",
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "text"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Multi-line text input.",
+          "properties": {
+            "hint": {
+              "description": "Optional hint.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "label": {
+              "description": "Visible label.",
+              "type": "string"
+            },
+            "max_length": {
+              "description": "`maxlength` attribute.",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "name": {
+              "description": "`name` attribute.",
+              "type": "string"
+            },
+            "placeholder": {
+              "description": "Optional placeholder.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "default": false,
+              "description": "`required` attribute.",
+              "type": "boolean"
+            },
+            "rows": {
+              "default": 4,
+              "description": "`rows` attribute (defaults to 4 if omitted).",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "type": {
+              "enum": [
+                "textarea"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "name",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Dropdown.",
+          "properties": {
+            "hint": {
+              "description": "Optional hint.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "label": {
+              "description": "Visible label.",
+              "type": "string"
+            },
+            "name": {
+              "description": "`name` attribute.",
+              "type": "string"
+            },
+            "options": {
+              "description": "Options list.",
+              "items": {
+                "$ref": "#/definitions/CmsSelectOption"
+              },
+              "type": "array"
+            },
+            "required": {
+              "default": false,
+              "description": "`required` attribute.",
+              "type": "boolean"
+            },
+            "type": {
+              "enum": [
+                "select"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "name",
+            "options",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Read-only text display (e.g. \"Set automatically: 720p · 30s\").",
+          "properties": {
+            "hint": {
+              "description": "Optional hint.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "label": {
+              "description": "Visible label.",
+              "type": "string"
+            },
+            "name": {
+              "description": "`name` attribute.",
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "readonly"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "description": "Display value.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "name",
+            "type",
+            "value"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "CmsFormStep": {
+      "additionalProperties": false,
+      "description": "One step inside a [`CmsSection::Form`].",
+      "properties": {
+        "fields": {
+          "description": "Fields belonging to this step.",
+          "items": {
+            "$ref": "#/definitions/CmsFormField"
+          },
+          "type": "array"
+        },
+        "label": {
+          "description": "Step display label.",
+          "type": "string"
+        },
+        "state": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/CmsFormStepState"
+            }
+          ],
+          "description": "Visual state (current / upcoming / done)."
+        }
+      },
+      "required": [
+        "fields",
+        "label",
+        "state"
+      ],
+      "type": "object"
+    },
+    "CmsFormStepState": {
+      "description": "Step visual state.",
+      "oneOf": [
+        {
+          "description": "User is currently on this step.",
+          "enum": [
+            "current"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Step is ahead of the user.",
+          "enum": [
+            "upcoming"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Step has been completed.",
+          "enum": [
+            "done"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CmsFormSubmit": {
+      "additionalProperties": false,
+      "description": "Submit-row config for [`CmsSection::Form`].",
+      "properties": {
+        "action": {
+          "description": "`<form action>` URL. Validated via `is_safe_url`.",
+          "type": "string"
+        },
+        "data_backend": {
+          "description": "Backend key (verified by phantom_button at build time).",
+          "type": "string"
+        },
+        "label": {
+          "description": "Primary button label (e.g. \"Continue → upload\").",
+          "type": "string"
+        },
+        "secondary_label": {
+          "description": "Optional secondary button label (e.g. \"Save draft\"). None → no secondary button rendered.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "action",
+        "data_backend",
+        "label"
+      ],
+      "type": "object"
+    },
+    "CmsLoading": {
+      "description": "Mirror of [`PictureLoading`].",
+      "oneOf": [
+        {
+          "description": "Lazy load.",
+          "enum": [
+            "lazy"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Eager load.",
+          "enum": [
+            "eager"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CmsNavLink": {
+      "additionalProperties": false,
+      "description": "One primary-nav link.",
+      "properties": {
+        "current": {
+          "default": false,
+          "description": "Mark this link as the current page (renders `aria-current=\"page\"`).",
+          "type": "boolean"
+        },
+        "data_backend": {
+          "description": "Backend key (verified against `backends.toml` by forge's phase_phantom_button).",
+          "type": "string"
+        },
+        "href": {
+          "description": "Same-origin path or `https://` URL.",
+          "type": "string"
+        },
+        "label": {
+          "description": "Visible label.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_backend",
+        "href",
+        "label"
+      ],
+      "type": "object"
+    },
+    "CmsPanel": {
+      "additionalProperties": false,
+      "description": "One sidebar panel inside a [`CmsSection::Sidebar`].",
+      "properties": {
+        "body": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/CmsPanelBody"
+            }
+          ],
+          "description": "Body content. Discriminated by `kind`."
+        },
+        "title": {
+          "description": "Panel heading (rendered as h2).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "title"
+      ],
+      "type": "object"
+    },
+    "CmsPanelBody": {
+      "description": "Typed panel body. Closed enum — adding a variant requires a renderer arm + test.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Ordered list of `{label, value, href?}` rows. Each row renders as a `<li>`; if `href` is set + valid, the row is wrapped in an `<a>`.",
+          "properties": {
+            "items": {
+              "description": "Row entries, top to bottom.",
+              "items": {
+                "$ref": "#/definitions/CmsPanelListItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "list"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Plain prose paragraph(s), each entry → one `<p>`.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "text"
+              ],
+              "type": "string"
+            },
+            "paragraphs": {
+              "description": "Paragraphs.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "paragraphs"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "CmsPanelListItem": {
+      "additionalProperties": false,
+      "description": "One row inside a [`CmsPanelBody::List`].",
+      "properties": {
+        "data_backend": {
+          "description": "Optional backend key (verified by phantom_button at build).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "href": {
+          "description": "Optional click target. Validated via `is_safe_url`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "Left-side label.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Right-side value.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "CmsPriority": {
+      "description": "Mirror of [`PicturePriority`].",
+      "oneOf": [
+        {
+          "description": "Browser default.",
+          "enum": [
+            "auto"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Pre-load high.",
+          "enum": [
+            "high"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "De-prioritize.",
+          "enum": [
+            "low"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CmsPromptAction": {
+      "description": "Closed enum mirror of [`PromptAction`] — separated so the wire format is independent of the Loom enum's internals.",
+      "oneOf": [
+        {
+          "description": "Map → [`PromptAction::UploadClip`].",
+          "enum": [
+            "upload_clip"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Map → [`PromptAction::ChallengeOpponent`].",
+          "enum": [
+            "challenge_opponent"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Map → [`PromptAction::GoLive`].",
+          "enum": [
+            "go_live"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Map → [`PromptAction::PhotoOnly`].",
+          "enum": [
+            "photo_only"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CmsSection": {
+      "description": "One section of a page. Adding a variant requires a paired renderer arm in [`render_section`] and a unit test.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Top-of-page hero. Optional eyebrow pill, required title, optional lede, optional primary CTA. Loom-namespaced (no Tailwind dependency) so it composes cleanly with the SkillShots PoC skin.",
+          "properties": {
+            "cta": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional primary CTA."
+            },
+            "eyebrow": {
+              "description": "Optional small pill above the title.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "hero"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional subhead paragraph.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Headline text.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Group: a heading + a body paragraph, framed as a `<section>`. Useful for \"How it works\" / \"Rules\" type explainer blocks.",
+          "properties": {
+            "body": {
+              "description": "Body paragraph(s). Each entry becomes a `<p>`.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "group"
+              ],
+              "type": "string"
+            },
+            "title": {
+              "description": "Heading text (rendered as h2 inside the section).",
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Card-feed: an ordered list of feed cards (battle list, leaderboard rows, vote queue, etc.). Each card carries an avatar, title, optional host subline, optional stats grid, and primary link. Maps to a series of `<article class=\"loom-card-feed-item\">` inside a `<section class=\"loom-card-feed\">`.",
+          "properties": {
+            "heading": {
+              "description": "Optional heading rendered above the list.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "description": "List items, top to bottom.",
+              "items": {
+                "$ref": "#/definitions/CmsCard"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "card_feed"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Sidebar: a stack of typed `Panel`s rendered inside an `<aside>` landmark. Used for index.html's right-rail (top earners / open votes / house rules / etc.).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "sidebar"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Optional aria-label for the `<aside>` landmark. Defaults to \"Side panels\" if omitted.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "panels": {
+              "description": "Stack of panels, top to bottom.",
+              "items": {
+                "$ref": "#/definitions/CmsPanel"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "panels"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Top-of-page persistent banner. Used for \"voting closes in 1h\", \"maintenance Saturday 2-4am\", \"PoC build\" type notices. Renders as an `<aside>` with a tone-tinted background and an optional close button.",
+          "properties": {
+            "dismissible": {
+              "default": false,
+              "description": "If true, render a close button with `data-loom-banner-dismiss` (client JS handles).",
+              "type": "boolean"
+            },
+            "id": {
+              "description": "Optional stable id used by client JS to remember a dismissal across page loads.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "banner"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "description": "Notice text. Maud auto-escapes.",
+              "type": "string"
+            },
+            "tone": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsBannerTone"
+                }
+              ],
+              "description": "Visual tone — info / warn / success / danger."
+            }
+          },
+          "required": [
+            "kind",
+            "text",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Multi-step form. Renders as `<form>` with a step indicator at top + each step's fields below + a submit row at bottom. Used for post-skill.html upload flow.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "form"
+              ],
+              "type": "string"
+            },
+            "legend": {
+              "description": "Form heading (rendered as h2 inside the section).",
+              "type": "string"
+            },
+            "steps": {
+              "description": "Ordered steps (multi-page UX rendered single-page in the SSG output; client JS can swap visibility later).",
+              "items": {
+                "$ref": "#/definitions/CmsFormStep"
+              },
+              "type": "array"
+            },
+            "submit": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsFormSubmit"
+                }
+              ],
+              "description": "Submit-row config."
+            }
+          },
+          "required": [
+            "kind",
+            "legend",
+            "steps",
+            "submit"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Feed-top compose box. Maps to [`Composer`].",
+          "properties": {
+            "actions": {
+              "description": "Up to 3 prompt actions.",
+              "items": {
+                "$ref": "#/definitions/CmsPromptAction"
+              },
+              "type": "array"
+            },
+            "avatar": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsAvatar"
+                }
+              ],
+              "description": "Avatar slot."
+            },
+            "kind": {
+              "enum": [
+                "composer"
+              ],
+              "type": "string"
+            },
+            "prompt": {
+              "description": "Visible CTA text.",
+              "type": "string"
+            },
+            "size": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsComposerSize"
+                }
+              ],
+              "description": "Density."
+            },
+            "submit_endpoint": {
+              "description": "Where the prompt links to.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "actions",
+            "avatar",
+            "kind",
+            "prompt",
+            "size",
+            "submit_endpoint"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Single image with the full Picture treatment.",
+          "properties": {
+            "alt": {
+              "description": "Required alt text. Empty string only for decorative.",
+              "type": "string"
+            },
+            "fit": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsFit"
+                }
+              ],
+              "description": "Object-fit mode."
+            },
+            "height": {
+              "description": "Intrinsic height.",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "kind": {
+              "enum": [
+                "picture"
+              ],
+              "type": "string"
+            },
+            "loading": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsLoading"
+                }
+              ],
+              "description": "Loading strategy."
+            },
+            "priority": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsPriority"
+                }
+              ],
+              "description": "Resource priority."
+            },
+            "src_stem": {
+              "description": "Asset stem under `/assets/`.",
+              "type": "string"
+            },
+            "width": {
+              "description": "Intrinsic width (CSS px).",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "alt",
+            "fit",
+            "height",
+            "kind",
+            "loading",
+            "priority",
+            "src_stem",
+            "width"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A paragraph of body text. Maud auto-escapes on render.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "paragraph"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "description": "Plain-text body (no markup).",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A heading. Level constrained to 2-4 (h1 is owned by the page-shell template, not section content).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "heading"
+              ],
+              "type": "string"
+            },
+            "level": {
+              "description": "`2` → `<h2>`, etc. Validation in [`render_section`].",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "text": {
+              "description": "Heading text.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "level",
+            "text"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "CmsSelectOption": {
+      "additionalProperties": false,
+      "description": "One option inside a [`CmsFormField::Select`].",
+      "properties": {
+        "label": {
+          "description": "Display text.",
+          "type": "string"
+        },
+        "value": {
+          "description": "`value` attribute.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "HeroCta": {
+      "additionalProperties": false,
+      "description": "Hero CTA — the single typed primary action attached to a Hero section. URL is validated by `composer::is_safe_url` at render time.",
+      "properties": {
+        "data_backend": {
+          "description": "Backend key (must match a `[backends.X]` in backends.toml). Forge's phantom_button phase verifies this at build time.",
+          "type": "string"
+        },
+        "href": {
+          "description": "Where the CTA navigates. Same-origin path or https://.",
+          "type": "string"
+        },
+        "label": {
+          "description": "Visible label text.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_backend",
+        "href",
+        "label"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "A single CMS-managed page. The smallest unit the bridge knows how to render in isolation.",
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema reference. Editors with jsonls (VS Code, Helix, Zed) read this to provide inline autocomplete + validation. The bridge ignores the value — it's the editor's contract, not the renderer's. Authors should generate the schema via `loom cms-schema --out ...` and reference it here as `\"$schema\": \"../cms-schema.json\"`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "description": {
+      "description": "`<meta name=\"description\">` text. Required for SEO.",
+      "type": "string"
+    },
+    "nav_links": {
+      "default": [],
+      "description": "Optional primary navigation links. The page-shell renders these inside `<nav aria-label=\"Primary\">`. Empty/omitted → shell emits brand-only nav. Each link's `href` is validated (same-origin path or `https://`); invalid hrefs render as `#invalid-nav-link` placeholders.",
+      "items": {
+        "$ref": "#/definitions/CmsNavLink"
+      },
+      "type": "array"
+    },
+    "path": {
+      "description": "Canonical URL path (e.g. `\"/leaderboard\"`). Required. Used by the layout shell to emit `<link rel=\"canonical\">`.",
+      "type": "string"
+    },
+    "sections": {
+      "description": "Sequence of body sections, top to bottom.",
+      "items": {
+        "$ref": "#/definitions/CmsSection"
+      },
+      "type": "array"
+    },
+    "title": {
+      "description": "`<title>` text. Required.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "description",
+    "path",
+    "sections",
+    "title"
+  ],
+  "title": "CmsPage",
+  "type": "object"
+}

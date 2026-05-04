@@ -1,55 +1,103 @@
 {
-  "title": "@court_dax — SkillShots",
+  "$schema": "../cms-schema.json",
+  "title": "@court_dax \u2014 SkillShots",
   "description": "Public profile, recent battles, and skill rankings.",
   "path": "/profile.html",
   "nav_links": [
-    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
-    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
-    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
-    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": true  }
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": false
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": false
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": false
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": true
+    }
   ],
   "sections": [
     {
       "kind": "hero",
       "eyebrow": "Player profile",
       "title": "@court_dax",
-      "lede": "Basketball · 1840 earnings this week · 127 battles · 78% top-vote rate."
+      "lede": "Basketball \u00b7 1840 earnings this week \u00b7 127 battles \u00b7 78% top-vote rate."
     },
     {
       "kind": "card_feed",
       "heading": "Recent battles",
       "items": [
         {
-          "avatar": { "kind": "initials", "letters": "HC" },
-          "title": "Half-court shot — clean swish",
-          "host": "1 take · single arc",
+          "avatar": {
+            "kind": "initials",
+            "letters": "HC"
+          },
+          "title": "Half-court shot \u2014 clean swish",
+          "host": "1 take \u00b7 single arc",
           "stats": [
-            { "label": "Result", "value": "Won" },
-            { "label": "Pot",    "value": "$240" }
+            {
+              "label": "Result",
+              "value": "Won"
+            },
+            {
+              "label": "Pot",
+              "value": "$240"
+            }
           ],
           "href": "/c/half-court-arc",
           "data_backend": "view-challenge",
           "tag": "Basketball"
         },
         {
-          "avatar": { "kind": "initials", "letters": "3P" },
+          "avatar": {
+            "kind": "initials",
+            "letters": "3P"
+          },
           "title": "3-point off-the-dribble streak (5/5)",
-          "host": "Continuous · 5 makes",
+          "host": "Continuous \u00b7 5 makes",
           "stats": [
-            { "label": "Result", "value": "Won" },
-            { "label": "Pot",    "value": "$180" }
+            {
+              "label": "Result",
+              "value": "Won"
+            },
+            {
+              "label": "Pot",
+              "value": "$180"
+            }
           ],
           "href": "/c/3pt-streak-5",
           "data_backend": "view-challenge",
           "tag": "Basketball"
         },
         {
-          "avatar": { "kind": "initials", "letters": "NL" },
+          "avatar": {
+            "kind": "initials",
+            "letters": "NL"
+          },
           "title": "No-look free throws (10/10)",
-          "host": "Single take · 10 makes",
+          "host": "Single take \u00b7 10 makes",
           "stats": [
-            { "label": "Result", "value": "Won" },
-            { "label": "Pot",    "value": "$120" }
+            {
+              "label": "Result",
+              "value": "Won"
+            },
+            {
+              "label": "Pot",
+              "value": "$120"
+            }
           ],
           "href": "/c/nolook-ft-10",
           "data_backend": "view-challenge",

@@ -1,12 +1,33 @@
 {
-  "title": "My Wins — SkillShots",
+  "$schema": "../cms-schema.json",
+  "title": "My Wins \u2014 SkillShots",
   "description": "Your active battles, entries in flight, and pots you've cashed.",
   "path": "/my-wins.html",
   "nav_links": [
-    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
-    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
-    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": true  },
-    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": false
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": false
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": true
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": false
+    }
   ],
   "sections": [
     {
@@ -20,28 +41,46 @@
       "heading": "Active entries",
       "items": [
         {
-          "avatar": { "kind": "initials", "letters": "MH" },
-          "title": "Half-court shot — single arc",
+          "avatar": {
+            "kind": "initials",
+            "letters": "MH"
+          },
+          "title": "Half-court shot \u2014 single arc",
           "host": "Hosted by @marcus_h",
           "stats": [
-            { "label": "Your entry", "value": "$60" },
-            { "label": "Status",     "value": "Top vote" }
+            {
+              "label": "Your entry",
+              "value": "$60"
+            },
+            {
+              "label": "Status",
+              "value": "Top vote"
+            }
           ],
           "href": "/c/half-court-arc",
           "data_backend": "view-challenge",
-          "tag": "Voting · 2h 14m"
+          "tag": "Voting \u00b7 2h 14m"
         },
         {
-          "avatar": { "kind": "initials", "letters": "9L" },
+          "avatar": {
+            "kind": "initials",
+            "letters": "9L"
+          },
           "title": "Pool: clear the table in 2 innings",
           "host": "Hosted by @9ball_lori",
           "stats": [
-            { "label": "Your entry", "value": "$30" },
-            { "label": "Submit by",  "value": "22h 11m" }
+            {
+              "label": "Your entry",
+              "value": "$30"
+            },
+            {
+              "label": "Submit by",
+              "value": "22h 11m"
+            }
           ],
           "href": "/c/pool-2-innings",
           "data_backend": "view-challenge",
-          "tag": "Live · awaiting submit"
+          "tag": "Live \u00b7 awaiting submit"
         }
       ]
     }

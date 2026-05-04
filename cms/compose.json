@@ -1,12 +1,33 @@
 {
-  "title": "Post a skill — SkillShots",
+  "$schema": "../cms-schema.json",
+  "title": "Post a skill \u2014 SkillShots",
   "description": "Post a skill clip, challenge a player, or go live. Voted by your crew.",
   "path": "/compose",
   "nav_links": [
-    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
-    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
-    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
-    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": false
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": false
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": false
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": false
+    }
   ],
   "sections": [
     {
@@ -14,14 +35,25 @@
       "eyebrow": "New",
       "title": "What did you nail today?",
       "lede": "Post your clip. Your crew votes. Pot splits at round end.",
-      "cta": { "label": "Upload a clip", "href": "/post-skill", "data_backend": "post-skill" }
+      "cta": {
+        "label": "Upload a clip",
+        "href": "/post-skill",
+        "data_backend": "post-skill"
+      }
     },
     {
       "kind": "composer",
       "prompt": "What did you nail today?",
       "submit_endpoint": "/post-skill",
-      "actions": ["upload_clip", "challenge_opponent", "go_live"],
-      "avatar": { "kind": "initials", "letters": "DA" },
+      "actions": [
+        "upload_clip",
+        "challenge_opponent",
+        "go_live"
+      ],
+      "avatar": {
+        "kind": "initials",
+        "letters": "DA"
+      },
       "size": "comfortable"
     },
     {
@@ -29,24 +61,42 @@
       "heading": "Open battles",
       "items": [
         {
-          "avatar": { "kind": "initials", "letters": "PK" },
-          "title": "One-take parkour line — top of stairwell to ground",
-          "host": "@court_dax · 4d left",
+          "avatar": {
+            "kind": "initials",
+            "letters": "PK"
+          },
+          "title": "One-take parkour line \u2014 top of stairwell to ground",
+          "host": "@court_dax \u00b7 4d left",
           "stats": [
-            { "label": "Votes", "value": "78%" },
-            { "label": "Pot",   "value": "$240" }
+            {
+              "label": "Votes",
+              "value": "78%"
+            },
+            {
+              "label": "Pot",
+              "value": "$240"
+            }
           ],
           "href": "/c/parkour-stairwell",
           "data_backend": "view-challenge",
           "tag": "Parkour"
         },
         {
-          "avatar": { "kind": "initials", "letters": "BA" },
+          "avatar": {
+            "kind": "initials",
+            "letters": "BA"
+          },
           "title": "Speed-cube: scrambled 3x3 in under 18 seconds",
-          "host": "@dax · 2d left",
+          "host": "@dax \u00b7 2d left",
           "stats": [
-            { "label": "Votes", "value": "62%" },
-            { "label": "Pot",   "value": "$120" }
+            {
+              "label": "Votes",
+              "value": "62%"
+            },
+            {
+              "label": "Pot",
+              "value": "$120"
+            }
           ],
           "href": "/c/cube-sub18",
           "data_backend": "view-challenge",

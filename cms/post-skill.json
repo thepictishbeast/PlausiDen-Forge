@@ -1,12 +1,33 @@
 {
-  "title": "Post a skill — SkillShots",
+  "$schema": "../cms-schema.json",
+  "title": "Post a skill \u2014 SkillShots",
   "description": "Set up a new battle: rules, video upload, pot + entry fee.",
   "path": "/post-skill.html",
   "nav_links": [
-    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
-    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
-    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
-    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": false
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": false
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": false
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": false
+    }
   ],
   "sections": [
     {
@@ -19,7 +40,7 @@
       "kind": "form",
       "legend": "New challenge",
       "submit": {
-        "label": "Continue → upload",
+        "label": "Continue \u2192 upload",
         "secondary_label": "Save draft",
         "action": "/post-skill",
         "data_backend": "post-skill"
@@ -34,7 +55,7 @@
               "name": "title",
               "label": "Challenge title",
               "hint": "120 chars max. State the SHOT, not the difficulty.",
-              "placeholder": "e.g. Half-court shot — single arc, no rebound, no backboard",
+              "placeholder": "e.g. Half-court shot \u2014 single arc, no rebound, no backboard",
               "max_length": 120,
               "required": true
             },
@@ -43,21 +64,42 @@
               "name": "category",
               "label": "Category",
               "options": [
-                { "value": "basketball", "label": "Basketball" },
-                { "value": "parkour",    "label": "Parkour" },
-                { "value": "billiards",  "label": "Billiards" },
-                { "value": "darts",      "label": "Darts" },
-                { "value": "skate",      "label": "Skateboard" },
-                { "value": "cafe",       "label": "Cafe" },
-                { "value": "mind",       "label": "Mind / Speedcube" }
+                {
+                  "value": "basketball",
+                  "label": "Basketball"
+                },
+                {
+                  "value": "parkour",
+                  "label": "Parkour"
+                },
+                {
+                  "value": "billiards",
+                  "label": "Billiards"
+                },
+                {
+                  "value": "darts",
+                  "label": "Darts"
+                },
+                {
+                  "value": "skate",
+                  "label": "Skateboard"
+                },
+                {
+                  "value": "cafe",
+                  "label": "Cafe"
+                },
+                {
+                  "value": "mind",
+                  "label": "Mind / Speedcube"
+                }
               ],
               "required": true
             },
             {
               "type": "textarea",
               "name": "rules",
-              "label": "Rules — measurable, observable",
-              "hint": "Voters judge against THIS list. Vague rules → contested votes.",
+              "label": "Rules \u2014 measurable, observable",
+              "hint": "Voters judge against THIS list. Vague rules \u2192 contested votes.",
               "placeholder": "Specific rules voters can verify by watching:\n- single take\n- no edits\n- backboard contact disqualifies",
               "rows": 8,
               "required": true
@@ -67,7 +109,7 @@
               "name": "format",
               "label": "Required video format",
               "hint": "Set automatically. Edited or sub-720p videos rejected at upload.",
-              "value": "720p min · 30s max · single take"
+              "value": "720p min \u00b7 30s max \u00b7 single take"
             }
           ]
         },
