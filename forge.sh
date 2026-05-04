@@ -405,6 +405,60 @@ phase_html_semantic() {
 }
 
 # ============================================================
+# Phase: class_prefix — every class= token must be loom-* or is-*.
+#
+# Forge audits this because raw class names (e.g. class="card-body")
+# bypass the design system: they don't read tokens, they don't get
+# audited by phase_tokens, and they collide with future Loom
+# component renames. Every class name in static/*.html MUST be
+# either a Loom-namespaced class (loom-*) or a state modifier
+# (is-*). Anything else is a strict finding.
+#
+# REGRESSION-GUARD: this phase was added 2026-05-04 after the
+# T31 audit pass surfaced 7+ raw classes in challenge.html that
+# every prior forge run silently shipped.
+# ============================================================
+phase_class_prefix() {
+  phase_header "class_prefix"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    # Pull every class="..." token; split on whitespace; keep only
+    # tokens that are NOT loom-* / is-* / empty.
+    local raw=$(python3 - "$f" <<'PY'
+import re, sys
+p = sys.argv[1]
+with open(p, 'r', encoding='utf-8') as fh:
+    src = fh.read()
+out = []
+for m in re.finditer(r'class="([^"]*)"', src):
+    for tok in m.group(1).split():
+        if not tok:
+            continue
+        if tok.startswith('loom-'):
+            continue
+        if tok.startswith('is-'):
+            continue
+        out.append(tok)
+if out:
+    # Print unique tokens, comma-separated.
+    seen = []
+    for t in out:
+        if t not in seen:
+            seen.append(t)
+    print(','.join(seen))
+PY
+)
+    if [ -n "$raw" ]; then
+      finding_strict "class_prefix" "$name" "non-Loom class name(s): $raw"
+      hits=$((hits + 1))
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every class= token is loom-* or is-*"
+}
+
+# ============================================================
 # Phase: csp — every page has strict CSP meta + nosniff
 # ============================================================
 phase_csp() {
@@ -1420,6 +1474,7 @@ phase_loom_sync
 phase_label_consistency
 phase_tokens
 phase_html_semantic
+phase_class_prefix
 phase_csp
 phase_a11y_landmarks
 phase_seo
