@@ -433,8 +433,13 @@
     .loom-navlinks { justify-self: center; scroll-snap-type: none; }
   }
   @media (min-width: 1024px) {
-    /* Above 1024px we have room for the nav to lay flat. */
-    .loom-navlinks { overflow: visible; }
+    /* T54: was `overflow: visible` — that assumed text always
+     * fits at desktop. At 200% browser zoom (WCAG 1.4.4), the
+     * 32px-rendered link text exceeds the column width and
+     * bleeds horizontally with no scroll affordance. Keep
+     * `overflow-x: auto` so a 1.4.4 user gets a scrollable nav
+     * instead of clipped/cut links. */
+    .loom-navlinks { overflow-x: auto; }
   }
   .loom-navlinks a {
     padding: var(--loom-space-2) var(--loom-space-3);
@@ -679,7 +684,9 @@
   .loom-stat-bar {
     margin-top: var(--loom-space-6);
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    /* T54: was minmax(140px, 1fr). Same root-font-size scaling story
+     * as .loom-badge-grid — 8.75rem = 140px @ 16px root. */
+    grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
     gap: var(--loom-space-4);
   }
   .loom-stat { min-width: 0; }
@@ -1002,7 +1009,15 @@
   /* ---------- Leaderboard row ---------- */
   .loom-leader {
     display: grid;
-    grid-template-columns: 22px 24px minmax(0, 1fr) auto;
+    /* T54: was `22px 24px ... auto`. Raw px columns don't scale
+     * with root font-size, so under 200% browser zoom the rank
+     * and avatar columns stayed 22/24px while the rendered
+     * digits/avatar grew to 2x — content bled out of the grid
+     * and forced the parent aside to overflow horizontally.
+     * 1.5rem scales: 24px @100% → 48px @200%. Last column gets
+     * minmax(0, auto) so .earnings can SHRINK below intrinsic
+     * width when needed instead of forcing horizontal overflow. */
+    grid-template-columns: 1.5rem 1.5rem minmax(0, 1fr) minmax(0, auto);
     align-items: center;
     gap: var(--loom-space-3);
     padding: var(--loom-space-2) 0;
@@ -1029,7 +1044,12 @@
     font-size: var(--loom-font-sm);
     color: var(--loom-color-success);
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+    /* T54: removed `white-space: nowrap`. Under 200% zoom the
+     * "37 hosted" string was longer than the auto column could
+     * supply, and nowrap forced the grid to overflow its parent.
+     * Allow soft wrap as a last-resort overflow strategy. */
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   /* ---------- Vote-row ---------- */
@@ -1129,7 +1149,12 @@
   /* ---------- Badge grid (compact tile grid) ---------- */
   .loom-badge-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    /* T54: was minmax(160px, 1fr). Raw px doesn't scale with root
+     * font-size — under 200% browser zoom, "ID + payment verified"
+     * rendered at 32px no longer fit in 160px-wide badge cards.
+     * 10rem keeps the same visual size at default zoom (10rem = 160px
+     * @ 16px root) but expands to 320px @ 200% zoom. */
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
     gap: var(--loom-gap-grid);
   }
   .loom-badge-card {

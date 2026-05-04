@@ -72,6 +72,28 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
         accept = self.headers.get('Accept-Encoding', '')
         for ext, encoding in (('.br', 'br'), ('.gz', 'gzip')):
             if encoding in accept and os.path.isfile(path + ext):
+                # T54-followup: stale compressed sibling check.
+                # If the source has been edited but forge.sh hasn't
+                # been re-run, .br/.gz contents diverge from the
+                # source — serving them returns OLD bytes while the
+                # SRI tag references the NEW content's hash, so
+                # browsers refuse the asset and the page renders
+                # un-styled. Detect by mtime comparison and fall
+                # through to the uncompressed path on mismatch.
+                try:
+                    src_mtime = os.path.getmtime(path)
+                    sib_mtime = os.path.getmtime(path + ext)
+                except OSError:
+                    break
+                if sib_mtime < src_mtime:
+                    sys.stdout.write(
+                        f"[serve.py] WARN stale {ext} sibling for "
+                        f"{path} — falling back to uncompressed "
+                        f"(src mtime {src_mtime:.0f} > sibling "
+                        f"{sib_mtime:.0f}). Run forge.sh to refresh.\n"
+                    )
+                    sys.stdout.flush()
+                    break
                 try:
                     with open(path + ext, 'rb') as f:
                         body = f.read()
