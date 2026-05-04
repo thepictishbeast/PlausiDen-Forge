@@ -1360,3 +1360,128 @@
     padding: var(--loom-space-3) var(--loom-space-4);
   }
 }
+/* ============================================================ *
+ * Complex animation + complex-component primitives             *
+ * ------------------------------------------------------------ *
+ * Owner directive 2026-05-04: complex animations + complex UI. *
+ * Lives outside the @layer system because it appends to the    *
+ * cascade tail and must always win over earlier component      *
+ * defaults (deliberate).                                       *
+ * ============================================================ */
+
+/* Motion utility classes — drop on any element. All honor
+ * prefers-reduced-motion via the universal reset rule. */
+.loom-anim-fade-in       { animation: loom-fade-in       var(--loom-transition-base) both; }
+.loom-anim-fade-in-up    { animation: loom-fade-in-up    var(--loom-transition-slow) both; }
+.loom-anim-scale-in      { animation: loom-scale-in      var(--loom-transition-base) both; transform-origin: center; }
+.loom-anim-slide-in-right{ animation: loom-slide-in-right var(--loom-transition-slow) both; }
+.loom-anim-pop           { animation: loom-pop           var(--loom-transition-base) both; }
+.loom-anim-shimmer {
+  background: linear-gradient(90deg,
+    var(--loom-color-surface-muted) 0%,
+    var(--loom-color-bg-overlay) 50%,
+    var(--loom-color-surface-muted) 100%);
+  background-size: 200% 100%;
+  animation: loom-shimmer 1.6s linear infinite;
+}
+[data-stagger="1"]  { animation-delay: 60ms; }
+[data-stagger="2"]  { animation-delay: 120ms; }
+[data-stagger="3"]  { animation-delay: 180ms; }
+[data-stagger="4"]  { animation-delay: 240ms; }
+[data-stagger="5"]  { animation-delay: 300ms; }
+[data-stagger="6"]  { animation-delay: 360ms; }
+[data-stagger="7"]  { animation-delay: 420ms; }
+[data-stagger="8"]  { animation-delay: 480ms; }
+[data-stagger="9"]  { animation-delay: 540ms; }
+[data-stagger="10"] { animation-delay: 600ms; }
+[data-stagger="11"] { animation-delay: 660ms; }
+[data-stagger="12"] { animation-delay: 720ms; }
+
+@keyframes loom-fade-in    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes loom-fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes loom-scale-in   { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+@keyframes loom-slide-in-right { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes loom-pop        { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+@keyframes loom-shimmer    { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* Skeleton loader — shimmer over surface tokens. */
+.loom-skeleton {
+  border-radius: var(--loom-radius-md);
+  background: linear-gradient(90deg,
+    var(--loom-color-surface-muted) 25%,
+    var(--loom-color-bg-overlay) 50%,
+    var(--loom-color-surface-muted) 75%);
+  background-size: 200% 100%;
+  animation: loom-shimmer 1.6s linear infinite;
+  color: transparent;
+  user-select: none;
+}
+.loom-skeleton[data-shape="text"]   { height: 1em; width: 100%; }
+.loom-skeleton[data-shape="title"]  { height: 1.4em; width: 60%; }
+.loom-skeleton[data-shape="circle"] {
+  border-radius: var(--loom-radius-full);
+  aspect-ratio: 1; width: var(--loom-space-12);
+}
+
+/* Tooltip — pure-CSS, no JS. Add data-tooltip + .loom-tooltip. */
+.loom-tooltip { position: relative; }
+.loom-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + var(--loom-space-2));
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  font-size: var(--loom-font-xs);
+  font-weight: 600;
+  padding: var(--loom-space-1) var(--loom-space-2);
+  border: var(--loom-border-strong);
+  border-radius: var(--loom-radius-md);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--loom-transition-fast),
+              transform var(--loom-transition-fast);
+  z-index: 10;
+}
+.loom-tooltip:hover::after,
+.loom-tooltip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Drawer — slides in from the right. Toggle via
+ * body[data-loom-drawer-open]. */
+.loom-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(420px, calc(100vw - var(--loom-space-8)));
+  background: var(--loom-color-surface);
+  border-left: var(--loom-border-strong);
+  box-shadow: var(--loom-shadow-elevated);
+  transform: translateX(100%);
+  transition: transform var(--loom-transition-slow);
+  z-index: 60;
+  overflow-y: auto;
+  padding: var(--loom-pad-band);
+}
+body[data-loom-drawer-open] .loom-drawer { transform: translateX(0); }
+.loom-drawer-scrim {
+  position: fixed; inset: 0;
+  background: hsl(220 33% 0% / 0.5);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--loom-transition-base);
+  z-index: 55;
+}
+body[data-loom-drawer-open] .loom-drawer-scrim {
+  opacity: 1; pointer-events: auto;
+}
+
+/* Aesthetic picker chip layout (used by Forge sidebar). */
+.loom-aesthetic-row {
+  display: flex; flex-wrap: wrap;
+  gap: var(--loom-space-2);
+  margin-bottom: var(--loom-space-3);
+}
+.loom-aesthetic-row:last-child { margin-bottom: 0; }
