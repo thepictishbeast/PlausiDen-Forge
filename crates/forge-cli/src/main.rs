@@ -18,7 +18,10 @@ use std::process::ExitCode;
 use anyhow::{Context, Result};
 use clap::Parser;
 use forge_core::{BuildCtx, BuildMode, BuildReport, Finding, Phase, Severity};
+use forge_phases::csp::CspPhase;
+use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
+use forge_phases::tokens::TokensPhase;
 
 #[derive(Parser, Debug)]
 #[command(name = "forge", version, about = "PlausiDen-Forge — typed, audited build pipeline.")]
@@ -97,11 +100,20 @@ fn run() -> Result<ExitCode> {
         mode,
     };
 
-    // BUG ASSUMPTION: phase order matters. v1 hard-codes a
-    // single-phase pipeline. The 22 phases in forge.sh will land
-    // here one at a time, with explicit ordering rules in a
-    // future `forge-runner` crate.
-    let phases: Vec<Box<dyn Phase>> = vec![Box::new(LoomSyncPhase)];
+    // BUG ASSUMPTION: phase order matters. `loom_sync` runs
+    // first because downstream phases (tokens, etc.) read
+    // skin.css and benefit from knowing it's drift-checked.
+    // Tokens / html_semantic / csp are independent — they each
+    // walk static/*.html in parallel-safe way (no shared mutable
+    // state). Order between them is alphabetic for now;
+    // forge-runner crate (queued) will introduce explicit
+    // dependency edges.
+    let phases: Vec<Box<dyn Phase>> = vec![
+        Box::new(LoomSyncPhase),
+        Box::new(TokensPhase),
+        Box::new(HtmlSemanticPhase),
+        Box::new(CspPhase),
+    ];
 
     let mut report = BuildReport {
         mode: format!("{mode:?}").to_lowercase(),
