@@ -12,7 +12,7 @@
 
 ## Crawler — make absence meaningful (10)
 
-1. ⏳ **Detect missing/broken CSS.** A page that loads CSS but
+1. ✅ **Detect missing/broken CSS.** A page that loads CSS but
    styles don't apply (cache, CSP block, selector miss) should
    trigger a "stylesheet load count = N but computed style on
    `body { background-color }` is the user-agent default."

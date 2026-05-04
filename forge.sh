@@ -421,11 +421,52 @@ phase_backend_coverage() {
 phase_self_check() {
   phase_header "self_check"
   local hits=0
-  # 1. loom-skin.css must declare the @layer cascade up top.
+  # 1. loom-skin.css must declare the @layer cascade up top OR
+  # the equivalent unwrapped-for-compat marker. (Bug 2026-05-04:
+  # an earlier strip-script destroyed the rules; this check
+  # was added to detect the class.)
   local skin="$STATIC/loom-skin.css"
   if [ -f "$skin" ]; then
-    if ! head -200 "$skin" | grep -qE '@layer\s+reset,\s*tokens,\s*primitives,\s*components,\s*plugins,\s*utilities'; then
-      finding_strict "self_check" "loom-skin.css" "missing @layer cascade declaration"
+    if ! head -200 "$skin" | grep -qE '@layer\s+reset,\s*tokens,\s*primitives,\s*components,\s*plugins,\s*utilities|@layer cascade dropped'; then
+      finding_strict "self_check" "loom-skin.css" "missing @layer cascade declaration AND no unwrap marker"
+      hits=$((hits + 1))
+    fi
+    # 2. Sanity: the file MUST have at least 30 unique component
+    # class selectors and MUST contain the known load-bearing ones.
+    # Without this, my own strip-script bug (which deleted rules
+    # while keeping comment text) goes undetected and the page
+    # renders unstyled. Owner directive 2026-05-04: detect when
+    # the site is broken.
+    local rule_count
+    rule_count=$(grep -cE '^\s*\.loom-[a-z][a-z0-9-]*' "$skin")
+    if [ "$rule_count" -lt 30 ]; then
+      finding_strict "self_check" "loom-skin.css" "only $rule_count .loom-* selectors (< 30 floor — file likely corrupted by a strip pass)"
+      hits=$((hits + 1))
+    fi
+    for required in '\.loom-card-battle' '\.loom-hero' '\.loom-nav' \
+                    '\.loom-page' '\.loom-btn' '\.loom-panel' \
+                    '\.loom-feed-grid' '\.loom-leader' '\.loom-stat-bar' \
+                    '\.loom-live-badge'; do
+      if ! grep -qE "^\s*${required}\s*\{|^\s*${required}\s*\[" "$skin"; then
+        finding_strict "self_check" "loom-skin.css" "missing required selector ${required//\\/} (page that uses this will render unstyled)"
+        hits=$((hits + 1))
+      fi
+    done
+    # 3. Detect comment-text leaking into rule positions
+    # (e.g. ' .loom-brand { ... }  in a separate' on its own line).
+    local malformed
+    malformed=$(grep -cE '\.loom-[a-z][a-z0-9-]*\s*\{\s*\.\.\.|\}\s+[a-z][a-z]+' "$skin")
+    if [ "$malformed" -gt 0 ]; then
+      finding_strict "self_check" "loom-skin.css" "$malformed lines look like comment text leaked into rule position (likely strip-script regression)"
+      hits=$((hits + 1))
+    fi
+    # 4. No raw hex / px in skin.css outside the few intentional
+    # decoration spots (we accept hsl() and var() refs).
+    local raw_hex_in_skin
+    raw_hex_in_skin=$(grep -E '#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}' "$skin" \
+                      | grep -v 'auto-generated' | wc -l)
+    if [ "$raw_hex_in_skin" -gt 0 ]; then
+      finding_warn "self_check" "loom-skin.css" "$raw_hex_in_skin raw hex literal(s); should be hsl() or var()"
       hits=$((hits + 1))
     fi
     # No raw hex / px in skin.css outside the few intentional

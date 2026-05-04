@@ -20,8 +20,7 @@
  *   components  composite components (.loom-card-battle, .loom-leader,
  *               .loom-hero, .loom-nav, etc.)
  *   plugins     OPEN — downstream apps drop overrides here. Empty
- *               by default. Overrides land via /* unwrapped @layer */
- ... 
+ *               by default. Overrides land via an unwrapped block
  *               in a separate stylesheet imported AFTER this one.
  *   utilities   single-purpose helpers (.loom-sr-only) — wins over
  *               components by design (utilities should be the final
@@ -45,9 +44,8 @@
  *
  * 4. PLUGIN extension — the @layer plugins block is intentionally
  *    empty here. A site that wants a different brand voice writes
- *    its own /* unwrapped @layer */
- .loom-brand { ... }  in a separate
- *    file imported after this one. No specificity war.
+ *    its own unwrapped block (e.g. ".loom-brand { ... }") in a
+ *    separate file imported after this one. No specificity war.
  *
  * STRICT INVARIANTS (enforced by `loom lint`)
  * -------------------------------------------
