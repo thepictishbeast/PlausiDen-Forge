@@ -1,0 +1,33 @@
+{
+  "title": "Post a skill — SkillShots",
+  "description": "Post a skill clip, challenge a player, or go live. Voted by your crew.",
+  "path": "/compose",
+  "sections": [
+    {
+      "kind": "composer",
+      "prompt": "What did you nail today?",
+      "submit_endpoint": "/post-skill",
+      "actions": ["upload_clip", "challenge_opponent", "go_live"],
+      "avatar": { "kind": "initials", "letters": "DA" },
+      "size": "comfortable"
+    },
+    {
+      "kind": "heading",
+      "text": "How posting works",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "One single take, judged on the rules in the challenge. Your crew votes; the pot splits at the end of the round."
+    },
+    {
+      "kind": "heading",
+      "text": "Get the rules right",
+      "level": 3
+    },
+    {
+      "kind": "paragraph",
+      "text": "Read the challenge spec before you film. Common reasons entries get rejected: cut takes, off-spec props, missing time stamps."
+    }
+  ]
+}

@@ -209,6 +209,54 @@ PY
 }
 
 # ============================================================
+# Phase: cms_render — regenerate every static/<page>.html that
+# has a corresponding cms/<page>.json source via Loom's
+# `loom cms-render` subcommand. This is the T55 "regen PoC HTML
+# from CMS" tide — pages with a JSON source ARE the canonical
+# form; the static HTML is generated output committed for
+# reproducibility (so a fresh checkout serves without needing
+# the loom binary at request time).
+#
+# Per the boundary doctrine: hand-edits to static/<page>.html
+# for any page whose source is in cms/ get OVERWRITTEN on every
+# build. Edit the JSON, not the HTML.
+#
+# REGRESSION-GUARD: do NOT add a --skip-render flag. If
+# `loom cms-render` is broken or absent, the build should FAIL
+# loudly so the operator notices, not silently ship stale HTML.
+# ============================================================
+phase_cms_render() {
+  phase_header "cms_render"
+  if [ ! -d "$ROOT/cms" ]; then
+    echo "  ${C_DIM}skip${C_OFF}    no cms/ directory; nothing to render"
+    return
+  fi
+  local LOOM_BIN="${LOOM_BIN:-/home/user/cargo-target/release/loom}"
+  if [ ! -x "$LOOM_BIN" ]; then
+    finding_strict "cms_render" "loom-cli" "loom binary not at $LOOM_BIN — run 'cargo build --release -p loom-cli' in PlausiDen-Loom"
+    return
+  fi
+  local hits=0
+  local rendered=0
+  for j in "$ROOT/cms"/*.json; do
+    [ -e "$j" ] || continue
+    local name=$(basename "$j" .json)
+    local out="$STATIC/$name.html"
+    if ! "$LOOM_BIN" cms-render --input "$j" --out "$out" --css-href "/loom-skin.css" 2>/tmp/forge-cms-render-err; then
+      local err=$(cat /tmp/forge-cms-render-err 2>/dev/null | head -1)
+      finding_strict "cms_render" "$name.json" "render failed: $err"
+      hits=$((hits + 1))
+    else
+      rendered=$((rendered + 1))
+    fi
+  done
+  rm -f /tmp/forge-cms-render-err
+  if [ $rendered -gt 0 ] && [ $hits -eq 0 ]; then
+    echo "  ${C_GREEN}ok${C_OFF}      $rendered page(s) regenerated from cms/*.json"
+  fi
+}
+
+# ============================================================
 # Phase: loom_sync — verify static/loom-skin.css matches Loom
 # ============================================================
 # Owner doctrine 2026-05-04: "you can hard code fixes into loom
@@ -1507,6 +1555,7 @@ phase_viewport_audit() {
 echo "${C_BOLD}forge build${C_OFF} ${C_DIM}— mode=$MODE — $(date -u)${C_OFF}"
 echo "${C_DIM}strict findings ALWAYS fatal; warn findings fatal in production mode${C_OFF}"
 
+phase_cms_render
 phase_loom_sync
 phase_label_consistency
 phase_tokens
