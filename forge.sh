@@ -397,11 +397,21 @@ groups = defaultdict(lambda: defaultdict(list))  # (kind,key) -> {label: [files]
 # collapse whitespace. This is intentionally simple — fancy
 # nested-element labels can have a future detector.
 LINK_RE = re.compile(
-    r'<a\b[^>]*\bhref="([^"]+)"[^>]*>(.*?)</a>',
+    r'<a\b([^>]*)\bhref="([^"]+)"([^>]*)>(.*?)</a>',
     re.IGNORECASE | re.DOTALL,
 )
+# REGRESSION-GUARD: anchors carrying data-loom-rich-link="true" are
+# container/card-style links whose visible text legitimately varies
+# by context (the card lists different stats per page; the destination
+# is the same href). Including them in label_consistency over-fires
+# strict findings on every CMS-driven feed/panel page. The opt-out
+# attribute is emitted by loom-cms-render's container anchors
+# (CardFeed item link, Panel list link); CTA-style anchors (nav-link,
+# Composer prompt, Hero CTA, Composer action) do NOT carry it and
+# remain audited.
+RICH_LINK_RE = re.compile(r'data-loom-rich-link="true"', re.IGNORECASE)
 BUTTON_RE = re.compile(
-    r'<button\b[^>]*\bdata-backend="([^"]+)"[^>]*>(.*?)</button>',
+    r'<button\b([^>]*)\bdata-backend="([^"]+)"([^>]*)>(.*?)</button>',
     re.IGNORECASE | re.DOTALL,
 )
 TAG_STRIP = re.compile(r'<[^>]+>')
@@ -420,12 +430,20 @@ for fn in sorted(os.listdir(static_dir)):
     with open(path, encoding='utf-8') as f:
         body = f.read()
     for m in LINK_RE.finditer(body):
-        href, inner = m.group(1), m.group(2)
+        attrs_pre, href, attrs_post, inner = m.group(1), m.group(2), m.group(3), m.group(4)
+        all_attrs = attrs_pre + attrs_post
+        # Skip anchors marked as rich/container links — their text
+        # legitimately differs across contexts.
+        if RICH_LINK_RE.search(all_attrs):
+            continue
         label = normalize(inner)
         if label and not label.startswith('▶'):  # skip glyph-only
             groups[('a', href)][label].append(fn)
     for m in BUTTON_RE.finditer(body):
-        backend, inner = m.group(1), m.group(2)
+        attrs_pre, backend, attrs_post, inner = m.group(1), m.group(2), m.group(3), m.group(4)
+        all_attrs = attrs_pre + attrs_post
+        if RICH_LINK_RE.search(all_attrs):
+            continue
         label = normalize(inner)
         if label:
             groups[('button', backend)][label].append(fn)
