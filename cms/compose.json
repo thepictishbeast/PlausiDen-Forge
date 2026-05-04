@@ -2,17 +2,19 @@
   "title": "Post a skill — SkillShots",
   "description": "Post a skill clip, challenge a player, or go live. Voted by your crew.",
   "path": "/compose",
+  "nav_links": [
+    { "label": "Battle Feed",  "href": "/",                 "data_backend": "list-challenges",  "current": false },
+    { "label": "Leaderboard",  "href": "/leaderboard.html", "data_backend": "list-leaderboard", "current": false },
+    { "label": "My Wins",      "href": "/my-wins.html",     "data_backend": "list-touches",     "current": false },
+    { "label": "Profile",      "href": "/profile.html",     "data_backend": "view-profile",     "current": false }
+  ],
   "sections": [
     {
       "kind": "hero",
       "eyebrow": "New",
       "title": "What did you nail today?",
       "lede": "Post your clip. Your crew votes. Pot splits at round end.",
-      "cta": {
-        "label": "Upload a clip",
-        "href": "/post-skill",
-        "data_backend": "post-skill"
-      }
+      "cta": { "label": "Upload a clip", "href": "/post-skill", "data_backend": "post-skill" }
     },
     {
       "kind": "composer",
@@ -28,13 +30,6 @@
       "body": [
         "One single take, judged on the rules in the challenge.",
         "Your crew votes; the pot splits at the end of the round."
-      ]
-    },
-    {
-      "kind": "group",
-      "title": "Get the rules right",
-      "body": [
-        "Read the challenge spec before you film. Common reasons entries get rejected: cut takes, off-spec props, missing time stamps."
       ]
     }
   ]
