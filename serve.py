@@ -42,9 +42,30 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
     T6: also serves pre-compressed .br / .gz siblings when the
     request advertises Accept-Encoding. Saves bandwidth + matches
     production deploys that serve via nginx/Caddy compression.
+
+    T37: per-request timing + slow-request alert. Every response
+    has its duration measured; over SLOW_REQUEST_MS_THRESHOLD it
+    prints a ⚠ prefix in the log so saturation patterns surface
+    during long crawler audits or live demos.
     """
 
+    SLOW_REQUEST_MS_THRESHOLD = 500
+    _slow_log_path = "/tmp/skillshots-server-slow.log"
+
+    def _record_slow(self, method, path, status, bytes_, ms):
+        """Append a structured line to the slow-request log."""
+        try:
+            with open(self._slow_log_path, "a", encoding="utf-8") as f:
+                f.write(
+                    f"{time.strftime('%Y-%m-%dT%H:%M:%S%z')} "
+                    f"{method} {path} {status} {bytes_}b {ms}ms\n"
+                )
+        except OSError:
+            pass
+
     def do_GET(self) -> None:  # noqa: N802
+        # T37: capture start time so log_request can compute duration.
+        self._t_start = time.perf_counter()
         # Resolve the path the parent class would serve, then check
         # for a pre-compressed sibling.
         path = self.translate_path(self.path)
@@ -83,8 +104,28 @@ class ForgeHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, fmt, *args):
         # Default logger writes to stderr with timestamp; we add our
         # own structured one for easier grep'ing.
+        # T37: append duration_ms when do_GET ran (started _t_start).
         ts = time.strftime("%Y-%m-%dT%H:%M:%S%z")
-        sys.stdout.write(f"[{ts}] {self.address_string()} - {fmt%args}\n")
+        ms = ""
+        slow_marker = ""
+        if hasattr(self, "_t_start"):
+            duration_ms = int((time.perf_counter() - self._t_start) * 1000)
+            ms = f" {duration_ms}ms"
+            if duration_ms >= self.SLOW_REQUEST_MS_THRESHOLD:
+                slow_marker = "⚠ "
+                # Best-effort parse of the log line for slow-log persistence.
+                try:
+                    parts = (fmt % args).split(" ")
+                    method = parts[0].lstrip('"')
+                    pth = parts[1] if len(parts) > 1 else "?"
+                    status = parts[3] if len(parts) > 3 else "?"
+                    bytes_ = parts[4] if len(parts) > 4 else "-"
+                    self._record_slow(method, pth, status, bytes_, duration_ms)
+                except Exception:
+                    pass
+        sys.stdout.write(
+            f"[{ts}] {slow_marker}{self.address_string()} - {fmt%args}{ms}\n"
+        )
         sys.stdout.flush()
 
 
