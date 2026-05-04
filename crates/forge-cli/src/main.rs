@@ -21,6 +21,9 @@ use forge_core::{BuildCtx, BuildMode, BuildReport, Finding, Phase, Severity};
 use forge_phases::csp::CspPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
+use forge_phases::perf_budget::PerfBudgetPhase;
+use forge_phases::seo::SeoPhase;
+use forge_phases::sri::SriPhase;
 use forge_phases::tokens::TokensPhase;
 
 #[derive(Parser, Debug)]
@@ -113,6 +116,9 @@ fn run() -> Result<ExitCode> {
         Box::new(TokensPhase),
         Box::new(HtmlSemanticPhase),
         Box::new(CspPhase),
+        Box::new(SeoPhase),
+        Box::new(PerfBudgetPhase),
+        Box::new(SriPhase),
     ];
 
     let mut report = BuildReport {
