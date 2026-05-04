@@ -133,6 +133,191 @@ phase_csp() {
 }
 
 # ============================================================
+# Phase: seo — catch missing meta / og: / alt / canonical /
+# heading structure / structured data.
+# ============================================================
+phase_seo() {
+  phase_header "seo"
+  local hits=0
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    grep -q '<meta name="description"' "$f" || \
+      { finding_warn "seo" "$name" "missing <meta name=\"description\">"; hits=$((hits+1)); }
+    grep -qE '<meta property="og:(title|description|type|url|image)"' "$f" || \
+      { finding_warn "seo" "$name" "missing Open Graph tags (og:title/description/type/url/image)"; hits=$((hits+1)); }
+    grep -qE '<meta name="twitter:(card|title|description)"' "$f" || \
+      { finding_warn "seo" "$name" "missing Twitter Card tags"; hits=$((hits+1)); }
+    grep -q '<link rel="canonical"' "$f" || \
+      { finding_warn "seo" "$name" "missing <link rel=\"canonical\">"; hits=$((hits+1)); }
+    # Exactly one <h1>
+    local h1_count=$(grep -oE '<h1[ >]' "$f" | wc -l)
+    if [ "$h1_count" -eq 0 ]; then
+      finding_strict "seo" "$name" "no <h1> on page"
+      hits=$((hits + 1))
+    elif [ "$h1_count" -gt 1 ]; then
+      finding_warn "seo" "$name" "$h1_count <h1> tags (should be exactly 1)"
+      hits=$((hits + 1))
+    fi
+    # Heading skip detection (h1 → h3 without h2)
+    if grep -q '<h3' "$f" && ! grep -q '<h2' "$f"; then
+      finding_warn "seo" "$name" "heading skip: <h3> present without <h2> (breaks reader navigation)"
+      hits=$((hits + 1))
+    fi
+    # JSON-LD structured data is recommended for any content page
+    grep -q 'application/ld+json' "$f" || \
+      { finding_warn "seo" "$name" "no JSON-LD structured data"; hits=$((hits+1)); }
+    # Lang attribute on <html>
+    grep -qE '<html[^>]+lang=' "$f" || \
+      { finding_strict "seo" "$name" "<html> missing lang attribute (also a11y)"; hits=$((hits+1)); }
+    # Title length 30-60 chars
+    local title=$(grep -oE '<title>[^<]+</title>' "$f" | sed -E 's/<\/?title>//g')
+    local tlen=${#title}
+    if [ "$tlen" -lt 20 ]; then
+      finding_warn "seo" "$name" "title too short ($tlen chars; aim 30-60 for SERP)"
+      hits=$((hits + 1))
+    elif [ "$tlen" -gt 70 ]; then
+      finding_warn "seo" "$name" "title too long ($tlen chars; truncated in SERP at ~60)"
+      hits=$((hits + 1))
+    fi
+    # Every <img> needs alt
+    local imgs_no_alt=$(grep -oE '<img[^>]*>' "$f" | grep -vE 'alt=' | wc -l)
+    if [ "$imgs_no_alt" -gt 0 ]; then
+      finding_strict "seo" "$name" "$imgs_no_alt <img> without alt (a11y + SEO)"
+      hits=$((hits + 1))
+    fi
+  done
+  # Sitemap.xml check
+  if [ ! -f "$STATIC/sitemap.xml" ]; then
+    finding_warn "seo" "sitemap.xml" "missing sitemap.xml — search-engine crawl coverage suffers"
+    hits=$((hits + 1))
+  fi
+  # robots.txt check
+  if [ ! -f "$STATIC/robots.txt" ]; then
+    finding_warn "seo" "robots.txt" "missing robots.txt — crawler hint missing"
+    hits=$((hits + 1))
+  fi
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      SEO clean"
+}
+
+# ============================================================
+# Phase: asset_optimization — flag unoptimized images / video /
+# audio / fonts.
+# ============================================================
+phase_asset_optimization() {
+  phase_header "asset_optimization"
+  local hits=0
+  # PNG over 100KB → suggest webp/avif
+  while IFS= read -r f; do
+    local sz=$(stat -c%s "$f")
+    local name=${f#$STATIC/}
+    if [ "$sz" -gt 102400 ]; then
+      finding_warn "asset_optimization" "$name" "$(numfmt --to=iec $sz) PNG — convert to webp (50-80% smaller, broader support) or avif"
+      hits=$((hits + 1))
+    fi
+  done < <(find "$STATIC" -type f -iname '*.png' 2>/dev/null)
+
+  # JPG without webp sibling
+  while IFS= read -r f; do
+    local base=${f%.*}
+    if [ ! -e "${base}.webp" ] && [ ! -e "${base}.avif" ]; then
+      local name=${f#$STATIC/}
+      finding_warn "asset_optimization" "$name" "JPG without webp/avif sibling — modern browsers fetch faster format via <picture>"
+      hits=$((hits + 1))
+    fi
+  done < <(find "$STATIC" -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) 2>/dev/null)
+
+  # MP4 without webm sibling
+  while IFS= read -r f; do
+    local base=${f%.*}
+    if [ ! -e "${base}.webm" ]; then
+      local name=${f#$STATIC/}
+      finding_warn "asset_optimization" "$name" "MP4 without webm sibling — Firefox / older clients fetch better via <video><source>"
+      hits=$((hits + 1))
+    fi
+  done < <(find "$STATIC" -type f -iname '*.mp4' 2>/dev/null)
+
+  # WAV (uncompressed) → suggest opus/aac
+  while IFS= read -r f; do
+    local name=${f#$STATIC/}
+    finding_warn "asset_optimization" "$name" "WAV — re-encode as opus (best ratio) or aac (broader compat) for web"
+    hits=$((hits + 1))
+  done < <(find "$STATIC" -type f -iname '*.wav' 2>/dev/null)
+
+  # TTF / OTF → suggest woff2
+  while IFS= read -r f; do
+    local name=${f#$STATIC/}
+    finding_warn "asset_optimization" "$name" "TTF/OTF — convert to woff2 (~30% smaller); add font-display: swap"
+    hits=$((hits + 1))
+  done < <(find "$STATIC" -type f \( -iname '*.ttf' -o -iname '*.otf' \) 2>/dev/null)
+
+  # <img> without explicit width/height (causes CLS)
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local name=$(basename "$f")
+    local imgs_no_dims=$(grep -oE '<img[^>]*>' "$f" \
+                         | grep -vE 'width=' | wc -l)
+    if [ "$imgs_no_dims" -gt 0 ]; then
+      finding_warn "asset_optimization" "$name" "$imgs_no_dims <img> without explicit width/height (causes CLS — Core Web Vital)"
+      hits=$((hits + 1))
+    fi
+    # Inline base64 images → flag if > 4KB
+    local b64=$(grep -oE 'src="data:image/[^"]+"' "$f" | wc -l)
+    if [ "$b64" -gt 0 ]; then
+      finding_warn "asset_optimization" "$name" "$b64 inline base64 image(s) — extract to file when > 4KB"
+      hits=$((hits + 1))
+    fi
+  done
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      asset formats are web-optimized"
+}
+
+# ============================================================
+# Phase: perf_budget — file sizes against budget.
+# ============================================================
+phase_perf_budget() {
+  phase_header "perf_budget"
+  local hits=0
+  # Per-file budgets (bytes; raw, pre-gzip)
+  local budget_html=20480       # 20 KB HTML
+  local budget_css=51200        # 50 KB CSS (we're at ~42 KB skin)
+  local budget_js=8192          # 8 KB JS each (we're at <3 KB)
+  local total_kb=0
+
+  for f in "$STATIC"/*.html; do
+    [ -e "$f" ] || continue
+    local sz=$(stat -c%s "$f")
+    total_kb=$((total_kb + sz))
+    local name=$(basename "$f")
+    if [ "$sz" -gt "$budget_html" ]; then
+      finding_warn "perf_budget" "$name" "$(numfmt --to=iec $sz) HTML > $(numfmt --to=iec $budget_html) budget — audit blocks / split route"
+      hits=$((hits + 1))
+    fi
+  done
+  for f in "$STATIC"/*.css; do
+    [ -e "$f" ] || continue
+    local sz=$(stat -c%s "$f")
+    total_kb=$((total_kb + sz))
+    local name=$(basename "$f")
+    if [ "$sz" -gt "$budget_css" ]; then
+      finding_warn "perf_budget" "$name" "$(numfmt --to=iec $sz) CSS > $(numfmt --to=iec $budget_css) budget — split into per-route bundles"
+      hits=$((hits + 1))
+    fi
+  done
+  for f in "$STATIC"/*.js; do
+    [ -e "$f" ] || continue
+    local sz=$(stat -c%s "$f")
+    total_kb=$((total_kb + sz))
+    local name=$(basename "$f")
+    if [ "$sz" -gt "$budget_js" ]; then
+      finding_warn "perf_budget" "$name" "$(numfmt --to=iec $sz) JS > $(numfmt --to=iec $budget_js) budget — code-split or tree-shake"
+      hits=$((hits + 1))
+    fi
+  done
+  echo "  ${C_DIM}total static payload: $(numfmt --to=iec $total_kb)${C_OFF}"
+  [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every file within perf budget"
+}
+
+# ============================================================
 # Phase: a11y_landmarks
 # ============================================================
 phase_a11y_landmarks() {
@@ -355,6 +540,9 @@ phase_tokens
 phase_html_semantic
 phase_csp
 phase_a11y_landmarks
+phase_seo
+phase_asset_optimization
+phase_perf_budget
 phase_phantom_button
 phase_backend_coverage
 phase_unbuilt_route

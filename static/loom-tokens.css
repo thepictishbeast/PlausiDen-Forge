@@ -6,10 +6,10 @@
   --loom-color-primary: hsl(220 90% 28%);
   --loom-color-primary-fg: #ffffff;
   --loom-color-surface: #ffffff;
-  --loom-color-surface-muted: hsl(210 40% 98%);
+  --loom-color-surface-muted: hsl(214 32% 95%);
   --loom-color-ink: hsl(222 47% 11%);
-  --loom-color-ink-muted: hsl(215 16% 47%);
-  --loom-color-border: hsl(214 32% 91%);
+  --loom-color-ink-muted: hsl(215 25% 38%);
+  --loom-color-border: hsl(214 32% 80%);
   --loom-color-danger: hsl(0 72% 51%);
   --loom-color-success: hsl(160 84% 30%);
   --loom-color-warn: hsl(28 80% 50%);
