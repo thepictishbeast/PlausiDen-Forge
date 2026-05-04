@@ -18,10 +18,13 @@ use std::process::ExitCode;
 use anyhow::{Context, Result};
 use clap::Parser;
 use forge_core::{BuildCtx, BuildMode, BuildReport, Finding, Phase, Severity};
+use forge_phases::a11y_landmarks::A11yLandmarksPhase;
+use forge_phases::backend_coverage::BackendCoveragePhase;
 use forge_phases::csp::CspPhase;
 use forge_phases::csp_devmode::CspDevmodePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
+use forge_phases::label_consistency::LabelConsistencyPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
@@ -29,6 +32,7 @@ use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::sri::SriPhase;
 use forge_phases::tokens::TokensPhase;
+use forge_phases::unbuilt_route::UnbuiltRoutePhase;
 
 #[derive(Parser, Debug)]
 #[command(name = "forge", version, about = "PlausiDen-Forge — typed, audited build pipeline.")]
@@ -122,10 +126,14 @@ fn run() -> Result<ExitCode> {
         Box::new(CspPhase),
         Box::new(CspDevmodePhase),
         Box::new(ExternalAssetsPhase),
+        Box::new(A11yLandmarksPhase),
         Box::new(SeoPhase),
         Box::new(PerfBudgetPhase),
         Box::new(SriPhase),
         Box::new(PhantomButtonPhase),
+        Box::new(BackendCoveragePhase),
+        Box::new(UnbuiltRoutePhase),
+        Box::new(LabelConsistencyPhase),
         Box::new(MotionPhase),
     ];
 

@@ -8,7 +8,6 @@
 //! is non-negotiable.
 
 use std::fs;
-use std::path::Path;
 
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 

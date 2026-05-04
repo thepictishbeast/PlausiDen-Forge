@@ -121,6 +121,16 @@ fn scan_button_tags(body: &str) -> Vec<String> {
     out
 }
 
+impl PhantomButtonPhase {
+    /// Public alias for `extract_data_backends` so sibling phases
+    /// (notably `backend_coverage`) can scan UI references without
+    /// duplicating the parser. Pure function — no shared state.
+    #[must_use]
+    pub fn extract_data_backends_pub(body: &str) -> BTreeSet<String> {
+        extract_data_backends(body)
+    }
+}
+
 /// Pull every `data-backend="X"` value out of `body`.
 fn extract_data_backends(body: &str) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
