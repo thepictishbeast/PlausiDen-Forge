@@ -225,6 +225,44 @@ PY
 # `loom cms-render` is broken or absent, the build should FAIL
 # loudly so the operator notices, not silently ship stale HTML.
 # ============================================================
+# ============================================================
+# Phase: image_convert — generate AVIF + WebP siblings for every
+# JPG/PNG under static/assets/. Loom's Picture component emits
+# <picture><source type="image/avif" srcset="...avif"><source
+# type="image/webp" srcset="...webp"><img src="...jpg"></picture>
+# — without the siblings, the avif/webp source elements 404 and
+# the browser falls back to JPEG. With them, every modern visitor
+# gets a 30-60% smaller payload at first paint.
+#
+# Skip-if-fresh: the loom CLI checks mtime and skips siblings
+# already newer than source. Build cost is ~zero on no-op.
+#
+# REGRESSION-GUARD: do NOT skip this phase even when assets/ has
+# zero files. The loom CLI handles empty + missing dirs gracefully
+# (exits 0 silently); skipping the phase entirely would mean a
+# future image addition silently ships without modern formats.
+# ============================================================
+phase_image_convert() {
+  phase_header "image_convert"
+  local LOOM_BIN="${LOOM_BIN:-/home/user/cargo-target/release/loom}"
+  local ASSETS_DIR="$STATIC/assets"
+  if [ ! -d "$ASSETS_DIR" ]; then
+    echo "  ${C_DIM}skip${C_OFF}    no static/assets/ directory; nothing to convert"
+    return
+  fi
+  if [ ! -x "$LOOM_BIN" ]; then
+    finding_warn "image_convert" "loom-cli" "loom binary not at $LOOM_BIN — modern image formats not generated; siblings may be stale"
+    return
+  fi
+  if "$LOOM_BIN" image-convert --input-dir "$ASSETS_DIR" 2>/tmp/forge-image-convert-err; then
+    rm -f /tmp/forge-image-convert-err
+  else
+    local err=$(cat /tmp/forge-image-convert-err 2>/dev/null | head -1)
+    finding_strict "image_convert" "static/assets/" "image-convert failed: $err"
+    rm -f /tmp/forge-image-convert-err
+  fi
+}
+
 phase_cms_render() {
   phase_header "cms_render"
   if [ ! -d "$ROOT/cms" ]; then
@@ -1610,6 +1648,7 @@ phase_viewport_audit() {
 echo "${C_BOLD}forge build${C_OFF} ${C_DIM}— mode=$MODE — $(date -u)${C_OFF}"
 echo "${C_DIM}strict findings ALWAYS fatal; warn findings fatal in production mode${C_OFF}"
 
+phase_image_convert
 phase_cms_render
 phase_loom_sync
 phase_label_consistency
