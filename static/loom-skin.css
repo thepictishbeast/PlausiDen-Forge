@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-g04KaqKON0VfQeC5JW0ND89WgLl29BJVY2t9z0kzpCO1Fa2VTIiRYFlviFIYu5YN — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-XJs8ZIsfgebDHce1QmVmTK18zvo7/8KI7ouydpAWIXqVEZnAulOz5Q9UAWoU5k+D — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -775,6 +775,122 @@
   }
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* ============================================================ *
+   * CardFeed                                                      *
+   * ----------                                                    *
+   * Vertical list of loom-card-feed-item articles. Each card is   *
+   * a real anchor wrapping avatar + body (title, host, stats,     *
+   * tag). Used for battle feeds, vote queues, leaderboard rows.   *
+   * ============================================================ */
+  .loom-card-feed {
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-3);
+  }
+  .loom-card-feed__heading {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-xl, 1.25rem);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    line-height: 1.2;
+    margin: 0 0 var(--loom-space-2) 0;
+  }
+  .loom-card-feed-item {
+    background: var(--loom-color-surface);
+    border: var(--loom-border-component);
+    border-radius: var(--loom-radius-component);
+    overflow: hidden;
+    transition: border-color var(--loom-transition-fast, 150ms ease),
+                box-shadow var(--loom-transition-fast, 150ms ease);
+  }
+  .loom-card-feed-item:hover,
+  .loom-card-feed-item:focus-within {
+    border-color: var(--loom-color-primary, currentColor);
+    box-shadow: 0 4px 12px color-mix(in oklab, var(--loom-color-ink) 8%, transparent);
+  }
+  .loom-card-feed-item__link {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--loom-space-3);
+    padding: var(--loom-space-4);
+    color: var(--loom-color-ink);
+    text-decoration: none;
+    min-height: var(--loom-tap-min);
+  }
+  .loom-card-feed-item__link[data-invalid="true"] {
+    outline: var(--loom-stroke-strong) dashed var(--loom-color-warning, currentColor);
+    outline-offset: var(--loom-stroke-thin);
+  }
+  .loom-card-feed-item__avatar {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--loom-color-surface-muted);
+    color: var(--loom-color-ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--loom-font-base);
+    overflow: hidden;
+  }
+  .loom-card-feed-item__body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-1);
+  }
+  .loom-card-feed-item__tag {
+    align-self: flex-start;
+    padding: 2px var(--loom-space-2);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--loom-color-primary, currentColor) 12%, transparent);
+    color: var(--loom-color-primary, currentColor);
+    font-size: var(--loom-font-sm, 0.875rem);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .loom-card-feed-item__title {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-lg, 1.125rem);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    line-height: 1.3;
+    margin: 0;
+  }
+  .loom-card-feed-item__host {
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    font-size: var(--loom-font-sm, 0.875rem);
+    line-height: 1.4;
+    margin: 0;
+  }
+  .loom-card-feed-item__stats {
+    list-style: none;
+    padding: 0;
+    margin: var(--loom-space-2) 0 0 0;
+    display: flex;
+    gap: var(--loom-space-4);
+    flex-wrap: wrap;
+  }
+  .loom-card-feed-item__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .loom-card-feed-item__stat-label {
+    font-size: var(--loom-font-sm, 0.875rem);
+    color: var(--loom-color-ink-muted, var(--loom-color-ink));
+    line-height: 1.2;
+  }
+  .loom-card-feed-item__stat-value {
+    font-family: var(--loom-font-display);
+    font-size: var(--loom-font-base);
+    font-weight: 600;
+    color: var(--loom-color-ink);
+    line-height: 1.2;
   }
 
   /* ============================================================ *

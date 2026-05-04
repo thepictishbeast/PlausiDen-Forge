@@ -25,6 +25,36 @@
       "size": "comfortable"
     },
     {
+      "kind": "card_feed",
+      "heading": "Open battles",
+      "items": [
+        {
+          "avatar": { "kind": "initials", "letters": "PK" },
+          "title": "One-take parkour line — top of stairwell to ground",
+          "host": "@court_dax · 4d left",
+          "stats": [
+            { "label": "Votes", "value": "78%" },
+            { "label": "Pot",   "value": "$240" }
+          ],
+          "href": "/c/parkour-stairwell",
+          "data_backend": "view-challenge",
+          "tag": "Parkour"
+        },
+        {
+          "avatar": { "kind": "initials", "letters": "BA" },
+          "title": "Speed-cube: scrambled 3x3 in under 18 seconds",
+          "host": "@dax · 2d left",
+          "stats": [
+            { "label": "Votes", "value": "62%" },
+            { "label": "Pot",   "value": "$120" }
+          ],
+          "href": "/c/cube-sub18",
+          "data_backend": "view-challenge",
+          "tag": "Mind"
+        }
+      ]
+    },
+    {
       "kind": "group",
       "title": "How posting works",
       "body": [
