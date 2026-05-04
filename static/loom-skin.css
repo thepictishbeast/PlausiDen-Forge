@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-xmgJ8aqD/SdtY6aTz8nhCzDBhJTmoLg8BOL9vpJ4CfmXELs28oR4ZOid4bcbs68y — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
+/* SYNC-FROM-LOOM:sha384-rbpZOSIZkSJcPWf1bYA1fABimoRCJFBHEeynm/FBOz/ApBX36cL45fwVVetlbwZP — auto-synced by forge.sh --sync-loom. Edits to this file will be overwritten on next sync. */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -831,6 +831,69 @@
   }
   @media (min-width: 768px) {
     .loom-feed-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* ============================================================ *
+   * Banner                                                        *
+   * ----------                                                    *
+   * Top-of-page persistent notice. Tone-tinted background via     *
+   * data-tone (info / warn / success / danger). Optional close    *
+   * button with data-loom-banner-dismiss for client JS to wire.   *
+   * ============================================================ */
+  .loom-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--loom-space-3);
+    padding: var(--loom-space-3) var(--loom-space-4);
+    border-radius: var(--loom-radius-component);
+    border: var(--loom-border-component);
+    background: var(--loom-color-surface-muted);
+    color: var(--loom-color-ink);
+  }
+  .loom-banner[data-tone="info"] {
+    background: color-mix(in oklab, var(--loom-color-primary) 12%, var(--loom-color-surface));
+    border-color: color-mix(in oklab, var(--loom-color-primary) 30%, transparent);
+  }
+  .loom-banner[data-tone="warn"] {
+    background: color-mix(in oklab, var(--loom-color-warn) 18%, var(--loom-color-surface));
+    border-color: color-mix(in oklab, var(--loom-color-warn) 40%, transparent);
+  }
+  .loom-banner[data-tone="success"] {
+    background: color-mix(in oklab, var(--loom-color-success) 18%, var(--loom-color-surface));
+    border-color: color-mix(in oklab, var(--loom-color-success) 40%, transparent);
+  }
+  .loom-banner[data-tone="danger"] {
+    background: color-mix(in oklab, var(--loom-color-danger) 18%, var(--loom-color-surface));
+    border-color: color-mix(in oklab, var(--loom-color-danger) 40%, transparent);
+  }
+  .loom-banner__text {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: var(--loom-font-sm, 0.875rem);
+    line-height: 1.5;
+  }
+  .loom-banner__dismiss {
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: var(--loom-font-lg, 1.25rem);
+    line-height: 1;
+    cursor: pointer;
+    min-width: var(--loom-tap-min);
+    min-height: var(--loom-tap-min);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--loom-radius-sm);
+  }
+  .loom-banner__dismiss:hover,
+  .loom-banner__dismiss:focus-visible {
+    background: color-mix(in oklab, var(--loom-color-ink) 10%, transparent);
+  }
+  .loom-banner__dismiss:focus-visible {
+    outline: var(--loom-stroke-strong) solid var(--loom-color-primary);
+    outline-offset: var(--loom-stroke-thin);
   }
 
   /* ============================================================ *
