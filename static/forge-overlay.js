@@ -11,6 +11,18 @@
 (function () {
   "use strict";
 
+  // T36: matches aesthetic.js debug-flag pattern.
+  var DEBUG = (function () {
+    try { return localStorage.getItem("loom-debug") === "1"; }
+    catch (e) { return false; }
+  })();
+  function dbg() {
+    if (!DEBUG) return;
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift("[loom:forge-overlay]");
+    try { console.log.apply(console, args); } catch (e) {}
+  }
+
   function ready(fn) {
     if (document.readyState !== "loading") fn();
     else document.addEventListener("DOMContentLoaded", fn);
@@ -18,6 +30,7 @@
 
   ready(function () {
     var data = (window.__FORGE_FINDINGS__) || null;
+    dbg("ready", { hasData: !!data, mode: data && data.mode, findings: data && (data.findings || []).length });
     if (!data) return;
     if (data.mode !== "poc") return; // production: don't render overlay
 

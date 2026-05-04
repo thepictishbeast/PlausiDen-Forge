@@ -16,14 +16,33 @@
 (function () {
   "use strict";
 
+  // T36: opt-in debug logging. Enable with
+  //   localStorage.setItem("loom-debug", "1")
+  // then reload. All Loom-shipped scripts (aesthetic.js, theme.js,
+  // forge-overlay.js, cmdk.js) check this flag and emit structured
+  // [loom:<source>] log lines. Silent by default — ships clean to
+  // production without noise.
+  var DEBUG = (function () {
+    try { return localStorage.getItem("loom-debug") === "1"; }
+    catch (e) { return false; }
+  })();
+  function dbg() {
+    if (!DEBUG) return;
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift("[loom:aesthetic]");
+    try { console.log.apply(console, args); } catch (e) {}
+  }
+
   var root = document.documentElement;
   var DIMENSIONS = ["theme", "font", "density"];
+  dbg("init", { storedTheme: localStorage.getItem("loom-theme"), url: location.search });
 
   function load(dim) {
     try { return localStorage.getItem("loom-" + dim); } catch (e) { return null; }
   }
   function save(dim, value) {
     try { localStorage.setItem("loom-" + dim, value); } catch (e) {}
+    dbg("save", dim, value);
   }
   function apply(dim, value) {
     if (value) {
@@ -31,6 +50,7 @@
     } else {
       root.removeAttribute("data-" + dim);
     }
+    dbg("apply", dim, value);
     var btns = document.querySelectorAll(
       '[data-loom-aesthetic-set^="' + dim + ':"]'
     );

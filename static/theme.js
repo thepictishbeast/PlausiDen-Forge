@@ -6,8 +6,22 @@
 (function () {
   "use strict";
 
+  // T36: matches aesthetic.js debug-flag pattern. Enable with
+  //   localStorage.setItem("loom-debug", "1")
+  var DEBUG = (function () {
+    try { return localStorage.getItem("loom-debug") === "1"; }
+    catch (e) { return false; }
+  })();
+  function dbg() {
+    if (!DEBUG) return;
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift("[loom:theme]");
+    try { console.log.apply(console, args); } catch (e) {}
+  }
+
   var STORAGE_KEY = "loom-theme";
   var root = document.documentElement;
+  dbg("init", { stored: (function(){ try {return localStorage.getItem(STORAGE_KEY);} catch(e){return null;}})(), inline: root.getAttribute("data-theme") });
 
   function preferred() {
     if (window.matchMedia &&
@@ -31,6 +45,7 @@
       btns[i].setAttribute("aria-pressed", theme === "light" ? "true" : "false");
       btns[i].textContent = theme === "light" ? "Dark mode" : "Light mode";
     }
+    dbg("apply", theme);
   }
 
   // Known palette set. theme.js owns light/dark; aesthetic.js owns

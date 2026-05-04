@@ -16,6 +16,18 @@
 (function () {
   "use strict";
 
+  // T36: matches aesthetic.js debug-flag pattern.
+  var DEBUG = (function () {
+    try { return localStorage.getItem("loom-debug") === "1"; }
+    catch (e) { return false; }
+  })();
+  function dbg() {
+    if (!DEBUG) return;
+    var args = Array.prototype.slice.call(arguments);
+    args.unshift("[loom:cmdk]");
+    try { console.log.apply(console, args); } catch (e) {}
+  }
+
   function ready(fn) {
     if (document.readyState !== "loading") fn();
     else document.addEventListener("DOMContentLoaded", fn);
@@ -53,6 +65,7 @@
 
     function fire(option) {
       var action = (option.getAttribute("data-action") || "").trim();
+      dbg("fire", action);
       dialog.close();
       if (action.indexOf("goto:") === 0) {
         window.location.href = action.slice(5);
