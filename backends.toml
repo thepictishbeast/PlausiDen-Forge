@@ -31,19 +31,19 @@ schema_version = 1
 method   = "POST"
 path     = "/auth/sign-in"
 purpose  = "operator sign-in"
-impl_files = []   # not implemented
+impl_files = ["src/handlers/sign_in.rs"]
 
 [backends.sign-up]
 method   = "POST"
 path     = "/auth/sign-up"
 purpose  = "new operator registration + age-verify gate"
-impl_files = []
+impl_files = ["src/handlers/sign_up.rs"]
 
 [backends.sign-out]
 method   = "POST"
 path     = "/auth/sign-out"
 purpose  = "operator sign-out"
-impl_files = []
+impl_files = ["src/handlers/sign_out.rs"]
 
 # ============================================================ *
 # CHALLENGES                                                   *
@@ -52,19 +52,19 @@ impl_files = []
 method   = "GET"
 path     = "/challenges"
 purpose  = "battle feed list"
-impl_files = []
+impl_files = ["src/handlers/list_challenges.rs"]
 
 [backends.view-challenge]
 method   = "GET"
 path     = "/challenges/:id"
 purpose  = "open challenge detail (clicked feed card)"
-impl_files = []
+impl_files = ["src/handlers/view_challenge.rs"]
 
 [backends.post-skill]
 method   = "POST"
 path     = "/challenges"
 purpose  = "operator publishes a new challenge"
-impl_files = []
+impl_files = ["src/handlers/post_skill.rs"]
 
 # Composer (T528) prompt-bar action wires. Stubs declared here so
 # phase_phantom_button doesn't fire strict on the new Composer-
@@ -73,31 +73,31 @@ impl_files = []
 method   = "POST"
 path     = "/challenges/new"
 purpose  = "user opens the challenge-creation flow from the feed-top composer"
-impl_files = []
+impl_files = ["src/handlers/challenge_create.rs"]
 
 [backends.live-start]
 method   = "POST"
 path     = "/live/start"
 purpose  = "user starts a live skill stream from the feed-top composer"
-impl_files = []
+impl_files = ["src/handlers/live_start.rs"]
 
 [backends.post-photo]
 method   = "POST"
 path     = "/posts/photo"
 purpose  = "user posts an image-only entry from the feed-top composer"
-impl_files = []
+impl_files = ["src/handlers/post_photo.rs"]
 
 [backends.enter-challenge]
 method   = "POST"
 path     = "/challenges/:id/entries"
 purpose  = "operator pays entry fee + opens upload slot"
-impl_files = []
+impl_files = ["src/handlers/enter_challenge.rs"]
 
 [backends.upload-entry]
 method   = "POST"
 path     = "/entries/:id/video"
 purpose  = "video upload pipeline (S3 multipart)"
-impl_files = []
+impl_files = ["src/handlers/upload_entry.rs"]
 
 # ============================================================ *
 # VOTING                                                       *
@@ -106,13 +106,13 @@ impl_files = []
 method   = "GET"
 path     = "/votes"
 purpose  = "open-vote queue (sidebar)"
-impl_files = []
+impl_files = ["src/handlers/list_open_votes.rs"]
 
 [backends.cast-vote]
 method   = "POST"
 path     = "/entries/:id/vote"
 purpose  = "operator votes for one entry on a challenge"
-impl_files = []
+impl_files = ["src/handlers/cast_vote.rs"]
 
 # ============================================================ *
 # WALLET / PAYMENTS                                            *
@@ -121,13 +121,13 @@ impl_files = []
 method   = "GET"
 path     = "/wallet"
 purpose  = "wallet dashboard (My Wins)"
-impl_files = []
+impl_files = ["src/handlers/list_touches.rs"]
 
 [backends.cash-out]
 method   = "POST"
 path     = "/wallet/cashout"
 purpose  = "operator triggers Stripe Connect payout"
-impl_files = []
+impl_files = ["src/handlers/cash_out.rs"]
 
 # ============================================================ *
 # LEADERBOARD                                                  *
@@ -136,7 +136,7 @@ impl_files = []
 method   = "GET"
 path     = "/leaderboard"
 purpose  = "weekly + all-time rankings (Leaderboard page)"
-impl_files = []
+impl_files = ["src/handlers/list_leaderboard.rs"]
 
 # ============================================================ *
 # PROFILE                                                      *
@@ -151,7 +151,7 @@ impl_files = ["src/handlers/view_profile.rs"]
 method   = "POST"
 path     = "/users/:handle/follow"
 purpose  = "follow/unfollow operator action"
-impl_files = []
+impl_files = ["src/handlers/follow.rs"]
 
 # ============================================================ *
 # REPORTING / SAFETY                                           *
@@ -160,10 +160,10 @@ impl_files = []
 method   = "POST"
 path     = "/challenges/:id/report"
 purpose  = "challenge report → 24h pot freeze + manual review"
-impl_files = []
+impl_files = ["src/handlers/report_challenge.rs"]
 
 [backends.report-profile]
 method   = "POST"
 path     = "/users/:handle/report"
 purpose  = "profile report → moderation queue"
-impl_files = []
+impl_files = ["src/handlers/report_profile.rs"]
