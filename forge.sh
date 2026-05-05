@@ -1098,16 +1098,14 @@ phase_phantom_button() {
       finding_warn "phantom_button" "$name" "$unwired button(s) with no data-backend (UI not declared in backends.toml)"
       hits=$((hits + 1))
     fi
-    # Buttons WITH data-backend → verify the backend is declared.
-    local refs
-    refs=$(grep -oE 'data-backend="[a-z][a-z0-9-]*"' "$f" \
-           | sed -E 's/data-backend="([a-z][a-z0-9-]*)"/\1/' | sort -u)
-    for r in $refs; do
-      if ! echo "$declared" | grep -qx "$r"; then
-        finding_strict "phantom_button" "$name" "data-backend=\"$r\" not declared in backends.toml — broken UI"
-        hits=$((hits + 1))
-      fi
-    done
+    # T17 (2026-05-04): undeclared-data-backend check moved to
+    # phase_backend_coverage. The check here was file-scoped (grep
+    # whole HTML), so it duplicated backend_coverage's signal AND
+    # surfaced the rendered HTML path instead of the source cms/*.json
+    # — operators got two strict findings per bug, neither of which
+    # pointed at the editable file. backend_coverage is now the
+    # canonical site for this; phantom_button stays narrow to its
+    # name (button without any data-backend wiring).
   done
   [ $hits -eq 0 ] && echo "  ${C_GREEN}ok${C_OFF}      every interactive has a wired backend"
 }
@@ -1126,7 +1124,7 @@ phase_backend_coverage() {
   declared=$(grep -oE '^\[backends\.[a-z][a-z0-9-]*\]' "$ROOT/backends.toml" \
              | sed -E 's/^\[backends\.([a-z][a-z0-9-]*)\]$/\1/' | sort -u)
   local total=$(echo "$declared" | wc -l)
-  local used=0; local unused=0; local stubs=0
+  local used=0; local unused=0; local stubs=0; local undeclared=0
   local all_refs
   all_refs=$(grep -hoE 'data-backend="[a-z][a-z0-9-]*"' "$STATIC"/*.html 2>/dev/null \
              | sed -E 's/data-backend="([a-z][a-z0-9-]*)"/\1/' | sort -u)
@@ -1144,7 +1142,36 @@ phase_backend_coverage() {
       finding_warn "backend_coverage" "backends.toml" "[$d] declared but impl_files is empty (PARTIAL — stub)"
     fi
   done
-  echo "  ${C_DIM}declared: $total · UI-referenced: $used · unused: $unused · stubs: $stubs${C_OFF}"
+  # T17 (2026-05-04): inverse direction — UI references that do NOT
+  # appear in backends.toml. A typo'd data_backend in cms/*.json
+  # (e.g. "list-challanges") renders as a UI-side data-backend
+  # attribute that points at nothing — fetch will 404 at runtime
+  # and the page silently breaks. Strict, because the only
+  # interpretations are (a) a typo or (b) an unfinished refactor;
+  # both are ship-blockers.
+  #
+  # REGRESSION-GUARD: do NOT downgrade to warn. The prior version
+  # of this phase only walked declared keys, so the typo class was
+  # silent — we already lost time chasing one in the past
+  # (challenge.json once shipped "list-challange"). Strict is the
+  # right gate.
+  for ref in $all_refs; do
+    if ! echo "$declared" | grep -qx "$ref"; then
+      undeclared=$((undeclared + 1))
+      # Find the source files for the operator. Prefer cms/*.json
+      # (the editable source); fall back to the rendered HTML.
+      local src
+      src=$(grep -lE "\"data_backend\":\\s*\"$ref\"" "$ROOT/cms"/*.json 2>/dev/null \
+            | sed -E "s|^$ROOT/||" | tr '\n' ',' | sed 's/,$//')
+      if [ -z "$src" ]; then
+        src=$(grep -lE "data-backend=\"$ref\"" "$STATIC"/*.html 2>/dev/null \
+              | sed -E "s|^$ROOT/||" | tr '\n' ',' | sed 's/,$//')
+      fi
+      finding_strict "backend_coverage" "${src:-cms/}" \
+        "[$ref] UI references undeclared backend key — typo or missing entry in backends.toml. Will 404 at runtime."
+    fi
+  done
+  echo "  ${C_DIM}declared: $total · UI-referenced: $used · unused: $unused · undeclared-refs: $undeclared · stubs: $stubs${C_OFF}"
 }
 
 # ============================================================
