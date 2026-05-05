@@ -31,6 +31,9 @@ pub struct LabelConsistencyPhase;
 /// for grouping + opt-out decisions.
 struct ElementHit {
     label: String,
+    /// Source file the element came from. Captured for future
+    /// finding-enrichment ("seen in A, B, C") — currently unread.
+    #[allow(dead_code)]
     file: String,
     has_poly_optout: bool,
 }
