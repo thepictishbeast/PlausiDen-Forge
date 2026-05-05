@@ -2,7 +2,7 @@
 window.__FORGE_FINDINGS__ = {
   "mode": "poc",
   "strict_count": 0,
-  "warn_count": 101,
+  "warn_count": 120,
   "findings": [
     {"severity":"WARN","phase":"seo","path":"about.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
@@ -80,7 +80,7 @@ window.__FORGE_FINDINGS__ = {
     ,
     {"severity":"WARN","phase":"perf_budget","path":"loom-skin.css","message":"89K CSS > 64K budget — split into per-route bundles"}
     ,
-    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"14K JS > 8.0K budget — code-split or tree-shake"}
+    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"17K JS > 8.0K budget — code-split or tree-shake"}
     ,
     {"severity":"WARN","phase":"perf_budget","path":"forge-overlay.js","message":"8.4K JS > 8.0K budget — code-split or tree-shake"}
     ,
@@ -88,25 +88,63 @@ window.__FORGE_FINDINGS__ = {
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[cash-out] declared but no UI references it (dead spec)"}
     ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[cash-out] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[cast-vote] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[cast-vote] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[challenge-create] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[enter-challenge] declared but impl_files is empty (PARTIAL — stub)"}
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[follow] declared but no UI references it (dead spec)"}
     ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[follow] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-challenges] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-leaderboard] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-open-votes] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-open-votes] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-touches] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[live-start] declared but impl_files is empty (PARTIAL — stub)"}
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[post-photo] declared but no UI references it (dead spec)"}
     ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[post-photo] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[post-skill] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[report-challenge] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[report-challenge] declared but impl_files is empty (PARTIAL — stub)"}
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[report-profile] declared but no UI references it (dead spec)"}
     ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[report-profile] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-in] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-in] declared but impl_files is empty (PARTIAL — stub)"}
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-out] declared but no UI references it (dead spec)"}
     ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-out] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-up] declared but no UI references it (dead spec)"}
     ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[sign-up] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[upload-entry] declared but no UI references it (dead spec)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[upload-entry] declared but impl_files is empty (PARTIAL — stub)"}
+    ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[view-challenge] declared but impl_files is empty (PARTIAL — stub)"}
     ,
     {"severity":"WARN","phase":"unbuilt_route","path":"challenge.html","message":"href=\"/c/half-court-arc/e/arc_kade\" — no built page at c/half-court-arc/e/arc_kade"}
     ,
