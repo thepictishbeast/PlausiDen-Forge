@@ -145,7 +145,7 @@ impl_files = []
 method   = "GET"
 path     = "/users/:handle"
 purpose  = "public profile page"
-impl_files = []
+impl_files = ["src/handlers/view_profile.rs"]
 
 [backends.follow]
 method   = "POST"

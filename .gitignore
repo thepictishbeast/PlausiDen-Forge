@@ -5,3 +5,13 @@ static/*.br
 # project convention) but ignore in case anyone overrides.
 target/
 **/*.rs.bk
+
+# Forge build reports are time-stamped artefacts; keep latest.json
+# (the canonical pointer) but ignore the per-run snapshots.
+reports/build-*.json
+reports/debug-*.log
+reports/contrast.json
+
+# Python helpers cache.
+__pycache__/
+**/__pycache__/

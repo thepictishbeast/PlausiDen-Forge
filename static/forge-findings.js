@@ -2,99 +2,99 @@
 window.__FORGE_FINDINGS__ = {
   "mode": "poc",
   "strict_count": 0,
-  "warn_count": 54,
+  "warn_count": 101,
   "findings": [
-    {"severity":"WARN","phase":"seo","path":"challenge.html","message":"missing <meta name=\"description\">"}
+    {"severity":"WARN","phase":"seo","path":"about.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
+    ,
+    {"severity":"WARN","phase":"seo","path":"about.html","message":"missing Twitter Card tags"}
+    ,
+    {"severity":"WARN","phase":"seo","path":"about.html","message":"no JSON-LD structured data"}
+    ,
+    {"severity":"WARN","phase":"seo","path":"about.html","message":"title too short (16 chars; aim 30-60 for SERP)"}
     ,
     {"severity":"WARN","phase":"seo","path":"challenge.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
     {"severity":"WARN","phase":"seo","path":"challenge.html","message":"missing Twitter Card tags"}
     ,
-    {"severity":"WARN","phase":"seo","path":"challenge.html","message":"missing <link rel=\"canonical\">"}
-    ,
     {"severity":"WARN","phase":"seo","path":"challenge.html","message":"no JSON-LD structured data"}
+    ,
+    {"severity":"WARN","phase":"seo","path":"compose.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
+    ,
+    {"severity":"WARN","phase":"seo","path":"compose.html","message":"missing Twitter Card tags"}
+    ,
+    {"severity":"WARN","phase":"seo","path":"compose.html","message":"no JSON-LD structured data"}
     ,
     {"severity":"WARN","phase":"seo","path":"index.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
     {"severity":"WARN","phase":"seo","path":"index.html","message":"missing Twitter Card tags"}
     ,
-    {"severity":"WARN","phase":"seo","path":"index.html","message":"missing <link rel=\"canonical\">"}
-    ,
     {"severity":"WARN","phase":"seo","path":"index.html","message":"no JSON-LD structured data"}
-    ,
-    {"severity":"WARN","phase":"seo","path":"leaderboard.html","message":"missing <meta name=\"description\">"}
     ,
     {"severity":"WARN","phase":"seo","path":"leaderboard.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
     {"severity":"WARN","phase":"seo","path":"leaderboard.html","message":"missing Twitter Card tags"}
     ,
-    {"severity":"WARN","phase":"seo","path":"leaderboard.html","message":"missing <link rel=\"canonical\">"}
-    ,
     {"severity":"WARN","phase":"seo","path":"leaderboard.html","message":"no JSON-LD structured data"}
-    ,
-    {"severity":"WARN","phase":"seo","path":"my-wins.html","message":"missing <meta name=\"description\">"}
     ,
     {"severity":"WARN","phase":"seo","path":"my-wins.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
     {"severity":"WARN","phase":"seo","path":"my-wins.html","message":"missing Twitter Card tags"}
     ,
-    {"severity":"WARN","phase":"seo","path":"my-wins.html","message":"missing <link rel=\"canonical\">"}
-    ,
     {"severity":"WARN","phase":"seo","path":"my-wins.html","message":"no JSON-LD structured data"}
-    ,
-    {"severity":"WARN","phase":"seo","path":"post-skill.html","message":"missing <meta name=\"description\">"}
     ,
     {"severity":"WARN","phase":"seo","path":"post-skill.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
     {"severity":"WARN","phase":"seo","path":"post-skill.html","message":"missing Twitter Card tags"}
     ,
-    {"severity":"WARN","phase":"seo","path":"post-skill.html","message":"missing <link rel=\"canonical\">"}
-    ,
     {"severity":"WARN","phase":"seo","path":"post-skill.html","message":"no JSON-LD structured data"}
-    ,
-    {"severity":"WARN","phase":"seo","path":"profile.html","message":"missing <meta name=\"description\">"}
     ,
     {"severity":"WARN","phase":"seo","path":"profile.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
     {"severity":"WARN","phase":"seo","path":"profile.html","message":"missing Twitter Card tags"}
     ,
-    {"severity":"WARN","phase":"seo","path":"profile.html","message":"missing <link rel=\"canonical\">"}
-    ,
     {"severity":"WARN","phase":"seo","path":"profile.html","message":"no JSON-LD structured data"}
     ,
-    {"severity":"WARN","phase":"seo","path":"sitemap.xml","message":"missing sitemap.xml — search-engine crawl coverage suffers"}
+    {"severity":"WARN","phase":"seo","path":"votes.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
-    {"severity":"WARN","phase":"seo","path":"robots.txt","message":"missing robots.txt — crawler hint missing"}
+    {"severity":"WARN","phase":"seo","path":"votes.html","message":"missing Twitter Card tags"}
     ,
-    {"severity":"WARN","phase":"perf_budget","path":"loom-skin.css","message":"51K CSS > 50K budget — split into per-route bundles"}
+    {"severity":"WARN","phase":"seo","path":"votes.html","message":"no JSON-LD structured data"}
     ,
-    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"9.2K JS > 8.0K budget — code-split or tree-shake"}
+    {"severity":"WARN","phase":"perf_budget","path":"about.html","message":"28K HTML > 20K budget — audit blocks / split route"}
     ,
-    {"severity":"WARN","phase":"phantom_button","path":"challenge.html","message":"7 button(s) with no data-backend (UI not declared in backends.toml)"}
+    {"severity":"WARN","phase":"perf_budget","path":"challenge.html","message":"30K HTML > 20K budget — audit blocks / split route"}
     ,
-    {"severity":"WARN","phase":"phantom_button","path":"index.html","message":"19 button(s) with no data-backend (UI not declared in backends.toml)"}
+    {"severity":"WARN","phase":"perf_budget","path":"compose.html","message":"31K HTML > 20K budget — audit blocks / split route"}
     ,
-    {"severity":"WARN","phase":"phantom_button","path":"leaderboard.html","message":"8 button(s) with no data-backend (UI not declared in backends.toml)"}
+    {"severity":"WARN","phase":"perf_budget","path":"index.html","message":"37K HTML > 20K budget — audit blocks / split route"}
     ,
-    {"severity":"WARN","phase":"phantom_button","path":"my-wins.html","message":"7 button(s) with no data-backend (UI not declared in backends.toml)"}
+    {"severity":"WARN","phase":"perf_budget","path":"leaderboard.html","message":"31K HTML > 20K budget — audit blocks / split route"}
     ,
-    {"severity":"WARN","phase":"phantom_button","path":"post-skill.html","message":"4 button(s) with no data-backend (UI not declared in backends.toml)"}
+    {"severity":"WARN","phase":"perf_budget","path":"my-wins.html","message":"28K HTML > 20K budget — audit blocks / split route"}
     ,
-    {"severity":"WARN","phase":"phantom_button","path":"profile.html","message":"8 button(s) with no data-backend (UI not declared in backends.toml)"}
+    {"severity":"WARN","phase":"perf_budget","path":"post-skill.html","message":"30K HTML > 20K budget — audit blocks / split route"}
+    ,
+    {"severity":"WARN","phase":"perf_budget","path":"profile.html","message":"30K HTML > 20K budget — audit blocks / split route"}
+    ,
+    {"severity":"WARN","phase":"perf_budget","path":"votes.html","message":"29K HTML > 20K budget — audit blocks / split route"}
+    ,
+    {"severity":"WARN","phase":"perf_budget","path":"loom-skin.css","message":"89K CSS > 64K budget — split into per-route bundles"}
+    ,
+    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"14K JS > 8.0K budget — code-split or tree-shake"}
+    ,
+    {"severity":"WARN","phase":"perf_budget","path":"forge-overlay.js","message":"8.4K JS > 8.0K budget — code-split or tree-shake"}
+    ,
+    {"severity":"WARN","phase":"phantom_button","path":"index.html","message":"1 button(s) with no data-backend (UI not declared in backends.toml)"}
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[cash-out] declared but no UI references it (dead spec)"}
     ,
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[cast-vote] declared but no UI references it (dead spec)"}
+    ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[follow] declared but no UI references it (dead spec)"}
-    ,
-    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-challenges] declared but no UI references it (dead spec)"}
-    ,
-    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-leaderboard] declared but no UI references it (dead spec)"}
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-open-votes] declared but no UI references it (dead spec)"}
     ,
-    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[list-touches] declared but no UI references it (dead spec)"}
-    ,
-    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[post-skill] declared but no UI references it (dead spec)"}
+    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[post-photo] declared but no UI references it (dead spec)"}
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[report-challenge] declared but no UI references it (dead spec)"}
     ,
@@ -108,8 +108,102 @@ window.__FORGE_FINDINGS__ = {
     ,
     {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[upload-entry] declared but no UI references it (dead spec)"}
     ,
-    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[view-challenge] declared but no UI references it (dead spec)"}
+    {"severity":"WARN","phase":"unbuilt_route","path":"challenge.html","message":"href=\"/c/half-court-arc/e/arc_kade\" — no built page at c/half-court-arc/e/arc_kade"}
     ,
-    {"severity":"WARN","phase":"backend_coverage","path":"backends.toml","message":"[view-profile] declared but no UI references it (dead spec)"}
+    {"severity":"WARN","phase":"unbuilt_route","path":"challenge.html","message":"href=\"/c/half-court-arc/e/court_dax\" — no built page at c/half-court-arc/e/court_dax"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"challenge.html","message":"href=\"/c/half-court-arc/e/hooper_jen\" — no built page at c/half-court-arc/e/hooper_jen"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"challenge.html","message":"href=\"/c/half-court-arc/enter\" — no built page at c/half-court-arc/enter"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"compose.html","message":"href=\"/c/cube-sub18\" — no built page at c/cube-sub18"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"compose.html","message":"href=\"/c/parkour-stairwell\" — no built page at c/parkour-stairwell"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"compose.html","message":"href=\"/post-skill\" — no built page at post-skill"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/c/9dart-501\" — no built page at c/9dart-501"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/c/cube-sub18\" — no built page at c/cube-sub18"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/c/half-court-arc\" — no built page at c/half-court-arc"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/c/kickflip-5stair\" — no built page at c/kickflip-5stair"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/c/latte-swan\" — no built page at c/latte-swan"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/c/parkour-stairwell\" — no built page at c/parkour-stairwell"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/c/pool-clear-9lori\" — no built page at c/pool-clear-9lori"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/post-skill\" — no built page at post-skill"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/u/9ball_lori\" — no built page at u/9ball_lori"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/u/court_dax\" — no built page at u/court_dax"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"index.html","message":"href=\"/u/vault_kit\" — no built page at u/vault_kit"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"leaderboard.html","message":"href=\"/u/9ball_lori\" — no built page at u/9ball_lori"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"leaderboard.html","message":"href=\"/u/brew_pia\" — no built page at u/brew_pia"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"leaderboard.html","message":"href=\"/u/court_dax\" — no built page at u/court_dax"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"leaderboard.html","message":"href=\"/u/oche_riv\" — no built page at u/oche_riv"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"leaderboard.html","message":"href=\"/u/vault_kit\" — no built page at u/vault_kit"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"my-wins.html","message":"href=\"/c/half-court-arc\" — no built page at c/half-court-arc"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"my-wins.html","message":"href=\"/c/pool-2-innings\" — no built page at c/pool-2-innings"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"profile.html","message":"href=\"/c/3pt-streak-5\" — no built page at c/3pt-streak-5"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"profile.html","message":"href=\"/c/half-court-arc\" — no built page at c/half-court-arc"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"profile.html","message":"href=\"/c/nolook-ft-10\" — no built page at c/nolook-ft-10"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"votes.html","message":"href=\"/c/9dart-501\" — no built page at c/9dart-501"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"votes.html","message":"href=\"/c/kickflip-5stair\" — no built page at c/kickflip-5stair"}
+    ,
+    {"severity":"WARN","phase":"unbuilt_route","path":"votes.html","message":"href=\"/c/pool-clear-9lori\" — no built page at c/pool-clear-9lori"}
+    ,
+    {"severity":"WARN","phase":"sri","path":"about.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"about.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"challenge.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"challenge.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"compose.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"compose.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"index.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"index.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"leaderboard.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"leaderboard.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"my-wins.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"my-wins.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"post-skill.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"post-skill.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"profile.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"profile.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"votes.html","message":"link src/href=/loom-skin.css missing integrity="}
+    ,
+    {"severity":"WARN","phase":"sri","path":"votes.html","message":"link src/href=/loom-skin.css missing integrity="}
   ]
 };
