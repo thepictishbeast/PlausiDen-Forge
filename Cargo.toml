@@ -61,9 +61,6 @@ base64 = "0.22"
 # CLI:
 clap = { version = "4", features = ["derive", "env"] }
 
-# Filesystem walking:
-walkdir = "2"
-
 # Config + serialization:
 toml = "0.8"
 serde = { version = "1", features = ["derive"] }
