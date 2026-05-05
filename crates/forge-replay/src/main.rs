@@ -264,7 +264,7 @@ fn render_slow_hotspots(slow_log: &Path) -> Result<()> {
     for (url, mean, max, count) in summarized.iter().take(5) {
         println!("  {:<40} {:>8.0} {:>8} {:>6}", url, mean, max, count);
     }
-    summarized.sort_by(|a, b| b.2.cmp(&a.2));
+    summarized.sort_by_key(|s| std::cmp::Reverse(s.2));
     println!("\n  top 5 by max ms:");
     println!(
         "  {:<40} {:>8} {:>8} {:>6}",
