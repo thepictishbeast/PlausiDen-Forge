@@ -1125,6 +1125,12 @@ phase_backend_coverage() {
              | sed -E 's/^\[backends\.([a-z][a-z0-9-]*)\]$/\1/' | sort -u)
   local total=$(echo "$declared" | wc -l)
   local used=0; local unused=0; local stubs=0; local undeclared=0
+  local missing_files=0
+  # T18 (2026-05-04): default crate root for impl_files resolution.
+  # Override with FORGE_BACKEND_CRATE_ROOT for repos that ship the
+  # handler crate elsewhere. Default matches the convention
+  # established by T15 (loom backend-stub --crate-dir server-stub).
+  local crate_root="${FORGE_BACKEND_CRATE_ROOT:-$ROOT/server-stub}"
   local all_refs
   all_refs=$(grep -hoE 'data-backend="[a-z][a-z0-9-]*"' "$STATIC"/*.html 2>/dev/null \
              | sed -E 's/data-backend="([a-z][a-z0-9-]*)"/\1/' | sort -u)
@@ -1135,11 +1141,44 @@ phase_backend_coverage() {
       unused=$((unused + 1))
       finding_warn "backend_coverage" "backends.toml" "[$d] declared but no UI references it (dead spec)"
     fi
-    # Stub detection: impl_files = []
-    if grep -A2 "^\[backends\.$d\]" "$ROOT/backends.toml" \
-       | grep -qE 'impl_files\s*=\s*\[\s*\]'; then
+    # T18: extract the impl_files line for this entry. Schema is:
+    #   [backends.X]
+    #   method   = "..."
+    #   path     = "..."
+    #   purpose  = "..."
+    #   impl_files = [...]
+    # impl_files lives 4 lines after the header; prior `grep -A2`
+    # (REGRESSION-GUARD: do NOT shrink) silently missed every
+    # entry — `loom backend-list` reported 19 stubs while this
+    # phase reported 0. Use -A8 to absorb future schema growth
+    # (e.g. an `auth_required = true` line).
+    local impl_line
+    impl_line=$(grep -A8 "^\[backends\.$d\]" "$ROOT/backends.toml" \
+                | grep -E '^\s*impl_files\s*=' \
+                | head -n1)
+    if echo "$impl_line" | grep -qE 'impl_files\s*=\s*\[\s*\]'; then
       stubs=$((stubs + 1))
       finding_warn "backend_coverage" "backends.toml" "[$d] declared but impl_files is empty (PARTIAL — stub)"
+    elif [ -n "$impl_line" ]; then
+      # T18: validate each path inside impl_files = [...] exists on
+      # disk. A stale entry (handler deleted, backends.toml not
+      # updated) leaves backend-list reporting IMPL while the file
+      # is gone — type signatures lie, runtime breaks. Strict.
+      #
+      # REGRESSION-GUARD: paths are extracted with a simple
+      # double-quoted-string match — if the schema ever changes
+      # to single-quotes or bare strings, this will silently miss
+      # them. Re-test after any schema change.
+      local paths
+      paths=$(echo "$impl_line" | grep -oE '"[^"]+"' | sed -E 's/^"(.*)"$/\1/')
+      for p in $paths; do
+        local abs="$crate_root/$p"
+        if [ ! -f "$abs" ]; then
+          missing_files=$((missing_files + 1))
+          finding_strict "backend_coverage" "backends.toml" \
+            "[$d] impl_files lists \"$p\" but $abs does not exist — stale entry; either restore the handler or clear impl_files."
+        fi
+      done
     fi
   done
   # T17 (2026-05-04): inverse direction — UI references that do NOT
@@ -1171,7 +1210,7 @@ phase_backend_coverage() {
         "[$ref] UI references undeclared backend key — typo or missing entry in backends.toml. Will 404 at runtime."
     fi
   done
-  echo "  ${C_DIM}declared: $total · UI-referenced: $used · unused: $unused · undeclared-refs: $undeclared · stubs: $stubs${C_OFF}"
+  echo "  ${C_DIM}declared: $total · UI-referenced: $used · unused: $unused · undeclared-refs: $undeclared · stubs: $stubs · missing-impl-files: $missing_files${C_OFF}"
 }
 
 # ============================================================
