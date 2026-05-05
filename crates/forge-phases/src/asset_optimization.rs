@@ -79,23 +79,19 @@ impl Phase for AssetOptimizationPhase {
                         ));
                     }
                 }
-                "jpg" | "jpeg" => {
-                    if !has_modern_sibling(path, &path_set) {
-                        findings.push(Finding::warn(
-                            self.name(),
-                            name,
-                            "JPG without webp/avif sibling — modern browsers fetch faster format via <picture>",
-                        ));
-                    }
+                "jpg" | "jpeg" if !has_modern_sibling(path, &path_set) => {
+                    findings.push(Finding::warn(
+                        self.name(),
+                        name,
+                        "JPG without webp/avif sibling — modern browsers fetch faster format via <picture>",
+                    ));
                 }
-                "mp4" => {
-                    if !has_sibling(path, &path_set, "webm") {
-                        findings.push(Finding::warn(
-                            self.name(),
-                            name,
-                            "MP4 without webm sibling — Firefox / older clients fetch better via <video><source>",
-                        ));
-                    }
+                "mp4" if !has_sibling(path, &path_set, "webm") => {
+                    findings.push(Finding::warn(
+                        self.name(),
+                        name,
+                        "MP4 without webm sibling — Firefox / older clients fetch better via <video><source>",
+                    ));
                 }
                 "wav" => {
                     findings.push(Finding::warn(
