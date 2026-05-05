@@ -80,7 +80,7 @@ window.__FORGE_FINDINGS__ = {
     ,
     {"severity":"WARN","phase":"perf_budget","path":"loom-skin.css","message":"89K CSS > 64K budget — split into per-route bundles"}
     ,
-    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"17K JS > 8.0K budget — code-split or tree-shake"}
+    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"14K JS > 8.0K budget — code-split or tree-shake"}
     ,
     {"severity":"WARN","phase":"perf_budget","path":"forge-overlay.js","message":"8.4K JS > 8.0K budget — code-split or tree-shake"}
     ,

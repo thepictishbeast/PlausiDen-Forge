@@ -610,6 +610,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "server-stub"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "tokio",
+]
+
+[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"

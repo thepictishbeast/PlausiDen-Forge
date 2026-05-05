@@ -1,0 +1,31 @@
+[package]
+name = "server-stub"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Skillshots backend handler scaffolds, one module per backends.toml entry. Bodies are placeholders (Ok(Response { ok: true })); real implementations land per-handler when each backend is wired. Generated and maintained by `loom backend-stub` / `loom backend-stub-all`."
+
+[dependencies]
+# Handler scaffolds (T15) declare typed Request/Response with
+# #[serde(deny_unknown_fields)] and bubble errors through anyhow.
+serde = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+# Each scaffold ships with a #[tokio::test] placeholder. tokio
+# stays at dev-only — production handlers can opt into it via
+# their own [dependencies] when an async runtime is needed.
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[lints.rust]
+# AVP-2 Tier 1: deny unsafe outside annotated SAFETY blocks.
+unsafe_code = "deny"
+unused_must_use = "deny"
+
+[lints.clippy]
+# AVP-2 gate: no unwrap/expect in lib code without justification.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
