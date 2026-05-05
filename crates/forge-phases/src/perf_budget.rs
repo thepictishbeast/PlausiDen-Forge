@@ -18,10 +18,34 @@ use std::path::Path;
 
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 
-/// Default budgets.
-const BUDGET_HTML: u64 = 20 * 1024;
-const BUDGET_CSS: u64 = 64 * 1024;
-const BUDGET_JS: u64 = 8 * 1024;
+/// Per-asset-class scan parameters.
+struct AssetClass {
+    ext: &'static str,
+    budget: u64,
+    label: &'static str,
+    hint: &'static str,
+}
+
+const CLASSES: &[AssetClass] = &[
+    AssetClass {
+        ext: "html",
+        budget: 20 * 1024,
+        label: "HTML",
+        hint: "audit blocks / split route",
+    },
+    AssetClass {
+        ext: "css",
+        budget: 64 * 1024,
+        label: "CSS",
+        hint: "split into per-route bundles",
+    },
+    AssetClass {
+        ext: "js",
+        budget: 8 * 1024,
+        label: "JS",
+        hint: "code-split or tree-shake",
+    },
+];
 
 /// `perf_budget` phase.
 #[derive(Debug, Default)]
@@ -35,36 +59,15 @@ impl Phase for PerfBudgetPhase {
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
         let mut findings = Vec::new();
         let mut total: u64 = 0;
-        check_class(
-            &ctx.static_dir,
-            "html",
-            BUDGET_HTML,
-            "HTML",
-            "audit blocks / split route",
-            &mut findings,
-            &mut total,
-            self.name(),
-        )?;
-        check_class(
-            &ctx.static_dir,
-            "css",
-            BUDGET_CSS,
-            "CSS",
-            "split into per-route bundles",
-            &mut findings,
-            &mut total,
-            self.name(),
-        )?;
-        check_class(
-            &ctx.static_dir,
-            "js",
-            BUDGET_JS,
-            "JS",
-            "code-split or tree-shake",
-            &mut findings,
-            &mut total,
-            self.name(),
-        )?;
+        for class in CLASSES {
+            check_class(
+                &ctx.static_dir,
+                class,
+                &mut findings,
+                &mut total,
+                self.name(),
+            )?;
+        }
         // Project-wide info (not a finding).
         // BUG ASSUMPTION: total here only includes top-level
         // static/*.html|css|js — not nested directories. Forge
@@ -78,14 +81,17 @@ impl Phase for PerfBudgetPhase {
 /// Walk one extension class and emit findings for over-budget files.
 fn check_class(
     dir: &Path,
-    ext: &str,
-    budget: u64,
-    label: &str,
-    hint: &str,
+    class: &AssetClass,
     findings: &mut Vec<Finding>,
     total: &mut u64,
     phase: &str,
 ) -> Result<(), BuildError> {
+    let AssetClass {
+        ext,
+        budget,
+        label,
+        hint,
+    } = *class;
     let entries = match fs::read_dir(dir) {
         Ok(it) => it,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
