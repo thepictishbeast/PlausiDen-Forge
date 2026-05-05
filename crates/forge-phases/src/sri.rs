@@ -97,23 +97,10 @@ struct AssetTag {
 /// PoC. forge-html parser will replace this in T11.X.
 fn scan_assets(body: &str) -> Vec<AssetTag> {
     let mut out = Vec::new();
-    scan_tag(body, "<link", "href=\"", "link", &mut out);
-    scan_tag(body, "<script", "src=\"", "script", &mut out);
-    // Keep only stylesheet-link tags (filter rel attribute).
-    out.retain(|t| {
-        t.kind != "link" || {
-            // Find original opening tag by re-scanning; cheap because tag count is small.
-            let needle = format!("href=\"{}\"", t.href);
-            if let Some(idx) = body.find(&needle) {
-                // Look back ~200 chars for `<link` and check for rel="stylesheet".
-                let start = idx.saturating_sub(200);
-                let window = &body[start..idx];
-                window.contains(r#"rel="stylesheet""#)
-            } else {
-                false
-            }
-        }
+    scan_tag(body, "<link", "href=\"", "link", &mut out, |tag| {
+        tag.contains(r#"rel="stylesheet""#)
     });
+    scan_tag(body, "<script", "src=\"", "script", &mut out, |_| true);
     out
 }
 
@@ -123,6 +110,7 @@ fn scan_tag(
     attr_prefix: &str,
     kind: &'static str,
     out: &mut Vec<AssetTag>,
+    keep: impl Fn(&str) -> bool,
 ) {
     let mut search = body;
     while let Some(open_idx) = search.find(open_prefix) {
@@ -131,13 +119,15 @@ fn scan_tag(
             break;
         };
         let tag = &after_open[..close_idx];
-        if let Some(href) = extract_attr(tag, attr_prefix) {
-            let integrity = extract_attr(tag, "integrity=\"");
-            out.push(AssetTag {
-                kind,
-                href,
-                integrity,
-            });
+        if keep(tag) {
+            if let Some(href) = extract_attr(tag, attr_prefix) {
+                let integrity = extract_attr(tag, "integrity=\"");
+                out.push(AssetTag {
+                    kind,
+                    href,
+                    integrity,
+                });
+            }
         }
         search = &after_open[close_idx + 1..];
     }
@@ -229,10 +219,22 @@ mod tests {
     fn scan_assets_skips_non_stylesheet_link() {
         let body = r#"<link rel="icon" href="favicon.ico">"#;
         let tags = scan_assets(body);
-        // Phase filter retains only stylesheet links; this scan
-        // returns the raw set, which the phase filters down.
-        // The icon link MUST be filtered out by the phase filter.
         let links: Vec<_> = tags.iter().filter(|t| t.kind == "link").collect();
         assert_eq!(links.len(), 0, "icon link should be filtered by rel check");
+    }
+
+    #[test]
+    fn scan_assets_keeps_stylesheet_when_earlier_link_shares_href() {
+        // Regression: previously the rel filter re-found the href via
+        // body.find() (first match wins), which discarded a later
+        // stylesheet whenever an earlier non-stylesheet shared its href.
+        let body = r#"
+            <link rel="icon" href="shared.css">
+            <link rel="stylesheet" href="shared.css" integrity="sha384-XYZ">
+        "#;
+        let tags = scan_assets(body);
+        let links: Vec<_> = tags.iter().filter(|t| t.kind == "link").collect();
+        assert_eq!(links.len(), 1);
+        assert_eq!(links[0].integrity.as_deref(), Some("sha384-XYZ"));
     }
 }
