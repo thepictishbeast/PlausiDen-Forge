@@ -368,6 +368,70 @@ phase_audit_bridge() {
 }
 
 # ============================================================
+# Phase: theme_consistency — wraps `loom theme validate` (T28).
+# Strict on undefined-base-token references, warn on theme drift
+# (named theme omits or adds a token relative to base).
+#
+# Catches the silent failure where a `var(--loom-color-X)`
+# reference ships without a definition in the base :root block —
+# computed value is undefined, the rule is silently dropped, the
+# affected element renders unstyled at first paint.
+#
+# REGRESSION-GUARD: keep the strict/warn split aligned with the
+# CLI's exit codes. Tightening warns to strict would block ship
+# on intentional drift (e.g. a theme that genuinely doesn't need
+# a token); loosening strict to warn would let the silent-paint
+# bug back in. T31 (2026-05-06).
+# ============================================================
+phase_theme_consistency() {
+  phase_header "theme_consistency"
+  local LOOM_BIN="${LOOM_BIN:-/home/user/cargo-target/release/loom}"
+  if [ ! -x "$LOOM_BIN" ]; then
+    finding_warn "theme_consistency" "loom-cli" "loom binary not at $LOOM_BIN — theme drift not verified"
+    return
+  fi
+  # Pick the canonical skin file. The PoC ships it as
+  # static/loom.css (full skin) AND static/loom-skin.css
+  # (component-only); validate runs against the full file.
+  local skin=""
+  for candidate in "$STATIC/loom.css" "$STATIC/loom-skin.css"; do
+    if [ -f "$candidate" ]; then
+      skin="$candidate"
+      break
+    fi
+  done
+  if [ -z "$skin" ]; then
+    finding_warn "theme_consistency" "static/" "no loom.css or loom-skin.css found — theme drift not verified"
+    return
+  fi
+  local out
+  out=$("$LOOM_BIN" theme validate --skin "$skin" 2>&1)
+  local rc=$?
+  if [ $rc -eq 0 ]; then
+    # Strip the leading `ok ` from the CLI line so we don't print
+    # "ok ok 4 theme(s)..." (phase header already adds the ok prefix).
+    local summary
+    summary=$(echo "$out" | grep -E '^\s+ok\s' | head -1 | sed -E 's/^\s+ok\s+//')
+    if [ -n "$summary" ]; then
+      echo "  ${C_GREEN}ok${C_OFF}      $summary"
+    fi
+    return
+  fi
+  # Walk findings: STRICT lines bubble up as strict; warn lines as warn.
+  while IFS= read -r line; do
+    if echo "$line" | grep -qE '^\s+STRICT\s'; then
+      local tok
+      tok=$(echo "$line" | grep -oE -- '--loom-color-[a-z0-9-]+' | head -1)
+      finding_strict "theme_consistency" "${tok:-skin}" "$line"
+    elif echo "$line" | grep -qE '^\s+warn\s'; then
+      local tok
+      tok=$(echo "$line" | grep -oE -- '--loom-color-[a-z0-9-]+' | head -1)
+      finding_warn "theme_consistency" "${tok:-skin}" "$line"
+    fi
+  done < <(echo "$out")
+}
+
+# ============================================================
 # Phase: path_consistency — every cms/<name>.json's `path` field
 # must resolve to a real static/<file>. Catches the mismatch
 # class T11 surfaced (compose.json declared /compose but file
@@ -1903,6 +1967,7 @@ phase_image_convert
 phase_cms_render
 phase_path_consistency
 phase_audit_bridge
+phase_theme_consistency
 phase_loom_sync
 phase_label_consistency
 phase_tokens
