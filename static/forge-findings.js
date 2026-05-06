@@ -2,8 +2,10 @@
 window.__FORGE_FINDINGS__ = {
   "mode": "poc",
   "strict_count": 0,
-  "warn_count": 101,
+  "warn_count": 103,
   "findings": [
+    {"severity":"WARN","phase":"loom_sync","path":"loom-skin.css","message":"Loom skin.css drift detected (recorded=sha384-eRqKn8Wuc5PhY0HyHTBZuP5Uaj5i0lUoECQv6YW9nlU+cd8GcLLanySubBpR+RP9, current=sha384-c1Ox12VQdjKj5xHxojC8bdgAQWrfDDnJB8orPkihkwpcDpA40gLMrJdKqDBAsBtQ; loom 2474 lines, poc 2451 lines). Run forge.sh --sync-loom to update."}
+    ,
     {"severity":"WARN","phase":"seo","path":"about.html","message":"missing Open Graph tags (og:title/description/type/url/image)"}
     ,
     {"severity":"WARN","phase":"seo","path":"about.html","message":"missing Twitter Card tags"}
@@ -78,9 +80,11 @@ window.__FORGE_FINDINGS__ = {
     ,
     {"severity":"WARN","phase":"perf_budget","path":"votes.html","message":"29K HTML > 20K budget — audit blocks / split route"}
     ,
+    {"severity":"WARN","phase":"perf_budget","path":"loom.css","message":"90K CSS > 64K budget — split into per-route bundles"}
+    ,
     {"severity":"WARN","phase":"perf_budget","path":"loom-skin.css","message":"89K CSS > 64K budget — split into per-route bundles"}
     ,
-    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"14K JS > 8.0K budget — code-split or tree-shake"}
+    {"severity":"WARN","phase":"perf_budget","path":"forge-findings.js","message":"15K JS > 8.0K budget — code-split or tree-shake"}
     ,
     {"severity":"WARN","phase":"perf_budget","path":"forge-overlay.js","message":"8.4K JS > 8.0K budget — code-split or tree-shake"}
     ,
