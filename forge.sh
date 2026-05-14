@@ -589,6 +589,94 @@ phase_cms_render() {
 # Why warn-not-strict: drift can be intentional during a
 # multi-step migration. The warning surfaces drift LOUDLY without
 # blocking a build. The `--sync-loom` flag makes resolving easy.
+# ============================================================
+# Phase: crawl — invoke PlausiDen-Crawler against the freshly
+# rendered static/. T49 (2026-05-06).
+#
+# One forge run = build + runtime audit, single report. Without
+# this phase the operator runs forge AND then a separate
+# `npm run audit`, and merging the two outputs is manual.
+#
+# Behaviour:
+#   * Crawler dir resolved via $CRAWLER_DIR or sibling path.
+#     Missing → warn, skip (devs without crawler installed
+#     shouldn't be blocked from building).
+#   * Dev server at 127.0.0.1:8123 must respond. If it doesn't
+#     (ERR_CONNECTION_REFUSED), warn + skip — fixing the dev
+#     server isn't forge's job, and a missing server would
+#     cascade as a fake regression in every axis.
+#   * Crawler exit 0  → ok summary line.
+#   * Crawler exit 1  → forge_strict per regressed axis (parsed
+#                       from positive-signal.txt of the latest
+#                       run dir).
+#   * Crawler exit ≥2 → forge_warn (crawler errored, not a site
+#                       regression).
+#
+# REGRESSION-GUARD: do NOT promote crawler-down-to-fake-regressions
+# back to strict. We saw this fire on 2026-05-05 when /tmp wiped
+# the dev server and every axis reported ERR_CONNECTION_REFUSED;
+# treating that as a strict failure of the site is wrong. Only
+# real regressions (exit 1 against a live server) gate the build.
+# ============================================================
+phase_crawl() {
+  phase_header "crawl"
+  local CRAWLER_DIR="${CRAWLER_DIR:-/home/user/Development/PlausiDen/PlausiDen-Crawler}"
+  if [ ! -d "$CRAWLER_DIR" ]; then
+    finding_warn "crawl" "PlausiDen-Crawler" \
+      "crawler dir not at $CRAWLER_DIR — runtime audit skipped (set CRAWLER_DIR to override)"
+    return
+  fi
+  local journey="${CRAWLER_JOURNEY:-journeys/skillshots-poc.json}"
+  if [ ! -f "$CRAWLER_DIR/$journey" ]; then
+    finding_warn "crawl" "$journey" \
+      "journey file not at $CRAWLER_DIR/$journey — runtime audit skipped"
+    return
+  fi
+  # Dev server probe. If 8123 is dead, every page would 404
+  # and surface as a fake regression on every axis. Skip with
+  # an explicit warn so the operator knows.
+  if ! curl -sf --max-time 2 -o /dev/null "http://127.0.0.1:8123/"; then
+    finding_warn "crawl" "127.0.0.1:8123" \
+      "dev server not responding — start it (e.g. python3 -m http.server 8123 --directory $STATIC) and re-run; runtime audit skipped"
+    return
+  fi
+  echo "  ${C_DIM}running crawler against http://127.0.0.1:8123/ ...${C_OFF}"
+  local out
+  out=$(cd "$CRAWLER_DIR" && timeout 120 npm run audit -- --journey "$journey" 2>&1)
+  local rc=$?
+  if [ $rc -eq 0 ]; then
+    local axes_line
+    axes_line=$(echo "$out" | grep -E '✓ all [0-9]+ axes silent' | head -1 | sed 's/^ *//')
+    if [ -n "$axes_line" ]; then
+      echo "  ${C_GREEN}ok${C_OFF}      ${axes_line}"
+    else
+      echo "  ${C_GREEN}ok${C_OFF}      crawler PASS"
+    fi
+    return
+  fi
+  if [ $rc -ge 2 ]; then
+    finding_warn "crawl" "PlausiDen-Crawler" \
+      "crawler errored (exit $rc) — runtime audit could not complete; check $CRAWLER_DIR for env"
+    return
+  fi
+  # Exit 1: parse regressed axes from positive-signal output.
+  # Format: "  ✗ N axis/axes regressed (strict): <name> (+M), ..."
+  local regressed_line
+  regressed_line=$(echo "$out" | grep -E 'axis/axes regressed \(strict\)' | head -1)
+  if [ -n "$regressed_line" ]; then
+    local axes
+    axes=$(echo "$regressed_line" | sed -E 's/^.*\(strict\): *//' | tr ',' '\n')
+    while IFS= read -r axis; do
+      axis=$(echo "$axis" | sed -E 's/^ +//;s/ +$//')
+      [ -z "$axis" ] && continue
+      finding_strict "crawl" "${axis}" "runtime regression: $axis"
+    done < <(echo "$axes")
+  else
+    # Generic strict if we couldn't parse a per-axis breakdown.
+    finding_strict "crawl" "runtime" "crawler reported FAIL (exit $rc); inspect $CRAWLER_DIR/runs/ for details"
+  fi
+}
+
 phase_loom_sync() {
   phase_header "loom_sync"
   local loom_path="${LOOM_PATH:-/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css}"
@@ -1991,6 +2079,11 @@ phase_csp_devmode
 phase_contrast
 phase_selfaudit
 phase_self_check
+# T49: runtime audit happens AFTER the build is on disk and
+# self-check has confirmed the build is structurally sound.
+# A failed crawl is real-site regression; a failed self_check
+# is build infra regression — keep them on separate rungs.
+phase_crawl
 
 # T6: gzip + brotli pre-compress every text asset so the dev server
 # (and a future production deploy) can serve compressed bytes when
