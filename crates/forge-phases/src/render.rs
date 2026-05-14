@@ -119,8 +119,18 @@ impl Phase for RenderPhase {
                 }
             };
 
+            // T70b: call Loom's full a11y / dual-theme page-shell
+            // directly. Forge inherits the same WCAG-AA contrast
+            // tokens, focus-visible outlines, skip-link styling,
+            // and `prefers-reduced-motion` honour as Loom-rendered
+            // sites — single source of truth in the render layer.
             let body_markup = loom_cms_render::render_page(&page).into_string();
-            let html = wrap_html_shell(&page, &body_markup);
+            let html = loom_cms_render::page_shell(
+                &page,
+                "/loom-skin.css",
+                &body_markup,
+                None,
+            );
 
             let out_path = out_dir.join(format!("{slug}.html"));
             if let Err(e) = atomic_write(&out_path, html.as_bytes()) {
@@ -199,46 +209,10 @@ fn slug_from_filename(path: &Path) -> Option<String> {
     Some(stem.to_owned())
 }
 
-/// Minimal HTML5 shell. Loom's full a11y / dual-theme page-shell
-/// lives in `loom-cli` for now; T70b moves it into
-/// `loom-cms-render` so this phase gets it for free. v1 hand-rolls
-/// the bare minimum (lang, color-scheme, viewport, main landmark)
-/// so the rendered output passes the existing a11y + html_semantic
-/// audits without further work.
-fn wrap_html_shell(page: &loom_cms_render::CmsPage, body: &str) -> String {
-    let title = escape_text(&page.title);
-    let description = escape_text(&page.description);
-    format!(
-        "<!doctype html>\n\
-<html lang=\"en\">\n\
-<head>\n\
-  <meta charset=\"utf-8\">\n\
-  <meta http-equiv=\"X-Content-Type-Options\" content=\"nosniff\">\n\
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
-  <meta name=\"color-scheme\" content=\"light dark\">\n\
-  <title>{title}</title>\n\
-  <meta name=\"description\" content=\"{description}\">\n\
-</head>\n\
-<body>\n\
-  <a class=\"loom-skip\" href=\"#content\">Skip to content</a>\n\
-  <header class=\"loom-page-header\"></header>\n\
-  <main id=\"content\">\n{body}\n  </main>\n\
-  <footer class=\"loom-page-footer\"></footer>\n\
-</body>\n\
-</html>\n"
-    )
-}
-
-fn escape_text(s: &str) -> String {
-    s.chars()
-        .map(|c| match c {
-            '&' => "&amp;".to_owned(),
-            '<' => "&lt;".to_owned(),
-            '>' => "&gt;".to_owned(),
-            other => other.to_string(),
-        })
-        .collect()
-}
+// T70b: `wrap_html_shell` and `escape_text` removed — replaced
+// by direct calls into `loom_cms_render::page_shell` and
+// `loom_cms_render::escape_html_text`. Keeps the a11y / dual-
+// theme contract co-located with the renderer that owns it.
 
 /// Atomic write: tmp file + rename. POSIX guarantees rename is
 /// atomic on the same filesystem.
@@ -337,10 +311,30 @@ mod tests {
         // includes the heading text and paragraph.
         assert!(home.contains("Hello"), "missing heading: {home}");
         assert!(home.contains("World."), "missing paragraph");
-        // a11y defaults from the wrap_html_shell.
+        // a11y defaults from loom_cms_render::page_shell (T70b).
         assert!(home.contains("<main id=\"content\">"));
         assert!(home.contains("color-scheme"));
         assert!(home.contains("lang=\"en\""));
+        // Dual-theme + reduced-motion + skip-link styling
+        // inherited from loom-cms-render's BASE_THEME_CSS:
+        assert!(
+            home.contains("prefers-color-scheme:dark"),
+            "T70b: phase_render must inherit Loom's dark-mode CSS"
+        );
+        assert!(
+            home.contains("prefers-reduced-motion:reduce"),
+            "T70b: phase_render must honour reduced-motion"
+        );
+        assert!(
+            home.contains(".loom-skip:focus"),
+            "T70b: phase_render must surface the skip link on focus"
+        );
+        // CSP inline-style hash present (no unsafe-inline).
+        assert!(home.contains("sha256-"), "base-theme must be CSP-pinned");
+        assert!(
+            !home.contains("'unsafe-inline'"),
+            "page_shell must never grant unsafe-inline"
+        );
         let _ = std::fs::remove_dir_all(&tmp);
     }
 
