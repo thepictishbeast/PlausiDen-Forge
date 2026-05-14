@@ -275,6 +275,8 @@ dependencies = [
  "base64",
  "forge-core",
  "proptest",
+ "serde",
+ "serde_json",
  "sha2",
  "thiserror",
  "tracing",
