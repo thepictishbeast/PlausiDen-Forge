@@ -437,6 +437,105 @@ Per-tenant view (the multi-tenant future):
                 └──────────────────────┘
 ```
 
+Six-tool federation view (full vision):
+
+```
+                    ┌──────────────────┐
+                    │   Oxidizer       │  meta-conformance gate
+                    │   ecosystem-wide │
+                    │   doctrine audit │
+                    └────────┬─────────┘
+                             │ phase_oxidizer_conformance
+                             ▼
+   ┌─────────────────────────────────────────────────────────┐
+   │                                                          │
+   │   ┌────────┐    ┌────────┐    ┌────────┐    ┌────────┐ │
+   │   │  Loom  │───▶│  CMS   │───▶│ Forge  │───▶│Crawler │ │
+   │   │ typed  │    │multi-  │    │ build  │    │runtime │ │
+   │   │ render │    │tenant  │    │ + sign │    │ audit  │ │
+   │   │+ editor│    │+ audit │    │+ deploy│    │+ recon │ │
+   │   └────────┘    └────────┘    └────────┘    └────────┘ │
+   │       ▲                            │              │     │
+   │       │                            ▼              ▼     │
+   │       │                    ┌──────────────────────────┐ │
+   │       │                    │ Annotator                │ │
+   │       └────────────────────┤ human-review session JSON│ │
+   │                            └──────────────────────────┘ │
+   │                                                          │
+   └──────────────────────────────────────────────────────────┘
+                                │
+                                ▼ feedback loop closes
+                       ┌──────────────────┐
+                       │  Agent / human   │
+                       │  iteration       │
+                       └──────────────────┘
+```
+
+## 5b. What Forge can do when each sister vision lands
+
+Sibling capabilities Forge inherits as they ship — each unlocks
+new phases or first-class capabilities IN Forge.
+
+### When **Loom** ships its full vision (LOOM_VISION.md)
+
+| Sibling capability | New Forge ability |
+|---|---|
+| Type-state Section landmarks (Loom T36) | `phase_landmark_compile_check` — refuses any CmsPage that statically violates landmark rules; promotes runtime to compile-time |
+| `loom-audit` visual-regression crate (parity with Forge T33) | Runtime + build-time visual diff cross-check — Forge can flag drift between Loom-rendered preview and Forge-built output |
+| Multi-tenant per-tenant workspace (Loom T45) | `forge build --tenant N` — per-tenant build isolation under the same binary |
+| Claude Code SSH bridge (Loom T46) | Forge phases can spawn a sandboxed agent inside the build to auto-fix findings before the report finalizes |
+| WebAuthn passkey auth (Loom T43d) | Forge build reports get hardware-key-signed by the human operator at attest time |
+| Loom-as-PWA + CRDT collab | Forge `phase_collab_drift` checks N concurrent editors haven't produced divergent CmsPage states |
+| Voice-to-CMS / on-device LLM | Forge phase consuming the LLM-suggestion provenance for transparency-log inclusion |
+
+### When **CMS** ships its full vision (CMS_VISION.md)
+
+| Sibling capability | New Forge ability |
+|---|---|
+| Multi-site SQLite + Postgres adapter | `forge build --site <name>` consumes typed `Page` direct from CMS storage adapter |
+| Per-site workflow (draft → review → schedule → publish) | `phase_pre_publish_audit` runs at workflow stage, blocks publish on strict findings |
+| Per-tenant capability tokens | Forge runs scoped to one tenant's content, can't accidentally cross-build |
+| Append-only signed audit log | Every Forge build event lands as a CMS audit-log entry signed by the build operator |
+| Time-locked publish | Forge generates the time-locked envelope; CMS executes when the timer fires |
+| C2PA content provenance | Forge embeds the C2PA manifest in every rendered image at build time |
+| Webhook outbound on publish | Forge build-completion fires the configured webhook with the signed report |
+| Tor onion-service publish target | Forge `phase_onion_deploy` writes the bundle to a per-site `.onion` mirror |
+
+### When **Crawler** ships its full vision (CRAWLER_VISION.md)
+
+| Sibling capability | New Forge ability |
+|---|---|
+| Cross-browser matrix (Chromium + Firefox + Safari TP) | `phase_crawl_cross_browser` — every deploy verified across all three before signing |
+| Cross-device matrix (mobile + tablet + desktop) | `phase_crawl_responsive` — verifies every page across every viewport |
+| Pixel-hash visual diff vs baseline | `phase_visual_drift` first-class (replaces the current Forge T33 stub) |
+| `crawler auto-record` from human clicks | Forge auto-generates per-tenant journeys from operator interaction history |
+| `crawler shrink-finding` | Forge `--explain` mode bisects journey to minimal repro for any strict finding |
+| `crawler-replay` (network-log replay) | Forge re-runs the audit against a captured network log offline |
+| OSINT mode (`PlausiDen-Recon` fork after Crawler T73) | `phase_competitor_audit` — compare Forge-built output vs reference site, flag missing capabilities |
+
+### When **Annotator** ships its full vision (ANNOTATOR_VISION.md)
+
+| Sibling capability | New Forge ability |
+|---|---|
+| Crawler `annotate` step kind | `phase_annotation_review` — every flagged element becomes a typed Forge Finding |
+| Rust `annotator-session` crate | Forge consumes Session JSON natively, no manual parsing |
+| `annotator-replay` (agent walks flagged elements) | Forge phase can reject a build if agent-proposed fixes don't resolve human-flagged elements |
+| Hardware-key signed comments | Forge surfaces commenter identity in the build report |
+| Multi-agent review consensus | Forge ranks findings by N-agent consensus weight |
+| Diff renderer (two sessions of same page) | Forge `phase_review_drift` — flags pages where two reviewers disagreed |
+
+### When **Oxidizer** ships its full vision (OXIDIZER_VISION.md)
+
+| Sibling capability | New Forge ability |
+|---|---|
+| `check_rust_only` + Rust-purity catalog | `phase_oxidizer_conformance` blocks Forge build if the source repo violates Rust-first |
+| Supersociety-stack baseline checks | Build report carries Oxidizer conformance score per dep |
+| Auto-fix engine | Forge `--fix` mode applies Oxidizer's fixes pre-build |
+| Per-fork conformance baseline | Forge respects per-fork waivers when computing severity |
+| Cross-repo conformance graph | Forge build-time link-check verifies every cross-repo dep is on a conformant version |
+| Hardware-attested Oxidizer runs | Forge build report inherits hardware-attestation chain |
+| Cross-Oxidizer federation (peer cross-signing) | Forge build reports gain federated trust; agents can verify deploys against multiple peer Oxidizers |
+
 ## 6. Roadmap from now to "done"
 
 ### Sprint 1 — operationalise the directives (this week)
