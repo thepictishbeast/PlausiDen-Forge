@@ -334,6 +334,7 @@ dependencies = [
  "clap",
  "forge-core",
  "forge-phases",
+ "serde",
  "serde_json",
  "time",
  "tracing",
