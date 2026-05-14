@@ -195,19 +195,48 @@ fn run() -> Result<ExitCode> {
         }
     }
     report.duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    report.started = time::OffsetDateTime::now_utc()
+        .format(&time::format_description::well_known::Rfc3339)
+        .unwrap_or_else(|_| String::from("?"));
+
+    // T26: Merkle-chain this report to its predecessor. Read the
+    // newest existing reports/build-*.json; if found, hash it
+    // and store the hash as prev_hash + bump chain_length.
+    // Genesis runs (no prior report) yield prev_hash=None,
+    // chain_length=1.
+    let reports_dir = root.join("reports");
+    let prior_report = load_newest_prior_report(&reports_dir);
+    forge_core::attest::chain_step(prior_report.as_ref(), &mut report)
+        .context("chain_step")?;
 
     println!("\n== summary ==");
     println!("  mode:                {}", report.mode);
     println!("  strict findings:     {}", report.strict_count);
     println!("  suppressible warns:  {}", report.warn_count);
     println!("  duration:            {}ms", report.duration_ms);
+    println!("  chain length:        {}", report.chain_length);
+    if let Some(h) = &report.prev_hash {
+        println!("  prev hash:           {}…{}", &h[..8], &h[h.len().saturating_sub(8)..]);
+    } else {
+        println!("  prev hash:           (genesis)");
+    }
+
+    // T26: write the chained report to reports/build-<ts>.json
+    // AND update reports/latest.json. If reports/ doesn't exist,
+    // create it.
+    let _ = std::fs::create_dir_all(&reports_dir);
+    let ts_compact = report.started.replace([':', '-'], "").replace('.', "");
+    let build_path = reports_dir.join(format!("build-{ts_compact}.json"));
+    let latest_path = reports_dir.join("latest.json");
+    let serialized = serde_json::to_string_pretty(&report).context("serialize report")?;
+    if std::fs::write(&build_path, &serialized).is_ok() {
+        let _ = std::fs::write(&latest_path, &serialized);
+        println!("  chain report:        {}", build_path.display());
+    }
 
     if let Some(p) = args.json_report {
-        std::fs::write(
-            &p,
-            serde_json::to_string_pretty(&report).context("serialize report")?,
-        )
-        .with_context(|| format!("writing JSON report to {}", p.display()))?;
+        std::fs::write(&p, &serialized)
+            .with_context(|| format!("writing JSON report to {}", p.display()))?;
         println!("  json report:         {}", p.display());
     }
 
@@ -236,6 +265,35 @@ fn print_finding(f: &Finding) {
     } else {
         println!("  {}{}: {} — {}", label, f.phase, f.path, f.message);
     }
+}
+
+/// T26: read the newest prior `reports/build-*.json` so we can
+/// chain to it. Returns `None` if the dir is empty/missing OR
+/// the newest file fails to parse — in either case we treat
+/// the current run as genesis.
+///
+/// REGRESSION-GUARD: sort by *filename* (not mtime) because
+/// filenames embed a monotonic timestamp; mtime can be wrong on
+/// rsync'd hosts (preserves source mtime not arrival time).
+fn load_newest_prior_report(reports_dir: &std::path::Path) -> Option<forge_core::BuildReport> {
+    let entries = std::fs::read_dir(reports_dir).ok()?;
+    let mut newest: Option<(std::ffi::OsString, std::path::PathBuf)> = None;
+    for e in entries.flatten() {
+        let name = e.file_name();
+        let name_str = name.to_string_lossy();
+        if !name_str.starts_with("build-") || !name_str.ends_with(".json") {
+            continue;
+        }
+        let path = e.path();
+        match &newest {
+            None => newest = Some((name, path)),
+            Some((bn, _)) if &name > bn => newest = Some((name, path)),
+            _ => {}
+        }
+    }
+    let (_, path) = newest?;
+    let raw = std::fs::read_to_string(&path).ok()?;
+    serde_json::from_str(&raw).ok()
 }
 
 /// Best-effort read of `mode = "..."` from `forge.toml`.

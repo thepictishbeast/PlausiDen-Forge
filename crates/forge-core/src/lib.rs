@@ -14,9 +14,14 @@
 //!   clippy deny enforces that mechanically.
 //! * `Severity` is `#[non_exhaustive]` so adding a new variant
 //!   in a future minor is not a breaking change.
+//!
+//! T26 (2026-05-06): `attest` submodule adds the Merkle-chain
+//! math for build-report continuity (pure, no I/O).
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+
+pub mod attest;
 
 use std::path::PathBuf;
 
@@ -248,6 +253,31 @@ pub struct BuildReport {
     /// don't have this — defaults to 0 on those.
     #[serde(default)]
     pub duration_ms: u64,
+    /// T26: SHA-256 of the canonical-serialized previous build
+    /// report. `None` for the genesis report; `Some(hex)` for
+    /// every subsequent build. The chain makes the build log
+    /// tamper-evident — any mutation, deletion, or out-of-order
+    /// insertion breaks the hash chain at the next verification.
+    ///
+    /// Format: lowercase hex of 32 bytes (64 chars). NOT base64
+    /// because hex round-trips through every shell tool without
+    /// quoting hazards.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prev_hash: Option<String>,
+    /// T26: depth of this report in the Merkle chain (1-indexed).
+    /// Operator can spot-check `length == N` against the count
+    /// of `reports/build-*.json` files.
+    #[serde(default, skip_serializing_if = "is_zero_u64")]
+    pub chain_length: u64,
+    /// T26: ISO-8601 UTC timestamp when this report was emitted.
+    /// Part of the hashed payload — backdating a report breaks
+    /// the chain.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub started: String,
+}
+
+fn is_zero_u64(n: &u64) -> bool {
+    *n == 0
 }
 
 impl BuildReport {
