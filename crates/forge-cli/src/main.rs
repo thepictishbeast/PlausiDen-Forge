@@ -39,6 +39,7 @@ use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::sri::SriPhase;
 use forge_phases::theme_consistency::ThemeConsistencyPhase;
+use forge_phases::theme_contrast::ThemeContrastPhase;
 use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
 use forge_phases::validate_cms::ValidateCmsPhase;
@@ -249,6 +250,12 @@ fn run() -> Result<ExitCode> {
         // tell every downstream phase that depends on themed
         // values that the cascade is broken.
         Box::new(ThemeConsistencyPhase),
+        // T29b (2026-05-06): WCAG AA mathematical contrast gate
+        // on every theme. Pairs with ThemeConsistencyPhase: that
+        // checks token presence; this checks token VALUES against
+        // the contrast threshold. Together they ensure no theme
+        // ships unreadable.
+        Box::new(ThemeContrastPhase),
         // T57 (2026-05-06): cms.path → static/<file>.html
         // consistency. Catches typo'd routes (e.g. /compose vs
         // /compose.html) at build time, before the crawler hits
