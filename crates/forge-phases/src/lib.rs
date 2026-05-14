@@ -28,6 +28,7 @@ pub mod label_consistency;
 pub mod link_check;
 pub mod loom_sync;
 pub mod motion;
+pub mod path_consistency;
 pub mod perf_budget;
 pub mod phantom_button;
 pub mod self_check;

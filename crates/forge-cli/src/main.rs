@@ -32,6 +32,7 @@ use forge_phases::label_consistency::LabelConsistencyPhase;
 use forge_phases::link_check::LinkCheckPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
+use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::self_check::SelfCheckPhase;
@@ -181,6 +182,11 @@ fn run() -> Result<ExitCode> {
         // tell every downstream phase that depends on themed
         // values that the cascade is broken.
         Box::new(ThemeConsistencyPhase),
+        // T57 (2026-05-06): cms.path → static/<file>.html
+        // consistency. Catches typo'd routes (e.g. /compose vs
+        // /compose.html) at build time, before the crawler hits
+        // a runtime 404.
+        Box::new(PathConsistencyPhase),
         Box::new(TokensPhase),
         Box::new(HtmlSemanticPhase),
         Box::new(CspPhase),
