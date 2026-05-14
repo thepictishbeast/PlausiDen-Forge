@@ -20,6 +20,7 @@ pub mod contrast;
 pub mod crawl;
 pub mod csp;
 pub mod csp_devmode;
+pub mod dual_theme;
 pub mod external_assets;
 pub mod html_semantic;
 pub mod html_walk;
