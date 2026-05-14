@@ -103,6 +103,36 @@ enum Cmd {
         #[command(subcommand)]
         action: AttestAction,
     },
+    /// Adversarial audits run OUTSIDE the build pipeline. Used
+    /// for one-off scans + pre-commit hooks; never gated on a
+    /// build's success.
+    Audit {
+        #[command(subcommand)]
+        action: AuditAction,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum AuditAction {
+    /// T56b: scan paths for filenames that match dangerous
+    /// patterns (private keys, certificates, dotenv, password
+    /// stores). With no paths, reads `git diff --cached
+    /// --name-only` so a pre-commit hook can `forge audit
+    /// secrets` and refuse the commit on any match.
+    ///
+    /// Exit codes:
+    ///   0 — no matches
+    ///   1 — at least one secret-shaped path found
+    ///   2 — fatal (git unavailable, etc.)
+    Secrets {
+        /// Explicit paths to scan. Defaults to git's staged
+        /// changes when omitted.
+        #[arg(value_name = "PATH")]
+        paths: Vec<PathBuf>,
+        /// Print the rule that matched alongside the path.
+        #[arg(long, default_value_t = false)]
+        explain: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -180,6 +210,7 @@ fn run() -> Result<ExitCode> {
             return run_verify(&root, *chain, *signatures)
         }
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
+        Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Build) | None => {}
     }
 
@@ -425,6 +456,127 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
 /// T55: walk `reports/build-*.json` ordered by filename
 /// (filenames embed monotonic ts), verify the Merkle chain.
 /// T56: also verify signatures when `signatures = true`.
+// ============================================================
+// T56b: secret-pattern scanner.
+// ============================================================
+//
+// Patterns chosen from real-world incident classes:
+//   * private keys (Ed25519 / RSA / ECDSA)
+//   * x509 certs / pkcs12 keystores
+//   * SSH private keys
+//   * dotenv / config files known to carry credentials
+//   * password store databases
+//
+// Each rule is `(name, glob)` where glob is a simple suffix /
+// basename match (no full glob crate dep). Rules are matched
+// against the BASENAME so paths under any subdir are caught.
+//
+// REGRESSION-GUARD (added 2026-05-06 after T56 incident):
+// `attest-key.b64` was the file I committed. The matching rule
+// `*-key.b64` is on this list. DO NOT remove without an
+// explicit justification + a replacement gate.
+
+const SECRET_RULES: &[(&str, fn(&str) -> bool)] = &[
+    ("ed25519-priv-key", |n| n.ends_with("-key.b64")),
+    ("pem-keystore", |n| n.ends_with(".pem") || n.ends_with(".p12") || n.ends_with(".pfx")),
+    ("ssh-private-key", |n| {
+        n == "id_rsa"
+            || n == "id_ed25519"
+            || n == "id_ecdsa"
+            || n == "id_dsa"
+            || n.starts_with("id_rsa.")
+            || n.starts_with("id_ed25519.")
+            || n.starts_with("id_ecdsa.")
+    }),
+    ("dotenv", |n| n == ".env" || n.starts_with(".env.")),
+    ("password-store", |n| n.ends_with(".kdbx") || n.ends_with(".kdb")),
+    ("aws-credentials", |n| n == "credentials" || n == "credentials.json"),
+    ("gcp-service-account", |n| n.contains("service-account") && n.ends_with(".json")),
+    ("git-credentials", |n| n == ".git-credentials" || n == ".netrc"),
+    ("private-key-suffix", |n| n.ends_with(".key") || n.ends_with(".priv") || n.ends_with("-private.b64")),
+];
+
+/// Scan a list of file paths for secret-shaped basenames.
+/// Returns the matches (path, rule-name) so caller can report.
+fn scan_paths_for_secrets<P: AsRef<std::path::Path>>(
+    paths: &[P],
+) -> Vec<(std::path::PathBuf, &'static str)> {
+    let mut hits = Vec::new();
+    for p in paths {
+        let path = p.as_ref();
+        let name = path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("");
+        for (rule_name, predicate) in SECRET_RULES {
+            if predicate(name) {
+                hits.push((path.to_path_buf(), *rule_name));
+                break; // one rule per path is enough
+            }
+        }
+    }
+    hits
+}
+
+/// Read `git diff --cached --name-only` from `cwd`. Returns
+/// empty Vec if git is unavailable / not a repo / no staged
+/// changes.
+fn git_staged_paths(cwd: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let out = std::process::Command::new("git")
+        .args(["diff", "--cached", "--name-only"])
+        .current_dir(cwd)
+        .output();
+    let Ok(o) = out else { return Vec::new() };
+    if !o.status.success() {
+        return Vec::new();
+    }
+    String::from_utf8_lossy(&o.stdout)
+        .lines()
+        .filter(|l| !l.is_empty())
+        .map(std::path::PathBuf::from)
+        .collect()
+}
+
+fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
+    match action {
+        AuditAction::Secrets { paths, explain } => {
+            let scan_targets: Vec<std::path::PathBuf> = if paths.is_empty() {
+                git_staged_paths(root)
+            } else {
+                paths.clone()
+            };
+            if scan_targets.is_empty() {
+                println!("forge audit secrets: nothing staged + no paths supplied — nothing to scan");
+                return Ok(ExitCode::SUCCESS);
+            }
+            let hits = scan_paths_for_secrets(&scan_targets);
+            if hits.is_empty() {
+                println!(
+                    "forge audit secrets: scanned {} path(s), no secret-shaped names matched",
+                    scan_targets.len()
+                );
+                return Ok(ExitCode::SUCCESS);
+            }
+            eprintln!(
+                "forge audit secrets: {} secret-shaped path(s) found — refuse to commit",
+                hits.len()
+            );
+            for (path, rule) in &hits {
+                if *explain {
+                    eprintln!("  SECRET  [{rule}]  {}", path.display());
+                } else {
+                    eprintln!("  SECRET  {}", path.display());
+                }
+            }
+            eprintln!(
+                "\nIf this is a false positive, rename the file or add it to a gitignore'd \
+                 directory. NEVER --force past this gate."
+            );
+            Ok(ExitCode::from(1))
+        }
+    }
+}
+
 fn run_verify(
     root: &std::path::Path,
     chain: bool,
@@ -617,4 +769,101 @@ fn read_mode_from_toml(root: &std::path::Path) -> Option<BuildMode> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod secret_scan_tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn p(s: &str) -> PathBuf {
+        PathBuf::from(s)
+    }
+
+    #[test]
+    fn flags_attest_key_b64() {
+        let hits = scan_paths_for_secrets(&[p("reports/attest-key.b64")]);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].1, "ed25519-priv-key");
+    }
+
+    #[test]
+    fn flags_dotenv() {
+        for f in [".env", ".env.local", ".env.production"] {
+            let hits = scan_paths_for_secrets(&[p(f)]);
+            assert_eq!(hits.len(), 1, "should flag {f}");
+            assert_eq!(hits[0].1, "dotenv");
+        }
+    }
+
+    #[test]
+    fn flags_pem_and_p12() {
+        for f in ["server.pem", "ca.p12", "keystore.pfx"] {
+            let hits = scan_paths_for_secrets(&[p(f)]);
+            assert_eq!(hits.len(), 1, "should flag {f}");
+            assert_eq!(hits[0].1, "pem-keystore");
+        }
+    }
+
+    #[test]
+    fn flags_ssh_keys() {
+        for f in ["id_rsa", "id_ed25519", "id_ecdsa", "id_rsa.bak"] {
+            let hits = scan_paths_for_secrets(&[p(f)]);
+            assert_eq!(hits.len(), 1, "should flag {f}");
+            assert_eq!(hits[0].1, "ssh-private-key");
+        }
+    }
+
+    #[test]
+    fn flags_password_store() {
+        let hits = scan_paths_for_secrets(&[p("vault.kdbx")]);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].1, "password-store");
+    }
+
+    #[test]
+    fn does_not_flag_safe_files() {
+        for f in [
+            "src/main.rs",
+            "Cargo.toml",
+            "README.md",
+            "reports/attest-pubkey.b64",
+            "config.toml",
+            "static/index.html",
+            "id_card.svg", // contains "id_" but not the SSH pattern
+        ] {
+            let hits = scan_paths_for_secrets(&[p(f)]);
+            assert!(hits.is_empty(), "should NOT flag {f}: {hits:?}");
+        }
+    }
+
+    #[test]
+    fn pubkey_b64_is_safe() {
+        // The public key is the trust anchor; it MUST be
+        // committable. Negative-control test prevents an
+        // overzealous future tightening of the rule.
+        let hits = scan_paths_for_secrets(&[p("reports/attest-pubkey.b64")]);
+        assert!(hits.is_empty(), "pubkey must NOT be flagged");
+    }
+
+    #[test]
+    fn matches_basename_under_subdirs() {
+        let hits = scan_paths_for_secrets(&[p("deeply/nested/dir/secret.pem")]);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].1, "pem-keystore");
+    }
+
+    #[test]
+    fn each_path_emits_at_most_one_hit() {
+        // A path that matches multiple rules (rare) should still
+        // emit exactly one finding (first match wins).
+        let hits = scan_paths_for_secrets(&[p("evil.pem")]);
+        assert_eq!(hits.len(), 1);
+    }
+
+    #[test]
+    fn flags_aws_credentials() {
+        let hits = scan_paths_for_secrets(&[p("credentials"), p("creds/credentials.json")]);
+        assert_eq!(hits.len(), 2);
+    }
 }
