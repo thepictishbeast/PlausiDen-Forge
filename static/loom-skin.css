@@ -1575,9 +1575,20 @@
     height: var(--loom-size-icon-md);
     color: var(--loom-color-primary, currentColor);
   }
+  /* REGRESSION-GUARD cycle 59: explicit color on the action
+   * label. Pre-fix in dark mode the label inherited primary
+   * blue (3.81:1 on #141414) — axe-static-a11y serious
+   * color-contrast violation on the SkillShots feed CTA, only
+   * fired under the keyboard journey (which forces dark theme
+   * via prefers-color-scheme). The action link's parent rule
+   * sets color:ink but a stacking inline-style override on
+   * `a { color: var(--loom-link) }` in the page-shell
+   * baseline CSS bleeds through. Explicit color on the label
+   * span shuts the cascade. */
   .loom-composer__action-label {
     font-size: var(--loom-font-sm, 0.875rem);
     font-weight: 500;
+    color: var(--loom-color-ink);
   }
   /* Compact action layout: icon-only on tight viewports. */
   @media (max-width: 540px) {
