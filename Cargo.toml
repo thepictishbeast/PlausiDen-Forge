@@ -84,6 +84,14 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # its deterministic unit tests.
 proptest = "1"
 
+# T56: Ed25519 keypair + signature for the build-report Merkle
+# chain attestation. ed25519-dalek is the canonical RustCrypto
+# implementation, audited, no_std-capable, used by Solana / Tor /
+# many others. We use it locally (no network); a future Sigstore
+# extension can layer on top.
+ed25519-dalek = { version = "2", features = ["rand_core", "pem"] }
+rand_core = { version = "0.6", features = ["getrandom"] }
+
 # AVP-2 gate: no unwrap/expect in lib code without justification.
 # Use the existing crate-local std::process::exit at the binary
 # edge only.

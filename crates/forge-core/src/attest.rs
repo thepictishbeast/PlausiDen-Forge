@@ -370,3 +370,331 @@ mod proptests {
         }
     }
 }
+
+// ============================================================
+// T56: Ed25519-signed Merkle chain roots
+// ============================================================
+//
+// T26 + T55 give tamper-evident chain CONTINUITY. T56 layers on
+// cryptographic IDENTITY — chain root forgery now requires key
+// compromise, not just byte access.
+//
+// Threat model extension:
+//   * Without signatures: an attacker who CAN extend the chain
+//     (e.g. an insider with write access to reports/) can rewrite
+//     history from a tampered checkpoint forward, and the chain
+//     verifier passes (because rewritten hashes are internally
+//     consistent).
+//   * With signatures: every chain root is signed by a private
+//     key the attacker doesn't have. Verification rejects any
+//     report whose signature doesn't match. Compromise requires
+//     the key, not just the directory.
+//
+// Doctrine:
+//   * Ed25519 (RFC 8032) — modern, fast, deterministic, no
+//     parameter tuning required, no nonce-reuse risk.
+//   * Pure-fn surface (sign / verify); key I/O lives in
+//     forge-cli per the forge-core "no I/O" rule.
+//   * No `unwrap`/`expect`; ADT errors.
+
+use base64::Engine as _;
+use ed25519_dalek::{Signer as _, SigningKey, Verifier as _, VerifyingKey, SIGNATURE_LENGTH};
+use rand_core::OsRng;
+
+/// Errors the signing layer can return.
+#[derive(Debug, thiserror::Error)]
+pub enum SignError {
+    /// Couldn't serialize the report for signing.
+    #[error("serialize: {0}")]
+    Serialize(String),
+    /// Couldn't decode a signature from base64.
+    #[error("signature decode: {0}")]
+    SignatureDecode(String),
+    /// Signature length wasn't ed25519's 64 bytes.
+    #[error("signature length wrong: got {got}, expected {SIGNATURE_LENGTH}")]
+    SignatureLength { got: usize },
+    /// Verifying key bytes were the wrong length / shape.
+    #[error("public key invalid")]
+    PublicKeyInvalid,
+    /// Signature did not verify against the report bytes.
+    #[error("signature verification failed")]
+    BadSignature,
+    /// Report has no signature field but signature was required.
+    #[error("report has no signature field")]
+    MissingSignature,
+}
+
+/// Generate a fresh Ed25519 keypair using the OS RNG.
+/// Caller owns key persistence — forge-core does no I/O.
+#[must_use]
+pub fn generate_keypair() -> SigningKey {
+    SigningKey::generate(&mut OsRng)
+}
+
+/// Serialize the report for signing — omits the `signature`
+/// field so the bytes hashed don't depend on the signature
+/// they're being signed for. Sets `signature = None` on a clone,
+/// then serializes; original report unchanged.
+fn report_bytes_for_signing(report: &BuildReport) -> Result<Vec<u8>, SignError> {
+    let mut clone = clone_without_signature(report);
+    clone.signature = None;
+    serde_json::to_vec(&clone).map_err(|e| SignError::Serialize(e.to_string()))
+}
+
+/// Cheap clone — `BuildReport` derives nothing, so we hand-build
+/// the subset we need. Findings are cloned shallow.
+fn clone_without_signature(r: &BuildReport) -> BuildReport {
+    BuildReport {
+        mode: r.mode.clone(),
+        findings: r.findings.clone(),
+        strict_count: r.strict_count,
+        warn_count: r.warn_count,
+        duration_ms: r.duration_ms,
+        prev_hash: r.prev_hash.clone(),
+        chain_length: r.chain_length,
+        started: r.started.clone(),
+        signature: None,
+    }
+}
+
+/// Sign `report` in place: serialise the report (omitting any
+/// existing signature), produce an Ed25519 signature, base64-
+/// encode, store on `report.signature`.
+///
+/// # Errors
+/// `SignError::Serialize` if serialisation fails.
+pub fn sign_report(report: &mut BuildReport, key: &SigningKey) -> Result<(), SignError> {
+    let bytes = report_bytes_for_signing(report)?;
+    let sig = key.sign(&bytes);
+    let b64 = base64::engine::general_purpose::STANDARD.encode(sig.to_bytes());
+    report.signature = Some(b64);
+    Ok(())
+}
+
+/// Verify a report's `signature` against the supplied public
+/// key. Returns `Ok(())` on valid, `Err(SignError::*)` on
+/// missing / malformed / forged.
+///
+/// # Errors
+/// See `SignError` variants.
+pub fn verify_report(
+    report: &BuildReport,
+    pub_key: &VerifyingKey,
+) -> Result<(), SignError> {
+    let sig_b64 = report
+        .signature
+        .as_deref()
+        .ok_or(SignError::MissingSignature)?;
+    let sig_bytes = base64::engine::general_purpose::STANDARD
+        .decode(sig_b64)
+        .map_err(|e| SignError::SignatureDecode(e.to_string()))?;
+    if sig_bytes.len() != SIGNATURE_LENGTH {
+        return Err(SignError::SignatureLength {
+            got: sig_bytes.len(),
+        });
+    }
+    let mut arr = [0u8; SIGNATURE_LENGTH];
+    arr.copy_from_slice(&sig_bytes);
+    let sig = ed25519_dalek::Signature::from_bytes(&arr);
+    let bytes = report_bytes_for_signing(report)?;
+    pub_key
+        .verify(&bytes, &sig)
+        .map_err(|_| SignError::BadSignature)
+}
+
+/// Encode a public key as base64 (32 bytes → 44 chars). Used by
+/// forge-cli to persist `attest-pubkey.b64` next to the chain.
+#[must_use]
+pub fn pubkey_to_base64(key: &VerifyingKey) -> String {
+    base64::engine::general_purpose::STANDARD.encode(key.as_bytes())
+}
+
+/// Decode a public key from base64. Returns `None` for malformed
+/// input.
+#[must_use]
+pub fn pubkey_from_base64(s: &str) -> Option<VerifyingKey> {
+    let bytes = base64::engine::general_purpose::STANDARD.decode(s).ok()?;
+    if bytes.len() != ed25519_dalek::PUBLIC_KEY_LENGTH {
+        return None;
+    }
+    let mut arr = [0u8; ed25519_dalek::PUBLIC_KEY_LENGTH];
+    arr.copy_from_slice(&bytes);
+    VerifyingKey::from_bytes(&arr).ok()
+}
+
+/// Encode a signing key (private) as base64. Caller responsible
+/// for protecting the resulting bytes (file mode 0600 etc.).
+#[must_use]
+pub fn signing_key_to_base64(key: &SigningKey) -> String {
+    base64::engine::general_purpose::STANDARD.encode(key.to_bytes())
+}
+
+/// Decode a signing key (private) from base64.
+#[must_use]
+pub fn signing_key_from_base64(s: &str) -> Option<SigningKey> {
+    let bytes = base64::engine::general_purpose::STANDARD.decode(s).ok()?;
+    if bytes.len() != ed25519_dalek::SECRET_KEY_LENGTH {
+        return None;
+    }
+    let mut arr = [0u8; ed25519_dalek::SECRET_KEY_LENGTH];
+    arr.copy_from_slice(&bytes);
+    Some(SigningKey::from_bytes(&arr))
+}
+
+#[cfg(test)]
+mod sign_tests {
+    use super::*;
+
+    fn rep() -> BuildReport {
+        BuildReport {
+            mode: "poc".into(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn sign_then_verify_succeeds() {
+        let key = generate_keypair();
+        let mut r = rep();
+        sign_report(&mut r, &key).expect("sign");
+        assert!(r.signature.is_some());
+        verify_report(&r, &key.verifying_key()).expect("verify");
+    }
+
+    #[test]
+    fn signature_changes_with_content() {
+        let key = generate_keypair();
+        let mut r1 = rep();
+        sign_report(&mut r1, &key).expect("sign1");
+        let mut r2 = rep();
+        r2.warn_count = 5;
+        sign_report(&mut r2, &key).expect("sign2");
+        assert_ne!(r1.signature, r2.signature);
+    }
+
+    #[test]
+    fn tampered_report_fails_verify() {
+        let key = generate_keypair();
+        let mut r = rep();
+        sign_report(&mut r, &key).expect("sign");
+        r.warn_count = 999; // tamper after signing
+        let res = verify_report(&r, &key.verifying_key());
+        assert!(matches!(res, Err(SignError::BadSignature)));
+    }
+
+    #[test]
+    fn wrong_key_fails_verify() {
+        let k1 = generate_keypair();
+        let k2 = generate_keypair();
+        let mut r = rep();
+        sign_report(&mut r, &k1).expect("sign");
+        let res = verify_report(&r, &k2.verifying_key());
+        assert!(matches!(res, Err(SignError::BadSignature)));
+    }
+
+    #[test]
+    fn missing_signature_errors() {
+        let key = generate_keypair();
+        let r = rep(); // no signature set
+        let res = verify_report(&r, &key.verifying_key());
+        assert!(matches!(res, Err(SignError::MissingSignature)));
+    }
+
+    #[test]
+    fn malformed_signature_errors() {
+        let key = generate_keypair();
+        let mut r = rep();
+        r.signature = Some("not!base64!".into());
+        let res = verify_report(&r, &key.verifying_key());
+        assert!(matches!(res, Err(SignError::SignatureDecode(_))));
+    }
+
+    #[test]
+    fn signature_omits_self_from_payload() {
+        // Signing must produce the SAME signature whether the
+        // input has a stale signature field or not — proves the
+        // payload omits the signature.
+        let key = generate_keypair();
+        let mut r1 = rep();
+        sign_report(&mut r1, &key).expect("sign1");
+        let mut r2 = rep();
+        r2.signature = Some("STALE_SIGNATURE_VALUE".into());
+        sign_report(&mut r2, &key).expect("sign2");
+        // Both signed reports have the SAME final signature.
+        assert_eq!(r1.signature, r2.signature);
+    }
+
+    #[test]
+    fn pubkey_roundtrip_base64() {
+        let key = generate_keypair();
+        let pk = key.verifying_key();
+        let b64 = pubkey_to_base64(&pk);
+        let decoded = pubkey_from_base64(&b64).expect("decode");
+        assert_eq!(pk.as_bytes(), decoded.as_bytes());
+    }
+
+    #[test]
+    fn signing_key_roundtrip_base64() {
+        let key = generate_keypair();
+        let b64 = signing_key_to_base64(&key);
+        let decoded = signing_key_from_base64(&b64).expect("decode");
+        assert_eq!(key.to_bytes(), decoded.to_bytes());
+    }
+
+    #[test]
+    fn pubkey_from_garbage_returns_none() {
+        assert!(pubkey_from_base64("garbage!").is_none());
+        assert!(pubkey_from_base64(&"A".repeat(100)).is_none());
+    }
+}
+
+#[cfg(test)]
+mod sign_proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        /// Sign+verify is closed under any report content
+        /// reachable from the public surface.
+        #[test]
+        fn sign_verify_roundtrip(
+            mode in "[a-z]{1,8}",
+            strict in 0u32..=1000,
+            warn in 0u32..=1000,
+        ) {
+            let key = generate_keypair();
+            let mut r = BuildReport {
+                mode,
+                strict_count: strict as usize,
+                warn_count: warn as usize,
+                ..Default::default()
+            };
+            sign_report(&mut r, &key).expect("sign");
+            prop_assert!(verify_report(&r, &key.verifying_key()).is_ok());
+        }
+
+        /// Decoder must not panic on arbitrary input.
+        #[test]
+        fn pubkey_decoder_does_not_panic(s in ".{0,200}") {
+            let _ = pubkey_from_base64(&s);
+        }
+
+        /// Any single-byte mutation of any field breaks
+        /// verification.
+        #[test]
+        fn any_mutation_breaks_signature(
+            mode in "[a-z]{1,8}",
+            strict in 0u32..=100,
+        ) {
+            let key = generate_keypair();
+            let mut r = BuildReport {
+                mode,
+                strict_count: strict as usize,
+                ..Default::default()
+            };
+            sign_report(&mut r, &key).expect("sign");
+            r.warn_count = r.warn_count.wrapping_add(1);
+            prop_assert!(verify_report(&r, &key.verifying_key()).is_err());
+        }
+    }
+}

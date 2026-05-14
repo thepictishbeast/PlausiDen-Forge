@@ -274,6 +274,18 @@ pub struct BuildReport {
     /// the chain.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub started: String,
+    /// T56: Ed25519 signature over the canonical-serialized
+    /// report bytes (with this field omitted). Base64 standard
+    /// encoding (44 chars). `None` when no signing key is
+    /// configured. Verifier checks signature against the public
+    /// key in `attest-pubkey.pem`; mismatch = forgery.
+    ///
+    /// REGRESSION-GUARD: signature is computed AFTER prev_hash
+    /// + chain_length + every other field is set; the bytes
+    /// hashed for signing OMIT this field (otherwise the hash
+    /// would depend on its own value — circular).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub signature: Option<String>,
 }
 
 fn is_zero_u64(n: &u64) -> bool {

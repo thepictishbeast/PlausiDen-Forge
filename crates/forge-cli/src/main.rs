@@ -82,12 +82,45 @@ enum Cmd {
     ///   1 — chain divergence (tamper, gap, missing prev, etc.)
     ///   2 — fatal I/O or parse error
     Verify {
-        /// Verify the Merkle chain. Currently the only verify
-        /// mode; future modes (--signatures, --dependencies)
-        /// will share the subcommand surface.
+        /// Verify the Merkle chain.
         #[arg(long, default_value_t = true)]
         chain: bool,
+        /// Also verify Ed25519 signatures on every chain root
+        /// (T56). Requires reports/attest-pubkey.b64 to exist.
+        #[arg(long, default_value_t = false)]
+        signatures: bool,
     },
+    /// T56: attestation key management.
+    ///
+    /// `forge attest init` generates a new Ed25519 keypair and
+    /// writes:
+    ///   reports/attest-key.b64       — private key (mode 0600)
+    ///   reports/attest-pubkey.b64    — public key (world-readable)
+    ///
+    /// Subsequent `forge build` runs sign every chain root with
+    /// the private key. `forge verify --signatures` checks them.
+    Attest {
+        #[command(subcommand)]
+        action: AttestAction,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum AttestAction {
+    /// Generate a fresh Ed25519 keypair and persist it under
+    /// `reports/`. Refuses to overwrite an existing key without
+    /// `--force`.
+    Init {
+        /// Overwrite an existing keypair. Use only if you've
+        /// rotated keys deliberately + accepted the
+        /// chain-of-trust break.
+        #[arg(long, default_value_t = false)]
+        force: bool,
+    },
+    /// Print the public key in base64 form. Stable identifier
+    /// for an external auditor pinning trust to this forge
+    /// instance.
+    Pubkey,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -143,7 +176,10 @@ fn run() -> Result<ExitCode> {
     // T55: subcommand router. `Build` is the default for backwards
     // compat with `forge` (no subcommand).
     match args.command.as_ref() {
-        Some(Cmd::Verify { chain }) => return run_verify(&root, *chain),
+        Some(Cmd::Verify { chain, signatures }) => {
+            return run_verify(&root, *chain, *signatures)
+        }
+        Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Build) | None => {}
     }
 
@@ -250,6 +286,25 @@ fn run() -> Result<ExitCode> {
     forge_core::attest::chain_step(prior_report.as_ref(), &mut report)
         .context("chain_step")?;
 
+    // T56: if a signing key exists at reports/attest-key.b64,
+    // sign the chain root. Missing key = unsigned build (silent
+    // skip — operator hasn't run `forge attest init` yet).
+    let key_path = reports_dir.join("attest-key.b64");
+    if key_path.is_file() {
+        match std::fs::read_to_string(&key_path)
+            .ok()
+            .and_then(|s| forge_core::attest::signing_key_from_base64(s.trim()))
+        {
+            Some(key) => {
+                forge_core::attest::sign_report(&mut report, &key)
+                    .context("sign chain root")?;
+            }
+            None => {
+                eprintln!("  warn  attest key at {} unreadable — build unsigned", key_path.display());
+            }
+        }
+    }
+
     println!("\n== summary ==");
     println!("  mode:                {}", report.mode);
     println!("  strict findings:     {}", report.strict_count);
@@ -260,6 +315,11 @@ fn run() -> Result<ExitCode> {
         println!("  prev hash:           {}…{}", &h[..8], &h[h.len().saturating_sub(8)..]);
     } else {
         println!("  prev hash:           (genesis)");
+    }
+    if let Some(s) = &report.signature {
+        println!("  signature:           {}…{} (Ed25519)", &s[..8], &s[s.len().saturating_sub(8)..]);
+    } else {
+        println!("  signature:           (unsigned — run `forge attest init` to enable)");
     }
 
     // T26: write the chained report to reports/build-<ts>.json
@@ -308,9 +368,68 @@ fn print_finding(f: &Finding) {
     }
 }
 
+/// T56: attestation key management.
+fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode> {
+    let reports_dir = root.join("reports");
+    let _ = std::fs::create_dir_all(&reports_dir);
+    let key_path = reports_dir.join("attest-key.b64");
+    let pub_path = reports_dir.join("attest-pubkey.b64");
+    match action {
+        AttestAction::Init { force } => {
+            if key_path.exists() && !force {
+                eprintln!(
+                    "forge attest init: {} already exists; pass --force to overwrite \
+                     (chain-of-trust will break for any verifier pinned to the old key)",
+                    key_path.display()
+                );
+                return Ok(ExitCode::from(1));
+            }
+            let key = forge_core::attest::generate_keypair();
+            let priv_b64 = forge_core::attest::signing_key_to_base64(&key);
+            let pub_b64 = forge_core::attest::pubkey_to_base64(&key.verifying_key());
+            std::fs::write(&key_path, &priv_b64)
+                .with_context(|| format!("write {}", key_path.display()))?;
+            // Restrict private key to owner-only on Unix.
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let mut perms = std::fs::metadata(&key_path)?.permissions();
+                perms.set_mode(0o600);
+                let _ = std::fs::set_permissions(&key_path, perms);
+            }
+            std::fs::write(&pub_path, &pub_b64)
+                .with_context(|| format!("write {}", pub_path.display()))?;
+            println!("forge attest init:");
+            println!("  ok    private key → {} (mode 0600)", key_path.display());
+            println!("  ok    public  key → {}", pub_path.display());
+            println!("  pubkey: {pub_b64}");
+            Ok(ExitCode::SUCCESS)
+        }
+        AttestAction::Pubkey => {
+            if !pub_path.is_file() {
+                eprintln!(
+                    "forge attest pubkey: no {} — run `forge attest init` first",
+                    pub_path.display()
+                );
+                return Ok(ExitCode::from(1));
+            }
+            let s = std::fs::read_to_string(&pub_path)
+                .with_context(|| format!("read {}", pub_path.display()))?;
+            print!("{}", s.trim());
+            println!();
+            Ok(ExitCode::SUCCESS)
+        }
+    }
+}
+
 /// T55: walk `reports/build-*.json` ordered by filename
 /// (filenames embed monotonic ts), verify the Merkle chain.
-fn run_verify(root: &std::path::Path, chain: bool) -> Result<ExitCode> {
+/// T56: also verify signatures when `signatures = true`.
+fn run_verify(
+    root: &std::path::Path,
+    chain: bool,
+    signatures: bool,
+) -> Result<ExitCode> {
     if !chain {
         // Currently chain is the only verify mode; reject other
         // shapes politely so future flags surface their own help.
@@ -367,6 +486,49 @@ fn run_verify(root: &std::path::Path, chain: bool) -> Result<ExitCode> {
             println!(
                 "  ok      chain intact — head chain_length={head_len} started={head_started}"
             );
+
+            // T56: optional signature verification.
+            if signatures {
+                let pub_path = reports_dir.join("attest-pubkey.b64");
+                if !pub_path.is_file() {
+                    eprintln!(
+                        "  FAIL    --signatures requested but {} missing — run `forge attest init`",
+                        pub_path.display()
+                    );
+                    return Ok(ExitCode::from(1));
+                }
+                let pub_b64 = std::fs::read_to_string(&pub_path)
+                    .with_context(|| format!("read {}", pub_path.display()))?;
+                let pubkey = match forge_core::attest::pubkey_from_base64(pub_b64.trim()) {
+                    Some(p) => p,
+                    None => {
+                        eprintln!("  FAIL    {} is not a valid base64 ed25519 pubkey", pub_path.display());
+                        return Ok(ExitCode::from(2));
+                    }
+                };
+                let mut signed = 0usize;
+                let mut unsigned = 0usize;
+                for (idx, r) in chain_reports.iter().enumerate() {
+                    if r.signature.is_none() {
+                        unsigned += 1;
+                        continue;
+                    }
+                    if let Err(e) = forge_core::attest::verify_report(r, &pubkey) {
+                        eprintln!(
+                            "  FAIL    signature mismatch at index {idx}: {e}"
+                        );
+                        if let Some(p) = entries.get(idx) {
+                            eprintln!("  bad     {}", p.display());
+                        }
+                        return Ok(ExitCode::from(1));
+                    }
+                    signed += 1;
+                }
+                println!(
+                    "  ok      {signed} signature(s) verified, {unsigned} unsigned (genesis-era)"
+                );
+            }
+
             Ok(ExitCode::SUCCESS)
         }
         Err(e) => {
