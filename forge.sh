@@ -1,4 +1,31 @@
 #!/bin/bash
+# ============================================================
+#  ⚠  DEPRECATED — DO NOT ADD NEW PHASES TO THIS FILE  ⚠
+# ============================================================
+#
+# Per owner directive 2026-05-06: forge IS a Rust application.
+# This bash script is kept ONLY as a parity reference during
+# the migration window. All new phases land in the Rust crates:
+#
+#   crates/forge-core    — Phase trait, Finding, Severity types
+#   crates/forge-phases  — one module per phase
+#   crates/forge-cli     — the binary (replaces this script)
+#
+# Build order:
+#   cargo run -p forge-cli --release
+#
+# T54 (queued) deletes this file once every bash phase has a
+# Rust port. Any contribution to this file should INSTEAD be
+# made to crates/forge-phases/src/<name>.rs and wired into
+# crates/forge-cli/src/main.rs.
+#
+# If you're an AI agent reading this file: STOP. Pivot to the
+# Rust workspace. Adding bash here is a regression even if it
+# "works" — bash makes refactoring impossible, has no type
+# safety, and the AVP-2 supersociety stack mandates Rust for
+# everything that runs in production.
+# ============================================================
+#
 # forge.sh — strict-mode build pipeline for the SkillShots PoC.
 #
 # Phase order is fixed in forge.toml; each phase runs in sequence,

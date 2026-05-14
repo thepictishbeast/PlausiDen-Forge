@@ -12,6 +12,18 @@ base64 = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 
+[dev-dependencies]
+# T51: property-based tests on the theme_consistency parser.
+# AVP-2 Tier 6 mandates proptest for any phase that ingests
+# arbitrary input (here: arbitrary CSS bytes).
+proptest = { workspace = true }
+
+[lints.rust]
+# AVP-2 Tier 1: deny unsafe outside annotated SAFETY blocks.
+unsafe_code = "deny"
+unused_must_use = "deny"
+
 [lints.clippy]
 unwrap_used = "warn"
 expect_used = "warn"
+panic = "warn"

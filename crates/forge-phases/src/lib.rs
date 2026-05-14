@@ -5,6 +5,10 @@
 //! Port progress (T11): 20 of 22 phases ported. T11 COMPLETE.
 //! Retired: viewport_audit, selfaudit.
 //! Net: 20 of 20 effective phases now in Rust.
+//!
+//! T51 (2026-05-06): + theme_consistency (newly added phase that
+//! shipped first in bash; supersociety Rust port). T52 will add
+//! phase_crawl. After both land, T54 deletes forge.sh.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -28,5 +32,6 @@ pub mod phantom_button;
 pub mod self_check;
 pub mod seo;
 pub mod sri;
+pub mod theme_consistency;
 pub mod tokens;
 pub mod unbuilt_route;

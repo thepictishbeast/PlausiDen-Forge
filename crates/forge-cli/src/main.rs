@@ -36,6 +36,7 @@ use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::sri::SriPhase;
+use forge_phases::theme_consistency::ThemeConsistencyPhase;
 use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
 
@@ -133,6 +134,11 @@ fn run() -> Result<ExitCode> {
     let phases: Vec<Box<dyn Phase>> = vec![
         Box::new(LoomSyncPhase),
         Box::new(SelfCheckPhase),
+        // T51 (2026-05-06): theme_consistency runs early — its
+        // findings (e.g. an undefined --loom-color-* reference)
+        // tell every downstream phase that depends on themed
+        // values that the cascade is broken.
+        Box::new(ThemeConsistencyPhase),
         Box::new(TokensPhase),
         Box::new(HtmlSemanticPhase),
         Box::new(CspPhase),

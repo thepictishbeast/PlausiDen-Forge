@@ -79,6 +79,11 @@ time = { version = "0.3", features = ["formatting", "macros"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
+# Property-based testing per AVP-2 Tier 6. Each phase that
+# parses arbitrary input MUST have a proptest target alongside
+# its deterministic unit tests.
+proptest = "1"
+
 # AVP-2 gate: no unwrap/expect in lib code without justification.
 # Use the existing crate-local std::process::exit at the binary
 # edge only.
