@@ -36,3 +36,4 @@ pub mod sri;
 pub mod theme_consistency;
 pub mod tokens;
 pub mod unbuilt_route;
+pub mod validate_cms;

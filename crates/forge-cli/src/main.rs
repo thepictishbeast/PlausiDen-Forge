@@ -40,6 +40,7 @@ use forge_phases::sri::SriPhase;
 use forge_phases::theme_consistency::ThemeConsistencyPhase;
 use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
+use forge_phases::validate_cms::ValidateCmsPhase;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -133,6 +134,11 @@ fn run() -> Result<ExitCode> {
     // forge-runner crate (queued) will introduce explicit
     // dependency edges.
     let phases: Vec<Box<dyn Phase>> = vec![
+        // T53 (2026-05-06): validate_cms is the entry gate. No
+        // downstream phase produces value if CMS input is
+        // malformed; failing fast surfaces the bug at the most
+        // actionable location.
+        Box::new(ValidateCmsPhase),
         Box::new(LoomSyncPhase),
         Box::new(SelfCheckPhase),
         // T51 (2026-05-06): theme_consistency runs early — its
