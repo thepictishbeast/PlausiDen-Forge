@@ -60,3 +60,10 @@ viewports = [
 static_dir = "static"
 dist_dir   = "dist"
 report_dir = "reports"
+
+# T70c (2026-05-14): regenerate static/<slug>.html from cms/*.json
+# on every `forge build`. Without this, edits to CMS or to Loom's
+# page_shell don't show up in the served HTML until the operator
+# runs `loom cms-render` per file manually.
+[render]
+write_canonical = true
