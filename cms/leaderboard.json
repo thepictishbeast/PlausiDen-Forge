@@ -1,7 +1,7 @@
 {
   "$schema": "../cms-schema.json",
   "title": "Leaderboard \u2014 SkillShots",
-  "description": "Top earners this week. Voted by your crew.",
+  "description": "Top SkillShots earners this week — pots, ranks, and category leaders, all voted by your crew.",
   "path": "/leaderboard.html",
   "nav_links": [
     {
