@@ -17,6 +17,12 @@ tracing = { workspace = true }
 # drift bugs.
 serde = { workspace = true }
 serde_json = { workspace = true }
+# T70: phase_render uses Loom's CMS renderer IN-PROCESS, not via
+# subprocess. Owner directive 2026-05-13: forge actually
+# generates content via the CMS, doesn't merely delegate.
+# Path dep on the sibling repo for now; vendoring or a workspace
+# merge tracked in T70b/T70c.
+loom-cms-render = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-cms-render" }
 
 [dev-dependencies]
 # T51: property-based tests on the theme_consistency parser.

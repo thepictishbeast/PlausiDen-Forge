@@ -32,6 +32,7 @@ pub mod motion;
 pub mod path_consistency;
 pub mod perf_budget;
 pub mod phantom_button;
+pub mod render;
 pub mod self_check;
 pub mod seo;
 pub mod sri;
