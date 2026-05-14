@@ -71,7 +71,29 @@ impl Phase for RenderPhase {
             return Ok(Vec::new());
         }
 
-        let out_dir = ctx.static_dir.join("_render");
+        // T70c (2026-05-14): per-site opt-in to write rendered HTML
+        // directly to <static_dir>/<slug>.html instead of the
+        // sibling <static_dir>/_render/<slug>.html. The default
+        // stays false for backwards compatibility — sites can flip
+        // it once they've verified parity with their existing
+        // hand-rendered HTML or pre-built static set.
+        //
+        //   forge.toml:
+        //     [render]
+        //     write_canonical = true
+        //
+        // Closes the workflow gap surfaced by the 2026-05-14
+        // SkillShots dogfood loop: a CMS or Loom edit was producing
+        // updated HTML in `_render/` while `static/` (which the
+        // dev server actually serves) stayed stale. With
+        // write_canonical=true, `forge build` rebuilds the served
+        // pages in one step.
+        let write_canonical = forge_toml_render_write_canonical(&ctx.root);
+        let out_dir = if write_canonical {
+            ctx.static_dir.clone()
+        } else {
+            ctx.static_dir.join("_render")
+        };
         if let Err(e) = std::fs::create_dir_all(&out_dir) {
             return Err(BuildError::Io {
                 context: format!("render mkdir {}", out_dir.display()),
@@ -246,6 +268,29 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
         "light" | "dark" => Some(theme.to_owned()),
         _ => None,
     }
+}
+
+/// T70c (2026-05-14): read `[render] write_canonical = true` from
+/// `<root>/forge.toml`. Returns false for any non-true value
+/// (missing file, parse error, key absent, key set to anything
+/// other than the literal boolean `true`).
+///
+/// Defence in depth: a typo'd or deliberately-malformed
+/// forge.toml falls back to the safe default (write to
+/// `_render/`, leave `static/` alone).
+fn forge_toml_render_write_canonical(root: &Path) -> bool {
+    let path = root.join("forge.toml");
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return false;
+    };
+    let Ok(parsed) = content.parse::<toml::Value>() else {
+        return false;
+    };
+    parsed
+        .get("render")
+        .and_then(|r| r.get("write_canonical"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
 }
 
 /// Atomic write: tmp file + rename. POSIX guarantees rename is
@@ -428,6 +473,68 @@ mod tests {
         assert!(v2.contains("<title>v2</title>"));
         assert!(!v2.contains("<title>v1</title>"));
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    // T70c (2026-05-14): write_canonical opt-in.
+    #[test]
+    fn render_writes_to_underscore_render_by_default() {
+        let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
+        // No forge.toml present → default behaviour.
+        let _ = RenderPhase.run(&ctx).expect("run");
+        assert!(tmp.join("static/_render/home.html").is_file(), "default writes to _render/");
+        assert!(!tmp.join("static/home.html").is_file(), "default must NOT write to static/<slug>");
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn render_writes_to_static_when_write_canonical_true() {
+        let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
+        std::fs::write(
+            tmp.join("forge.toml"),
+            "[render]\nwrite_canonical = true\n",
+        )
+        .expect("write forge.toml");
+        let _ = RenderPhase.run(&ctx).expect("run");
+        assert!(
+            tmp.join("static/home.html").is_file(),
+            "write_canonical=true must write to static/<slug>"
+        );
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn render_falls_back_safely_on_malformed_forge_toml() {
+        let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
+        std::fs::write(tmp.join("forge.toml"), "this is = not [valid toml{").expect("write");
+        let _ = RenderPhase.run(&ctx).expect("run");
+        // Defence-in-depth: malformed config falls back to the
+        // safe default (write to _render/, leave static/ alone).
+        assert!(tmp.join("static/_render/home.html").is_file());
+        assert!(!tmp.join("static/home.html").is_file());
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn render_write_canonical_false_or_missing_uses_underscore_render() {
+        for forge_toml in &[
+            "",                                          // empty
+            "[render]\n",                                // section but no key
+            "[render]\nwrite_canonical = false\n",       // explicit false
+            "[render]\nwrite_canonical = \"yes\"\n",     // wrong type
+        ] {
+            let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
+            std::fs::write(tmp.join("forge.toml"), forge_toml).expect("write");
+            let _ = RenderPhase.run(&ctx).expect("run");
+            assert!(
+                tmp.join("static/_render/home.html").is_file(),
+                "default-bound case '{forge_toml}' must write to _render/"
+            );
+            assert!(
+                !tmp.join("static/home.html").is_file(),
+                "default-bound case '{forge_toml}' must NOT write to static/<slug>"
+            );
+            let _ = std::fs::remove_dir_all(&tmp);
+        }
     }
 
     #[test]

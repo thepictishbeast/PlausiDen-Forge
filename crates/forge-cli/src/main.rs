@@ -35,6 +35,7 @@ use forge_phases::motion::MotionPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
+use forge_phases::render::RenderPhase;
 use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::sri::SriPhase;
@@ -297,6 +298,16 @@ fn run() -> Result<ExitCode> {
         // actionable location.
         Box::new(ValidateCmsPhase),
         Box::new(LoomSyncPhase),
+        // T70c (2026-05-14): regenerate static HTML from cms/*.json
+        // BEFORE every lint phase runs. Without this, edits to
+        // cms/ or to loom-cms-render's page_shell don't show up
+        // in static/ until the operator runs `loom cms-render`
+        // manually — a friction surfaced by repeated dogfood loops.
+        // The phase opt-out for legacy sites: forge.toml
+        //   [render]
+        //   write_canonical = false   # default; writes _render/
+        // skips overwriting static/.
+        Box::new(RenderPhase),
         Box::new(SelfCheckPhase),
         // T51 (2026-05-06): theme_consistency runs early — its
         // findings (e.g. an undefined --loom-color-* reference)
