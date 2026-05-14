@@ -19,3 +19,8 @@ serde_json = { workspace = true }
 time = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+# T44: filesystem-watch loop for `forge watch`. notify is the
+# standard Rust file-watcher crate (mature, single-author-
+# maintained, ~3 transitive deps). Mom-class UX: edit your CMS,
+# see findings stream as you save.
+notify = "6"

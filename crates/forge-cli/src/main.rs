@@ -73,6 +73,26 @@ struct Args {
 enum Cmd {
     /// Run every phase. Default when no subcommand is given.
     Build,
+    /// T44: continuous-build mode. Watches the project root for
+    /// changes (cms/*, static/*, forge.toml, backends.toml) and
+    /// re-runs the build pipeline on each save with debounce. Exit
+    /// with Ctrl-C.
+    ///
+    /// Mom-class UX: `forge watch` in one terminal, `loom edit-serve`
+    /// in another, edit cms/index.json — see findings stream as you
+    /// save.
+    ///
+    /// Debounce: 300 ms (notify can fire many events for one
+    /// editor save — vim ~swap files, atomic replaces, etc.).
+    Watch {
+        /// Debounce window in ms. Defaults to 300.
+        #[arg(long, default_value_t = 300)]
+        debounce_ms: u64,
+        /// Limit to N rebuilds then exit (useful for tests + CI
+        /// smoke). 0 means unlimited (the default).
+        #[arg(long, default_value_t = 0)]
+        max_rebuilds: usize,
+    },
     /// Verify the cryptographic build-report chain (T26). Walks
     /// `reports/build-*.json` sorted by filename + asserts that
     /// every report's `prev_hash` matches the SHA-256 of its
@@ -241,6 +261,10 @@ fn run() -> Result<ExitCode> {
         }
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
+        Some(Cmd::Watch {
+            debounce_ms,
+            max_rebuilds,
+        }) => return run_watch(&root, *debounce_ms, *max_rebuilds),
         Some(Cmd::Build) | None => {}
     }
 
@@ -433,6 +457,190 @@ fn print_finding(f: &Finding) {
     } else {
         println!("  {}{}: {} — {}", label, f.phase, f.path, f.message);
     }
+}
+
+/// T44: continuous-build watch mode.
+///
+/// Watches `cms/`, `static/`, `forge.toml`, and `backends.toml`
+/// under `root`. On any debounced change, re-execs `forge` (the
+/// current binary, with no `watch` subcommand) so the existing
+/// `run()` build pipeline runs unchanged.
+///
+/// Why subprocess re-exec instead of in-process loop:
+///   * Phase order, BuildCtx setup, Merkle-chain logic all live
+///     in `run()` — re-using them as a function would mean
+///     factoring out `run_build()` from `run()`. Subprocess is
+///     a smaller change with the same operator semantics.
+///   * Each rebuild gets a fresh process — no in-memory state
+///     leaks across rebuilds, no risk of phases interfering
+///     across iterations.
+///
+/// Debounce: `notify` can fire many events for one editor save
+/// (vim swap files, atomic-rename, fsync flushes). We coalesce
+/// any burst of events within `debounce_ms` into a single
+/// rebuild.
+///
+/// Exit: Ctrl-C terminates the loop. `--max-rebuilds N` exits
+/// cleanly after N rebuilds (used for tests + CI smoke).
+///
+/// AVP-PASS-T44: 2026-05-14.
+fn run_watch(
+    root: &std::path::Path,
+    debounce_ms: u64,
+    max_rebuilds: usize,
+) -> Result<ExitCode> {
+    use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
+    use std::sync::mpsc::{channel, RecvTimeoutError};
+    use std::time::{Duration, Instant};
+
+    // T44 BUG-GUARD: notify emits events with ABSOLUTE paths.
+    // is_relevant_event strip_prefix's against the watch root,
+    // so we must canonicalise BEFORE handing to either notify or
+    // the filter — otherwise a relative `.` root never matches
+    // the absolute event paths and every event is "irrelevant."
+    let root_canon = root
+        .canonicalize()
+        .with_context(|| format!("canonicalize root {}", root.display()))?;
+    let root = root_canon.as_path();
+
+    eprintln!("forge watch:");
+    eprintln!("  ok    watching {}", root.display());
+    eprintln!("  ok    debounce {debounce_ms}ms");
+    if max_rebuilds > 0 {
+        eprintln!("  info  capped at {max_rebuilds} rebuilds");
+    }
+    eprintln!("  info  Ctrl-C to exit");
+    eprintln!();
+
+    // Initial build runs immediately so the operator sees current
+    // state without having to save first.
+    let mut rebuild_count = 0usize;
+    rebuild_once(root, "initial", &mut rebuild_count)?;
+    if max_rebuilds > 0 && rebuild_count >= max_rebuilds {
+        eprintln!("forge watch: hit max-rebuilds; exiting cleanly");
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    let (tx, rx) = channel::<notify::Result<Event>>();
+    let mut watcher: RecommendedWatcher = notify::recommended_watcher(move |res| {
+        // The notify thread sends events; we coalesce in main.
+        let _ = tx.send(res);
+    })
+    .context("failed to create file-watcher")?;
+
+    // Watch the project root recursively. Subdirs we care about
+    // (`cms/`, `static/`) are auto-included; `target/` and dot-
+    // dirs are filtered in the event-handler below to keep the
+    // operator from triggering rebuilds via cargo activity.
+    watcher
+        .watch(root, RecursiveMode::Recursive)
+        .context("failed to watch project root")?;
+
+    let debounce = Duration::from_millis(debounce_ms);
+    loop {
+        // Block until first event.
+        let first = match rx.recv() {
+            Ok(r) => r,
+            Err(_) => {
+                eprintln!("forge watch: watcher channel closed; exiting");
+                return Ok(ExitCode::SUCCESS);
+            }
+        };
+        if !is_relevant_event(&first, root) {
+            continue;
+        }
+
+        // Coalesce burst within debounce window.
+        let burst_started = Instant::now();
+        let mut latest_path: Option<String> = first.ok().and_then(event_path_label);
+        loop {
+            let remaining = debounce.checked_sub(burst_started.elapsed()).unwrap_or_default();
+            if remaining.is_zero() {
+                break;
+            }
+            match rx.recv_timeout(remaining) {
+                Ok(r) => {
+                    if is_relevant_event(&r, root) {
+                        if let Some(label) = r.ok().and_then(event_path_label) {
+                            latest_path = Some(label);
+                        }
+                    }
+                }
+                Err(RecvTimeoutError::Timeout) => break,
+                Err(RecvTimeoutError::Disconnected) => {
+                    eprintln!("forge watch: watcher channel disconnected; exiting");
+                    return Ok(ExitCode::SUCCESS);
+                }
+            }
+        }
+
+        let trigger = latest_path.unwrap_or_else(|| "<unknown>".to_owned());
+        rebuild_once(root, &trigger, &mut rebuild_count)?;
+        if max_rebuilds > 0 && rebuild_count >= max_rebuilds {
+            eprintln!("forge watch: hit max-rebuilds; exiting cleanly");
+            return Ok(ExitCode::SUCCESS);
+        }
+    }
+}
+
+/// Filter for filesystem events that should trigger a rebuild.
+/// Excludes target/, hidden dot-dirs, and reports/ to avoid
+/// rebuild-storm from cargo + the build's own outputs.
+fn is_relevant_event(ev: &notify::Result<notify::Event>, root: &std::path::Path) -> bool {
+    let Ok(event) = ev else {
+        return false;
+    };
+    for path in &event.paths {
+        let rel = match path.strip_prefix(root) {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
+        let s = rel.to_string_lossy();
+        if s.starts_with("target/")
+            || s.starts_with(".git/")
+            || s.starts_with("reports/")
+            || s.starts_with("node_modules/")
+            || s.contains("/.")
+            || s.starts_with('.')
+        {
+            continue;
+        }
+        // At least one path is interesting.
+        return true;
+    }
+    false
+}
+
+fn event_path_label(ev: notify::Event) -> Option<String> {
+    ev.paths.first().map(|p| p.display().to_string())
+}
+
+/// Re-exec the current binary as `forge build` (no watch flag)
+/// so we hit the existing build pipeline. Inherits stdio so
+/// findings stream live to the operator's terminal.
+fn rebuild_once(
+    root: &std::path::Path,
+    trigger: &str,
+    counter: &mut usize,
+) -> Result<()> {
+    *counter += 1;
+    let n = *counter;
+    eprintln!("---- forge watch rebuild #{n} (trigger: {trigger}) ----");
+    let exe = std::env::current_exe().context("locate own binary for re-exec")?;
+    let status = std::process::Command::new(exe)
+        .arg("--root")
+        .arg(root)
+        .arg("build")
+        .status()
+        .context("forge build subprocess failed to spawn")?;
+    eprintln!(
+        "---- forge watch rebuild #{n} done ({}) ----",
+        status
+            .code()
+            .map(|c| format!("exit {c}"))
+            .unwrap_or_else(|| "signaled".to_owned())
+    );
+    Ok(())
 }
 
 /// T56: attestation key management.
