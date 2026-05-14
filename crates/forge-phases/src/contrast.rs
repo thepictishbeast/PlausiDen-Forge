@@ -106,8 +106,15 @@ impl Phase for ContrastPhase {
     }
 }
 
-/// Parse `:root` + `:root[data-theme="X"]` blocks, returning
-/// `{ theme: { token_name: rgb } }`.
+/// Parse `:root` + `:root[data-theme="X"]` + `@media
+/// (prefers-color-scheme: dark) { :root { … } }` blocks,
+/// returning `{ theme: { token_name: rgb } }`.
+///
+/// T68 (2026-05-14): added `prefers-color-scheme` support.
+/// PlausiDen-Loom T48c v2 emits the dark palette via
+/// `@media (prefers-color-scheme: dark)`, NOT via
+/// `[data-theme="dark"]`. Without this branch, the dark
+/// palette was silently un-audited.
 ///
 /// BUG ASSUMPTION: this is a brace-balanced text scan, not a CSS
 /// AST parse. Comments containing literal `{` or `}` would skew
@@ -115,12 +122,56 @@ impl Phase for ContrastPhase {
 /// in comments, but a real CSS parser is queued (forge-css crate).
 fn parse_tokens(css: &str) -> BTreeMap<String, BTreeMap<String, Rgb>> {
     let mut out: BTreeMap<String, BTreeMap<String, Rgb>> = BTreeMap::new();
+
+    // Pass 1: extract `prefers-color-scheme: dark` media-query
+    // blocks BEFORE the second pass scans :root, so a `:root`
+    // inside a media query gets its tokens routed to the "dark"
+    // bucket rather than the default "light" bucket.
+    let dark_media_inner = extract_prefers_color_scheme_dark_blocks(css);
+    for inner_css in &dark_media_inner {
+        let entry = out.entry("dark".to_owned()).or_default();
+        // Each inner_css is the body of an @media block. It may
+        // contain one or more `:root { ... }` rules; we want the
+        // tokens from each.
+        let mut cursor = 0usize;
+        while cursor < inner_css.len() {
+            let Some(rel_idx) = inner_css[cursor..].find(":root") else {
+                break;
+            };
+            let abs_idx = cursor + rel_idx;
+            let after_root = &inner_css[abs_idx + ":root".len()..];
+            let Some(brace_offset) = after_root.find('{') else {
+                break;
+            };
+            let block_start = abs_idx + ":root".len() + brace_offset + 1;
+            let block_end = match find_matching_brace(&inner_css[block_start..]) {
+                Some(end) => block_start + end,
+                None => break,
+            };
+            cursor = block_end + 1;
+            let block = &inner_css[block_start..block_end];
+            for (name, rgb) in parse_color_decls(block) {
+                entry.insert(name, rgb);
+            }
+        }
+    }
+
+    // Pass 2: walk top-level `:root` + `:root[data-theme="X"]`
+    // outside any @media block.
     let mut cursor = 0usize;
     while cursor < css.len() {
         let Some(rel_idx) = css[cursor..].find(":root") else {
             break;
         };
         let abs_idx = cursor + rel_idx;
+
+        // Skip if this `:root` is inside a `@media (prefers-color-
+        // scheme: dark)` block — pass 1 already captured those.
+        if is_inside_dark_media(css, abs_idx) {
+            cursor = abs_idx + ":root".len();
+            continue;
+        }
+
         let after_root = &css[abs_idx + ":root".len()..];
 
         // Optional `[data-theme="X"]` (case-insensitive, attribute
@@ -150,6 +201,98 @@ fn parse_tokens(css: &str) -> BTreeMap<String, BTreeMap<String, Rgb>> {
         }
     }
     out
+}
+
+/// Extract the body of every `@media (prefers-color-scheme: dark)
+/// { … }` block in `css`. Returns the inner-CSS strings (the part
+/// inside the outer braces).
+///
+/// Tolerant of whitespace inside the media query parens. Does NOT
+/// match `prefers-color-scheme: light` or other values.
+fn extract_prefers_color_scheme_dark_blocks(css: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cursor = 0usize;
+    while cursor < css.len() {
+        let Some(rel_idx) = css[cursor..].find("@media") else {
+            break;
+        };
+        let abs_idx = cursor + rel_idx;
+        let after_at = &css[abs_idx + "@media".len()..];
+        // Find the opening brace; everything between is the
+        // media query.
+        let Some(brace_offset) = after_at.find('{') else {
+            break;
+        };
+        let media_query = &after_at[..brace_offset];
+        let block_start = abs_idx + "@media".len() + brace_offset + 1;
+        let Some(block_len) = find_matching_brace(&css[block_start..]) else {
+            break;
+        };
+        let block_end = block_start + block_len;
+        cursor = block_end + 1;
+
+        if media_query_matches_prefers_dark(media_query) {
+            out.push(css[block_start..block_end].to_owned());
+        }
+    }
+    out
+}
+
+/// Predicate: does the given media-query string (without the
+/// surrounding `@media` and `{`) match `prefers-color-scheme: dark`?
+fn media_query_matches_prefers_dark(query: &str) -> bool {
+    // Walk for "prefers-color-scheme" then verify ":" then "dark"
+    // before the next "(" closer.
+    let needle = "prefers-color-scheme";
+    let Some(idx) = query.find(needle) else {
+        return false;
+    };
+    let after = &query[idx + needle.len()..];
+    let trimmed = after.trim_start();
+    let Some(after_colon) = trimmed.strip_prefix(':') else {
+        return false;
+    };
+    // Bound to the next ')' so we don't accidentally match
+    // `prefers-color-scheme: light) and (something dark)`.
+    let bound = after_colon.find(')').unwrap_or(after_colon.len());
+    let candidate = &after_colon[..bound];
+    candidate.contains("dark")
+}
+
+/// Predicate: is the byte position `pos` inside an @media block
+/// that matches `prefers-color-scheme: dark`?
+///
+/// Used in pass 2 to skip `:root` rules whose tokens were already
+/// captured in pass 1.
+fn is_inside_dark_media(css: &str, pos: usize) -> bool {
+    let mut cursor = 0usize;
+    while cursor < pos {
+        let Some(rel_idx) = css[cursor..].find("@media") else {
+            return false;
+        };
+        let abs_idx = cursor + rel_idx;
+        if abs_idx >= pos {
+            return false;
+        }
+        let after_at = &css[abs_idx + "@media".len()..];
+        let Some(brace_offset) = after_at.find('{') else {
+            return false;
+        };
+        let media_query = &after_at[..brace_offset];
+        let block_start = abs_idx + "@media".len() + brace_offset + 1;
+        let Some(block_len) = find_matching_brace(&css[block_start..]) else {
+            return false;
+        };
+        let block_end = block_start + block_len;
+        if pos >= block_start
+            && pos < block_end
+            && media_query_matches_prefers_dark(media_query)
+        {
+            return true;
+        }
+        cursor = block_end + 1;
+    }
+    false
 }
 
 /// Given `[data-theme="X"]<rest>`, extract X. Returns None on
@@ -426,5 +569,86 @@ mod tests {
         let themes = parse_tokens(css);
         assert!(themes.contains_key("dark"));
         assert!(themes["dark"].contains_key("ink"));
+    }
+
+    // ---- T68: prefers-color-scheme: dark support ----
+
+    #[test]
+    fn parse_tokens_picks_up_prefers_color_scheme_dark() {
+        let css = r#"
+            :root {
+                --loom-color-ink: #111111;
+                --loom-color-bg-canvas: #ffffff;
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --loom-color-ink: #f0f0f0;
+                    --loom-color-bg-canvas: #111111;
+                }
+            }
+        "#;
+        let themes = parse_tokens(css);
+        assert!(themes.contains_key("light"), "missing light theme");
+        assert!(themes.contains_key("dark"), "T68: missing dark theme from @media");
+        // Rgb is (f64, f64, f64) in [0.0, 1.0]. Compare with
+        // tolerance instead of exact equality.
+        let light_ink = themes["light"].get("ink").expect("light ink");
+        assert!((light_ink.0 - (0x11 as f64 / 255.0)).abs() < 0.01);
+        let dark_ink = themes["dark"].get("ink").expect("dark ink");
+        assert!((dark_ink.0 - (0xf0 as f64 / 255.0)).abs() < 0.01);
+    }
+
+    #[test]
+    fn parse_tokens_ignores_prefers_color_scheme_light() {
+        // A media query for the LIGHT preference is not a dark
+        // palette, even if "dark" appears later as a token name.
+        let css = r#"
+            :root { --loom-color-ink: #000; }
+            @media (prefers-color-scheme: light) {
+                :root { --loom-color-ink: #001; }
+            }
+        "#;
+        let themes = parse_tokens(css);
+        assert!(themes.contains_key("light"));
+        assert!(!themes.contains_key("dark"), "must not auto-create dark from light @media");
+    }
+
+    #[test]
+    fn parse_tokens_dark_media_compact_no_spaces() {
+        let css = "@media(prefers-color-scheme:dark){:root{--loom-color-ink:#fff}}";
+        let themes = parse_tokens(css);
+        assert!(themes.contains_key("dark"), "compact-spacing dark @media must parse");
+    }
+
+    #[test]
+    fn parse_tokens_dark_media_and_data_theme_coexist() {
+        // T48c v2 emits @media; some sites also provide an
+        // explicit data-theme="dark" for opt-in JS toggling.
+        // Both should populate the "dark" bucket; later writes win.
+        let css = r#"
+            :root { --loom-color-ink: #111; }
+            :root[data-theme="dark"] { --loom-color-ink: #fff; }
+            @media (prefers-color-scheme: dark) {
+                :root { --loom-color-ink: #eee; }
+            }
+        "#;
+        let themes = parse_tokens(css);
+        assert!(themes.contains_key("dark"));
+        // Either #fff or #eee may win depending on pass order;
+        // the contract is that "dark" exists with one of them.
+        let v = themes["dark"].get("ink").expect("dark ink");
+        // Either #fff (1.0) or #eee (~0.933) wins.
+        assert!(v.0 > 0.9 && v.1 > 0.9 && v.2 > 0.9);
+    }
+
+    #[test]
+    fn media_query_matcher_basics() {
+        assert!(media_query_matches_prefers_dark("(prefers-color-scheme: dark)"));
+        assert!(media_query_matches_prefers_dark("(prefers-color-scheme:dark)"));
+        assert!(media_query_matches_prefers_dark(" ( prefers-color-scheme : dark ) "));
+        assert!(!media_query_matches_prefers_dark("(prefers-color-scheme: light)"));
+        assert!(!media_query_matches_prefers_dark("(min-width: 768px)"));
+        // Tricky: light mode + something else mentioning "dark" — must not match.
+        assert!(!media_query_matches_prefers_dark("(prefers-color-scheme: light) and (max-width: 768px) /* dark */"));
     }
 }
