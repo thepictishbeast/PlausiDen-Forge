@@ -134,6 +134,35 @@ enum AuditAction {
         #[arg(long, default_value_t = false)]
         explain: bool,
     },
+    /// T58: mutation testing per AVP-2 Tier 6. Without
+    /// `--run`, reads the most recent `mutants.out/outcomes.json`
+    /// and reports survivor count vs threshold. With `--run`,
+    /// invokes `cargo mutants` first (SLOW — re-runs the test
+    /// suite per mutation; expect minutes-to-hours).
+    ///
+    /// Doctrine: a public function whose mutations all SURVIVE
+    /// the test suite is a function the tests don't actually
+    /// constrain. AVP-2 mandates < 5% survival on critical
+    /// paths. forge core, forge-phases, attest, capability —
+    /// all critical.
+    ///
+    /// Exit codes:
+    ///   0 — survival rate ≤ threshold (or no outcomes yet)
+    ///   1 — survival rate above threshold
+    ///   2 — fatal (cargo-mutants missing, JSON unparseable)
+    Mutants {
+        /// Actually invoke `cargo mutants -p <crate>` first.
+        /// Default false: just read existing mutants.out/.
+        #[arg(long, default_value_t = false)]
+        run: bool,
+        /// Crate to test under `--run`. Defaults to forge-core.
+        #[arg(long, default_value = "forge-core")]
+        crate_name: String,
+        /// Maximum acceptable survival rate as a percent.
+        /// AVP-2 default is 5.0. Lower is stricter.
+        #[arg(long, default_value_t = 5.0)]
+        threshold: f64,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -544,8 +573,162 @@ fn git_staged_paths(cwd: &std::path::Path) -> Vec<std::path::PathBuf> {
         .collect()
 }
 
+// ============================================================
+// T58: cargo-mutants integration.
+// ============================================================
+//
+// AVP-2 Tier 6: mutation testing < 5% survival on critical
+// paths. cargo-mutants writes results to `mutants.out/` —
+// notably `mutants.out/outcomes.json` with per-mutant outcomes.
+//
+// JSON shape (cargo-mutants 27.x):
+//   { "outcomes": [
+//       { "outcome": "Caught" | "MissedSurvived" | "Unviable" | "Timeout", ... },
+//       ...
+//     ],
+//     ...
+//   }
+//
+// Survival rate = MissedSurvived / (MissedSurvived + Caught).
+// (Unviable + Timeout aren't counted — they're scaffolding
+// failures, not mutation outcomes.)
+
+#[derive(serde::Deserialize, Debug, Default)]
+struct MutantsOutcomes {
+    #[serde(default)]
+    outcomes: Vec<MutantOutcome>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct MutantOutcome {
+    /// Either a string or an object — cargo-mutants 27.x has
+    /// {"summary": "Caught"} OR a bare string. We accept either.
+    #[serde(default)]
+    summary: Option<String>,
+    #[serde(default)]
+    outcome: Option<String>,
+}
+
+impl MutantOutcome {
+    fn category(&self) -> Option<&str> {
+        self.summary.as_deref().or(self.outcome.as_deref())
+    }
+}
+
+#[derive(Debug, Default, PartialEq)]
+struct MutantsSummary {
+    caught: usize,
+    survived: usize,
+    unviable: usize,
+    timeout: usize,
+    other: usize,
+}
+
+impl MutantsSummary {
+    fn from_outcomes(o: &MutantsOutcomes) -> Self {
+        let mut s = Self::default();
+        for m in &o.outcomes {
+            match m.category() {
+                Some("Caught") => s.caught += 1,
+                Some("MissedSurvived") | Some("Survived") => s.survived += 1,
+                Some("Unviable") => s.unviable += 1,
+                Some("Timeout") => s.timeout += 1,
+                _ => s.other += 1,
+            }
+        }
+        s
+    }
+
+    fn survival_rate(&self) -> f64 {
+        let total = self.caught + self.survived;
+        if total == 0 {
+            0.0
+        } else {
+            (self.survived as f64) * 100.0 / (total as f64)
+        }
+    }
+}
+
+fn run_audit_mutants(
+    root: &std::path::Path,
+    run: bool,
+    crate_name: &str,
+    threshold: f64,
+) -> Result<ExitCode> {
+    if run {
+        // Optional cargo-mutants invocation. SECURITY: arg-vec
+        // only, no shell.
+        let status = std::process::Command::new("cargo")
+            .args(["mutants", "-p", crate_name])
+            .current_dir(root)
+            .status();
+        match status {
+            Ok(s) if s.success() => {}
+            Ok(s) => {
+                eprintln!("forge audit mutants: cargo mutants exited {s} (continuing to parse outcomes)");
+            }
+            Err(e) => {
+                eprintln!("forge audit mutants: cargo mutants failed: {e}");
+                return Ok(ExitCode::from(2));
+            }
+        }
+    }
+    let outcomes_path = root.join("mutants.out").join("outcomes.json");
+    if !outcomes_path.is_file() {
+        if run {
+            eprintln!(
+                "forge audit mutants: cargo mutants ran but {} missing — \
+                 the version may write outcomes to a different path",
+                outcomes_path.display()
+            );
+            return Ok(ExitCode::from(2));
+        }
+        println!(
+            "forge audit mutants: no {} yet — run with --run to generate",
+            outcomes_path.display()
+        );
+        return Ok(ExitCode::SUCCESS);
+    }
+    let raw = std::fs::read_to_string(&outcomes_path)
+        .with_context(|| format!("read {}", outcomes_path.display()))?;
+    let parsed: MutantsOutcomes = serde_json::from_str(&raw)
+        .with_context(|| format!("parse {}", outcomes_path.display()))?;
+    let summary = MutantsSummary::from_outcomes(&parsed);
+    let rate = summary.survival_rate();
+
+    println!("forge audit mutants:");
+    println!("  caught     {}", summary.caught);
+    println!("  survived   {}", summary.survived);
+    println!("  unviable   {}", summary.unviable);
+    println!("  timeout    {}", summary.timeout);
+    if summary.other > 0 {
+        println!("  other      {}", summary.other);
+    }
+    println!(
+        "  survival rate: {:.1}%  (threshold: {:.1}%)",
+        rate, threshold
+    );
+
+    if rate <= threshold {
+        println!("  ok      survival ≤ threshold (AVP-2 Tier 6 met)");
+        Ok(ExitCode::SUCCESS)
+    } else {
+        eprintln!(
+            "  FAIL    survival {rate:.1}% > threshold {threshold:.1}% — \
+             tests do not constrain {} survived mutations",
+            summary.survived
+        );
+        Ok(ExitCode::from(1))
+    }
+}
+
 fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
     match action {
+        AuditAction::Mutants {
+            run,
+            crate_name,
+            threshold,
+        } => run_audit_mutants(root, *run, crate_name, *threshold),
         AuditAction::Secrets { paths, explain } => {
             let scan_targets: Vec<std::path::PathBuf> = if paths.is_empty() {
                 git_staged_paths(root)
@@ -776,6 +959,78 @@ fn read_mode_from_toml(root: &std::path::Path) -> Option<BuildMode> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod mutants_summary_tests {
+    use super::*;
+
+    #[test]
+    fn empty_outcomes_yield_zero_rate() {
+        let o = MutantsOutcomes::default();
+        let s = MutantsSummary::from_outcomes(&o);
+        assert_eq!(s.survival_rate(), 0.0);
+    }
+
+    #[test]
+    fn caught_only_yields_zero_rate() {
+        let raw = r#"{"outcomes":[{"summary":"Caught"},{"summary":"Caught"}]}"#;
+        let o: MutantsOutcomes = serde_json::from_str(raw).expect("parse");
+        let s = MutantsSummary::from_outcomes(&o);
+        assert_eq!(s.caught, 2);
+        assert_eq!(s.survived, 0);
+        assert_eq!(s.survival_rate(), 0.0);
+    }
+
+    #[test]
+    fn one_survived_three_caught_yields_25_percent() {
+        let raw = r#"{"outcomes":[
+            {"summary":"Caught"},
+            {"summary":"Caught"},
+            {"summary":"Caught"},
+            {"summary":"MissedSurvived"}
+        ]}"#;
+        let o: MutantsOutcomes = serde_json::from_str(raw).expect("parse");
+        let s = MutantsSummary::from_outcomes(&o);
+        assert_eq!(s.caught, 3);
+        assert_eq!(s.survived, 1);
+        assert!((s.survival_rate() - 25.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn unviable_and_timeout_excluded_from_rate() {
+        let raw = r#"{"outcomes":[
+            {"summary":"Caught"},
+            {"summary":"Unviable"},
+            {"summary":"Timeout"},
+            {"summary":"MissedSurvived"}
+        ]}"#;
+        let o: MutantsOutcomes = serde_json::from_str(raw).expect("parse");
+        let s = MutantsSummary::from_outcomes(&o);
+        assert_eq!(s.unviable, 1);
+        assert_eq!(s.timeout, 1);
+        // Rate = 1 / (1+1) = 50%, NOT 1/4 = 25%.
+        assert!((s.survival_rate() - 50.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn alternative_field_name_outcome_works() {
+        // cargo-mutants version skew: some emit `summary`, some
+        // `outcome`. We accept either.
+        let raw = r#"{"outcomes":[{"outcome":"Caught"}]}"#;
+        let o: MutantsOutcomes = serde_json::from_str(raw).expect("parse");
+        let s = MutantsSummary::from_outcomes(&o);
+        assert_eq!(s.caught, 1);
+    }
+
+    #[test]
+    fn unknown_category_routes_to_other() {
+        let raw = r#"{"outcomes":[{"summary":"Mystery"}]}"#;
+        let o: MutantsOutcomes = serde_json::from_str(raw).expect("parse");
+        let s = MutantsSummary::from_outcomes(&o);
+        assert_eq!(s.other, 1);
+        assert_eq!(s.survival_rate(), 0.0);
+    }
 }
 
 #[cfg(test)]

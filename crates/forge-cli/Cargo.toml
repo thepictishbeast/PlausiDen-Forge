@@ -14,6 +14,7 @@ forge-core = { path = "../forge-core" }
 forge-phases = { path = "../forge-phases" }
 clap = { workspace = true }
 anyhow = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
 time = { workspace = true }
 tracing = { workspace = true }
