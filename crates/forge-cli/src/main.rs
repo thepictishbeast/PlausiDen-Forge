@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use forge_core::{BuildCtx, BuildMode, BuildReport, Finding, Phase, Severity};
 use forge_phases::a11y_landmarks::A11yLandmarksPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
@@ -49,17 +49,44 @@ use forge_phases::validate_cms::ValidateCmsPhase;
     about = "PlausiDen-Forge — typed, audited build pipeline."
 )]
 struct Args {
-    /// Project root. Defaults to CWD.
-    #[arg(long, env = "FORGE_ROOT")]
+    /// Project root. Defaults to CWD. Applies to every subcommand.
+    #[arg(long, env = "FORGE_ROOT", global = true)]
     root: Option<PathBuf>,
 
-    /// Build mode. Overrides `forge.toml`.
+    #[command(subcommand)]
+    command: Option<Cmd>,
+
+    /// Build mode (only used by `build`, the default). Overrides
+    /// `forge.toml`.
     #[arg(long, value_enum)]
     mode: Option<ModeArg>,
 
     /// Emit JSON report to this path in addition to terminal.
+    /// Only used by `build`.
     #[arg(long)]
     json_report: Option<PathBuf>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Cmd {
+    /// Run every phase. Default when no subcommand is given.
+    Build,
+    /// Verify the cryptographic build-report chain (T26). Walks
+    /// `reports/build-*.json` sorted by filename + asserts that
+    /// every report's `prev_hash` matches the SHA-256 of its
+    /// predecessor and `chain_length` is contiguous.
+    ///
+    /// Exit codes:
+    ///   0 — clean chain (or empty reports/ — nothing to verify)
+    ///   1 — chain divergence (tamper, gap, missing prev, etc.)
+    ///   2 — fatal I/O or parse error
+    Verify {
+        /// Verify the Merkle chain. Currently the only verify
+        /// mode; future modes (--signatures, --dependencies)
+        /// will share the subcommand surface.
+        #[arg(long, default_value_t = true)]
+        chain: bool,
+    },
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -105,12 +132,20 @@ fn main() -> ExitCode {
 fn run() -> Result<ExitCode> {
     let args = Args::parse();
 
-    let root = match args.root {
-        Some(p) => p,
+    let root = match &args.root {
+        Some(p) => p.clone(),
         None => {
             std::env::current_dir().context("forge needs a project root and CWD is unreadable")?
         }
     };
+
+    // T55: subcommand router. `Build` is the default for backwards
+    // compat with `forge` (no subcommand).
+    match args.command.as_ref() {
+        Some(Cmd::Verify { chain }) => return run_verify(&root, *chain),
+        Some(Cmd::Build) | None => {}
+    }
+
     let static_dir = root.join("static");
 
     let mode = if let Some(m) = args.mode {
@@ -264,6 +299,104 @@ fn print_finding(f: &Finding) {
         println!("  {}{}: {}", label, f.phase, f.message);
     } else {
         println!("  {}{}: {} — {}", label, f.phase, f.path, f.message);
+    }
+}
+
+/// T55: walk `reports/build-*.json` ordered by filename
+/// (filenames embed monotonic ts), verify the Merkle chain.
+fn run_verify(root: &std::path::Path, chain: bool) -> Result<ExitCode> {
+    if !chain {
+        // Currently chain is the only verify mode; reject other
+        // shapes politely so future flags surface their own help.
+        eprintln!("forge verify: pass --chain (currently the only mode)");
+        return Ok(ExitCode::from(2));
+    }
+    let reports_dir = root.join("reports");
+    if !reports_dir.is_dir() {
+        println!(
+            "forge verify --chain: no reports/ directory at {} — nothing to verify",
+            reports_dir.display()
+        );
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    // Collect + sort by filename (filenames embed monotonic ts).
+    let mut entries: Vec<std::path::PathBuf> = std::fs::read_dir(&reports_dir)
+        .with_context(|| format!("read_dir {}", reports_dir.display()))?
+        .filter_map(Result::ok)
+        .map(|e| e.path())
+        .filter(|p| {
+            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            name.starts_with("build-") && name.ends_with(".json")
+        })
+        .collect();
+    entries.sort();
+
+    if entries.is_empty() {
+        println!("forge verify --chain: no build-*.json reports — nothing to verify");
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    let mut chain_reports: Vec<BuildReport> = Vec::with_capacity(entries.len());
+    for path in &entries {
+        let raw = std::fs::read_to_string(path)
+            .with_context(|| format!("read {}", path.display()))?;
+        let report: BuildReport = serde_json::from_str(&raw)
+            .with_context(|| format!("parse {}", path.display()))?;
+        chain_reports.push(report);
+    }
+
+    println!(
+        "forge verify --chain: walking {} report(s) in {}",
+        chain_reports.len(),
+        reports_dir.display()
+    );
+    match forge_core::attest::verify_chain(&chain_reports) {
+        Ok(()) => {
+            let last = chain_reports.last();
+            let head_len = last.map(|r| r.chain_length).unwrap_or(0);
+            let head_started = last
+                .map(|r| r.started.as_str())
+                .unwrap_or("?");
+            println!(
+                "  ok      chain intact — head chain_length={head_len} started={head_started}"
+            );
+            Ok(ExitCode::SUCCESS)
+        }
+        Err(e) => {
+            // T55: print the typed ChainError verbatim. Each
+            // variant carries the at_index + expected/actual so
+            // the operator can immediately bisect to the bad file.
+            eprintln!("  FAIL    chain divergence: {e}");
+            // Surface which file the divergence is at if available.
+            if let Some(idx) = chain_error_index(&e) {
+                if let Some(p) = entries.get(idx) {
+                    eprintln!("  bad     {}", p.display());
+                }
+            }
+            Ok(ExitCode::from(1))
+        }
+    }
+}
+
+/// Extract the index of the offending file from a ChainError.
+///
+/// Subtle: ChainError::Broken { at_index } reports the SUCCESSOR
+/// — that's where the broken `prev_hash` was *detected*. But the
+/// actual tampered file is the PREDECESSOR (its bytes no longer
+/// hash to what the successor recorded). We return at_index - 1
+/// for Broken so the operator opens the right file.
+///
+/// SequenceGap + MissingPrev are detected at the successor and
+/// the successor IS the bad file (its chain_length / prev_hash
+/// is forged), so they return at_index unchanged.
+fn chain_error_index(e: &forge_core::attest::ChainError) -> Option<usize> {
+    use forge_core::attest::ChainError;
+    match e {
+        ChainError::Broken { at_index, .. } => at_index.checked_sub(1),
+        ChainError::SequenceGap { at_index, .. }
+        | ChainError::MissingPrev { at_index, .. } => Some(*at_index),
+        ChainError::GenesisHasPrev | ChainError::Serialize(_) => None,
     }
 }
 
