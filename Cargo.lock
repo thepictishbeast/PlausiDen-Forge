@@ -263,7 +263,10 @@ dependencies = [
 name = "forge-core"
 version = "0.1.0"
 dependencies = [
+ "proptest",
  "serde",
+ "serde_json",
+ "sha2",
  "thiserror",
  "time",
 ]
