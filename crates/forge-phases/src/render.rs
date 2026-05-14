@@ -124,12 +124,21 @@ impl Phase for RenderPhase {
             // tokens, focus-visible outlines, skip-link styling,
             // and `prefers-reduced-motion` honour as Loom-rendered
             // sites — single source of truth in the render layer.
+            //
+            // T37 v3 (2026-05-14): theme override flows from
+            // FORGE_THEME env var → page_shell_themed. Closed
+            // allow-list ("light"|"dark"); anything else dropped.
+            // Future v3.b: read from forge.toml [render] theme = "..."
+            // entry; env var stays as the override path.
+            let theme = std::env::var("FORGE_THEME").ok();
+            let theme_ref = theme.as_deref().filter(|t| matches!(*t, "light" | "dark"));
             let body_markup = loom_cms_render::render_page(&page).into_string();
-            let html = loom_cms_render::page_shell(
+            let html = loom_cms_render::page_shell_themed(
                 &page,
                 "/loom-skin.css",
                 &body_markup,
                 None,
+                theme_ref,
             );
 
             let out_path = out_dir.join(format!("{slug}.html"));
