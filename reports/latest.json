@@ -8,6 +8,24 @@
       "severity": "warn"
     },
     {
+      "phase": "theme_contrast",
+      "path": "theme=sepia",
+      "message": "WCAG AA fail: ink-muted-on-canvas on sepia = 5.45 (text will be unreadable for users with low-vision or in bright sunlight)",
+      "severity": "strict"
+    },
+    {
+      "phase": "theme_contrast",
+      "path": "theme=sepia",
+      "message": "WCAG AA fail: ink-muted-on-surface on sepia = 5.92 (text will be unreadable for users with low-vision or in bright sunlight)",
+      "severity": "strict"
+    },
+    {
+      "phase": "theme_contrast",
+      "path": "theme=sepia",
+      "message": "WCAG AA fail: primary-fg-on-primary on sepia = 5.28 (text will be unreadable for users with low-vision or in bright sunlight)",
+      "severity": "strict"
+    },
+    {
       "phase": "tokens",
       "path": "about.html",
       "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
@@ -644,11 +662,11 @@
       "severity": "warn"
     }
   ],
-  "strict_count": 52,
+  "strict_count": 55,
   "warn_count": 55,
-  "duration_ms": 10,
-  "prev_hash": "76b484a55e1e4d341b377c818d72f9595506ab65749aa0946df873613cdf81c0",
-  "chain_length": 2,
-  "started": "2026-05-14T01:24:46.423915801Z",
-  "signature": "6TlJngM/ujEetRUVchgZs0P961tYQXb4hzn4OO4gMD5GUN5uI08thsNYQPj1/mNhTgdEX7QYIx5eu4/lzZ/hBw=="
+  "duration_ms": 11,
+  "prev_hash": "af5b042da3ae1a7cda18e7206d2022319e5477cf9d2bc3728fbe37fcd6225cd2",
+  "chain_length": 4,
+  "started": "2026-05-14T01:35:37.204704731Z",
+  "signature": "7sHw1lQHRtA7ARDEyQfBCwQH1oGfejlrJyMd7E17oj72YsQ3LcOBlT/gFopsUh2ANcX1IHoR7S1AOz9kN3WqAQ=="
 }
