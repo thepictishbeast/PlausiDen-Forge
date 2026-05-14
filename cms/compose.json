@@ -1,6 +1,6 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Post a skill \u2014 SkillShots",
+  "title": "Compose \u2014 SkillShots",
   "description": "Post a skill clip, challenge a player, or go live. Voted by your crew.",
   "path": "/compose.html",
   "nav_links": [

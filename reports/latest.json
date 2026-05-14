@@ -4,79 +4,115 @@
     {
       "phase": "loom_sync",
       "path": "static/loom-skin.css",
-      "message": "Loom skin.css drift (recorded sha384-eRqKn8Wuc5PhY0HyHTBZuP5Uaj5i0lUoECQv6YW9nlU+cd8GcLLanySubBpR+RP9, current sha384-vJXTkp7qs8q/SLj/1ghq6kler4rNktlN32Yx/0xmTGPgTSczC4nicQ1pC35ddOhN). Run `forge --sync-loom` to update.",
+      "message": "Loom skin.css drift (recorded sha384-eRqKn8Wuc5PhY0HyHTBZuP5Uaj5i0lUoECQv6YW9nlU+cd8GcLLanySubBpR+RP9, current sha384-JJbW88s6IiBtf9GVu1pyLnsu9eLfxt8sSKMvxho8XR9BROJeHbFT5ogLXQP53lj3). Run `forge --sync-loom` to update.",
       "severity": "warn"
     },
     {
-      "phase": "theme_contrast",
-      "path": "theme=sepia",
-      "message": "WCAG AA fail: ink-muted-on-canvas on sepia = 5.45 (text will be unreadable for users with low-vision or in bright sunlight)",
-      "severity": "strict"
-    },
-    {
-      "phase": "theme_contrast",
-      "path": "theme=sepia",
-      "message": "WCAG AA fail: ink-muted-on-surface on sepia = 5.92 (text will be unreadable for users with low-vision or in bright sunlight)",
-      "severity": "strict"
-    },
-    {
-      "phase": "theme_contrast",
-      "path": "theme=sepia",
-      "message": "WCAG AA fail: primary-fg-on-primary on sepia = 5.28 (text will be unreadable for users with low-vision or in bright sunlight)",
+      "phase": "tokens",
+      "path": "about.html",
+      "message": "raw px values: 44px 4px 9999px",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "about.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "challenge.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "challenge.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "compose.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "compose.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "index.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "index.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "leaderboard.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "leaderboard.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "my-wins.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "my-wins.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "post-skill.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "post-skill.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "profile.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "profile.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
       "phase": "tokens",
       "path": "votes.html",
-      "message": "raw px values: 1024px 1200px 12px 16px 19px 20px 24px 320px 32px 44px 48px 4px 500px 600px 768px 8px 900px",
+      "message": "raw px values: 44px 4px 9999px",
+      "severity": "strict"
+    },
+    {
+      "phase": "tokens",
+      "path": "votes.html",
+      "message": "raw hex color in HTML",
       "severity": "strict"
     },
     {
@@ -249,60 +285,6 @@
     },
     {
       "phase": "perf_budget",
-      "path": "votes.html",
-      "message": "28.6K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "profile.html",
-      "message": "29.3K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "post-skill.html",
-      "message": "29.6K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "my-wins.html",
-      "message": "28.2K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "leaderboard.html",
-      "message": "30.5K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "index.html",
-      "message": "36.3K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "compose.html",
-      "message": "30.5K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "challenge.html",
-      "message": "29.7K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "about.html",
-      "message": "27.4K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
       "path": "loom.css",
       "message": "90.9K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
@@ -315,14 +297,68 @@
     },
     {
       "phase": "perf_budget",
+      "path": "forge-findings.js",
+      "message": "14.0K JS > 8.00K budget — code-split or tree-shake",
+      "severity": "warn"
+    },
+    {
+      "phase": "perf_budget",
       "path": "forge-overlay.js",
       "message": "8.39K JS > 8.00K budget — code-split or tree-shake",
       "severity": "warn"
     },
     {
-      "phase": "perf_budget",
-      "path": "forge-findings.js",
-      "message": "14.0K JS > 8.00K budget — code-split or tree-shake",
+      "phase": "sri",
+      "path": "about.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "challenge.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "compose.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "index.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "leaderboard.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "my-wins.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "post-skill.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "profile.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "votes.html",
+      "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
     {
@@ -399,6 +435,18 @@
     },
     {
       "phase": "unbuilt_route",
+      "path": "about.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "challenge.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
       "path": "challenge.html",
       "message": "href=\"/c/half-court-arc/enter\" → static/c/half-court-arc/enter does not exist",
       "severity": "strict"
@@ -424,6 +472,12 @@
     {
       "phase": "unbuilt_route",
       "path": "compose.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "compose.html",
       "message": "href=\"/post-skill\" → static/post-skill does not exist",
       "severity": "strict"
     },
@@ -437,6 +491,12 @@
       "phase": "unbuilt_route",
       "path": "compose.html",
       "message": "href=\"/c/cube-sub18\" → static/c/cube-sub18 does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
       "severity": "strict"
     },
     {
@@ -508,6 +568,12 @@
     {
       "phase": "unbuilt_route",
       "path": "leaderboard.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "leaderboard.html",
       "message": "href=\"/u/court_dax\" → static/u/court_dax does not exist",
       "severity": "strict"
     },
@@ -538,6 +604,12 @@
     {
       "phase": "unbuilt_route",
       "path": "my-wins.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "my-wins.html",
       "message": "href=\"/c/half-court-arc\" → static/c/half-court-arc does not exist",
       "severity": "strict"
     },
@@ -545,6 +617,18 @@
       "phase": "unbuilt_route",
       "path": "my-wins.html",
       "message": "href=\"/c/pool-2-innings\" → static/c/pool-2-innings does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "post-skill.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "profile.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
       "severity": "strict"
     },
     {
@@ -563,6 +647,12 @@
       "phase": "unbuilt_route",
       "path": "profile.html",
       "message": "href=\"/c/nolook-ft-10\" → static/c/nolook-ft-10 does not exist",
+      "severity": "strict"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "votes.html",
+      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
       "severity": "strict"
     },
     {
@@ -654,19 +744,12 @@
       "path": "static/",
       "message": "button[post-skill] — 2 distinct labels: \"Continue → upload\" (1x), \"Save draft\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
       "severity": "strict"
-    },
-    {
-      "phase": "crawl",
-      "path": "127.0.0.1:8123",
-      "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
-      "severity": "warn"
     }
   ],
-  "strict_count": 55,
-  "warn_count": 55,
-  "duration_ms": 11,
-  "prev_hash": "af5b042da3ae1a7cda18e7206d2022319e5477cf9d2bc3728fbe37fcd6225cd2",
-  "chain_length": 4,
-  "started": "2026-05-14T01:35:37.204704731Z",
-  "signature": "7sHw1lQHRtA7ARDEyQfBCwQH1oGfejlrJyMd7E17oj72YsQ3LcOBlT/gFopsUh2ANcX1IHoR7S1AOz9kN3WqAQ=="
+  "strict_count": 70,
+  "warn_count": 54,
+  "duration_ms": 18842,
+  "prev_hash": "0342326876ba2e02f2da84cd5ffeb06d90f2ec1c40b4ef680e4a53c5eb9091c3",
+  "chain_length": 3,
+  "started": "2026-05-14T13:07:52.795846828Z"
 }
