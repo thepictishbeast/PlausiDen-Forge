@@ -536,6 +536,131 @@ new phases or first-class capabilities IN Forge.
 | Hardware-attested Oxidizer runs | Forge build report inherits hardware-attestation chain |
 | Cross-Oxidizer federation (peer cross-signing) | Forge build reports gain federated trust; agents can verify deploys against multiple peer Oxidizers |
 
+## 5c. Background-infrastructure adjacencies (the other 9)
+
+The 5 sister tools above are immediate user-facing functionality.
+The PlausiDen ecosystem also has 9+ background-infrastructure
+repos that Forge does NOT depend on today but reasonably could,
+and probably should as each matures. Listed for completeness so
+future planners know the adjacency exists — none of these are
+in scope for current sprints, all are queued at "concept" tier.
+
+| Repo | What it is | When Forge would integrate |
+|---|---|---|
+| **PlausiDen-AVP-Doctrine** | The validation protocol every PlausiDen artifact is graded against — standing orders, gates, annotations, FOSS-absorption protocol, cross-repo contribution protocol, ship-decision rules. The doctrine repo is the source of truth for what Forge's audit phases enforce. | Forge `phase_doctrine_conformance` reads doctrine TOMLs from this repo via path/git dep, generates audit phases procedurally so a doctrine update in PlausiDen-AVP-Doctrine auto-rolls into every Forge build. Today: doctrine is duplicated in `~/.claude/CLAUDE.md` + scattered through Forge phase docstrings. |
+| **PlausiDen-Audits** | TOOL_REGISTRY of every external tool considered for absorption (cargo-audit, cargo-deny, cargo-mutants, axe-core, …) with verdicts (`adopted` / `adopted-as-dep` / `deferred` / `reference-only` / `rejected`). Same shape as PlausiDen-Crawler's CRAWLER_REGISTRY. | Forge phases that wrap external tools record their choice rationale here. `forge audit registry` cross-checks every wrapped tool against the catalog. Re-evaluation gate: agents can't re-evaluate a `rejected` tool without new evidence + signed waiver. |
+| **PlausiDen-Canon** | Tier-1 canonical invariant substrate — tokens, primitives, components, contracts that every UI surface conforms to. Five-layer model (Tokens / Primitives / Components / Compositions / Patterns). Sibling to Loom but at a higher abstraction (Canon = ecosystem-wide; Loom = render layer for Canon-conformant content). | Forge `phase_canon_conformance` checks every rendered output uses Canon-blessed tokens / primitives. Loom-rendered content gets free Canon conformance because Loom-tokens is Canon-derived; hand-written HTML in `static/` gets audited against Canon directly. |
+| **PlausiDen-Tests** | Generic testing-framework + test-harness substrate. Bidirectional flow: patterns flow Generic↔Specific between Testing-Framework and project test suites. | Forge phases that need property-test infrastructure consume the test-harness; `forge audit tests` checks every Forge phase has a test-to-public-fn ratio ≥ 4 per AVP-2 doctrine. |
+| **PlausiDen-Obs** | Observability substrate — structured tracing, signed audit-event format, doctrine-guarding tests pinning the schema. | Forge's `tracing` output emits Obs-compatible structured events; build reports land in the Obs event stream signed with the build operator's key. |
+| **PlausiDen-Meta** | Cross-repo coordination + priority gate (PRIORITY.md). Tier-promotion rules (build-ahead-of-trigger vs wait-for-trigger). Governance for the whole PlausiDen ecosystem. | Forge `phase_priority_check` enforces that no work proceeds on a Tier-2 repo if a Tier-1 dependency is still missing. Forge build-graph metadata lands in Meta for cross-repo planning. |
+| **PlausiDen-Sentinel** | Live-system runtime sentinel (Kali-workstation hardening, intrusion detection, …). | Forge can register build-success / deploy events with Sentinel for runtime cross-correlation. Sentinel can trigger Forge re-builds on monitored events (signed-cert rotation, dep-CVE notification). |
+| **PlausiDen-Harvest** | Harvest candidate evaluation — when Forge phases produce findings that suggest a new component / pattern / tool worth absorbing, the candidate goes through Harvest's protocol. | Forge findings of class `harvest_candidate` route to Harvest automatically; Harvest's verdict feeds back as a Forge `SHIP-DECISION` waiver if rejected. |
+| **sacredvote-crypto** | Post-quantum-forward primitives (ML-KEM / ML-DSA). Source-of-truth for any PlausiDen crypto crate that needs PQ-readiness. | Forge gains dual-sign manifests (Ed25519 + ML-DSA) when this crate stabilises. The Sacred.Vote-class technical-client tier gets cryptographic forward-secrecy by default. |
+
+These adjacencies are real but lower-priority than the immediate
+5-tool federation. They show up in Forge's roadmap once the
+five-tool integration loop closes and the federation is stable
+enough to absorb meta-layer dependencies without re-litigating
+every architectural decision.
+
+## 5d. Ecosystem dependency topology (consolidated)
+
+Visions for every load-bearing repo are now in `docs/<NAME>_VISION.md`
+under each repo. This is the consolidated edge list across the
+14 PlausiDen-* repos that touch Forge's transitive dep cone.
+
+```
+                    ┌──────────────────┐
+                    │  PlausiDen-Meta  │  Tier-0 — root governance
+                    │  (constitution)  │  (consumes nothing)
+                    └────────┬─────────┘
+                             │ advisory
+                             ▼
+   ┌────────────────────────────────────────────────────┐
+   │                                                     │
+   ▼                                                     ▼
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ AVP-Doctrine     │    │ Canon            │    │ Harvest          │
+│ Tier-1           │    │ Tier-1           │    │ Tier-3 root      │
+│ (constitution)   │    │ (5-layer subst.) │    │ (protocol)       │
+│ consumes: nothing│    │ consumes: nothing│    │ consumes: nothing│
+└────────┬─────────┘    └────────┬─────────┘    └────────┬─────────┘
+         │                       │                        │
+         ├───────────┬───────────┼────────────┬──────────┘
+         │           │           │            │
+         ▼           ▼           ▼            ▼
+   ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+   │ Audits  │ │ Tests   │ │ Obs     │ │ Oxidizer│
+   │ Tier-1  │ │ Tier-1  │ │ Tier-0  │ │ NEW     │
+   └─────────┘ └─────────┘ └─────────┘ └─────────┘
+        │           │           │           │
+        └───────────┴───────────┴───────────┘
+                          │
+                          ▼ enforced by
+                   ┌─────────────┐
+                   │   Loom      │  ◀── (loom-cms-render)
+                   │   CMS       │      Cargo path-dep
+                   │   Forge     │  ◀── this repo
+                   │   Crawler   │
+                   │   Annotator │
+                   │   Sentinel  │
+                   │   Engine    │
+                   └─────────────┘
+```
+
+### Direct deps Forge has TODAY (Cargo-level)
+
+| Dep | Type | Status |
+|---|---|---|
+| `loom-cms-render` | path dep | shipped (T70) |
+| `forge-core` (in-workspace) | path dep | shipped |
+| `forge-phases` (in-workspace) | path dep | shipped |
+| External: serde, clap, toml, time, tracing, sha2, base64, ed25519-dalek, thiserror, anyhow, proptest | crates.io | shipped |
+
+### Conceptual integration points (the 5-tool federation, queued)
+
+| Dep | Integration | Status |
+|---|---|---|
+| Loom (`loom-cms-render`) | `phase_render` calls `page_shell` in-process | ✅ shipped |
+| CMS | `phase_pre_publish_audit` consumes `cms-core::Page` | concept |
+| Crawler | `phase_crawl` invokes Crawler runtime audit | partial (subprocess) |
+| Annotator | `phase_annotation_review` consumes `annotator-session` JSON | concept |
+| Oxidizer | `phase_oxidizer_conformance` calls `oxidizer-cli` / `oxidizer-core` | concept |
+
+### Background-infrastructure adjacencies (the meta-layer, concept)
+
+| Dep | Integration | Vision |
+|---|---|---|
+| AVP-Doctrine | doctrine TOMLs feed phase generation | `PlausiDen-AVP-Doctrine/docs/AVP_DOCTRINE_VISION.md` |
+| Audits | `phase_audits_catalog_check` consumes audit.toml registry | `PlausiDen-Audits/docs/AUDITS_VISION.md` |
+| Canon | `phase_canon_conformance` against 5-layer substrate | `PlausiDen-Canon/docs/CANON_VISION.md` |
+| Tests | property + mutation + fuzz harnesses | `PlausiDen-Tests/docs/TESTS_VISION.md` |
+| Obs | structured-tracing emission + signed audit events | `PlausiDen-Obs/docs/OBS_VISION.md` |
+| Meta | `phase_priority_check` enforces tier-promotion | `PlausiDen-Meta/docs/META_VISION.md` |
+| Sentinel | runtime defence on the host Forge runs on | `PlausiDen-Sentinel/docs/SENTINEL_VISION.md` |
+| Harvest | `harvest.toml` for upstream-doctrine candidates | `PlausiDen-Harvest/docs/HARVEST_VISION.md` |
+| sacredvote-crypto | post-quantum dual-sign manifests (ML-DSA) | external — vision deferred |
+
+### Engine + adjacent (orthogonal — Forge does NOT consume Engine directly)
+
+Engine is the synthetic-data generation library powering
+PlausiDen's plausible-deniability mission. Forge is a build
+tool — Engine is a runtime concern. They share the AVP-2
+substrate via Tests + Obs but don't directly cross at the
+Cargo level.
+
+### Total ecosystem awareness for Forge
+
+- **1 Cargo-level dep** (loom-cms-render) — the only hard edge today
+- **5 user-facing siblings** — vision-doc-tracked integrations
+- **9 meta-layer adjacencies** — all visioned now (AVP-Doctrine, Audits, Canon, Tests, Obs, Meta, Sentinel, Harvest, Engine)
+- **= 15 PlausiDen-* repos** Forge transitively touches when fully built
+
+Each of those 15 has its own `docs/<NAME>_VISION.md` companion
+to this Forge vision. The federation discipline lets each repo
+evolve independently; the typed contracts + shared doctrine
+keep them composable.
+
 ## 6. Roadmap from now to "done"
 
 ### Sprint 1 — operationalise the directives (this week)
