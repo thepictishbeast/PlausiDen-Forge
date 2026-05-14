@@ -23,6 +23,10 @@ serde_json = { workspace = true }
 # Path dep on the sibling repo for now; vendoring or a workspace
 # merge tracked in T70b/T70c.
 loom-cms-render = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-cms-render" }
+# T39: phase_loom_lint wraps loom-lint's CSS rules + view-class
+# rules into a Forge phase. RawColour = strict; RawSpacing /
+# RawTime = warn. Same path-dep shape as loom-cms-render.
+loom-lint = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-lint" }
 
 [dev-dependencies]
 # T51: property-based tests on the theme_consistency parser.

@@ -27,6 +27,7 @@ pub mod html_walk;
 pub mod id_strategy;
 pub mod label_consistency;
 pub mod link_check;
+pub mod loom_lint;
 pub mod loom_sync;
 pub mod motion;
 pub mod path_consistency;
