@@ -17,6 +17,7 @@ pub mod a11y_landmarks;
 pub mod asset_optimization;
 pub mod backend_coverage;
 pub mod contrast;
+pub mod crawl;
 pub mod csp;
 pub mod csp_devmode;
 pub mod external_assets;

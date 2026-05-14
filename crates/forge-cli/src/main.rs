@@ -22,6 +22,7 @@ use forge_phases::a11y_landmarks::A11yLandmarksPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
 use forge_phases::backend_coverage::BackendCoveragePhase;
 use forge_phases::contrast::ContrastPhase;
+use forge_phases::crawl::CrawlPhase;
 use forge_phases::csp::CspPhase;
 use forge_phases::csp_devmode::CspDevmodePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
@@ -157,6 +158,11 @@ fn run() -> Result<ExitCode> {
         Box::new(LinkCheckPhase),
         Box::new(MotionPhase),
         Box::new(ContrastPhase),
+        // T52 (2026-05-06): runtime audit runs LAST. Build-
+        // infra issues surface earlier; runtime-only regressions
+        // (placeholder text in DOM, ARIA drift, axe runtime) get
+        // their own rung so the operator can tell them apart.
+        Box::new(CrawlPhase),
     ];
 
     let mut report = BuildReport {

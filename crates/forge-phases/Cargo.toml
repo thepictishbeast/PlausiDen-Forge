@@ -11,6 +11,12 @@ sha2 = { workspace = true }
 base64 = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+# T52: typed JSON parse of Crawler diff.json output. Supersociety
+# doctrine: never scrape stdout text when the source emits JSON
+# — typed deserialization eliminates an entire class of parser
+# drift bugs.
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 # T51: property-based tests on the theme_consistency parser.
