@@ -17,6 +17,11 @@ tracing = { workspace = true }
 # drift bugs.
 serde = { workspace = true }
 serde_json = { workspace = true }
+# T37 v3.b: phase_render reads `[render] theme = "..."` from
+# forge.toml. The `loom site init --theme` flag bakes this in
+# at scaffold time so the deployed site ships with the explicit
+# theme.
+toml = { workspace = true }
 # T70: phase_render uses Loom's CMS renderer IN-PROCESS, not via
 # subprocess. Owner directive 2026-05-13: forge actually
 # generates content via the CMS, doesn't merely delegate.

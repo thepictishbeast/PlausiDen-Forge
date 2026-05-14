@@ -125,13 +125,19 @@ impl Phase for RenderPhase {
             // and `prefers-reduced-motion` honour as Loom-rendered
             // sites — single source of truth in the render layer.
             //
-            // T37 v3 (2026-05-14): theme override flows from
-            // FORGE_THEME env var → page_shell_themed. Closed
-            // allow-list ("light"|"dark"); anything else dropped.
-            // Future v3.b: read from forge.toml [render] theme = "..."
-            // entry; env var stays as the override path.
-            let theme = std::env::var("FORGE_THEME").ok();
-            let theme_ref = theme.as_deref().filter(|t| matches!(*t, "light" | "dark"));
+            // T37 v3.b (2026-05-14): theme resolution order:
+            //   1. FORGE_THEME env var (highest priority — CI override)
+            //   2. forge.toml `[render] theme = "..."` entry (the
+            //      `loom site init --theme` baked default)
+            //   3. None → fall back to OS prefers-color-scheme
+            //
+            // Closed allow-list ("light"|"dark") at every layer.
+            let env_theme = std::env::var("FORGE_THEME").ok();
+            let toml_theme = forge_toml_theme(&ctx.root);
+            let theme_owned = env_theme.or(toml_theme);
+            let theme_ref = theme_owned
+                .as_deref()
+                .filter(|t| matches!(*t, "light" | "dark"));
             let body_markup = loom_cms_render::render_page(&page).into_string();
             let html = loom_cms_render::page_shell_themed(
                 &page,
@@ -222,6 +228,25 @@ fn slug_from_filename(path: &Path) -> Option<String> {
 // by direct calls into `loom_cms_render::page_shell` and
 // `loom_cms_render::escape_html_text`. Keeps the a11y / dual-
 // theme contract co-located with the renderer that owns it.
+
+/// T37 v3.b: read `[render] theme = "..."` from `<root>/forge.toml`.
+/// Returns `Some("light"|"dark")` on a valid entry; `None` for any
+/// other case (file missing, parse error, missing section, unknown
+/// theme value). Closed allow-list — anything other than the two
+/// canonical values is treated as absent.
+fn forge_toml_theme(root: &Path) -> Option<String> {
+    let path = root.join("forge.toml");
+    let content = std::fs::read_to_string(&path).ok()?;
+    let parsed: toml::Value = content.parse().ok()?;
+    let theme = parsed
+        .get("render")
+        .and_then(|r| r.get("theme"))
+        .and_then(|t| t.as_str())?;
+    match theme {
+        "light" | "dark" => Some(theme.to_owned()),
+        _ => None,
+    }
+}
 
 /// Atomic write: tmp file + rename. POSIX guarantees rename is
 /// atomic on the same filesystem.
@@ -436,6 +461,85 @@ mod tests {
             .collect();
         assert!(names.contains(&"home.json".to_owned()));
         assert!(!names.contains(&"cms-schema.json".to_owned()));
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    // ---- T37 v3.b: forge.toml [render] theme reading ----
+
+    fn tmpdir_for(label: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(format!(
+            "forge-render-{label}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ))
+    }
+
+    #[test]
+    fn forge_toml_theme_reads_dark() {
+        let tmp = tmpdir_for("dark");
+        std::fs::create_dir_all(&tmp).expect("mk");
+        std::fs::write(
+            tmp.join("forge.toml"),
+            "mode = \"poc\"\n[render]\ntheme = \"dark\"\n",
+        )
+        .expect("write");
+        assert_eq!(forge_toml_theme(&tmp), Some("dark".to_owned()));
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn forge_toml_theme_reads_light() {
+        let tmp = tmpdir_for("light");
+        std::fs::create_dir_all(&tmp).expect("mk");
+        std::fs::write(
+            tmp.join("forge.toml"),
+            "[render]\ntheme = \"light\"\n",
+        )
+        .expect("write");
+        assert_eq!(forge_toml_theme(&tmp), Some("light".to_owned()));
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn forge_toml_theme_returns_none_when_missing() {
+        let tmp = tmpdir_for("none");
+        std::fs::create_dir_all(&tmp).expect("mk");
+        // No forge.toml at all.
+        assert_eq!(forge_toml_theme(&tmp), None);
+        // forge.toml exists but no [render] section.
+        std::fs::write(tmp.join("forge.toml"), "mode = \"poc\"\n").expect("write");
+        assert_eq!(forge_toml_theme(&tmp), None);
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn forge_toml_theme_drops_unknown_values() {
+        let tmp = tmpdir_for("evil");
+        std::fs::create_dir_all(&tmp).expect("mk");
+        for hostile in ["evil", "DARK", "auto", "high-contrast"] {
+            std::fs::write(
+                tmp.join("forge.toml"),
+                format!("[render]\ntheme = \"{hostile}\"\n"),
+            )
+            .expect("write");
+            assert_eq!(
+                forge_toml_theme(&tmp),
+                None,
+                "hostile value `{hostile}` must be dropped"
+            );
+        }
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn forge_toml_theme_returns_none_on_parse_error() {
+        let tmp = tmpdir_for("garbage");
+        std::fs::create_dir_all(&tmp).expect("mk");
+        std::fs::write(tmp.join("forge.toml"), "this is = not valid toml [[[ ").expect("write");
+        assert_eq!(forge_toml_theme(&tmp), None);
         let _ = std::fs::remove_dir_all(&tmp);
     }
 }
