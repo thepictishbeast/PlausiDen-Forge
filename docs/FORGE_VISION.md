@@ -36,6 +36,51 @@ Forge's contract: feed it a project root with `cms/*.json` and
 `forge.toml` and it returns a verified bundle plus a build
 report listing every finding, severity-ranked.
 
+## The meta-mission: making AI-built UI reliable
+
+Every PlausiDen tool — Loom, CMS, Forge, Crawler, Annotator,
+Oxidizer — exists for one common reason: **AI agents building
+GUI / frontend / UX work need a reliability substrate that
+humans don't.** A human dev opens DevTools, eyeballs the layout,
+fixes the colour. An AI agent doesn't open DevTools — so without
+typed primitives, schema-validated content, mathematical contrast
+verification, runtime audit, ecosystem-wide doctrine enforcement,
+and human-review capture, regressions ship silently every
+iteration.
+
+Forge's specific contribution: **the build-time gate.** Every
+audit phase Forge runs is a check the agent gets BEFORE Mom sees
+the broken page. WCAG contrast, CSP strictness, link-target
+validity, semantic HTML, dual-theme parity, schema-validated
+CMS, signed manifest — all enforced before the bundle reaches
+the deploy step. An agent edit that violates any of them is
+held at the build, not in production.
+
+The six PlausiDen tools cover six different timeslices of the
+agent-driven UI work:
+
+| Tool | Where it operates | What it gives the agent |
+|---|---|---|
+| **Loom** ([vision](https://github.com/thepictishbeast/PlausiDen-Loom/blob/main/docs/LOOM_VISION.md)) | Edit-time | Typed primitives + schema-validated CMS so edits can't silently corrupt data |
+| **CMS** ([vision](https://github.com/thepictishbeast/PlausiDen-CMS/blob/main/docs/CMS_VISION.md)) | Storage + multi-tenant | Per-tenant isolation + signed audit log so agent ops are forensically attributable |
+| **Forge** (this doc) | Build-time | Audit gates (a11y / contrast / CSP / semantic HTML / theme parity) so regressions are held |
+| **Crawler** ([vision](https://github.com/thepictishbeast/PlausiDen-Crawler/blob/master/docs/CRAWLER_VISION.md)) | Runtime / post-deploy | Typed Findings from real browser execution — agent's runtime oracle |
+| **Annotator** ([vision](https://github.com/thepictishbeast/PlausiDen-Annotator/blob/master/docs/ANNOTATOR_VISION.md)) | Human-in-the-loop | Captured human review as JSON the agent can act on |
+| **Oxidizer** (vision in `PlausiDen-Oxidizer/docs/`) | Doctrine-time | Ecosystem conformance gate — agent can't introduce non-Rust / non-supersociety regressions |
+
+Forge integrates with all five siblings:
+
+- **Loom** → Forge's `phase_render` calls `loom_cms_render::page_shell`
+  in-process [shipped T70 + T70b].
+- **CMS** → publish event hands rendered bundle to Forge for audit
+  before write [queued].
+- **Crawler** → Forge's `phase_crawl` invokes Crawler runtime audit
+  pre-deploy [partial].
+- **Annotator** → `phase_annotation_review` consumes Annotator session
+  JSON as findings [concept].
+- **Oxidizer** → `phase_oxidizer_conformance` ensures Forge itself
+  passes Rust-first + supersociety doctrine on every build [concept].
+
 ## 2. The supersociety stack Forge uses
 
 Tech-of-tomorrow choices, layered for defence in depth:
