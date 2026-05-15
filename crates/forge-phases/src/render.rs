@@ -179,10 +179,29 @@ impl Phase for RenderPhase {
             rendered_count += 1;
         }
 
+        // T69 (cycle 96 iter 13): write the canonical loom-skin.css
+        // bytes alongside the rendered HTML. Previous behaviour
+        // emitted <slug>.html without the design-system CSS,
+        // forcing operators to manually `cp` skin.css after every
+        // build. Now Forge ships current CSS bytes automatically.
+        //
+        // REGRESSION-GUARD: atomic write so a half-written CSS
+        // never serves to a live page. Same atomic_write helper
+        // the HTML pages use. Failures surface as BuildError::Io
+        // (no silent skip).
+        let skin_path = ctx.static_dir.join("loom-skin.css");
+        if let Err(e) = atomic_write(&skin_path, loom_tokens::SKIN_CSS.as_bytes()) {
+            return Err(BuildError::Io {
+                context: format!("render write {}", skin_path.display()),
+                source: e,
+            });
+        }
+
         tracing::info!(
             target: "forge_phases::render",
             rendered = rendered_count,
-            "phase_render generated {rendered_count} HTML page(s) from cms/*.json"
+            skin_bytes = loom_tokens::SKIN_CSS.len(),
+            "phase_render generated {rendered_count} HTML page(s) from cms/*.json + loom-skin.css"
         );
 
         Ok(findings)

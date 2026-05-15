@@ -28,6 +28,13 @@ toml = { workspace = true }
 # Path dep on the sibling repo for now; vendoring or a workspace
 # merge tracked in T70b/T70c.
 loom-cms-render = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-cms-render" }
+# T69 (cycle 96 iter 13): pull SKIN_CSS (the loom-tokens skin.css
+# bytes) via include_str! so render phase writes the CURRENT
+# bytes to <static_dir>/loom-skin.css on every build. Closes the
+# silent-stale-skin bug class that caused cycles 95a-g to need
+# manual `cp /home/user/.../loom-tokens/src/skin.css static/`
+# every iteration.
+loom-tokens = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens" }
 # T39: phase_loom_lint wraps loom-lint's CSS rules + view-class
 # rules into a Forge phase. RawColour = strict; RawSpacing /
 # RawTime = warn. Same path-dep shape as loom-cms-render.
