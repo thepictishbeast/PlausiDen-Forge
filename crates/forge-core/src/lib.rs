@@ -22,6 +22,7 @@
 #![warn(missing_docs)]
 
 pub mod attest;
+pub mod pipeline;
 
 use std::path::PathBuf;
 
