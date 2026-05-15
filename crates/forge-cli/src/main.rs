@@ -17,7 +17,11 @@ use std::process::ExitCode;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use forge_core::{BuildCtx, BuildMode, BuildReport, Finding, Phase, Severity};
+use forge_core::pipeline::{
+    AuditedArtifacts, DiscoveredArtifacts, ParsedArtifacts, Pipeline, RenderedArtifacts,
+    StageOutput,
+};
+use forge_core::{BuildCtx, BuildError, BuildMode, BuildReport, Finding, Phase, Severity};
 use forge_phases::a11y_landmarks::A11yLandmarksPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
 use forge_phases::backend_coverage::BackendCoveragePhase;
@@ -350,33 +354,54 @@ fn run() -> Result<ExitCode> {
         Box::new(CrawlPhase),
     ];
 
-    let mut report = BuildReport {
-        mode: format!("{mode:?}").to_lowercase(),
-        ..Default::default()
-    };
     let started = std::time::Instant::now();
-
-    println!("forge {} mode={}", env!("CARGO_PKG_VERSION"), report.mode);
-    for phase in &phases {
-        let phase_started = std::time::Instant::now();
-        println!("\n== phase: {} ==", phase.name());
-        let findings = phase
-            .run(&ctx)
-            .with_context(|| format!("phase {}", phase.name()))?;
-        let elapsed = phase_started.elapsed().as_millis();
-        if findings.is_empty() {
-            println!("  ok      no findings ({elapsed}ms)");
-        } else {
-            for f in &findings {
-                print_finding(f);
-                report.push(f.clone());
-            }
-        }
-    }
-    report.duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-    report.started = time::OffsetDateTime::now_utc()
+    let started_iso = time::OffsetDateTime::now_utc()
         .format(&time::format_description::well_known::Rfc3339)
         .unwrap_or_else(|_| String::from("?"));
+
+    // T24 cycle 2 (advances #576): opt-in type-state pipeline.
+    // FORGE_PIPELINE=1 routes the same phases through
+    // forge_core::pipeline so the parse → render → audit shape
+    // actually carries traffic. Default path stays the flat loop
+    // for zero-risk regression on prod builds. Once the pipeline
+    // path has soaked, the flat loop will be removed.
+    let use_pipeline = std::env::var("FORGE_PIPELINE").ok().as_deref() == Some("1");
+    let mode_str = format!("{mode:?}").to_lowercase();
+    println!(
+        "forge {} mode={}{}",
+        env!("CARGO_PKG_VERSION"),
+        mode_str,
+        if use_pipeline { " [pipeline]" } else { "" }
+    );
+
+    let mut report = if use_pipeline {
+        run_phases_through_pipeline(&ctx, &phases, started_iso.clone())
+            .context("type-state pipeline run")?
+    } else {
+        let mut report = BuildReport {
+            mode: mode_str,
+            ..Default::default()
+        };
+        for phase in &phases {
+            let phase_started = std::time::Instant::now();
+            println!("\n== phase: {} ==", phase.name());
+            let findings = phase
+                .run(&ctx)
+                .with_context(|| format!("phase {}", phase.name()))?;
+            let elapsed = phase_started.elapsed().as_millis();
+            if findings.is_empty() {
+                println!("  ok      no findings ({elapsed}ms)");
+            } else {
+                for f in &findings {
+                    print_finding(f);
+                    report.push(f.clone());
+                }
+            }
+        }
+        report
+    };
+    report.duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    report.started = started_iso;
 
     // T26: Merkle-chain this report to its predecessor. Read the
     // newest existing reports/build-*.json; if found, hash it
@@ -449,6 +474,136 @@ fn run() -> Result<ExitCode> {
     } else {
         println!("\nforge build FAILED — see findings above");
         Ok(ExitCode::from(1))
+    }
+}
+
+/// T24 cycle 2 (advances #576): drive the existing flat phase
+/// list through the type-state pipeline.
+///
+/// Phase classification (preserves declared order within each
+/// bucket — the documented order in the flat list is sacrosanct):
+///
+///   parse stage  → ValidateCmsPhase, LoomSyncPhase
+///   render stage → RenderPhase, SelfCheckPhase
+///   audit stage  → every other phase
+///
+/// The classification matches each phase's documented purpose
+/// (validate_cms is the entry gate; loom_sync drift-checks
+/// skin.css; render emits HTML; self_check verifies the emit;
+/// the rest audit the rendered output). Future commits migrate
+/// individual phases to typed stage closures with their own
+/// per-stage artifacts.
+fn run_phases_through_pipeline(
+    ctx: &BuildCtx,
+    phases: &[Box<dyn Phase>],
+    started_iso: String,
+) -> Result<BuildReport> {
+    fn is_parse(name: &str) -> bool {
+        matches!(name, "validate_cms" | "loom_sync")
+    }
+    fn is_render(name: &str) -> bool {
+        matches!(name, "render" | "self_check")
+    }
+
+    let pipeline = Pipeline::start(ctx.clone())
+        .with_start_iso(started_iso)
+        .discover(|_| {
+            // No real discovery yet — phases that walk static/
+            // do their own walking. Future commit: emit the
+            // walked file list here so phases can read from
+            // typed inventory instead of restating the walk.
+            Ok(StageOutput::clean(DiscoveredArtifacts::default()))
+        })
+        .map_err(|e| anyhow::anyhow!("pipeline discover: {e}"))?
+        .parse(|ctx, _| {
+            println!("\n== pipeline stage: parse ==");
+            let mut findings = Vec::new();
+            for phase in phases.iter().filter(|p| is_parse(p.name())) {
+                let started = std::time::Instant::now();
+                println!("  -- phase: {}", phase.name());
+                let f = phase.run(ctx).map_err(|e| BuildError::Other {
+                    phase: phase.name().to_owned(),
+                    message: format!("{e}"),
+                })?;
+                report_inline(&f, started);
+                findings.extend(f);
+            }
+            Ok(StageOutput {
+                artifacts: ParsedArtifacts::default(),
+                findings,
+            })
+        })
+        .map_err(|e| anyhow::anyhow!("pipeline parse: {e}"))?
+        .render(|ctx, _, _| {
+            println!("\n== pipeline stage: render ==");
+            let mut findings = Vec::new();
+            for phase in phases.iter().filter(|p| is_render(p.name())) {
+                let started = std::time::Instant::now();
+                println!("  -- phase: {}", phase.name());
+                let f = phase.run(ctx).map_err(|e| BuildError::Other {
+                    phase: phase.name().to_owned(),
+                    message: format!("{e}"),
+                })?;
+                report_inline(&f, started);
+                findings.extend(f);
+            }
+            Ok(StageOutput {
+                artifacts: RenderedArtifacts::default(),
+                findings,
+            })
+        })
+        .map_err(|e| anyhow::anyhow!("pipeline render: {e}"))?
+        .audit(|ctx, _, _| {
+            println!("\n== pipeline stage: audit ==");
+            let mut findings = Vec::new();
+            let mut phases_run = 0usize;
+            let mut clean_phases = 0usize;
+            for phase in phases
+                .iter()
+                .filter(|p| !is_parse(p.name()) && !is_render(p.name()))
+            {
+                let started = std::time::Instant::now();
+                println!("  -- phase: {}", phase.name());
+                let f = phase.run(ctx).map_err(|e| BuildError::Other {
+                    phase: phase.name().to_owned(),
+                    message: format!("{e}"),
+                })?;
+                report_inline(&f, started);
+                phases_run += 1;
+                if f.is_empty() {
+                    clean_phases += 1;
+                }
+                findings.extend(f);
+            }
+            Ok(StageOutput {
+                artifacts: AuditedArtifacts {
+                    phases_run,
+                    clean_phases,
+                },
+                findings,
+            })
+        })
+        .map_err(|e| anyhow::anyhow!("pipeline audit: {e}"))?;
+
+    println!(
+        "\n== pipeline summary ==\n  audit phases run:  {}\n  clean phases:      {}",
+        pipeline.audited().phases_run,
+        pipeline.audited().clean_phases,
+    );
+    let (report, _) = pipeline
+        .into_report(|_, _| Ok(()))
+        .map_err(|e| anyhow::anyhow!("pipeline report: {e}"))?;
+    Ok(report)
+}
+
+fn report_inline(findings: &[Finding], started: std::time::Instant) {
+    let elapsed = started.elapsed().as_millis();
+    if findings.is_empty() {
+        println!("    ok      no findings ({elapsed}ms)");
+    } else {
+        for f in findings {
+            print_finding(f);
+        }
     }
 }
 
