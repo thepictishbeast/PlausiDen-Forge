@@ -28,6 +28,14 @@ then runs 25+ build phases that gate the output on accessibility,
 performance, security headers, semantic HTML, token consistency, and
 runtime browser audit.
 
+Forge is a **general-purpose engine**. There are no committed clones
+of third-party sites in this repo — the `examples/` holding pen that
+existed briefly between 2026-05-13 and 2026-05-17 was a debug input
+for the variant dedup table at [`docs/DEDUP_TABLE.md`](docs/DEDUP_TABLE.md)
+and was deleted once the signal was extracted. If you want to see
+what Forge produces, run it against your own `cms/*.json` or against
+one of the customer sites listed in `docs/PERSONAS.md`.
+
 > ## ⚠ Status: pre-1.0, AVP-2 in flight — NOT production-ready
 >
 > This codebase is published publicly for transparency, third-party
@@ -97,6 +105,17 @@ cargo install --path crates/forge-cli   # or use the binary
 cd <your-site>
 forge build                              # default: --mode poc
 forge build --mode production            # gate the release
+
+# Local preview (forge-serve)
+forge serve                              # http://localhost:8080
+forge serve --port 4000 --watch          # rebuild on cms/ change
+
+# Visual regression (delegates to PlausiDen-Crawler)
+npm run audit:rust:smoke                 # desktop journey
+npm run audit:rust:mobile                # mobile viewport
+npm run audit:rust:tablet                # tablet viewport
+                                         # × light + dark theme variants
+                                         # = 8 combos per page (see test matrix below)
 ```
 
 `forge.toml` (minimal):
@@ -107,6 +126,28 @@ mode = "production"
 [render]
 theme = "loom-default"
 ```
+
+## Test matrix
+
+Every rendered page is validated across:
+
+```
+static (pre-rendered HTML)  ×  dynamic (server-rendered live)
+desktop viewport            ×  mobile viewport
+light theme                 ×  dark theme
+= 8 combinations per page
+```
+
+Driven by [PlausiDen-Crawler](https://github.com/thepictishbeast/PlausiDen-Crawler)
+journeys (`journeys/plausiden-smoke{,-mobile,-tablet}.json`) which
+drive Forge's dev server through scripted user flows, capturing
+per-step PNGs + a typed `Report` per combination. The Rust crawler
+(via `audit:rust:*` npm scripts) is the canonical runner; the
+legacy TS path is being deprecated.
+
+Theme variations are simulated via the journey setting
+`prefers-color-scheme` before screenshot — light + dark are CSS-
+variable swaps in the page-shell, not separate bundles.
 
 ## Repository layout
 
@@ -119,6 +160,76 @@ crates/
   forge-replay/    Re-run a recorded build against a new tree
 ```
 
+## Ecosystem integration
+
+Forge is one of six PlausiDen tools. The ecosystem is designed for
+seamless coupling — each tool's output is a typed input to the next.
+
+```
+CMS (cms/*.json)                  ←  content authoring
+   │
+   ▼
+Loom (typed primitives + tokens)  ←  design system, theme tokens,
+   │                                 typed component variants
+   ▼
+Forge (build pipeline)            ←  THIS REPO: renders, audits,
+   │                                 emits attested static/dynamic
+   ▼                                 bundle
+Crawler (Playwright runtime)      ←  drives the rendered output,
+   │                                 captures per-step PNGs +
+   │                                 typed Report (findings flow
+   │                                 back as Forge phase results)
+   ▼
+Annotator (operator UX capture)   ←  human-in-the-loop session
+                                     JSON; consumed by agents +
+                                     by future Forge phases as
+                                     review-flagged findings
+Oxidizer                          ←  (deferred) final ship gate
+```
+
+Forge phases consume Crawler reports (`forge-phases::crawl`) and
+Annotator sessions (queued: `forge-phases::review_capture`). The
+shared schema is `forge-core::Finding` — every tool emits the
+same typed shape, every consumer reads it identically.
+
+## Component variants
+
+See [`docs/DEDUP_TABLE.md`](docs/DEDUP_TABLE.md) for the canonical
+list of typed `CmsSection` variants — what ships, what's queued, what
+single-surface variants are deferred until a second site needs them.
+The table is the deliverable; per-site mimic folders are not.
+
+## Theme + accessibility defaults
+
+Every site Forge generates ships **light + dark themes**, **WCAG 2.1
+AA accessibility**, and **semantic HTML** by default. Override only
+if explicitly asked. Enforced by these phases:
+
+- `phase_theme_consistency` — dual-theme parity (every light token
+  is defined in dark).
+- `phase_a11y_landmarks` — `<header>`, `<nav>`, `<main>`, `<aside>`,
+  `<footer>` present and unique. P0.
+- `phase_contrast` — WCAG 2.1 AA contrast in both themes.
+- `phase_semantic_html` — no `<div role="banner">`; use semantic
+  elements.
+
+Per the design doctrine (see [PlausiDen-Loom/CLAUDE.md](https://github.com/thepictishbeast/PlausiDen-Loom/blob/main/CLAUDE.md)):
+no raw class strings outside `loom-components`, no `<div>`-stacks
+without `<section>`, every interactive element has `:focus-visible`.
+
+## Standards
+
+PlausiDen software defaults to ISO/IEC standards where one applies:
+
+- **ISO 8601** for all date/time strings (`YYYY-MM-DDTHH:MM:SSZ`)
+- **ISO 639-1** for language codes (`<html lang="en">`)
+- **ISO 3166-1 alpha-2** for country codes
+- **ISO/IEC 25010** software quality model — commit messages note
+  which of the eight quality attributes the change advances
+- **ISO/IEC 40500:2012 / WCAG 2.1 AA** — accessibility floor
+- **ISO/IEC 27001:2022** — infosec management; AVP-2 passes map to
+  Annex A controls in audit docs
+
 ## Doctrine
 
 - **No raw HTML/CSS.** All output flows through the typed CMS
@@ -129,6 +240,11 @@ crates/
 - **The build is reproducible.** Same input + same forge version
   = bit-identical output. Phases that aren't reproducible (e.g.
   network calls) explicitly opt in via `forge-runner` flags.
+- **General-purpose, never site-specific.** No committed clones of
+  named third-party sites. The 9 rebuilds that produced
+  `docs/DEDUP_TABLE.md` were single-pass inputs and have been deleted.
+  Future variant proposals come from customer-site work or owner
+  directive, not speculative clones.
 
 See [AVP-Doctrine](https://github.com/thepictishbeast/PlausiDen-AVP-Doctrine)
 for the full development methodology.
