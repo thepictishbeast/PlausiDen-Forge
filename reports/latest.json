@@ -4,13 +4,13 @@
     {
       "phase": "loom_sync",
       "path": "static/loom-skin.css",
-      "message": "Loom skin.css drift (recorded sha384-eRqKn8Wuc5PhY0HyHTBZuP5Uaj5i0lUoECQv6YW9nlU+cd8GcLLanySubBpR+RP9, current sha384-JJbW88s6IiBtf9GVu1pyLnsu9eLfxt8sSKMvxho8XR9BROJeHbFT5ogLXQP53lj3). Run `forge --sync-loom` to update.",
+      "message": "no SYNC-FROM-LOOM marker — skin.css has never been auto-synced from Loom. Run `forge --sync-loom`.",
       "severity": "warn"
     },
     {
       "phase": "tokens",
       "path": "about.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -22,7 +22,7 @@
     {
       "phase": "tokens",
       "path": "challenge.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -34,7 +34,7 @@
     {
       "phase": "tokens",
       "path": "compose.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -46,7 +46,7 @@
     {
       "phase": "tokens",
       "path": "index.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -58,7 +58,7 @@
     {
       "phase": "tokens",
       "path": "leaderboard.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -70,7 +70,7 @@
     {
       "phase": "tokens",
       "path": "my-wins.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -82,7 +82,7 @@
     {
       "phase": "tokens",
       "path": "post-skill.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -94,7 +94,7 @@
     {
       "phase": "tokens",
       "path": "profile.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -106,7 +106,7 @@
     {
       "phase": "tokens",
       "path": "votes.html",
-      "message": "raw px values: 44px 4px 9999px",
+      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
       "severity": "strict"
     },
     {
@@ -292,7 +292,7 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "89.0K CSS > 64.0K budget — split into per-route bundles",
+      "message": "94.3K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
@@ -748,8 +748,8 @@
   ],
   "strict_count": 70,
   "warn_count": 54,
-  "duration_ms": 18842,
-  "prev_hash": "0342326876ba2e02f2da84cd5ffeb06d90f2ec1c40b4ef680e4a53c5eb9091c3",
-  "chain_length": 3,
-  "started": "2026-05-14T13:07:52.795846828Z"
+  "duration_ms": 19673,
+  "prev_hash": "ad65487ce85c558322622f351b99aafd1335cc640d2bda455df6fa5211f59e7f",
+  "chain_length": 6,
+  "started": "2026-05-15T12:45:25.925141136Z"
 }

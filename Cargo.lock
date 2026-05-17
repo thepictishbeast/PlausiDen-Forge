@@ -402,6 +402,7 @@ dependencies = [
  "forge-core",
  "loom-cms-render",
  "loom-lint",
+ "loom-tokens",
  "proptest",
  "serde",
  "serde_json",
