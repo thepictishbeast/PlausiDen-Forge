@@ -96,7 +96,12 @@ Forge integrates with all five siblings:
 - **Crawler** → Forge's `phase_crawl` invokes Crawler runtime audit
   pre-deploy [partial].
 - **Annotator** → `phase_annotation_review` consumes Annotator session
-  JSON as findings [concept].
+  JSON as findings [shipped 2026-05-17] — reads `[review] session_dir`
+  from `forge.toml`, walks `*.json` sessions, maps operator tags
+  (`a11y` / `contrast` / `bug` → Strict; `alignment` / `copy` / `perf`
+  / `suggestion` / `other` → Warn) to typed Findings clustered per
+  page from `session.meta.url`. Closes task #13. Silent skip when
+  unconfigured.
 - **Oxidizer** → `phase_oxidizer_conformance` ensures Forge itself
   passes Rust-first + supersociety doctrine on every build [concept].
 
@@ -643,7 +648,7 @@ under each repo. This is the consolidated edge list across the
 | Loom (`loom-cms-render`) | `phase_render` calls `page_shell` in-process | ✅ shipped |
 | CMS | `phase_pre_publish_audit` consumes `cms-core::Page` | concept |
 | Crawler | `phase_crawl` invokes Crawler runtime audit | partial (subprocess) |
-| Annotator | `phase_annotation_review` consumes `annotator-session` JSON | concept |
+| Annotator | `phase_annotation_review` consumes `annotator-session` JSON | ✅ shipped 2026-05-17 |
 | Oxidizer | `phase_oxidizer_conformance` calls `oxidizer-cli` / `oxidizer-core` | concept |
 
 ### Background-infrastructure adjacencies (the meta-layer, concept)

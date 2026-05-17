@@ -14,6 +14,7 @@
 #![warn(missing_docs)]
 
 pub mod a11y_landmarks;
+pub mod annotation_review;
 pub mod asset_optimization;
 pub mod backend_coverage;
 pub mod contrast;

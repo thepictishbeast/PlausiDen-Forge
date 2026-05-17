@@ -23,6 +23,7 @@ use forge_core::pipeline::{
 };
 use forge_core::{BuildCtx, BuildError, BuildMode, BuildReport, Finding, Phase, Severity};
 use forge_phases::a11y_landmarks::A11yLandmarksPhase;
+use forge_phases::annotation_review::AnnotationReviewPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
 use forge_phases::backend_coverage::BackendCoveragePhase;
 use forge_phases::contrast::ContrastPhase;
@@ -354,6 +355,13 @@ fn run() -> Result<ExitCode> {
         // but before CrawlPhase so the runtime gets exercised
         // by the headless browser audit.
         Box::new(DynamicRuntimePhase),
+        // Annotator↔Forge integration (closes task #13): consume
+        // operator-flagged elements from annotator-relay sessions
+        // and surface them as Findings. Runs after runtime audit
+        // so axe/runtime regressions get their own rung first;
+        // operator-flagged signals layer on top. Silent skip if
+        // [review] session_dir is unconfigured or absent.
+        Box::new(AnnotationReviewPhase),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
         // infra issues surface earlier; runtime-only regressions
         // (placeholder text in DOM, ARIA drift, axe runtime) get
