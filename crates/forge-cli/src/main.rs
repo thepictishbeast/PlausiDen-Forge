@@ -148,6 +148,29 @@ enum Cmd {
         #[command(subcommand)]
         action: AuditAction,
     },
+    /// Auto-fix mechanical findings from the latest build report.
+    ///
+    /// Default mode is `--dry-run`: read the latest `reports/
+    /// build-*.json`, identify findings whose fix is unambiguous
+    /// (per the in-process fixer registry), print the proposed
+    /// diff. Operator reviews + re-runs with `--apply` to write
+    /// the changes.
+    ///
+    /// Current fixers (v1):
+    ///   * `required_pages.security_txt` — create
+    ///     `static/.well-known/security.txt` from a template.
+    ///   * (more fixers planned as separate commits.)
+    ///
+    /// Exit codes:
+    ///   0 — dry-run had no fixable findings, OR --apply succeeded
+    ///   1 — dry-run found fixable findings (operator should review)
+    ///   2 — fatal (no report found, parse error, etc.)
+    Fix {
+        /// Actually write the fixes. Default is dry-run (read +
+        /// print only).
+        #[arg(long, default_value_t = false)]
+        apply: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -295,6 +318,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Verify { chain, signatures }) => return run_verify(&root, *chain, *signatures),
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
+        Some(Cmd::Fix { apply }) => return run_fix(&root, *apply),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -1329,6 +1353,168 @@ release:
         PRECOMMIT_HOOK_BODY.len(),
     );
     Ok(ExitCode::SUCCESS)
+}
+
+/// `forge fix` — auto-fix mechanical findings from the latest
+/// build report. v1 ships ONE fixer (security_txt) and the
+/// framework for adding more. Dry-run by default; `--apply`
+/// writes.
+fn run_fix(root: &std::path::Path, apply: bool) -> Result<ExitCode> {
+    // Locate the latest build report.
+    let reports_dir = root.join("reports");
+    let mut reports: Vec<std::path::PathBuf> = std::fs::read_dir(&reports_dir)
+        .with_context(|| format!("read_dir {}", reports_dir.display()))?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| {
+            p.extension().and_then(|s| s.to_str()) == Some("json")
+                && p.file_name()
+                    .and_then(|s| s.to_str())
+                    .map(|s| s.starts_with("build-"))
+                    .unwrap_or(false)
+        })
+        .collect();
+    if reports.is_empty() {
+        eprintln!(
+            "forge fix: no reports/build-*.json found — run `forge build` first then re-run."
+        );
+        return Ok(ExitCode::from(2));
+    }
+    reports.sort();
+    let latest = reports.last().expect("non-empty");
+    let body =
+        std::fs::read_to_string(latest).with_context(|| format!("read {}", latest.display()))?;
+    let report: serde_json::Value =
+        serde_json::from_str(&body).with_context(|| format!("parse {}", latest.display()))?;
+    let findings = report
+        .get("findings")
+        .and_then(|v| v.as_array())
+        .cloned()
+        .unwrap_or_default();
+
+    // Build the fix-plan: pairs (Finding, FixAction).
+    let mut planned: Vec<FixAction> = Vec::new();
+    for finding in &findings {
+        let phase = finding.get("phase").and_then(|v| v.as_str()).unwrap_or("");
+        let path = finding.get("path").and_then(|v| v.as_str()).unwrap_or("");
+        let message = finding
+            .get("message")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+
+        // Fixer: required_pages.security_txt — create the file.
+        if phase == "required_pages" && path == "security_txt" {
+            planned.push(FixAction::CreateSecurityTxt);
+        }
+        let _ = message;
+    }
+
+    if planned.is_empty() {
+        println!(
+            "forge fix: no auto-fixable findings in {} — nothing to do.",
+            latest.file_name().unwrap_or_default().to_string_lossy()
+        );
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    println!(
+        "forge fix: {} auto-fixable finding(s) in {} (mode={}):",
+        planned.len(),
+        latest.file_name().unwrap_or_default().to_string_lossy(),
+        if apply { "apply" } else { "dry-run" }
+    );
+    let mut applied = 0usize;
+    for action in &planned {
+        let summary = action.summary();
+        if apply {
+            match action.apply(root) {
+                Ok(()) => {
+                    println!("  [applied]  {summary}");
+                    applied += 1;
+                }
+                Err(e) => {
+                    eprintln!("  [failed]   {summary}: {e}");
+                }
+            }
+        } else {
+            println!("  [proposed] {summary}");
+        }
+    }
+
+    if apply {
+        println!(
+            "\nforge fix: applied {applied} of {} fix(es). Re-run `forge build` to verify.",
+            planned.len()
+        );
+        Ok(ExitCode::SUCCESS)
+    } else {
+        println!("\nDry-run only — re-run with `--apply` to write the fixes.");
+        // Exit 1 so CI pipelines piping `forge fix` see "stuff to
+        // fix" without the operator needing a separate flag.
+        Ok(ExitCode::from(1))
+    }
+}
+
+/// Per-fix mechanical-edit action. New fixers add a variant +
+/// implement `summary` and `apply`. Keep each fixer SAFE: must
+/// be idempotent + must never overwrite operator-authored
+/// content silently.
+#[derive(Debug, Clone)]
+enum FixAction {
+    /// Create `static/.well-known/security.txt` from a template
+    /// if the file is missing. Idempotent — if it exists, this
+    /// action skips silently.
+    CreateSecurityTxt,
+}
+
+impl FixAction {
+    fn summary(&self) -> String {
+        match self {
+            Self::CreateSecurityTxt => {
+                "required_pages.security_txt — create static/.well-known/security.txt".to_owned()
+            }
+        }
+    }
+
+    fn apply(&self, root: &std::path::Path) -> Result<()> {
+        match self {
+            Self::CreateSecurityTxt => apply_create_security_txt(root),
+        }
+    }
+}
+
+/// Canonical security.txt body. Per RFC 9116, every Contact line
+/// MUST exist; Expires SHOULD be within 1 year. Operator edits
+/// the file after generation to put real values.
+const SECURITY_TXT_TEMPLATE: &str = "# RFC 9116 vulnerability-disclosure declaration.
+# Edit Contact + Expires + Preferred-Languages to match your
+# operator setup. Re-generate via `forge fix` if removed.
+
+Contact: mailto:security@example.com
+Expires: 2026-12-31T23:59:59Z
+Preferred-Languages: en
+
+# Optional: PGP-Encryption key fingerprint
+# Encryption: https://example.com/.well-known/openpgpkey
+
+# Optional: link to scope + policy
+# Policy: https://example.com/security-policy
+
+# Optional: where to thank disclosers
+# Acknowledgments: https://example.com/security-acknowledgments
+";
+
+fn apply_create_security_txt(root: &std::path::Path) -> Result<()> {
+    let well_known = root.join("static").join(".well-known");
+    let target = well_known.join("security.txt");
+    if target.exists() {
+        // Idempotent: don't overwrite. Operator may have customized.
+        return Ok(());
+    }
+    std::fs::create_dir_all(&well_known)
+        .with_context(|| format!("create_dir_all {}", well_known.display()))?;
+    std::fs::write(&target, SECURITY_TXT_TEMPLATE)
+        .with_context(|| format!("write {}", target.display()))?;
+    Ok(())
 }
 
 fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<ExitCode> {
