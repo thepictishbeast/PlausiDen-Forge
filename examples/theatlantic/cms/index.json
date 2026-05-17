@@ -1,0 +1,163 @@
+{
+  "$schema": "../../../cms-schema.json",
+  "title": "The Atlantic — Ideas that matter",
+  "description": "T660 / T73 cycle 5: theatlantic.com landing rebuilt as a Forge CmsPage. SECOND news-vertical rebuild. The decisive test of the ArticleCard dedup theory: 1-of-1 from NYT bumps to 2-of-2 if Atlantic surfaces the same pattern, which would promote ArticleCard from MED to T70 HIGH priority for the news/publication vertical.",
+  "path": "/",
+  "nav_links": [
+    {"label": "Latest", "href": "/latest", "current": false},
+    {"label": "Politics", "href": "/politics", "current": false},
+    {"label": "Culture", "href": "/culture", "current": false},
+    {"label": "Ideas", "href": "/ideas", "current": false},
+    {"label": "Science", "href": "/science", "current": false},
+    {"label": "Magazine", "href": "/magazine", "current": false}
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "May 17 · The Atlantic",
+      "title": "Ideas that matter",
+      "lede": "Long-form reporting on politics, culture, and the slow architecture of how we live. Independent. Subscriber-supported.",
+      "cta": {
+        "label": "Subscribe",
+        "href": "/subscribe"
+      }
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T660-NEW3 (re-surface) — ArticleCard NOW 2-OF-2 news-vertical",
+      "body": [
+        "Atlantic's homepage is, like NYT's, dominated by ArticleCards: a hero image, a kicker (issue / section), a headline, a 1-sentence dek, an author byline with link to profile, a read-time. Same pattern as cycle 4 (NYT). The ArticleCard variant now has 2-of-2 news rebuilds — bump from MED to T70 HIGH for the news/publication vertical.",
+        "Shape continues to fit: CmsSection::ArticleCard { headline, dek?, byline, dateline, thumbnail?, primary_link, kicker? }. Atlantic adds an extra signal — a 'magazine' kicker when the piece is from the print edition (vs daily web). The optional kicker field already covers that.",
+        "Going forward: a 3rd publication rebuild (Vox / Wired / a magazine) is no longer needed to validate; ArticleCard is the locked baseline for news. The next news rebuild (if owner picks one) is for SECONDARY variant discovery (live-blog, newsletter-card, comments, etc.) not ArticleCard validation."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "The big essay this week"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": "Editor's picks",
+      "items": [
+        {
+          "title": "The age of polite collapse",
+          "host_sub": "By Mira Ostrov · Magazine · 16 min read · May 13",
+          "primary_link": {"label": "Read the essay", "href": "/magazine/archive/2026/05/age-of-polite-collapse/"},
+          "avatar": {"kind": "letter", "letter": "M", "color": "indigo"}
+        },
+        {
+          "title": "What happens when the data centers move in",
+          "host_sub": "By Vincent O. Henley · Tech · 11 min read · May 14",
+          "primary_link": {"label": "Read the essay", "href": "/tech/archive/2026/05/data-centers-move-in/"},
+          "avatar": {"kind": "letter", "letter": "V", "color": "violet"}
+        },
+        {
+          "title": "The case against the seasonal nostalgia industry",
+          "host_sub": "By Aliyah Park · Culture · 9 min read · May 15",
+          "primary_link": {"label": "Read the essay", "href": "/culture/archive/2026/05/seasonal-nostalgia-industry/"},
+          "avatar": {"kind": "letter", "letter": "A", "color": "amber"}
+        }
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Politics"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": "Politics, in plain language",
+      "items": [
+        {
+          "title": "The senator who keeps voting both ways",
+          "host_sub": "By Renata Cole · 8 min read · 2h ago",
+          "primary_link": {"label": "Read", "href": "/politics/archive/2026/05/senator-voting-both-ways/"},
+          "avatar": {"kind": "letter", "letter": "R", "color": "cyan"}
+        },
+        {
+          "title": "Why the foreign-policy consensus broke this spring",
+          "host_sub": "By Ezra Linde-Whitfield · 13 min read · this morning",
+          "primary_link": {"label": "Read", "href": "/politics/archive/2026/05/foreign-policy-consensus-broke/"},
+          "avatar": {"kind": "letter", "letter": "E", "color": "indigo"}
+        }
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Ideas"
+    },
+
+    {
+      "kind": "quote",
+      "body": "When the only people writing the rules are the people who profit from the loopholes, the laws stop pretending they're for everyone.",
+      "attribution": "Devorah Lin",
+      "role": "Contributing Writer"
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T660-NEW6 (NEW) — NewsletterCard / SubscriptionPrompt",
+      "body": [
+        "Atlantic interleaves 'Subscribe to The Daily' style newsletter-card promos between article cards every 4-6 stories. These are different from a CTA banner — they have their own headline / blurb / inline-email-form (or 'open in app' button), and they appear MID-feed rather than as a hero CTA.",
+        "Forge's existing 'banner' CmsSection handles eye-catch info banners but not the form-having + mid-feed pattern. Proposed shape: CmsSection::NewsletterCard { kicker, title, blurb, form_action: NavLink, button_label }. Email collection via the existing WriteCapability flow (T577).",
+        "Currently 1-of-2 news rebuilds (Atlantic only; NYT mostly uses static Subscribe CTAs in the header). Dedup count: MED priority. A magazine rebuild (e.g., Wired) would likely surface it again — HIGH if so."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "From the print issue"
+    },
+
+    {
+      "kind": "kv_pair",
+      "heading": "Inside the May issue",
+      "items": [
+        {"key": "Cover essay", "value": "'The age of polite collapse' by Mira Ostrov — what it means when institutions decay without anyone breaking them."},
+        {"key": "Feature", "value": "'Eighteen months in the kitchen of an Italian widow' by Hank Salinger — a profile of food, grief, and place."},
+        {"key": "Dispatch", "value": "'Letters from a melting town' by Jules Brando — climate field report from the Alaskan north slope."},
+        {"key": "Books", "value": "Five new releases reviewed; standalone essays on rereading Joan Didion at 50."}
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Listen + watch"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": "Recent podcasts",
+      "items": [
+        {
+          "title": "Radio Atlantic · The thing nobody's covering",
+          "host_sub": "Hosted by Sera Ridge · 42 min · this week",
+          "primary_link": {"label": "Listen", "href": "/podcasts/radio-atlantic/2026/05/the-thing-nobody-is-covering/"},
+          "avatar": {"kind": "letter", "letter": "R", "color": "violet"}
+        },
+        {
+          "title": "Good on Paper · The economics of getting older",
+          "host_sub": "Hosted by Jerusalem Demsas · 38 min · last week",
+          "primary_link": {"label": "Listen", "href": "/podcasts/good-on-paper/2026/05/economics-of-getting-older/"},
+          "avatar": {"kind": "letter", "letter": "G", "color": "amber"}
+        }
+      ]
+    },
+
+    {
+      "kind": "banner",
+      "tone": "info",
+      "text": "T660 cycle 5 (2nd news rebuild) decisive: ArticleCard is NOW 2-of-2 news-vertical surfaces → T70 HIGH priority for news/publication sites. NewsletterCard surfaces 1-of-2; MED priority. Quote variant remains 6-of-6 universal across ALL marketing + news + animated rebuilds (Stripe + Linear + Vercel + NYT + Atlantic + aristidebenoist) — LOCKED as a baseline primitive."
+    }
+  ]
+}
