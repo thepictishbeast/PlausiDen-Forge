@@ -788,6 +788,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "manifest-codegen"
+version = "0.1.0"
+dependencies = [
+ "manifest-core",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
 name = "manifest-core"
 version = "0.1.0"
 dependencies = [

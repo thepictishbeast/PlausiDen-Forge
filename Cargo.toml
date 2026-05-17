@@ -44,6 +44,12 @@ members = [
     # via manifest-codegen (task #30). See
     # docs/PLATFORM_ROADMAP.md §3.
     "crates/manifest-core",
+    # T30: manifest-codegen — build.rs projector that turns a
+    # PlatformManifest into typed Rust constants downstream crates
+    # `include!()` from $OUT_DIR. Proc-macro layer is queued for
+    # later; build.rs comes first because it carries the immediate
+    # codegen value with minimal compile-graph cost.
+    "crates/manifest-codegen",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
