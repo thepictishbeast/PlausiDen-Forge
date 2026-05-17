@@ -36,6 +36,7 @@ use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
 use forge_phases::label_consistency::LabelConsistencyPhase;
 use forge_phases::link_check::LinkCheckPhase;
+use forge_phases::locale_html_lang::LocaleHtmlLangPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
@@ -348,6 +349,11 @@ fn run() -> Result<ExitCode> {
         // Silent skip when [required_pages] missing from forge.toml;
         // sites that haven't opted into the contract aren't gated.
         Box::new(RequiredPagesPhase),
+        // phase_locale_html_lang — every <html lang="..."> matches
+        // the site's declared locale set. WCAG 2.1 SC 3.1.1 Level A
+        // baseline. Silent skip when [locale] missing from
+        // forge.toml.
+        Box::new(LocaleHtmlLangPhase),
         Box::new(UnbuiltRoutePhase),
         Box::new(LabelConsistencyPhase),
         Box::new(LinkCheckPhase),

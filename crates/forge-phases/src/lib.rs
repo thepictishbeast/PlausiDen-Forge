@@ -30,6 +30,7 @@ pub mod id_strategy;
 pub mod iso_8601;
 pub mod label_consistency;
 pub mod link_check;
+pub mod locale_html_lang;
 pub mod loom_lint;
 pub mod loom_sync;
 pub mod motion;
