@@ -20,7 +20,7 @@ env:
 jobs:
   fmt:
     name: rustfmt
-    runs-on: [self-hosted, linux, x64, plausiden]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -30,7 +30,7 @@ jobs:
 
   clippy:
     name: clippy
-    runs-on: [self-hosted, linux, x64, plausiden]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -40,7 +40,7 @@ jobs:
 
   test:
     name: test
-    runs-on: [self-hosted, linux, x64, plausiden]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -48,7 +48,7 @@ jobs:
 
   doc:
     name: doc
-    runs-on: [self-hosted, linux, x64, plausiden]
+    runs-on: ubuntu-latest
     env:
       RUSTDOCFLAGS: "-D warnings"
     steps:
