@@ -1,0 +1,148 @@
+{
+  "$schema": "../../../cms-schema.json",
+  "title": "Lusion — Crafted with motion + matter",
+  "description": "T662 / T74 cycle 4: structural mirror of lusion.co — htmlburger-listed creative-tech studio with WebGL-dominant landing. Fourth animated rebuild. Same vertical as sphericalwaves.com (3D + WebGL), so this is the decisive test for Canvas3D dedup: 1-of-3 from sphericalwaves bumps to 2-of-4 if Lusion surfaces it (it will), which would promote Canvas3D from LOW to MED for the animated vertical.",
+  "path": "/",
+  "nav_links": [
+    {"label": "Work", "href": "#work", "current": false},
+    {"label": "Studio", "href": "#studio", "current": false},
+    {"label": "Latest", "href": "#latest", "current": false},
+    {"label": "Contact", "href": "#contact", "current": false}
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Studio · Established 2017",
+      "title": "Crafted with motion and matter",
+      "lede": "A small team of designers, developers, and 3D artists building interactive experiences that feel like physical things. We do production from start to finish — concept, design, code, launch.",
+      "cta": {
+        "label": "Start a project",
+        "href": "mailto:hello@example.test"
+      }
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-6 (re-surface) — Canvas3D NOW 2-of-4 animated",
+      "body": [
+        "Lusion's hero is a full-bleed WebGL canvas — a generative liquid-metal surface that responds to cursor position with ray-marched reflections. Same Canvas3D need as sphericalwaves (cycle 2). Dedup count: 2-of-4 animated surfaces → bump Canvas3D from LOW to MED priority for animated rebuilds.",
+        "Both Lusion and sphericalwaves are 3D-vertical studios; if a future animated rebuild of a non-3D studio also surfaces Canvas3D (unlikely — typography portfolios don't ship WebGL), bump to HIGH. Until then, Canvas3D is the 3D-vertical-specific gap and ships only when the owner picks a Canvas3D-needing project.",
+        "Proposed shape recap: Canvas3D { scene_module: String, audio_src: Option<String>, fallback_poster: CmsImage (REQUIRED — no-JS / prefers-reduced-motion baseline), controls: CanvasControls, intensity: f32 (0..=1) }. Same-origin scene_module + SRI required per AVP-2."
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-8 (re-surface) — ScrollRevealText NOW 4-of-4 animated",
+      "body": [
+        "Every section heading on Lusion has the per-character scroll-reveal pattern. 4-of-4 animated surfaces — every animated rebuild needs it. ScrollRevealText is the locked-HIGH animated primitive; this is the one to ship in loom-cms-render next.",
+        "Bump confidence to MAXIMUM: 4-of-4 means 'every interactive-design / motion site needs this'. Implementation priority equivalent to LogoWall for marketing rebuilds (4 surfaces, locked-priority)."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Selected work"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": null,
+      "items": [
+        {
+          "title": "MM — Maison Margiela archival microsite",
+          "host_sub": "Direction + design + WebGL · 2025",
+          "primary_link": {"label": "Case study", "href": "/work/mm-archive"},
+          "avatar": {"kind": "letter", "letter": "M", "color": "indigo"}
+        },
+        {
+          "title": "Tessellate — synthwave artist site",
+          "host_sub": "Site build · audio-reactive shader · 2024",
+          "primary_link": {"label": "Case study", "href": "/work/tessellate"},
+          "avatar": {"kind": "letter", "letter": "T", "color": "violet"}
+        },
+        {
+          "title": "OWENS — fashion-week presentation site",
+          "host_sub": "Concept + WebGL prototyping · 2024",
+          "primary_link": {"label": "Case study", "href": "/work/owens-fw"},
+          "avatar": {"kind": "letter", "letter": "O", "color": "amber"}
+        },
+        {
+          "title": "Soundscape Atlas — generative-audio map",
+          "host_sub": "Concept + Three.js + Tone.js · 2023",
+          "primary_link": {"label": "Case study", "href": "/work/soundscape-atlas"},
+          "avatar": {"kind": "letter", "letter": "S", "color": "cyan"}
+        }
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Studio"
+    },
+
+    {
+      "kind": "group",
+      "title": "Who we are",
+      "body": [
+        "Eight people, two cities. Roughly half design + concept, half engineering. Most projects pair a designer + developer + 3D artist from kickoff. We don't subcontract code; we don't subcontract design.",
+        "We've built for cultural institutions (Maison Margiela, Rick Owens), independent musicians, motion studios, and a few brands. We turn down anything we wouldn't want to show our friends."
+      ]
+    },
+
+    {
+      "kind": "quote",
+      "body": "We're suspicious of any brief that tells us the answer before it tells us the problem. The interesting work is in the disagreement.",
+      "attribution": "The studio",
+      "role": "principal designers"
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-9 (re-surface) — Quote NOW 7-of-7 universal",
+      "body": [
+        "Quote variant fires AGAIN. Tally across both rebuild families: marketing (Stripe + Linear + Vercel + NYT + Atlantic) + animated (aristidebenoist + Lusion) = 7-of-7 sites needing Quote. (marcodeluca + sphericalwaves were earlier animated rebuilds; let me re-check — actually marcodeluca + sphericalwaves did NOT use Quote so the count is 7-of-9 total rebuilds, NOT 7-of-7.) Either way: most universal CmsSection primitive by a wide margin. T660 P2 implementation continues to pay back across every vertical."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Latest"
+    },
+
+    {
+      "kind": "kv_pair",
+      "heading": "Studio notebook",
+      "items": [
+        {"key": "2026-05-12", "value": "Released a 200-line vertex-shader util crate to GitHub. MIT."},
+        {"key": "2026-04-30", "value": "MM-archive site shipped. Case study + recorded process walkthrough up."},
+        {"key": "2026-04-12", "value": "Speaking at FWD Conf Berlin on 'WebGL as physical-design tool'."}
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Contact"
+    },
+
+    {
+      "kind": "kv_pair",
+      "heading": "Reach us",
+      "items": [
+        {"key": "Studio", "value": "hello@example.test (replace before publishing)"},
+        {"key": "New work", "value": "We pick up roughly six projects/year; current waitlist: Q4 2026."},
+        {"key": "Press", "value": "press@example.test"}
+      ]
+    },
+
+    {
+      "kind": "banner",
+      "tone": "info",
+      "text": "T662 cycle 4 (4th animated rebuild) tightens dedup table: ScrollRevealText 4-of-4 (MAX confidence — ship next in loom-cms-render). Canvas3D 2-of-4 → MED for animated 3D vertical. Quote 7-of-9 (1st-ever miss on marcodeluca+sphericalwaves) → still STRONG, still load-bearing. KineticTitle stays 2-of-4 → MED."
+    }
+  ]
+}
