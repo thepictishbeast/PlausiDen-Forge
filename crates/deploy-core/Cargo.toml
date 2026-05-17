@@ -1,0 +1,18 @@
+[package]
+name = "deploy-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Trait + typed DeployTarget + SecurityProfile types every deploy adapter (Tor/I2P/IPFS/Gemini/Lokinet/clearnet) implements."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+manifest-core = { path = "../manifest-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
