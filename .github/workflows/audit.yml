@@ -103,7 +103,7 @@ jobs:
       - run: cargo doc --workspace --no-deps --locked --document-private-items --verbose
 
   no-unwrap-in-lib:
-    name: AVP-2: no unwrap/expect in lib code
+    name: "AVP-2 — no unwrap/expect in lib code"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
