@@ -63,6 +63,10 @@ members = [
     # T39: deploy-onion — Tor v3 hidden-service DeployAdapter.
     # First leaf network-target adapter on top of deploy-core.
     "crates/deploy-onion",
+    # T40: deploy-i2p — I2P eepsite DeployAdapter (.b32.i2p).
+    # Parallel in shape to deploy-onion: config + address-resolution
+    # half ships first; content publish lands as a follow-up.
+    "crates/deploy-i2p",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the

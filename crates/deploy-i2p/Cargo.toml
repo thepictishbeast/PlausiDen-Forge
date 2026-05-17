@@ -1,0 +1,21 @@
+[package]
+name = "deploy-i2p"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "I2P eepsite DeployAdapter implementation. Validates config + reads .b32.i2p address from i2pd / java I2P tunnel config; content publish lives in a follow-up."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+deploy-core = { path = "../deploy-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
