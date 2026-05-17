@@ -321,7 +321,8 @@ mod tests {
         // Loom uses rich-link on form buttons too (e.g. Save draft /
         // Continue → upload on the same data-backend) to signal that
         // visible text is a CTA per-context, not a stable label.
-        let body = r#"<button data-backend="post-skill" data-loom-rich-link="true">Save draft</button>"#;
+        let body =
+            r#"<button data-backend="post-skill" data-loom-rich-link="true">Save draft</button>"#;
         let pairs = extract_button(body);
         assert!(pairs[0].2, "button with rich-link must count as opt-out");
     }
