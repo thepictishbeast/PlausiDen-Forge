@@ -47,6 +47,7 @@ use forge_phases::required_pages::RequiredPagesPhase;
 use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::sri::SriPhase;
+use forge_phases::structured_data::StructuredDataPhase;
 use forge_phases::theme_consistency::ThemeConsistencyPhase;
 use forge_phases::theme_contrast::ThemeContrastPhase;
 use forge_phases::tokens::TokensPhase;
@@ -339,6 +340,10 @@ fn run() -> Result<ExitCode> {
         Box::new(A11yLandmarksPhase),
         Box::new(IdStrategyPhase),
         Box::new(SeoPhase),
+        // phase_structured_data — Schema.org JSON-LD per page +
+        // @context/@type validation. Silent skip when
+        // [structured_data] missing from forge.toml.
+        Box::new(StructuredDataPhase),
         Box::new(PerfBudgetPhase),
         Box::new(AssetOptimizationPhase),
         Box::new(SriPhase),

@@ -42,6 +42,7 @@ pub mod required_pages;
 pub mod self_check;
 pub mod seo;
 pub mod sri;
+pub mod structured_data;
 pub mod theme_consistency;
 pub mod theme_contrast;
 pub mod tokens;
