@@ -12,6 +12,8 @@ path = "src/main.rs"
 [dependencies]
 forge-core = { path = "../forge-core" }
 forge-phases = { path = "../forge-phases" }
+# T33: manifest-gate CLI uses the keystone types directly.
+manifest-core = { path = "../manifest-core" }
 clap = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
@@ -24,3 +26,8 @@ tracing-subscriber = { workspace = true }
 # maintained, ~3 transitive deps). Mom-class UX: edit your CMS,
 # see findings stream as you save.
 notify = "6"
+
+[dev-dependencies]
+# T33: manifest-gate tests write fixture phases.toml + backends.toml
+# into a tempdir and run run_manifest_validate against it.
+tempfile = { workspace = true }

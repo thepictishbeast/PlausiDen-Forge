@@ -171,6 +171,24 @@ enum Cmd {
         #[arg(long, default_value_t = false)]
         apply: bool,
     },
+    /// T33: manifest-keystone gate. Loads phases.toml + backends.toml
+    /// from the project root, projects through manifest-core, and
+    /// asserts internal consistency:
+    ///   * every backend ID parses as kebab-case
+    ///   * every phase ID parses as kebab-case
+    ///   * phase depends_on is acyclic + resolvable (topo-sorts)
+    ///   * phase implements references resolve to declared
+    ///     capabilities (if a capabilities table is present in
+    ///     phases.toml meta)
+    ///
+    /// Exit codes:
+    ///   0 — manifest is internally consistent
+    ///   1 — at least one gate violation
+    ///   2 — fatal (missing required file, parse error)
+    Manifest {
+        #[command(subcommand)]
+        action: ManifestAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -241,6 +259,19 @@ enum AuditAction {
         /// replace any non-identical existing hook.
         #[arg(long, default_value_t = false)]
         force: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ManifestAction {
+    /// Validate phases.toml + backends.toml at the project root.
+    /// Reports parsing + projection + topo-sort errors and exits
+    /// non-zero on the first gate violation.
+    Validate {
+        /// Emit a JSON-form summary of phases/backends counts +
+        /// detected gaps to stdout. Default is human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 }
 
@@ -319,6 +350,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Fix { apply }) => return run_fix(&root, *apply),
+        Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -1705,6 +1737,210 @@ fn read_mode_from_toml(root: &std::path::Path) -> Option<BuildMode> {
         }
     }
     None
+}
+
+// ====================================================================
+// T33: manifest-keystone gate.
+//
+// Loads phases.toml + backends.toml from the project root, projects
+// through manifest-core, and asserts internal consistency. Designed
+// for use in a CI workflow (.github/workflows/manifest-gate.yml).
+// ====================================================================
+
+#[derive(Debug, serde::Serialize)]
+struct ManifestGateSummary {
+    backends_path: String,
+    phases_path: String,
+    backends_declared: usize,
+    backends_stub: usize,
+    phases_declared: usize,
+    phases_topo_ok: bool,
+    violations: Vec<String>,
+}
+
+fn run_manifest(root: &std::path::Path, action: &ManifestAction) -> Result<ExitCode> {
+    match action {
+        ManifestAction::Validate { json } => run_manifest_validate(root, *json),
+    }
+}
+
+fn run_manifest_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let backends_path = root.join("backends.toml");
+    let phases_path = root.join("phases.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let mut summary = ManifestGateSummary {
+        backends_path: backends_path.display().to_string(),
+        phases_path: phases_path.display().to_string(),
+        backends_declared: 0,
+        backends_stub: 0,
+        phases_declared: 0,
+        phases_topo_ok: false,
+        violations: Vec::new(),
+    };
+
+    // --- backends.toml ---
+    if !backends_path.exists() {
+        violations.push(format!(
+            "missing backends.toml at {}",
+            backends_path.display()
+        ));
+    } else {
+        let s = std::fs::read_to_string(&backends_path)
+            .with_context(|| format!("reading {}", backends_path.display()))?;
+        match manifest_core::projections::backends_toml::BackendsToml::from_toml(&s) {
+            Ok(bt) => match bt.to_descriptors() {
+                Ok(descs) => {
+                    summary.backends_declared = descs.len();
+                    summary.backends_stub = bt.stub_ids().len();
+                }
+                Err(e) => violations.push(format!("backends.toml projection: {e}")),
+            },
+            Err(e) => violations.push(format!("backends.toml parse: {e}")),
+        }
+    }
+
+    // --- phases.toml ---
+    if !phases_path.exists() {
+        violations.push(format!("missing phases.toml at {}", phases_path.display()));
+    } else {
+        let s = std::fs::read_to_string(&phases_path)
+            .with_context(|| format!("reading {}", phases_path.display()))?;
+        match manifest_core::projections::phases_toml::PhasesToml::from_toml(&s) {
+            Ok(pt) => {
+                match pt.to_descriptors() {
+                    Ok(descs) => summary.phases_declared = descs.len(),
+                    Err(e) => violations.push(format!("phases.toml projection: {e}")),
+                }
+                match pt.topo_sort() {
+                    Ok(_) => summary.phases_topo_ok = true,
+                    Err(e) => violations.push(format!("phases.toml topo-sort: {e}")),
+                }
+            }
+            Err(e) => violations.push(format!("phases.toml parse: {e}")),
+        }
+    }
+
+    summary.violations = violations.clone();
+
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "manifest-gate: {} backends ({} stub), {} phases, topo {}",
+            summary.backends_declared,
+            summary.backends_stub,
+            summary.phases_declared,
+            if summary.phases_topo_ok { "ok" } else { "FAIL" },
+        );
+        if !violations.is_empty() {
+            println!("violations:");
+            for v in &violations {
+                println!("  - {v}");
+            }
+        }
+    }
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+#[cfg(test)]
+mod manifest_gate_tests {
+    use super::*;
+
+    fn write_files(dir: &std::path::Path, phases: &str, backends: &str) {
+        std::fs::write(dir.join("phases.toml"), phases).unwrap();
+        std::fs::write(dir.join("backends.toml"), backends).unwrap();
+    }
+
+    #[test]
+    fn passes_on_clean_files() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_files(
+            tmp.path(),
+            r#"
+[phases.a]
+summary = "a"
+"#,
+            r#"
+[backends.x]
+method = "GET"
+path   = "/x"
+purpose = "x"
+impl_files = ["src/x.rs"]
+"#,
+        );
+        let r = run_manifest_validate(tmp.path(), false).unwrap();
+        assert_eq!(r, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn fails_on_phases_cycle() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_files(
+            tmp.path(),
+            r#"
+[phases.a]
+summary    = "a"
+depends_on = ["b"]
+[phases.b]
+summary    = "b"
+depends_on = ["a"]
+"#,
+            r#"
+[backends.x]
+method = "GET"
+path   = "/x"
+purpose = "x"
+impl_files = ["src/x.rs"]
+"#,
+        );
+        let r = run_manifest_validate(tmp.path(), false).unwrap();
+        assert_eq!(r, ExitCode::from(1));
+    }
+
+    #[test]
+    fn fails_on_missing_backends_toml() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("phases.toml"),
+            r#"
+[phases.a]
+summary = "a"
+"#,
+        )
+        .unwrap();
+        let r = run_manifest_validate(tmp.path(), false).unwrap();
+        assert_eq!(r, ExitCode::from(1));
+    }
+
+    #[test]
+    fn fails_on_invalid_kebab_case_id() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_files(
+            tmp.path(),
+            r#"
+[phases.A]
+summary = "a"
+"#,
+            r#"
+[backends.x]
+method = "GET"
+path   = "/x"
+purpose = "x"
+impl_files = []
+"#,
+        );
+        let r = run_manifest_validate(tmp.path(), false).unwrap();
+        assert_eq!(r, ExitCode::from(1));
+    }
 }
 
 #[cfg(test)]

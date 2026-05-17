@@ -1,0 +1,76 @@
+name: manifest-gate
+
+# T33: validates the keystone PlatformManifest layer on every push +
+# PR. Runs `forge manifest validate` which loads phases.toml +
+# backends.toml at the workspace root, projects them through
+# manifest-core, and asserts internal consistency:
+#   * every backend ID parses as kebab-case
+#   * every phase ID parses as kebab-case
+#   * phase depends_on is acyclic + topo-sorts
+#
+# Cheap by design — no test suite, no full build pipeline. Just the
+# manifest layer health check, separate from the heavier ci.yml +
+# forge-audit.yml workflows so manifest regressions surface fast.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "phases.toml"
+      - "backends.toml"
+      - "crates/manifest-core/**"
+      - "crates/manifest-codegen/**"
+      - "crates/manifest-codegen-macros/**"
+      - "crates/forge-cli/src/main.rs"
+      - ".github/workflows/manifest-gate.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "phases.toml"
+      - "backends.toml"
+      - "crates/manifest-core/**"
+      - "crates/manifest-codegen/**"
+      - "crates/manifest-codegen-macros/**"
+      - "crates/forge-cli/src/main.rs"
+      - ".github/workflows/manifest-gate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  manifest-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install rust toolchain
+        run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: manifest-gate-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            manifest-gate-${{ runner.os }}-
+
+      - name: Run manifest-core unit tests
+        run: cargo test -p manifest-core --quiet
+
+      - name: Run manifest-codegen unit tests
+        run: cargo test -p manifest-codegen --quiet
+
+      - name: Run manifest-codegen-macros expansion tests
+        run: cargo test -p manifest-codegen-macros --quiet
+
+      - name: Build forge-cli
+        run: cargo build -p forge-cli --quiet
+
+      - name: Run manifest-gate against workspace
+        run: cargo run -q -p forge-cli -- manifest validate --json
