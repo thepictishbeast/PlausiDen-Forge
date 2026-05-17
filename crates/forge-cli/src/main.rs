@@ -296,7 +296,7 @@ fn main() -> ExitCode {
     match run() {
         Ok(code) => code,
         Err(e) => {
-            eprintln!("forge: fatal: {e:#}");
+            tracing::error!("forge: fatal: {e:#}");
             ExitCode::from(2)
         }
     }
@@ -483,7 +483,7 @@ fn run() -> Result<ExitCode> {
     // path has soaked, the flat loop will be removed.
     let use_pipeline = std::env::var("FORGE_PIPELINE").ok().as_deref() == Some("1");
     let mode_str = format!("{mode:?}").to_lowercase();
-    println!(
+    tracing::info!(
         "forge {} mode={}{}",
         env!("CARGO_PKG_VERSION"),
         mode_str,
@@ -500,13 +500,13 @@ fn run() -> Result<ExitCode> {
         };
         for phase in &phases {
             let phase_started = std::time::Instant::now();
-            println!("\n== phase: {} ==", phase.name());
+            tracing::info!("\n== phase: {} ==", phase.name());
             let findings = phase
                 .run(&ctx)
                 .with_context(|| format!("phase {}", phase.name()))?;
             let elapsed = phase_started.elapsed().as_millis();
             if findings.is_empty() {
-                println!("  ok      no findings ({elapsed}ms)");
+                tracing::info!("  ok      no findings ({elapsed}ms)");
             } else {
                 for f in &findings {
                     print_finding(f);
@@ -541,7 +541,7 @@ fn run() -> Result<ExitCode> {
                 forge_core::attest::sign_report(&mut report, &key).context("sign chain root")?;
             }
             None => {
-                eprintln!(
+                tracing::error!(
                     "  warn  attest key at {} unreadable — build unsigned",
                     key_path.display()
                 );
@@ -549,29 +549,29 @@ fn run() -> Result<ExitCode> {
         }
     }
 
-    println!("\n== summary ==");
-    println!("  mode:                {}", report.mode);
-    println!("  strict findings:     {}", report.strict_count);
-    println!("  suppressible warns:  {}", report.warn_count);
-    println!("  duration:            {}ms", report.duration_ms);
-    println!("  chain length:        {}", report.chain_length);
+    tracing::info!("\n== summary ==");
+    tracing::info!("  mode:                {}", report.mode);
+    tracing::info!("  strict findings:     {}", report.strict_count);
+    tracing::info!("  suppressible warns:  {}", report.warn_count);
+    tracing::info!("  duration:            {}ms", report.duration_ms);
+    tracing::info!("  chain length:        {}", report.chain_length);
     if let Some(h) = &report.prev_hash {
-        println!(
+        tracing::info!(
             "  prev hash:           {}…{}",
             &h[..8],
             &h[h.len().saturating_sub(8)..]
         );
     } else {
-        println!("  prev hash:           (genesis)");
+        tracing::info!("  prev hash:           (genesis)");
     }
     if let Some(s) = &report.signature {
-        println!(
+        tracing::info!(
             "  signature:           {}…{} (Ed25519)",
             &s[..8],
             &s[s.len().saturating_sub(8)..]
         );
     } else {
-        println!("  signature:           (unsigned — run `forge attest init` to enable)");
+        tracing::info!("  signature:           (unsigned — run `forge attest init` to enable)");
     }
 
     // T26: write the chained report to reports/build-<ts>.json
@@ -584,20 +584,20 @@ fn run() -> Result<ExitCode> {
     let serialized = serde_json::to_string_pretty(&report).context("serialize report")?;
     if std::fs::write(&build_path, &serialized).is_ok() {
         let _ = std::fs::write(&latest_path, &serialized);
-        println!("  chain report:        {}", build_path.display());
+        tracing::info!("  chain report:        {}", build_path.display());
     }
 
     if let Some(p) = args.json_report {
         std::fs::write(&p, &serialized)
             .with_context(|| format!("writing JSON report to {}", p.display()))?;
-        println!("  json report:         {}", p.display());
+        tracing::info!("  json report:         {}", p.display());
     }
 
     if report.passed(mode) {
-        println!("\nforge build OK");
+        tracing::info!("\nforge build OK");
         Ok(ExitCode::SUCCESS)
     } else {
-        println!("\nforge build FAILED — see findings above");
+        tracing::info!("\nforge build FAILED — see findings above");
         Ok(ExitCode::from(1))
     }
 }
@@ -641,11 +641,11 @@ fn run_phases_through_pipeline(
         })
         .map_err(|e| anyhow::anyhow!("pipeline discover: {e}"))?
         .parse(|ctx, _| {
-            println!("\n== pipeline stage: parse ==");
+            tracing::info!("\n== pipeline stage: parse ==");
             let mut findings = Vec::new();
             for phase in phases.iter().filter(|p| is_parse(p.name())) {
                 let started = std::time::Instant::now();
-                println!("  -- phase: {}", phase.name());
+                tracing::info!("  -- phase: {}", phase.name());
                 let f = phase.run(ctx).map_err(|e| BuildError::Other {
                     phase: phase.name().to_owned(),
                     message: format!("{e}"),
@@ -660,11 +660,11 @@ fn run_phases_through_pipeline(
         })
         .map_err(|e| anyhow::anyhow!("pipeline parse: {e}"))?
         .render(|ctx, _, _| {
-            println!("\n== pipeline stage: render ==");
+            tracing::info!("\n== pipeline stage: render ==");
             let mut findings = Vec::new();
             for phase in phases.iter().filter(|p| is_render(p.name())) {
                 let started = std::time::Instant::now();
-                println!("  -- phase: {}", phase.name());
+                tracing::info!("  -- phase: {}", phase.name());
                 let f = phase.run(ctx).map_err(|e| BuildError::Other {
                     phase: phase.name().to_owned(),
                     message: format!("{e}"),
@@ -679,7 +679,7 @@ fn run_phases_through_pipeline(
         })
         .map_err(|e| anyhow::anyhow!("pipeline render: {e}"))?
         .audit(|ctx, _, _| {
-            println!("\n== pipeline stage: audit ==");
+            tracing::info!("\n== pipeline stage: audit ==");
             let mut findings = Vec::new();
             let mut phases_run = 0usize;
             let mut clean_phases = 0usize;
@@ -688,7 +688,7 @@ fn run_phases_through_pipeline(
                 .filter(|p| !is_parse(p.name()) && !is_render(p.name()))
             {
                 let started = std::time::Instant::now();
-                println!("  -- phase: {}", phase.name());
+                tracing::info!("  -- phase: {}", phase.name());
                 let f = phase.run(ctx).map_err(|e| BuildError::Other {
                     phase: phase.name().to_owned(),
                     message: format!("{e}"),
@@ -710,7 +710,7 @@ fn run_phases_through_pipeline(
         })
         .map_err(|e| anyhow::anyhow!("pipeline audit: {e}"))?;
 
-    println!(
+    tracing::info!(
         "\n== pipeline summary ==\n  audit phases run:  {}\n  clean phases:      {}",
         pipeline.audited().phases_run,
         pipeline.audited().clean_phases,
@@ -724,7 +724,7 @@ fn run_phases_through_pipeline(
 fn report_inline(findings: &[Finding], started: std::time::Instant) {
     let elapsed = started.elapsed().as_millis();
     if findings.is_empty() {
-        println!("    ok      no findings ({elapsed}ms)");
+        tracing::info!("    ok      no findings ({elapsed}ms)");
     } else {
         for f in findings {
             print_finding(f);
@@ -744,9 +744,9 @@ fn print_finding(f: &Finding) {
         _ => "STRICT  ",
     };
     if f.path.is_empty() {
-        println!("  {}{}: {}", label, f.phase, f.message);
+        tracing::info!("  {}{}: {}", label, f.phase, f.message);
     } else {
-        println!("  {}{}: {} — {}", label, f.phase, f.path, f.message);
+        tracing::info!("  {}{}: {} — {}", label, f.phase, f.path, f.message);
     }
 }
 
@@ -790,21 +790,21 @@ fn run_watch(root: &std::path::Path, debounce_ms: u64, max_rebuilds: usize) -> R
         .with_context(|| format!("canonicalize root {}", root.display()))?;
     let root = root_canon.as_path();
 
-    eprintln!("forge watch:");
-    eprintln!("  ok    watching {}", root.display());
-    eprintln!("  ok    debounce {debounce_ms}ms");
+    tracing::error!("forge watch:");
+    tracing::error!("  ok    watching {}", root.display());
+    tracing::error!("  ok    debounce {debounce_ms}ms");
     if max_rebuilds > 0 {
-        eprintln!("  info  capped at {max_rebuilds} rebuilds");
+        tracing::error!("  info  capped at {max_rebuilds} rebuilds");
     }
-    eprintln!("  info  Ctrl-C to exit");
-    eprintln!();
+    tracing::error!("  info  Ctrl-C to exit");
+    tracing::error!("");
 
     // Initial build runs immediately so the operator sees current
     // state without having to save first.
     let mut rebuild_count = 0usize;
     rebuild_once(root, "initial", &mut rebuild_count)?;
     if max_rebuilds > 0 && rebuild_count >= max_rebuilds {
-        eprintln!("forge watch: hit max-rebuilds; exiting cleanly");
+        tracing::error!("forge watch: hit max-rebuilds; exiting cleanly");
         return Ok(ExitCode::SUCCESS);
     }
 
@@ -829,7 +829,7 @@ fn run_watch(root: &std::path::Path, debounce_ms: u64, max_rebuilds: usize) -> R
         let first = match rx.recv() {
             Ok(r) => r,
             Err(_) => {
-                eprintln!("forge watch: watcher channel closed; exiting");
+                tracing::error!("forge watch: watcher channel closed; exiting");
                 return Ok(ExitCode::SUCCESS);
             }
         };
@@ -857,7 +857,7 @@ fn run_watch(root: &std::path::Path, debounce_ms: u64, max_rebuilds: usize) -> R
                 }
                 Err(RecvTimeoutError::Timeout) => break,
                 Err(RecvTimeoutError::Disconnected) => {
-                    eprintln!("forge watch: watcher channel disconnected; exiting");
+                    tracing::error!("forge watch: watcher channel disconnected; exiting");
                     return Ok(ExitCode::SUCCESS);
                 }
             }
@@ -866,7 +866,7 @@ fn run_watch(root: &std::path::Path, debounce_ms: u64, max_rebuilds: usize) -> R
         let trigger = latest_path.unwrap_or_else(|| "<unknown>".to_owned());
         rebuild_once(root, &trigger, &mut rebuild_count)?;
         if max_rebuilds > 0 && rebuild_count >= max_rebuilds {
-            eprintln!("forge watch: hit max-rebuilds; exiting cleanly");
+            tracing::error!("forge watch: hit max-rebuilds; exiting cleanly");
             return Ok(ExitCode::SUCCESS);
         }
     }
@@ -910,7 +910,7 @@ fn event_path_label(ev: notify::Event) -> Option<String> {
 fn rebuild_once(root: &std::path::Path, trigger: &str, counter: &mut usize) -> Result<()> {
     *counter += 1;
     let n = *counter;
-    eprintln!("---- forge watch rebuild #{n} (trigger: {trigger}) ----");
+    tracing::error!("---- forge watch rebuild #{n} (trigger: {trigger}) ----");
     let exe = std::env::current_exe().context("locate own binary for re-exec")?;
     let status = std::process::Command::new(exe)
         .arg("--root")
@@ -918,7 +918,7 @@ fn rebuild_once(root: &std::path::Path, trigger: &str, counter: &mut usize) -> R
         .arg("build")
         .status()
         .context("forge build subprocess failed to spawn")?;
-    eprintln!(
+    tracing::error!(
         "---- forge watch rebuild #{n} done ({}) ----",
         status
             .code()
@@ -937,7 +937,7 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
     match action {
         AttestAction::Init { force } => {
             if key_path.exists() && !force {
-                eprintln!(
+                tracing::error!(
                     "forge attest init: {} already exists; pass --force to overwrite \
                      (chain-of-trust will break for any verifier pinned to the old key)",
                     key_path.display()
@@ -959,15 +959,15 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
             }
             std::fs::write(&pub_path, &pub_b64)
                 .with_context(|| format!("write {}", pub_path.display()))?;
-            println!("forge attest init:");
-            println!("  ok    private key → {} (mode 0600)", key_path.display());
-            println!("  ok    public  key → {}", pub_path.display());
-            println!("  pubkey: {pub_b64}");
+            tracing::info!("forge attest init:");
+            tracing::info!("  ok    private key → {} (mode 0600)", key_path.display());
+            tracing::info!("  ok    public  key → {}", pub_path.display());
+            tracing::info!("  pubkey: {pub_b64}");
             Ok(ExitCode::SUCCESS)
         }
         AttestAction::Pubkey => {
             if !pub_path.is_file() {
-                eprintln!(
+                tracing::error!(
                     "forge attest pubkey: no {} — run `forge attest init` first",
                     pub_path.display()
                 );
@@ -976,7 +976,7 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
             let s = std::fs::read_to_string(&pub_path)
                 .with_context(|| format!("read {}", pub_path.display()))?;
             print!("{}", s.trim());
-            println!();
+            tracing::info!("");
             Ok(ExitCode::SUCCESS)
         }
     }
@@ -1167,12 +1167,12 @@ fn run_audit_mutants(
         match status {
             Ok(s) if s.success() => {}
             Ok(s) => {
-                eprintln!(
+                tracing::error!(
                     "forge audit mutants: cargo mutants exited {s} (continuing to parse outcomes)"
                 );
             }
             Err(e) => {
-                eprintln!("forge audit mutants: cargo mutants failed: {e}");
+                tracing::error!("forge audit mutants: cargo mutants failed: {e}");
                 return Ok(ExitCode::from(2));
             }
         }
@@ -1180,14 +1180,14 @@ fn run_audit_mutants(
     let outcomes_path = root.join("mutants.out").join("outcomes.json");
     if !outcomes_path.is_file() {
         if run {
-            eprintln!(
+            tracing::error!(
                 "forge audit mutants: cargo mutants ran but {} missing — \
                  the version may write outcomes to a different path",
                 outcomes_path.display()
             );
             return Ok(ExitCode::from(2));
         }
-        println!(
+        tracing::info!(
             "forge audit mutants: no {} yet — run with --run to generate",
             outcomes_path.display()
         );
@@ -1200,24 +1200,24 @@ fn run_audit_mutants(
     let summary = MutantsSummary::from_outcomes(&parsed);
     let rate = summary.survival_rate();
 
-    println!("forge audit mutants:");
-    println!("  caught     {}", summary.caught);
-    println!("  survived   {}", summary.survived);
-    println!("  unviable   {}", summary.unviable);
-    println!("  timeout    {}", summary.timeout);
+    tracing::info!("forge audit mutants:");
+    tracing::info!("  caught     {}", summary.caught);
+    tracing::info!("  survived   {}", summary.survived);
+    tracing::info!("  unviable   {}", summary.unviable);
+    tracing::info!("  timeout    {}", summary.timeout);
     if summary.other > 0 {
-        println!("  other      {}", summary.other);
+        tracing::info!("  other      {}", summary.other);
     }
-    println!(
+    tracing::info!(
         "  survival rate: {:.1}%  (threshold: {:.1}%)",
         rate, threshold
     );
 
     if rate <= threshold {
-        println!("  ok      survival ≤ threshold (AVP-2 Tier 6 met)");
+        tracing::info!("  ok      survival ≤ threshold (AVP-2 Tier 6 met)");
         Ok(ExitCode::SUCCESS)
     } else {
-        eprintln!(
+        tracing::error!(
             "  FAIL    survival {rate:.1}% > threshold {threshold:.1}% — \
              tests do not constrain {} survived mutations",
             summary.survived
@@ -1241,31 +1241,31 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
                 paths.clone()
             };
             if scan_targets.is_empty() {
-                println!(
+                tracing::info!(
                     "forge audit secrets: nothing staged + no paths supplied — nothing to scan"
                 );
                 return Ok(ExitCode::SUCCESS);
             }
             let hits = scan_paths_for_secrets(&scan_targets);
             if hits.is_empty() {
-                println!(
+                tracing::info!(
                     "forge audit secrets: scanned {} path(s), no secret-shaped names matched",
                     scan_targets.len()
                 );
                 return Ok(ExitCode::SUCCESS);
             }
-            eprintln!(
+            tracing::error!(
                 "forge audit secrets: {} secret-shaped path(s) found — refuse to commit",
                 hits.len()
             );
             for (path, rule) in &hits {
                 if *explain {
-                    eprintln!("  SECRET  [{rule}]  {}", path.display());
+                    tracing::error!("  SECRET  [{rule}]  {}", path.display());
                 } else {
-                    eprintln!("  SECRET  {}", path.display());
+                    tracing::error!("  SECRET  {}", path.display());
                 }
             }
-            eprintln!(
+            tracing::error!(
                 "\nIf this is a false positive, rename the file or add it to a gitignore'd \
                  directory. NEVER --force past this gate."
             );
@@ -1305,11 +1305,11 @@ fn cmd_audit_init_hook(root: &std::path::Path, force: bool) -> Result<ExitCode> 
         let existing = std::fs::read_to_string(&hook_path)
             .with_context(|| format!("read existing {}", hook_path.display()))?;
         if existing == PRECOMMIT_HOOK_BODY {
-            println!("forge audit init-hook: .githooks/pre-commit already up-to-date — no change.");
+            tracing::info!("forge audit init-hook: .githooks/pre-commit already up-to-date — no change.");
             return Ok(ExitCode::SUCCESS);
         }
         if !force {
-            eprintln!(
+            tracing::error!(
                 "forge audit init-hook: .githooks/pre-commit exists with different content. \
                  Use --force to overwrite (review the existing hook first; the operator may \
                  have customized it)."
@@ -1332,7 +1332,7 @@ fn cmd_audit_init_hook(root: &std::path::Path, force: bool) -> Result<ExitCode> 
             .with_context(|| format!("chmod 0755 {}", hook_path.display()))?;
     }
 
-    println!(
+    tracing::info!(
         "forge audit init-hook: wrote {} ({} bytes, mode 0755).
 
 To activate (one-time per clone):
@@ -1374,7 +1374,7 @@ fn run_fix(root: &std::path::Path, apply: bool) -> Result<ExitCode> {
         })
         .collect();
     if reports.is_empty() {
-        eprintln!(
+        tracing::error!(
             "forge fix: no reports/build-*.json found — run `forge build` first then re-run."
         );
         return Ok(ExitCode::from(2));
@@ -1409,14 +1409,14 @@ fn run_fix(root: &std::path::Path, apply: bool) -> Result<ExitCode> {
     }
 
     if planned.is_empty() {
-        println!(
+        tracing::info!(
             "forge fix: no auto-fixable findings in {} — nothing to do.",
             latest.file_name().unwrap_or_default().to_string_lossy()
         );
         return Ok(ExitCode::SUCCESS);
     }
 
-    println!(
+    tracing::info!(
         "forge fix: {} auto-fixable finding(s) in {} (mode={}):",
         planned.len(),
         latest.file_name().unwrap_or_default().to_string_lossy(),
@@ -1428,26 +1428,26 @@ fn run_fix(root: &std::path::Path, apply: bool) -> Result<ExitCode> {
         if apply {
             match action.apply(root) {
                 Ok(()) => {
-                    println!("  [applied]  {summary}");
+                    tracing::info!("  [applied]  {summary}");
                     applied += 1;
                 }
                 Err(e) => {
-                    eprintln!("  [failed]   {summary}: {e}");
+                    tracing::error!("  [failed]   {summary}: {e}");
                 }
             }
         } else {
-            println!("  [proposed] {summary}");
+            tracing::info!("  [proposed] {summary}");
         }
     }
 
     if apply {
-        println!(
+        tracing::info!(
             "\nforge fix: applied {applied} of {} fix(es). Re-run `forge build` to verify.",
             planned.len()
         );
         Ok(ExitCode::SUCCESS)
     } else {
-        println!("\nDry-run only — re-run with `--apply` to write the fixes.");
+        tracing::info!("\nDry-run only — re-run with `--apply` to write the fixes.");
         // Exit 1 so CI pipelines piping `forge fix` see "stuff to
         // fix" without the operator needing a separate flag.
         Ok(ExitCode::from(1))
@@ -1521,12 +1521,12 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
     if !chain {
         // Currently chain is the only verify mode; reject other
         // shapes politely so future flags surface their own help.
-        eprintln!("forge verify: pass --chain (currently the only mode)");
+        tracing::error!("forge verify: pass --chain (currently the only mode)");
         return Ok(ExitCode::from(2));
     }
     let reports_dir = root.join("reports");
     if !reports_dir.is_dir() {
-        println!(
+        tracing::info!(
             "forge verify --chain: no reports/ directory at {} — nothing to verify",
             reports_dir.display()
         );
@@ -1546,7 +1546,7 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
     entries.sort();
 
     if entries.is_empty() {
-        println!("forge verify --chain: no build-*.json reports — nothing to verify");
+        tracing::info!("forge verify --chain: no build-*.json reports — nothing to verify");
         return Ok(ExitCode::SUCCESS);
     }
 
@@ -1559,7 +1559,7 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
         chain_reports.push(report);
     }
 
-    println!(
+    tracing::info!(
         "forge verify --chain: walking {} report(s) in {}",
         chain_reports.len(),
         reports_dir.display()
@@ -1569,7 +1569,7 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
             let last = chain_reports.last();
             let head_len = last.map(|r| r.chain_length).unwrap_or(0);
             let head_started = last.map(|r| r.started.as_str()).unwrap_or("?");
-            println!(
+            tracing::info!(
                 "  ok      chain intact — head chain_length={head_len} started={head_started}"
             );
 
@@ -1577,7 +1577,7 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
             if signatures {
                 let pub_path = reports_dir.join("attest-pubkey.b64");
                 if !pub_path.is_file() {
-                    eprintln!(
+                    tracing::error!(
                         "  FAIL    --signatures requested but {} missing — run `forge attest init`",
                         pub_path.display()
                     );
@@ -1588,7 +1588,7 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
                 let pubkey = match forge_core::attest::pubkey_from_base64(pub_b64.trim()) {
                     Some(p) => p,
                     None => {
-                        eprintln!(
+                        tracing::error!(
                             "  FAIL    {} is not a valid base64 ed25519 pubkey",
                             pub_path.display()
                         );
@@ -1603,15 +1603,15 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
                         continue;
                     }
                     if let Err(e) = forge_core::attest::verify_report(r, &pubkey) {
-                        eprintln!("  FAIL    signature mismatch at index {idx}: {e}");
+                        tracing::error!("  FAIL    signature mismatch at index {idx}: {e}");
                         if let Some(p) = entries.get(idx) {
-                            eprintln!("  bad     {}", p.display());
+                            tracing::error!("  bad     {}", p.display());
                         }
                         return Ok(ExitCode::from(1));
                     }
                     signed += 1;
                 }
-                println!(
+                tracing::info!(
                     "  ok      {signed} signature(s) verified, {unsigned} unsigned (genesis-era)"
                 );
             }
@@ -1622,11 +1622,11 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
             // T55: print the typed ChainError verbatim. Each
             // variant carries the at_index + expected/actual so
             // the operator can immediately bisect to the bad file.
-            eprintln!("  FAIL    chain divergence: {e}");
+            tracing::error!("  FAIL    chain divergence: {e}");
             // Surface which file the divergence is at if available.
             if let Some(idx) = chain_error_index(&e) {
                 if let Some(p) = entries.get(idx) {
-                    eprintln!("  bad     {}", p.display());
+                    tracing::error!("  bad     {}", p.display());
                 }
             }
             Ok(ExitCode::from(1))
