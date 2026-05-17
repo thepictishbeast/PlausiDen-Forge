@@ -1,0 +1,170 @@
+{
+  "$schema": "../../../cms-schema.json",
+  "title": "The New York Times — Breaking News, Top Stories & Investigations",
+  "description": "T660 / T73 cycle 4: nytimes.com landing rebuilt as a Forge CmsPage. First NEWS-MEDIA category rebuild (prior 3 were dev-tools). Tests the LogoWall + Pricing + Quote dedup theory against a different vertical — news pages don't ship customer logos or pricing tiers, but DO ship article cards + bylines + datelines en masse.",
+  "path": "/",
+  "nav_links": [
+    {"label": "U.S.", "href": "/section/us", "current": false},
+    {"label": "World", "href": "/section/world", "current": false},
+    {"label": "Politics", "href": "/section/politics", "current": false},
+    {"label": "Business", "href": "/section/business", "current": false},
+    {"label": "Opinion", "href": "/section/opinion", "current": false},
+    {"label": "Science", "href": "/section/science", "current": false},
+    {"label": "Cooking", "href": "https://cooking.nytimes.com/", "current": false}
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Today's Edition · Friday, May 17",
+      "title": "The Lede",
+      "lede": "Live coverage of the day's top stories — politics, conflict abroad, markets, climate, and the slow churn of the cultural beat. Every story sourced, datelined, and bylined.",
+      "cta": {
+        "label": "Subscribe",
+        "href": "/subscriptions"
+      }
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T660-NEW3 — ArticleCard (headline + dek + byline + dateline + thumbnail)",
+      "body": [
+        "NYT's homepage is ~80% ArticleCards: a thumbnail, a headline, an optional dek (1-sentence summary), a byline (author + link to profile), and a relative dateline ('1h ago', '3 min read'). Forge's existing CardFeed handles title + sub + primary_link + avatar — close but doesn't model byline-vs-dek separately, and avatars are decorative-letter, not actual thumbnail images.",
+        "First news-media rebuild, so dedup count starts at 1-of-1 surfaces. Marketing/SaaS rebuilds (Stripe, Linear, Vercel) didn't need this. If a 5th rebuild (any news / blog / publication site) ALSO needs it, bump to 2-of-2 vertical-specific → bump T70 priority. Otherwise stay LOW.",
+        "Proposed shape: CmsSection::ArticleCard { headline: String, dek: Option<String>, byline: Author, dateline: Dateline, thumbnail: Option<CmsImage>, primary_link: NavLink, kicker: Option<String> }",
+        "Where Author = { name, profile_href, role? }, Dateline = { absolute_iso8601, relative_human, read_minutes? }, CmsImage = { src, alt, intrinsic_aspect }. The relative_human ('1h ago') is owner-input not derived — Forge isn't computing dynamic timestamps; for CMS-mode the editor types it."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Top Stories"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": "Filed in the past hour",
+      "items": [
+        {
+          "title": "Senate vote-counting drags as filibuster pushes confirmation hearings into next week",
+          "host_sub": "By Adrian Hoyt · Politics · 12 min ago · 6 min read",
+          "primary_link": {"label": "Read the story", "href": "/2026/05/17/us/politics/senate-confirmation-filibuster.html"},
+          "avatar": {"kind": "letter", "letter": "A", "color": "indigo"}
+        },
+        {
+          "title": "Climate envoys in Geneva push for binding emissions target ahead of COP-32 plenary",
+          "host_sub": "By Mei Wong & Lars Bjornsen · Climate · 34 min ago · 8 min read",
+          "primary_link": {"label": "Read the story", "href": "/2026/05/17/world/europe/climate-geneva-cop32.html"},
+          "avatar": {"kind": "letter", "letter": "M", "color": "violet"}
+        },
+        {
+          "title": "Markets close mixed as semiconductor index slips on chip-export rumor",
+          "host_sub": "By Park Sung-jin · Business · 1h ago · 4 min read",
+          "primary_link": {"label": "Read the story", "href": "/2026/05/17/business/markets-close-semiconductor.html"},
+          "avatar": {"kind": "letter", "letter": "P", "color": "amber"}
+        },
+        {
+          "title": "Inside the 'Last Quiet Mile' — how one stretch of coastal road shaped a town",
+          "host_sub": "By Hannah Gillis · Magazine · 2h ago · 16 min read",
+          "primary_link": {"label": "Read the story", "href": "/2026/05/17/magazine/last-quiet-mile-coastal-road.html"},
+          "avatar": {"kind": "letter", "letter": "H", "color": "cyan"}
+        }
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Opinion"
+    },
+
+    {
+      "kind": "quote",
+      "body": "Democracy doesn't fail at the polling station. It fails in the months between, when no one is paying attention to the things the polling station is supposed to settle.",
+      "attribution": "Maeve O'Connor",
+      "role": "Columnist, Opinion"
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T660-NEW4 — Opinion lede + author-tagline pattern",
+      "body": [
+        "NYT's Opinion section uses a tighter Quote shape: a short pull-quote + a byline that's tagged with 'Columnist' / 'Guest Essay' / 'Editorial Board'. The existing Quote variant (T660 P2 shipped this session) handles body + attribution + role — actually a clean fit! No new variant needed. Dedup confirmation: Quote on 4-of-4 rebuilds (Stripe + Linear + Vercel + NYT). LOCKS T660 P2 as load-bearing for ALL marketing+content site rebuilds going forward."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Investigations"
+    },
+
+    {
+      "kind": "group",
+      "title": "The Coastal Authority Files",
+      "body": [
+        "A six-month investigation into the Coastal Land-Use Authority and its dealings with private resort developers in three states. Documents obtained under FOIA, leaked internal memos, and on-the-record interviews with eleven former staff. Published in three parts; the first ran yesterday.",
+        "Part 1: 'How a sleepy regulator became a deal-making machine' — May 16.",
+        "Part 2: 'The $4.2bn in approvals the public never saw' — Monday.",
+        "Part 3: 'What the staff lawyers wrote, and what got published instead' — Wednesday."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Live Updates"
+    },
+
+    {
+      "kind": "kv_pair",
+      "heading": "Geneva climate talks · day 4",
+      "items": [
+        {"key": "9:14 GMT", "value": "EU and African Union joint statement: emissions target must be 'binding and verifiable'."},
+        {"key": "10:02 GMT", "value": "China's lead negotiator confirms attendance at the binding-target working group."},
+        {"key": "11:48 GMT", "value": "US delegation pushes for an opt-out clause covering 'critical-mineral supply-chain restrictions'."},
+        {"key": "13:30 GMT", "value": "Civil-society observers ejected from the plenary after protest banner unfurled."},
+        {"key": "14:55 GMT", "value": "Brazil's environment minister: 'No deal without Annex II reparations.'"}
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T660-NEW5 — Live-blog timestamp pattern",
+      "body": [
+        "NYT's live-blog uses chronologically-ordered timestamp + paragraph pairs. The existing kv_pair variant (T660 P1) maps the data shape cleanly (key=timestamp, value=summary). The rendering hint is different though — live-blog wants vertical timeline with bullets/connectors, kv_pair wants two-column table. Style hint, not data-shape gap. PROPOSAL: an optional 'style: timeline | table | grid' field on kv_pair (additive, non-breaking) rather than a new variant. Not bumping T70 priority yet — needs 2nd-surface confirmation from another news/live-blog rebuild."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Cooking"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": "Recipes editors are cooking this week",
+      "items": [
+        {
+          "title": "Spring-onion + miso pasta — 25 minutes, 4 servings",
+          "host_sub": "By Yotam Otto · 4.9★ (2,140 ratings) · 25 min",
+          "primary_link": {"label": "Open recipe", "href": "https://cooking.nytimes.com/recipes/spring-onion-miso-pasta"},
+          "avatar": {"kind": "letter", "letter": "Y", "color": "amber"}
+        },
+        {
+          "title": "Skillet brown-butter cornbread",
+          "host_sub": "By Vivian Kao · 4.8★ (3,011 ratings) · 35 min",
+          "primary_link": {"label": "Open recipe", "href": "https://cooking.nytimes.com/recipes/skillet-brown-butter-cornbread"},
+          "avatar": {"kind": "letter", "letter": "V", "color": "indigo"}
+        }
+      ]
+    },
+
+    {
+      "kind": "banner",
+      "tone": "info",
+      "text": "T660 cycle 4 (first news-media rebuild) confirmed: Quote variant is 4-of-4 universal across all rebuilds shipped this session (Stripe + Linear + Vercel + NYT). LogoWall is 3-of-3 marketing-only — NYT didn't surface it. ArticleCard surfaced as a NEW MED-priority gap specific to news/publication verticals."
+    }
+  ]
+}
