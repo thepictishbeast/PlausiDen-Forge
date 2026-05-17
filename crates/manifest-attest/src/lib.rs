@@ -846,3 +846,99 @@ mod tests {
         assert!(dbg.contains("fingerprint"));
     }
 }
+
+// ============================================================
+// Property-based tests (task #66 — fuzz at protocol boundaries).
+//
+// Sign + verify is the core invariant the entire attestation
+// chain rests on. Proptest exercises it across arbitrary
+// payload sizes + shapes, including the empty payload and
+// adversarial high-entropy inputs that would surface boundary
+// bugs unit tests miss.
+// ============================================================
+
+#[cfg(test)]
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        #![proptest_config(ProptestConfig {
+            cases: 64,
+            // Sign+verify is ~µs but we run fewer cases here than
+            // in manifest-core because each iteration runs a real
+            // Ed25519 keygen + sign + verify.
+            ..ProptestConfig::default()
+        })]
+
+        /// Sign-then-verify holds for every payload, including
+        /// empty, ASCII, binary, large blobs.
+        #[test]
+        fn sign_verify_roundtrip(payload in proptest::collection::vec(any::<u8>(), 0..4096)) {
+            let key = AttestKey::generate();
+            let att = key.sign(AttestableKind::Manifest, &payload);
+            let pubkey = key.public();
+            prop_assert!(att.verify(&payload, &pubkey).is_ok());
+        }
+
+        /// Tampering with even a single byte must invalidate the
+        /// attestation. Property: payload XOR random byte mask =>
+        /// verification fails.
+        #[test]
+        fn tamper_breaks_verification(
+            payload in proptest::collection::vec(any::<u8>(), 1..1024),
+            tamper_index in 0..1024usize,
+        ) {
+            let key = AttestKey::generate();
+            let att = key.sign(AttestableKind::Manifest, &payload);
+            let pubkey = key.public();
+            let idx = tamper_index % payload.len();
+            let mut tampered = payload.clone();
+            tampered[idx] ^= 0xFF;
+            if tampered != payload {
+                prop_assert!(att.verify(&tampered, &pubkey).is_err());
+            }
+        }
+
+        /// Cross-key verification always fails — a signature by
+        /// key A can never verify under key B.
+        #[test]
+        fn cross_key_verification_fails(
+            payload in proptest::collection::vec(any::<u8>(), 0..1024)
+        ) {
+            let key_a = AttestKey::generate();
+            let key_b = AttestKey::generate();
+            let att = key_a.sign(AttestableKind::Manifest, &payload);
+            let r = att.verify(&payload, &key_b.public());
+            let is_fingerprint_mismatch =
+                matches!(r, Err(AttestError::FingerprintMismatch { .. }));
+            prop_assert!(is_fingerprint_mismatch);
+        }
+
+        /// Round-trip a key through secret_b64 → key → public
+        /// is deterministic. Same secret bytes → same fingerprint.
+        #[test]
+        fn key_secret_roundtrip_is_deterministic(
+            secret_seed in proptest::array::uniform32(any::<u8>())
+        ) {
+            let b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(secret_seed);
+            let k1 = AttestKey::from_secret_b64(&b64).unwrap();
+            let k2 = AttestKey::from_secret_b64(&b64).unwrap();
+            prop_assert_eq!(k1.public(), k2.public());
+        }
+
+        /// Attestation always serde-round-trips. Property: every
+        /// generated attestation can be JSON-encoded + decoded
+        /// without value loss.
+        #[test]
+        fn attestation_serde_roundtrip(
+            payload in proptest::collection::vec(any::<u8>(), 0..256)
+        ) {
+            let key = AttestKey::generate();
+            let att = key.sign(AttestableKind::AuditReport, &payload);
+            let s = serde_json::to_string(&att).unwrap();
+            let back: Attestation = serde_json::from_str(&s).unwrap();
+            prop_assert_eq!(att, back);
+        }
+    }
+}

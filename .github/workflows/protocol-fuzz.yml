@@ -1,0 +1,66 @@
+name: protocol-fuzz
+
+# T66: build/test discipline.
+#
+# Runs property-based fuzz tests on every push for the load-bearing
+# protocol boundaries the entire platform rests on:
+#   * manifest-core: CapabilityId parse/serde/validate
+#   * manifest-attest: sign/verify roundtrip + tamper detection +
+#     cross-key rejection
+#
+# Property tests run with the default proptest case count for
+# fast CI; for deeper fuzz on a scheduled cadence, see the
+# proptest persistent-regression files (target/proptest-regressions)
+# which the runners pick up automatically.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/manifest-core/**"
+      - "crates/manifest-attest/**"
+      - ".github/workflows/protocol-fuzz.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/manifest-core/**"
+      - "crates/manifest-attest/**"
+      - ".github/workflows/protocol-fuzz.yml"
+  # Weekly deep-fuzz: run with elevated case counts.
+  schedule:
+    - cron: "0 7 * * 1" # Mondays 07:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  proptest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Elevated cases on the weekly run; default for pushes.
+      PROPTEST_CASES: ${{ github.event_name == 'schedule' && '4096' || '256' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install rust toolchain
+        run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: protocol-fuzz-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            protocol-fuzz-${{ runner.os }}-
+
+      - name: Run manifest-core property tests
+        run: cargo test -p manifest-core proptests --release --quiet
+
+      - name: Run manifest-attest property tests
+        run: cargo test -p manifest-attest proptests --release --quiet

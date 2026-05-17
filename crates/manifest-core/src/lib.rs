@@ -499,3 +499,106 @@ docs = ["docs/auth.md"]
         assert!(PlatformManifest::from_json(bad).is_err());
     }
 }
+
+// ============================================================
+// Property-based tests (task #66 — fuzz at protocol boundaries).
+//
+// The CapabilityId + serde + validate paths are the load-bearing
+// invariants the entire codegen + projection + CI-gate chain
+// depends on. Proptest exercises them with adversarially-shaped
+// inputs to catch boundary bugs unit tests would miss.
+// ============================================================
+
+#[cfg(test)]
+mod proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    /// Strategy: kebab-case strings the parser SHOULD accept.
+    fn arb_valid_capability_id() -> impl Strategy<Value = String> {
+        // 1-32 chars, [a-z0-9], single-token shape — guaranteed
+        // kebab-case-valid because we don't insert hyphens.
+        proptest::collection::vec(
+            proptest::char::ranges(vec!['a'..='z', '0'..='9'].into()),
+            1..=32,
+        )
+        .prop_map(|chars| chars.into_iter().collect::<String>())
+    }
+
+    /// Strategy: arbitrary strings (most invalid).
+    fn arb_any_string() -> impl Strategy<Value = String> {
+        // Mostly-ASCII to keep the proptest readable; punctuation
+        // included so we hit reject-paths.
+        proptest::collection::vec(any::<char>(), 0..=64).prop_map(|chars| {
+            chars
+                .into_iter()
+                .filter(|c| c.is_ascii() && !c.is_ascii_control())
+                .collect()
+        })
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig {
+            cases: 256,
+            ..ProptestConfig::default()
+        })]
+
+        /// Every all-lowercase-ASCII alphanumeric string is a valid
+        /// CapabilityId.
+        #[test]
+        fn valid_kebab_case_always_parses(s in arb_valid_capability_id()) {
+            let r = CapabilityId::parse(&s);
+            prop_assert!(r.is_ok(), "valid {s:?} rejected");
+            let id = r.unwrap();
+            prop_assert_eq!(id.as_str(), s.as_str());
+        }
+
+        /// Whatever shape a CapabilityId successfully parses,
+        /// serialize→deserialize must return an equal value.
+        #[test]
+        fn capability_id_serde_roundtrip(s in arb_valid_capability_id()) {
+            let id = CapabilityId::parse(&s).unwrap();
+            let json = serde_json::to_string(&id).unwrap();
+            let back: CapabilityId = serde_json::from_str(&json).unwrap();
+            prop_assert_eq!(id, back);
+        }
+
+        /// Strings containing characters outside [a-z0-9-] MUST
+        /// fail to parse. Property: at least one disallowed char →
+        /// parser refuses.
+        #[test]
+        fn disallowed_chars_always_rejected(s in arb_any_string()) {
+            let has_bad_char = s.is_empty()
+                || s.chars().any(|c| !(c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'))
+                || s.starts_with('-')
+                || s.ends_with('-')
+                || s.contains("--");
+            if has_bad_char {
+                let r = CapabilityId::parse(&s);
+                prop_assert!(r.is_err(), "expected reject for {s:?}, got {:?}", r);
+            }
+        }
+
+        /// Round-trip a CapabilityId through its Display impl —
+        /// the displayed string must re-parse to the same value.
+        #[test]
+        fn display_round_trips(s in arb_valid_capability_id()) {
+            let id = CapabilityId::parse(&s).unwrap();
+            let displayed = id.to_string();
+            let back = CapabilityId::parse(&displayed).unwrap();
+            prop_assert_eq!(id, back);
+        }
+
+        /// Empty manifest is always self-consistent under validate().
+        #[test]
+        fn empty_manifest_validates_under_any_platform_name(
+            name in "[a-z][a-z0-9-]{0,32}"
+        ) {
+            let m = PlatformManifest {
+                platform: name,
+                ..Default::default()
+            };
+            prop_assert!(m.validate().is_ok());
+        }
+    }
+}
