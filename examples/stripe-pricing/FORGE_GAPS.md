@@ -72,3 +72,25 @@ Per the task description: Linear, Vercel, GitHub, Apple product page,
 NYT, ProductHunt. Each will surface a different gap set. Expectation
 is that after ~4 sites the gap-list deduplicates and the CmsSection
 enum stabilizes around 15–20 variants.
+
+## Dedup roll-up (updated 2026-05-17 cycle 2)
+
+Two rebuilds done (Stripe pricing, Linear landing). Cross-site gap
+dedup:
+
+| Variant needed       | Stripe | Linear | marcodeluca | Hits | Priority |
+|----------------------|--------|--------|-------------|------|----------|
+| `Pricing` tier-cards | ✓      | ✓      | —           | 2    | HIGH     |
+| `LogoWall`           | ✓      | ✓      | ✓           | 3    | HIGHEST  |
+| `Quote` testimonial  | ✓      | ✓      | —           | 2    | HIGH     |
+| `Faq` disclosure     | ✓      | —      | —           | 1    | MED      |
+| `ComparisonTable`    | ✓      | —      | —           | 1    | MED      |
+| `FooterSitemap`      | ✓      | —      | —           | 1    | MED      |
+| `CountryPicker`      | ✓      | —      | —           | 1    | LOW      |
+| `KineticTitle`       | —      | —      | ✓           | 1    | LOW      |
+| `CmsCard.hover_video`| —      | —      | ✓           | 1    | LOW      |
+| `ScrollMarquee`      | —      | —      | ✓           | 1    | LOW      |
+
+After 4 rebuilds the LogoWall / Pricing / Quote variants will be the
+clear top-3 — implement those first and the next rebuilds' gap
+inventory falls.
