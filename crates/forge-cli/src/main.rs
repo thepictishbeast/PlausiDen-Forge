@@ -31,6 +31,7 @@ use forge_phases::contrast::ContrastPhase;
 use forge_phases::crawl::CrawlPhase;
 use forge_phases::csp::CspPhase;
 use forge_phases::csp_devmode::CspDevmodePhase;
+use forge_phases::dns_hygiene_lint::DnsHygieneLintPhase;
 use forge_phases::dynamic_runtime::DynamicRuntimePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
@@ -398,6 +399,11 @@ fn run() -> Result<ExitCode> {
         // [networks].targets includes tor/i2p/lokinet; opt-in for
         // clearnet via explicit [reader_safety] section.
         Box::new(ReaderSafetyPhase),
+        // phase_dns_hygiene_lint — emit Warn-level DNS-record
+        // checklist per declared [dns_hygiene] features. Cannot
+        // verify external DNS state; surfaces what operator
+        // needs to add at registrar.
+        Box::new(DnsHygieneLintPhase),
         Box::new(ContrastPhase),
         // T432 (closes #432): emit SPA client runtime + inject
         // <script> tag into every page WHEN mode is Dynamic or

@@ -22,6 +22,7 @@ pub mod contrast;
 pub mod crawl;
 pub mod csp;
 pub mod csp_devmode;
+pub mod dns_hygiene_lint;
 pub mod dual_theme;
 pub mod dynamic_runtime;
 pub mod external_assets;
