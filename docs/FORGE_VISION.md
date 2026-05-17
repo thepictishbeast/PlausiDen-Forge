@@ -16,6 +16,25 @@ to the work that closes the gap.
 
 ---
 
+## 0. Companion documents
+
+This vision says **what** Forge does and **where it's going**.
+Three companion docs in the same `docs/` directory carry the
+deeper layers:
+
+| Doc | What it covers |
+|---|---|
+| [`ARCHITECTURE_PRINCIPLES.md`](./ARCHITECTURE_PRINCIPLES.md) | **Why** the substrate is shaped the way it is. WordPress-inversion principle. Capability manifest as constitution. Primitives as constraint system. Token axes + style packs. AI as bounded neurosymbolic search. Editor UX (canvas-dominant, ⌘K + AI bar). Quality gates as continuous gradient. Strangler-fig retrofit. Substrate-flexible / product-opinionated stance. |
+| [`SITE_OPERATIONS.md`](./SITE_OPERATIONS.md) | **What every published site needs to operate in the real world.** Required pages by site type. Live linkage between practice + policy. Site-success operational layer (search verification, business directory, DNS hygiene, email deliverability, registrar best practices). Multi-network publishing (Tor / I2P / Lokinet / IPFS / Gemini). Threat-model tiers + security rating dashboard. Mainstream vs sovereign per-dimension duality. |
+| [`ENGINEERING_DISCIPLINES.md`](./ENGINEERING_DISCIPLINES.md) | **What every engineer working on Forge needs to know.** Caching + invalidation with surrogate keys. Concurrency + database choices. Time + clocks + ordering. Background jobs. Webhook delivery semantics. State machines. Cryptography in concrete (Argon2id, XChaCha20-Poly1305, Ed25519, ML-KEM-768). Secrets management. Multi-region complexity. Failure modes from system dynamics. DB migration safety. Incident handling. Open-source strategy. Costs + funding implications. Decision-making framework. Honest revisions to earlier doctrine. |
+
+Companion docs cross-reference each other and back to this
+vision. **Read them as one connected design**, not as separate
+artifacts — the principles inform the operations inform the
+disciplines inform the vision.
+
+---
+
 ## 1. What Forge IS
 
 Forge is the **build pipeline** for the PlausiDen ecosystem. It
@@ -660,6 +679,256 @@ Each of those 15 has its own `docs/<NAME>_VISION.md` companion
 to this Forge vision. The federation discipline lets each repo
 evolve independently; the typed contracts + shared doctrine
 keep them composable.
+
+## 5b. What Forge becomes when all of this is true
+
+This section describes the platform Forge **becomes** once the
+substrate from
+[`ARCHITECTURE_PRINCIPLES.md`](./ARCHITECTURE_PRINCIPLES.md), the
+operations layer from
+[`SITE_OPERATIONS.md`](./SITE_OPERATIONS.md), and the engineering
+disciplines from
+[`ENGINEERING_DISCIPLINES.md`](./ENGINEERING_DISCIPLINES.md) are
+all in place. The capabilities below are **emergent from
+substrate composition**, not features that need to be specified
+independently. Each falls out for free once the substrate is
+honest.
+
+### 5b.1 The unifying principle that makes everything composable
+
+> Identify the implicit assumption that produces the failure
+> mode. Make it explicit and structural. Derive everything else
+> from the boundary.
+
+Every capability below is a corollary of this single principle.
+Listing them is enumerating consequences, not adding features.
+
+### 5b.2 What the capability manifest unlocks
+
+Once the manifest is the source of truth and every projection
+(backend handlers, frontend client, UI affordances, AI tools,
+docs, contract tests, telemetry, permissions, audit hooks,
+billing meters) is generated from it:
+
+- **Drift between frontend and backend is structurally
+  impossible.** Orphan UI (button that calls nothing) and orphan
+  capability (endpoint with no UI surface) both fail the build.
+- **Adding a new capability is mechanical.** Declare it in the
+  manifest; implement the handler. Everything else is generated.
+  ~30 lines of code, ~5 minutes of human review for the
+  permission scope and AI-callability flag.
+- **AI's tool list cannot drift from reality.** The model
+  cannot hallucinate a capability the platform doesn't have.
+  The platform cannot ship a capability the AI doesn't know
+  about.
+- **Documentation cannot rot.** API reference, SDK reference,
+  CLI reference, AI tool reference, contract test suite — all
+  generated. The gap between "code that exists" and "code in the
+  generated docs" is zero by construction.
+- **Permissions cannot drift.** Hand-written
+  `if (user.role === 'admin')` checks don't exist; the manifest
+  is the only place permissions are expressed.
+- **Plugins inherit the same discipline.** Plugin manifest
+  extends the same IDL. Plugin can't ship a backend endpoint
+  with no UI counterpart or vice versa for the same structural
+  reason core can't.
+
+### 5b.3 What the primitive system unlocks
+
+Once primitives are typed components with overflow + a11y +
+performance contracts, and the token system has discrete axes
+(density, formality, motion, texture, type personality, grid
+character, color mood, color energy):
+
+- **AI-generated sites are correct by construction.** The model
+  emits a site spec; the renderer turns spec → HTML. The
+  renderer is the same for AI and human paths. The model cannot
+  produce broken layouts because the primitive system makes
+  broken layouts unreachable.
+- **Layout failures become impossible classes, not bug
+  categories.** Overflow, overlap, broken responsiveness,
+  contrast violations, missing focus indicators — none of these
+  are bug categories Forge ships with, because the primitive
+  system makes them structurally absent.
+- **Visual range is genuinely large without slop.** 200 primitives,
+  8+ aesthetic dimensions as discrete enums, dozens of curated
+  style packs — tens of thousands of valid combinations, every
+  one of them coherent and guaranteed-correct.
+- **Cross-browser / cross-device / cross-locale testing
+  collapses to primitive testing.** A small kernel of
+  primitives means a small surface. Property-based testing per
+  primitive against adversarial content + every breakpoint +
+  RTL + every theme catches issues no human QA would find.
+
+### 5b.4 What the multi-network publishing capability unlocks
+
+Once Tor / I2P / Lokinet / IPFS / Gemini are typed deployment
+targets with their own constraint sets:
+
+- **A site can declare its network reach as a property,** not a
+  separate deployment story. `[networks] clearnet=true, tor=true,
+  i2p=optional` in `forge.toml` and the build pipeline produces
+  appropriately-constrained bundles per target.
+- **The primitive system enforces no-clearnet-leakage on
+  Tor-mode sites at the primitive layer.** External fonts,
+  scripts, embeds, fingerprintable resources — denied at the
+  primitive level, not as an afterthought CSP rule.
+- **The security rating dashboard is a typed projection of the
+  manifest + primitive analysis.** No separate "is this site
+  safe" subsystem; the answer falls out of capability
+  composition.
+- **Plausible deniability integrates** rather than reimplements.
+  Forge is the publishing surface; PlausiDen-Engine handles the
+  obfuscation layer. The seams are typed.
+
+### 5b.5 What the dual mainstream/sovereign architecture unlocks
+
+Once the values configuration panel lets users mix per-dimension
+(hosting, analytics, auth, AI, embeds, payments, email):
+
+- **Forge serves multiple audiences with one substrate.** The
+  small bakery and the dissident publisher both get a CMS that
+  fits their threat model, without two product lines.
+- **Substrate discipline benefits the mainstream case too.** A
+  CMS that *could* run a Tor site safely produces a CMS where
+  every mainstream site has better default security, cleaner
+  extension model, less performance bloat, more honest defaults.
+- **The values declaration is an audit-grade artifact.** Per-
+  dimension declared choices become the basis for the
+  Privacy Policy, the Sub-processor list, the Accessibility
+  Statement, the trust center. Practice and policy stay bound
+  at the source.
+
+### 5b.6 What the AI-as-bounded-search architecture unlocks
+
+Once AI generates site specs constrained by the schema, composes
+via typed primitive tools, runs through staged pipelines with
+critics, and operates under per-tenant cost + safety budgets:
+
+- **An AI agent can spawn a fresh tenant, build a complete
+  accessible site from a brief, fix every fixable finding, and
+  deliver a signed bundle, in under 5 minutes end-to-end.**
+  (Acceptance criterion §7.3.)
+- **AI output passes the same gates as human output.** No
+  separate quality story for AI-generated content. The gates
+  don't care what produced the input.
+- **AI behavior is bounded by the capability manifest.** The
+  AI's tools are exactly the manifest's `ai-callable` capabilities.
+  Prompt injection attempts that try to escape the grammar are
+  rejected at the structural layer, not the prompt layer.
+- **The corpus + critic loop compounds over time.** Sites that
+  perform well in production feed back into the corpus as
+  positive examples; bounces and drop-offs feed back as
+  negative. The system improves at its own job.
+
+### 5b.7 What the operational layer unlocks
+
+Once required pages, site-success automation, contextual
+reminders, and template freshness all flow from declared site
+type + jurisdiction:
+
+- **Mom never sees a stack trace.** (Acceptance criterion §7.1.)
+- **First-publish-to-customer-visible-search-listing is days,
+  not months.** Forge handles Search Console submission,
+  business directory listings, social profile claiming, DNS
+  hygiene, email authentication automatically.
+- **Compliance documents reflect reality.** Cookie Policy
+  generated from actually-running scripts. Privacy Policy
+  references PII-tagged schema fields. Sub-processor list
+  reflects actual integrations. Drift between practice and
+  policy is structurally impossible.
+- **Legal regression has a CI gate.** EU regulation drops →
+  cookie banner template updates → every site sees a "recommended
+  update" notification with diff and one-click apply. Sites stay
+  legal as the law changes, without operator effort.
+
+### 5b.8 What the engineering disciplines unlock
+
+Once caching uses surrogate keys, jobs have priority lanes,
+webhooks have exactly-once-with-receipt, state machines are
+typed, idempotency keys are mandatory, secrets are rotated, and
+incident response is drilled:
+
+- **Failure modes that hit other platforms during scaling don't
+  hit Forge.** Cache stampedes, retry storms, notification loops,
+  thundering herds — patterns from *Release It!* applied
+  deliberately rather than discovered painfully.
+- **The system can be reasoned about.** Transaction isolation
+  is explicit per operation. Time is HLC-ordered. Background
+  jobs have observability per job. State transitions are typed.
+- **Database migrations are safe by default.** Expand-contract
+  pattern is the only way to ALTER. The CI linter rejects
+  unsafe single-shot migrations on hot tables.
+- **Security incidents have a known response.** Forensic logs
+  in immutable storage. Tabletop drills quarterly. The first
+  serious incident isn't a learning experience because the
+  lessons were already learned in the drill.
+
+### 5b.9 The continuous-gradient stance
+
+> World-class isn't a state — it's a gradient maintained against
+> entropy.
+
+Every quality dimension (security, UI, UX, SEO, a11y,
+performance, audit) has the same structural recipe: explicit
+measurable criteria, automated measurement on every change,
+manual audit on cadence, adversarial testing by parties with
+incentive to find failures, public accountability, protected
+capacity.
+
+The substrate above makes this measurement + enforcement
+infrastructure **cheap**. On unbounded WordPress-style extension,
+every gate is impossible to enforce because the system has no
+internal model of what it should be doing. On the substrate
+Forge designs, every gate is **mechanical** because the system
+knows its own contract.
+
+### 5b.10 The honest revisions
+
+[`ENGINEERING_DISCIPLINES.md §22`](./ENGINEERING_DISCIPLINES.md)
+captures nuance the earlier doctrine understated:
+
+- **Capability manifest needs explicit ownership** — manifests
+  rot without it. Closer to language-standards-committee work
+  than typical engineering.
+- **World-class costs continuous resources** — visual regression,
+  pen tests, bug bounties, localization, a11y user testing all
+  have ongoing budget implications. Treating "world-class" as
+  achievable without explicit budget is the failure mode that
+  turns architecture documents into wishes.
+- **Mainstream vs sovereign is per-dimension, not binary.** Most
+  real deployments mix (Stripe for payments + Hetzner for
+  hosting + Cloudflare for CDN + self-hosted analytics + OpenAI
+  for AI + passkeys for auth). The values declaration is
+  per-dimension; profile presets are starting points the user
+  mixes from.
+- **AI integration is pluggable, not hosted-model-coupled.** The
+  capability manifest declares AI providers as pluggable; self-
+  hosted fallback for critical paths means the platform survives
+  provider disputes or outages.
+- **The plugin sandbox is Wasm-based, not "solved."** WASI
+  Preview 2 + component model are recent. Architectural
+  commitment is right; implementation will hit edges that don't
+  have great answers yet. Honest framing.
+
+### 5b.11 The meta-observation
+
+The architecture is coherent, ambitious, recognizably valuable.
+Remaining gaps are increasingly specialized — "things experts in
+narrow domains would add" rather than "things a complete picture
+is missing."
+
+The useful question at this point isn't *"what else?"* but
+**"what now?"** The architecture has been thought through.
+Building it requires choices about sequencing, team, funding,
+audience, and which compromises to accept. Those are not
+engineering questions; the answer to them is the next layer of
+work.
+
+The architecture is sound. The remaining questions are about
+what to do with it.
+
+---
 
 ## 6. Roadmap from now to "done"
 
