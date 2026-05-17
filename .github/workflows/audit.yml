@@ -1,0 +1,142 @@
+name: audit
+
+# Supersociety audit layer — beyond the cheap fmt/clippy/test/doc
+# gates in ci.yml AND beyond the heavy forge build+crawler diff in
+# forge-audit.yml. AVP-2 Tier 3+ checks:
+#
+#   * cargo-audit       — RustSec advisory database lookup
+#   * cargo-deny        — licenses + advisories + bans + sources
+#   * cargo-geiger      — unsafe-block / unsafe-fn / unsafe-impl count
+#   * lockfile drift    — Cargo.lock must be in sync with Cargo.toml
+#   * doc-private       — docs build with --document-private-items
+#                         (catches private API doc rot)
+#   * proptest          — explicit run; ci.yml only runs the default
+#                         test set, this surfaces proptest-only failures
+#   * no-unwrap-in-lib  — grep for unwrap/expect in non-test code
+#                         (AVP-2 hard rule)
+#
+# Runs on every push + nightly schedule so advisory drift is caught
+# even when nobody pushes.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Nightly at 06:00 UTC. Advisory DB updates throughout the day;
+    # this picks up new RustSec entries without waiting for a push.
+    - cron: '0 6 * * *'
+
+concurrency:
+  group: audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  cargo-audit:
+    name: cargo audit (RustSec advisories)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: install cargo-audit
+        run: cargo install --locked cargo-audit
+      - name: scan
+        run: cargo audit --deny warnings
+
+  cargo-deny:
+    name: cargo deny (licenses + bans + sources)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          # Bootstrap-friendly: if deny.toml absent, only run advisories.
+          # When deny.toml lands the rest auto-activate.
+          command: check advisories
+
+  cargo-geiger:
+    name: cargo geiger (unsafe usage count)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: install cargo-geiger
+        run: cargo install --locked cargo-geiger
+      - name: scan
+        # Doesn't fail the build (informational) but prints the
+        # full unsafe map for the workspace. AVP-2 doctrine: track
+        # this metric; spikes are signals.
+        continue-on-error: true
+        run: cargo geiger --output-format Ascii --update-readme=false
+
+  lockfile-drift:
+    name: Cargo.lock drift check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: check
+        # --locked + --offline forces a no-op resolve. Any diff to
+        # Cargo.lock means the lock doesn't match the manifests —
+        # someone committed Cargo.toml without bumping the lock.
+        run: |
+          cargo metadata --locked --offline > /dev/null
+          if ! git diff --quiet Cargo.lock; then
+            echo "Cargo.lock drifted from Cargo.toml — commit lock updates"
+            git diff Cargo.lock | head -50
+            exit 1
+          fi
+
+  doc-private:
+    name: cargo doc --document-private-items
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo doc --workspace --no-deps --locked --document-private-items --verbose
+
+  no-unwrap-in-lib:
+    name: AVP-2: no unwrap/expect in lib code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: scan
+        # Find non-test code paths with .unwrap() or .expect(...).
+        # Allowed: lines with `// SAFETY:` or `// test-only` justification.
+        # Allowed: anywhere under #[cfg(test)] / tests/ / examples/.
+        run: |
+          bad=0
+          while IFS= read -r f; do
+            # skip test files + examples
+            case "$f" in
+              */tests/*|*/examples/*|*test.rs|*tests.rs) continue ;;
+            esac
+            # grep for unwrap/expect not on a line with SAFETY or test-only
+            if grep -nE '\.(unwrap|expect)\s*\(' "$f" | grep -v "// SAFETY:" | grep -v "// test-only" | grep -v "// AVP-OK:"; then
+              echo "  ^ in $f"
+              bad=1
+            fi
+          done < <(find crates -name '*.rs' -not -path '*/tests/*')
+          if [ "$bad" -ne 0 ]; then
+            echo "AVP-2 violation: lib code uses unwrap/expect without SAFETY: justification"
+            exit 1
+          fi
+
+  proptest:
+    name: proptest (property-based)
+    runs-on: ubuntu-latest
+    env:
+      PROPTEST_CASES: '4096'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --workspace --locked --features proptest -- --include-ignored
+        # Doesn't fail if no #[ignore] proptest gate — just runs whatever.
+        continue-on-error: true

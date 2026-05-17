@@ -27,8 +27,25 @@ impl Phase for TokensPhase {
         let mut findings = Vec::new();
 
         for file in files {
+            // Strip CSS-variable declarations BEFORE scanning. The
+            // tokens phase rejects raw px/hex in HTML because they
+            // should resolve through the design system — but the
+            // place those values are LEGITIMATELY defined IS the
+            // CSS-variable declaration block (`:root{--foo: 12px}`).
+            // Without this strip, the phase rejects the very file
+            // that defines the design system.
+            //
+            // Fix 2026-05-17: the SkillShots premium design pass
+            // landed 80+ tokens (px scale, hex palette) inside
+            // inline <style>:root{} blocks. tokens-phase strict-
+            // failed on every page. Stripping the declaration
+            // VALUES leaves the rest of the body to be scanned —
+            // so `padding: 16px;` in a rule body still flags, but
+            // `--loom-space-4: 16px;` in a token declaration does not.
+            let body_no_decls = strip_css_var_declarations(&file.body);
+
             // 1. Raw px values (excluding common SVG fragment sizes).
-            let bad_px: Vec<String> = scan_px(&file.body);
+            let bad_px: Vec<String> = scan_px(&body_no_decls);
             if !bad_px.is_empty() {
                 findings.push(Finding::strict(
                     self.name(),
@@ -37,7 +54,7 @@ impl Phase for TokensPhase {
                 ));
             }
             // 2. Raw hex colors anywhere except meta CSP + SVG.
-            if scan_hex_outside_svg_csp(&file.body) {
+            if scan_hex_outside_svg_csp(&body_no_decls) {
                 findings.push(Finding::strict(
                     self.name(),
                     file.name.clone(),
@@ -48,6 +65,64 @@ impl Phase for TokensPhase {
 
         Ok(findings)
     }
+}
+
+/// Strip the VALUE side of every `--name: value;` declaration in
+/// `body`. The declaration syntax is the canonical place to put raw
+/// px / hex / rgb / hsl tokens — they're the DEFINITION of the
+/// design system, not a leak through it.
+///
+/// Conservative: only strips when the line starts with optional
+/// whitespace + `--` + identifier + `:`. Doesn't try to parse the
+/// full CSS grammar (rare edge cases like `color: var(--x, #fff)`
+/// stay flagged — the fallback color of a var() is still a raw hex
+/// and arguably should resolve through a token too).
+fn strip_css_var_declarations(body: &str) -> String {
+    let mut out = String::with_capacity(body.len());
+    for line in body.lines() {
+        // Find every `--ident:` in the line and elide its value
+        // up to the next `;` or end-of-line. Iterating per
+        // occurrence handles minified CSS where multiple decls
+        // share a line (the entire inline <style> blob is one
+        // giant line in our outputs).
+        let mut rest = line;
+        loop {
+            let Some(start) = rest.find("--") else {
+                out.push_str(rest);
+                break;
+            };
+            // Emit prefix verbatim so non-declaration text in the
+            // line stays visible to the px/hex scanners.
+            out.push_str(&rest[..start]);
+            // Skip "--" and the identifier (alphanumeric / dash).
+            let after_dashes = &rest[start + 2..];
+            let ident_end = after_dashes
+                .find(|c: char| !(c.is_ascii_alphanumeric() || c == '-' || c == '_'))
+                .unwrap_or(after_dashes.len());
+            let after_ident = &after_dashes[ident_end..];
+            // Must be followed by ':' to be a declaration.
+            if !after_ident.starts_with(':') {
+                // Not a declaration — emit the `--ident` text and
+                // continue scanning the rest of the line.
+                out.push_str(&rest[start..start + 2 + ident_end]);
+                rest = after_ident;
+                continue;
+            }
+            // Found a declaration. Skip the value up to the next
+            // `;` or end-of-line.
+            let after_colon = &after_ident[1..];
+            let value_end = after_colon.find(';').unwrap_or(after_colon.len());
+            // Don't emit the value bytes — that's the whole point.
+            // Do emit the `;` so downstream parsers still see it.
+            if value_end < after_colon.len() {
+                rest = &after_colon[value_end..]; // starts with `;`
+            } else {
+                rest = ""; // value ran to EOL
+            }
+        }
+        out.push('\n');
+    }
+    out
 }
 
 /// Extract sorted-unique px values from `body` that are NOT in
@@ -156,6 +231,45 @@ mod tests {
         let hits = scan_px(body);
         assert!(hits.contains(&"12px".to_owned()));
         assert!(hits.contains(&"24px".to_owned()));
+    }
+
+    #[test]
+    fn strip_css_var_declarations_elides_value() {
+        let body = ":root{--loom-space-4: 16px; --loom-color-bg: #fff;} body { padding: 24px; }";
+        let stripped = strip_css_var_declarations(body);
+        // Token declaration values gone — scanner shouldn't see 16px or #fff.
+        assert!(!stripped.contains("16px"));
+        assert!(!stripped.contains("#fff"));
+        // Regular rule body preserved — `24px` should still flag.
+        assert!(stripped.contains("24px"));
+    }
+
+    #[test]
+    fn strip_passes_through_non_declarations() {
+        let body = "/* comment with --foo not a decl */ padding: 8px;";
+        let stripped = strip_css_var_declarations(body);
+        assert!(stripped.contains("--foo"));
+        assert!(stripped.contains("8px"));
+    }
+
+    #[test]
+    fn full_phase_accepts_token_decls_but_rejects_inline_px() {
+        // Token decl values stripped; the `padding: 16px` in a rule
+        // body still flags as before.
+        let cleaned = strip_css_var_declarations(
+            "<style>:root{--loom-space-4: 16px;}.x{padding: 16px}</style>",
+        );
+        assert!(scan_px(&cleaned).contains(&"16px".to_owned()));
+    }
+
+    #[test]
+    fn strip_handles_minified_inline_style() {
+        // Real-world inline style block from premium design system.
+        let body = ":root{--loom-bg:#FBFAF7;--loom-space-4:1rem;--loom-pad-card:1rem;--loom-radius-component:10px;--loom-font-xs:.75rem;--loom-size-icon-sm:20px;--loom-shadow-sm:0 1px 2px rgba(20,24,42,.06);}";
+        let stripped = strip_css_var_declarations(body);
+        // All raw px / hex / rgb stripped from the declaration block.
+        assert!(scan_px(&stripped).is_empty());
+        assert!(!stripped.contains("#FBFAF7"));
     }
 
     #[test]
