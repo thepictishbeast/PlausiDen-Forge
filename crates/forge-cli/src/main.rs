@@ -42,6 +42,7 @@ use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::render::RenderPhase;
+use forge_phases::required_pages::RequiredPagesPhase;
 use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::sri::SriPhase;
@@ -342,6 +343,11 @@ fn run() -> Result<ExitCode> {
         Box::new(SriPhase),
         Box::new(PhantomButtonPhase),
         Box::new(BackendCoveragePhase),
+        // phase_required_pages — site-type + jurisdiction-aware
+        // required-pages doctrine from SITE_OPERATIONS.md §1.
+        // Silent skip when [required_pages] missing from forge.toml;
+        // sites that haven't opted into the contract aren't gated.
+        Box::new(RequiredPagesPhase),
         Box::new(UnbuiltRoutePhase),
         Box::new(LabelConsistencyPhase),
         Box::new(LinkCheckPhase),

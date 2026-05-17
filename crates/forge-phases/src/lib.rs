@@ -37,6 +37,7 @@ pub mod path_consistency;
 pub mod perf_budget;
 pub mod phantom_button;
 pub mod render;
+pub mod required_pages;
 pub mod self_check;
 pub mod seo;
 pub mod sri;
