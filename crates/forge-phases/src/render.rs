@@ -235,9 +235,7 @@ fn collect_cms_jsons(cms_dir: &Path) -> Result<Vec<PathBuf>, BuildError> {
         let path = entry.path();
         if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("json") {
             // Skip the `$schema` companion doc if present.
-            if path.file_name().and_then(|s| s.to_str())
-                == Some("cms-schema.json")
-            {
+            if path.file_name().and_then(|s| s.to_str()) == Some("cms-schema.json") {
                 continue;
             }
             out.push(path);
@@ -349,8 +347,7 @@ mod tests {
         std::fs::create_dir_all(tmp.join("cms")).expect("mk cms");
         std::fs::create_dir_all(tmp.join("static")).expect("mk static");
         for (name, body) in pages {
-            std::fs::write(tmp.join("cms").join(format!("{name}.json")), body)
-                .expect("write json");
+            std::fs::write(tmp.join("cms").join(format!("{name}.json")), body).expect("write json");
         }
         let ctx = BuildCtx {
             root: tmp.clone(),
@@ -375,10 +372,7 @@ mod tests {
 
     #[test]
     fn render_passes_through_when_no_cms_dir() {
-        let tmp = std::env::temp_dir().join(format!(
-            "render-t70-empty-{}",
-            std::process::id()
-        ));
+        let tmp = std::env::temp_dir().join(format!("render-t70-empty-{}", std::process::id()));
         std::fs::create_dir_all(tmp.join("static")).expect("mk");
         let ctx = BuildCtx {
             root: tmp.clone(),
@@ -398,10 +392,10 @@ mod tests {
         ]);
         let findings = RenderPhase.run(&ctx).expect("run");
         assert!(findings.is_empty(), "expected clean run, got {findings:?}");
-        let home = std::fs::read_to_string(tmp.join("static/_render/home.html"))
-            .expect("home.html");
-        let about = std::fs::read_to_string(tmp.join("static/_render/about.html"))
-            .expect("about.html");
+        let home =
+            std::fs::read_to_string(tmp.join("static/_render/home.html")).expect("home.html");
+        let about =
+            std::fs::read_to_string(tmp.join("static/_render/about.html")).expect("about.html");
         // Title from CMS landed in <title>.
         assert!(home.contains("<title>Home</title>"));
         assert!(about.contains("<title>About</title>"));
@@ -438,9 +432,10 @@ mod tests {
 
     #[test]
     fn render_emits_strict_finding_on_schema_drift() {
-        let (ctx, tmp) = make_ctx_with_cms(&[
-            ("broken", r#"{"title":"X","description":"D","path":"/","sections":[{"kind":"paragraph","body":"WRONG FIELD NAME"}]}"#),
-        ]);
+        let (ctx, tmp) = make_ctx_with_cms(&[(
+            "broken",
+            r#"{"title":"X","description":"D","path":"/","sections":[{"kind":"paragraph","body":"WRONG FIELD NAME"}]}"#,
+        )]);
         let findings = RenderPhase.run(&ctx).expect("run");
         assert_eq!(findings.len(), 1);
         assert!(
@@ -454,14 +449,8 @@ mod tests {
     #[test]
     fn render_skips_invalid_slug_filenames() {
         // Filename has uppercase / dot — not a valid slug.
-        let (ctx, tmp) = make_ctx_with_cms(&[
-            ("good", &sample_page("OK")),
-        ]);
-        std::fs::write(
-            ctx.root.join("cms/Bad.Name.json"),
-            sample_page("Bad"),
-        )
-        .expect("write bad");
+        let (ctx, tmp) = make_ctx_with_cms(&[("good", &sample_page("OK"))]);
+        std::fs::write(ctx.root.join("cms/Bad.Name.json"), sample_page("Bad")).expect("write bad");
         let findings = RenderPhase.run(&ctx).expect("run");
         assert_eq!(findings.len(), 1, "one finding for the bad filename");
         assert!(
@@ -476,19 +465,15 @@ mod tests {
 
     #[test]
     fn render_writes_atomically_and_overwrites_existing() {
-        let (ctx, tmp) = make_ctx_with_cms(&[
-            ("home", &sample_page("v1")),
-        ]);
+        let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("v1"))]);
         // First run writes v1.
         let _ = RenderPhase.run(&ctx).expect("run v1");
-        let v1 = std::fs::read_to_string(tmp.join("static/_render/home.html"))
-            .expect("v1 file");
+        let v1 = std::fs::read_to_string(tmp.join("static/_render/home.html")).expect("v1 file");
         assert!(v1.contains("<title>v1</title>"));
         // Update CMS, second run overwrites.
         std::fs::write(tmp.join("cms/home.json"), sample_page("v2")).expect("update");
         let _ = RenderPhase.run(&ctx).expect("run v2");
-        let v2 = std::fs::read_to_string(tmp.join("static/_render/home.html"))
-            .expect("v2 file");
+        let v2 = std::fs::read_to_string(tmp.join("static/_render/home.html")).expect("v2 file");
         assert!(v2.contains("<title>v2</title>"));
         assert!(!v2.contains("<title>v1</title>"));
         let _ = std::fs::remove_dir_all(&tmp);
@@ -500,19 +485,22 @@ mod tests {
         let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
         // No forge.toml present → default behaviour.
         let _ = RenderPhase.run(&ctx).expect("run");
-        assert!(tmp.join("static/_render/home.html").is_file(), "default writes to _render/");
-        assert!(!tmp.join("static/home.html").is_file(), "default must NOT write to static/<slug>");
+        assert!(
+            tmp.join("static/_render/home.html").is_file(),
+            "default writes to _render/"
+        );
+        assert!(
+            !tmp.join("static/home.html").is_file(),
+            "default must NOT write to static/<slug>"
+        );
         let _ = std::fs::remove_dir_all(&tmp);
     }
 
     #[test]
     fn render_writes_to_static_when_write_canonical_true() {
         let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
-        std::fs::write(
-            tmp.join("forge.toml"),
-            "[render]\nwrite_canonical = true\n",
-        )
-        .expect("write forge.toml");
+        std::fs::write(tmp.join("forge.toml"), "[render]\nwrite_canonical = true\n")
+            .expect("write forge.toml");
         let _ = RenderPhase.run(&ctx).expect("run");
         assert!(
             tmp.join("static/home.html").is_file(),
@@ -536,10 +524,10 @@ mod tests {
     #[test]
     fn render_write_canonical_false_or_missing_uses_underscore_render() {
         for forge_toml in &[
-            "",                                          // empty
-            "[render]\n",                                // section but no key
-            "[render]\nwrite_canonical = false\n",       // explicit false
-            "[render]\nwrite_canonical = \"yes\"\n",     // wrong type
+            "",                                      // empty
+            "[render]\n",                            // section but no key
+            "[render]\nwrite_canonical = false\n",   // explicit false
+            "[render]\nwrite_canonical = \"yes\"\n", // wrong type
         ] {
             let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
             std::fs::write(tmp.join("forge.toml"), forge_toml).expect("write");
@@ -558,9 +546,18 @@ mod tests {
 
     #[test]
     fn slug_from_filename_validates() {
-        assert_eq!(slug_from_filename(Path::new("home.json")), Some("home".to_owned()));
-        assert_eq!(slug_from_filename(Path::new("about-us.json")), Some("about-us".to_owned()));
-        assert_eq!(slug_from_filename(Path::new("page-1.json")), Some("page-1".to_owned()));
+        assert_eq!(
+            slug_from_filename(Path::new("home.json")),
+            Some("home".to_owned())
+        );
+        assert_eq!(
+            slug_from_filename(Path::new("about-us.json")),
+            Some("about-us".to_owned())
+        );
+        assert_eq!(
+            slug_from_filename(Path::new("page-1.json")),
+            Some("page-1".to_owned())
+        );
         assert_eq!(slug_from_filename(Path::new("Home.json")), None);
         assert_eq!(slug_from_filename(Path::new("1home.json")), None);
         assert_eq!(slug_from_filename(Path::new("home page.json")), None);
@@ -572,9 +569,7 @@ mod tests {
 
     #[test]
     fn collect_cms_jsons_skips_schema_companion() {
-        let (ctx, tmp) = make_ctx_with_cms(&[
-            ("home", &sample_page("Home")),
-        ]);
+        let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
         std::fs::write(
             ctx.root.join("cms/cms-schema.json"),
             r#"{"$schema": "http://json-schema.org/draft-07/schema#"}"#,
@@ -620,11 +615,7 @@ mod tests {
     fn forge_toml_theme_reads_light() {
         let tmp = tmpdir_for("light");
         std::fs::create_dir_all(&tmp).expect("mk");
-        std::fs::write(
-            tmp.join("forge.toml"),
-            "[render]\ntheme = \"light\"\n",
-        )
-        .expect("write");
+        std::fs::write(tmp.join("forge.toml"), "[render]\ntheme = \"light\"\n").expect("write");
         assert_eq!(forge_toml_theme(&tmp), Some("light".to_owned()));
         let _ = std::fs::remove_dir_all(&tmp);
     }

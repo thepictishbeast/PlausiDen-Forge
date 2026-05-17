@@ -336,10 +336,7 @@ pub fn parse_skin_themes(raw: &str) -> (Vec<ThemeBlock>, BTreeSet<TokenName>) {
 
 /// Detect drift between the parsed blocks + reference set.
 /// Pure: deterministic output for any input.
-pub fn detect_drift(
-    blocks: &[ThemeBlock],
-    refs: &BTreeSet<TokenName>,
-) -> Vec<ThemeFinding> {
+pub fn detect_drift(blocks: &[ThemeBlock], refs: &BTreeSet<TokenName>) -> Vec<ThemeFinding> {
     let mut out = Vec::<ThemeFinding>::new();
     let Some(base) = blocks.iter().find(|b| b.name == "default") else {
         // No base block at all is a degenerate case — emit one
@@ -507,7 +504,10 @@ mod tests {
     fn parser_drops_var_references_inside_comments() {
         let raw = "/* example: var(--loom-color-*) */\n.x { color: red; }";
         let (_, refs) = parse_skin_themes(raw);
-        assert!(refs.is_empty(), "comment-stripped reference must not surface: {refs:?}");
+        assert!(
+            refs.is_empty(),
+            "comment-stripped reference must not surface: {refs:?}"
+        );
     }
 
     #[test]
@@ -528,7 +528,9 @@ mod tests {
             .iter()
             .any(|f| matches!(f, ThemeFinding::UndefinedRef { token } if token.as_str() == "--loom-color-missing")));
         let findings: Vec<Finding> = drift.iter().map(ThemeFinding::as_finding).collect();
-        assert!(findings.iter().any(|f| matches!(f.severity, Severity::Strict)));
+        assert!(findings
+            .iter()
+            .any(|f| matches!(f.severity, Severity::Strict)));
     }
 
     #[test]
@@ -541,7 +543,9 @@ mod tests {
         let drift = detect_drift(&blocks, &refs);
         let warns: Vec<&ThemeFinding> = drift
             .iter()
-            .filter(|f| matches!(f, ThemeFinding::MissingFromTheme { theme, .. } if theme == "sepia"))
+            .filter(
+                |f| matches!(f, ThemeFinding::MissingFromTheme { theme, .. } if theme == "sepia"),
+            )
             .collect();
         assert_eq!(warns.len(), 1);
     }

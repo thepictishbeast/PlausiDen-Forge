@@ -32,7 +32,10 @@ pub enum ThemeContrastFinding {
     /// No skin file. WARN.
     SkinMissing { searched: Vec<PathBuf> },
     /// loom theme contrast errored unexpectedly (exit ≥ 2). WARN.
-    LoomErrored { exit_code: i32, stderr_excerpt: String },
+    LoomErrored {
+        exit_code: i32,
+        stderr_excerpt: String,
+    },
     /// One specific (theme, pair) is below threshold. STRICT.
     PairBelowThreshold {
         theme: String,
@@ -78,15 +81,9 @@ impl ThemeContrastFinding {
             } => Finding::warn(
                 PHASE,
                 "loom theme contrast",
-                format!(
-                    "loom theme contrast errored (exit {exit_code}): {stderr_excerpt}"
-                ),
+                format!("loom theme contrast errored (exit {exit_code}): {stderr_excerpt}"),
             ),
-            Self::PairBelowThreshold {
-                theme,
-                pair,
-                ratio,
-            } => Finding::strict(
+            Self::PairBelowThreshold { theme, pair, ratio } => Finding::strict(
                 PHASE,
                 format!("theme={theme}"),
                 format!(
@@ -165,11 +162,7 @@ pub fn parse_contrast_output(text: &str) -> Vec<ThemeContrastFinding> {
         let theme = cols[0].to_owned();
         let pair = cols[1].to_owned();
         let ratio = cols[cols.len() - 2].to_owned();
-        hits.push(ThemeContrastFinding::PairBelowThreshold {
-            theme,
-            pair,
-            ratio,
-        });
+        hits.push(ThemeContrastFinding::PairBelowThreshold { theme, pair, ratio });
     }
     hits
 }
@@ -189,14 +182,18 @@ impl Phase for ThemeContrastPhase {
             Ok(p) => p,
             Err(searched) => {
                 tracing::warn!(?searched, "theme_contrast: loom missing");
-                return Ok(vec![ThemeContrastFinding::LoomMissing { searched }.as_finding()]);
+                return Ok(vec![
+                    ThemeContrastFinding::LoomMissing { searched }.as_finding()
+                ]);
             }
         };
         let skin = match resolve_skin(&ctx.static_dir) {
             Ok(p) => p,
             Err(searched) => {
                 tracing::warn!(?searched, "theme_contrast: skin missing");
-                return Ok(vec![ThemeContrastFinding::SkinMissing { searched }.as_finding()]);
+                return Ok(vec![
+                    ThemeContrastFinding::SkinMissing { searched }.as_finding()
+                ]);
             }
         };
 
@@ -257,7 +254,10 @@ impl Phase for ThemeContrastPhase {
                 ),
             )]);
         }
-        Ok(parsed.iter().map(ThemeContrastFinding::as_finding).collect())
+        Ok(parsed
+            .iter()
+            .map(ThemeContrastFinding::as_finding)
+            .collect())
     }
 }
 

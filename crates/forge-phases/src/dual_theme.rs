@@ -117,8 +117,7 @@ fn css_has_dark_palette(css: &str) -> bool {
 fn has_data_theme_dark(css: &str) -> bool {
     // Either quoting style; the `:root[…]` selector might be
     // preceded by other tokens but the substring is unambiguous.
-    css.contains("[data-theme=\"dark\"]")
-        || css.contains("[data-theme='dark']")
+    css.contains("[data-theme=\"dark\"]") || css.contains("[data-theme='dark']")
 }
 
 fn has_prefers_color_scheme_dark(css: &str) -> bool {
@@ -149,10 +148,7 @@ fn has_prefers_color_scheme_dark(css: &str) -> bool {
 /// Walk `static_dir` recursively for `.css` files, ignoring `.gz`
 /// / `.br` precompressed siblings.
 fn collect_css_files(static_dir: &Path) -> Result<Vec<std::path::PathBuf>, BuildError> {
-    fn walk(
-        dir: &Path,
-        out: &mut Vec<std::path::PathBuf>,
-    ) -> Result<(), BuildError> {
+    fn walk(dir: &Path, out: &mut Vec<std::path::PathBuf>) -> Result<(), BuildError> {
         let entries = match std::fs::read_dir(dir) {
             Ok(e) => e,
             Err(e) => {
@@ -274,16 +270,16 @@ mod tests {
             ":root{--bg:#fff}@media (prefers-color-scheme:dark){:root{--bg:#000}}",
         );
         let findings = DualThemePhase.run(&ctx).expect("run");
-        assert!(findings.is_empty(), "expected no findings, got {findings:?}");
+        assert!(
+            findings.is_empty(),
+            "expected no findings, got {findings:?}"
+        );
         let _ = std::fs::remove_dir_all(&tmp);
     }
 
     #[test]
     fn run_fails_when_only_light_palette_present() {
-        let (ctx, tmp) = make_ctx_with_css(
-            "skin.css",
-            ":root{--bg:#fff;--fg:#111}",
-        );
+        let (ctx, tmp) = make_ctx_with_css("skin.css", ":root{--bg:#fff;--fg:#111}");
         let findings = DualThemePhase.run(&ctx).expect("run");
         assert_eq!(findings.len(), 1, "expected one finding, got {findings:?}");
         assert!(
@@ -296,10 +292,7 @@ mod tests {
 
     #[test]
     fn run_fails_when_no_css_files_at_all() {
-        let tmp = std::env::temp_dir().join(format!(
-            "dual-theme-t66-empty-{}",
-            std::process::id()
-        ));
+        let tmp = std::env::temp_dir().join(format!("dual-theme-t66-empty-{}", std::process::id()));
         std::fs::create_dir_all(tmp.join("static")).expect("mk");
         let ctx = BuildCtx {
             root: tmp.clone(),
@@ -307,7 +300,11 @@ mod tests {
             mode: forge_core::BuildMode::Poc,
         };
         let findings = DualThemePhase.run(&ctx).expect("run");
-        assert_eq!(findings.len(), 1, "no css = no dark palette = strict finding");
+        assert_eq!(
+            findings.len(),
+            1,
+            "no css = no dark palette = strict finding"
+        );
         assert!(findings[0].message.contains("no .css files"));
         let _ = std::fs::remove_dir_all(&tmp);
     }
@@ -315,10 +312,7 @@ mod tests {
     #[test]
     fn run_passes_when_dark_in_separate_tokens_file() {
         // Multiple CSS files; only tokens.css carries the palette.
-        let tmp = std::env::temp_dir().join(format!(
-            "dual-theme-t66-split-{}",
-            std::process::id()
-        ));
+        let tmp = std::env::temp_dir().join(format!("dual-theme-t66-split-{}", std::process::id()));
         std::fs::create_dir_all(tmp.join("static")).expect("mk");
         std::fs::write(
             tmp.join("static/skin.css"),

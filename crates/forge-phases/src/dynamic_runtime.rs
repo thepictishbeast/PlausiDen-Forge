@@ -102,8 +102,7 @@ const SPA_RUNTIME_JS: &str = r#"// forge-spa-runtime — emitted by forge dynami
 
 /// Tag injected before `</body>` so the runtime is available on
 /// every Dynamic / Hybrid page.
-const SCRIPT_TAG: &str =
-    r#"<script src="/forge-spa-runtime.js" defer></script>"#;
+const SCRIPT_TAG: &str = r#"<script src="/forge-spa-runtime.js" defer></script>"#;
 
 /// File the runtime is written to (relative to `static_dir`).
 const RUNTIME_FILENAME: &str = "forge-spa-runtime.js";
@@ -144,10 +143,7 @@ impl Phase for DynamicRuntimePhase {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(findings),
             Err(e) => {
                 return Err(BuildError::Io {
-                    context: format!(
-                        "dynamic_runtime: read_dir {}",
-                        ctx.static_dir.display()
-                    ),
+                    context: format!("dynamic_runtime: read_dir {}", ctx.static_dir.display()),
                     source: e,
                 });
             }
@@ -238,7 +234,10 @@ mod tests {
         let phase = DynamicRuntimePhase;
         let findings = phase.run(&ctx(&sd, BuildMode::Static)).unwrap();
 
-        assert!(findings.is_empty(), "static mode should produce no findings");
+        assert!(
+            findings.is_empty(),
+            "static mode should produce no findings"
+        );
         assert!(
             !sd.join(RUNTIME_FILENAME).exists(),
             "static mode must not emit the runtime file"
@@ -341,9 +340,7 @@ mod tests {
         create_dir_all(&sd).unwrap();
         write(sd.join("i.html"), "<html><body></body></html>").unwrap();
 
-        DynamicRuntimePhase
-            .run(&ctx(&sd, BuildMode::Poc))
-            .unwrap();
+        DynamicRuntimePhase.run(&ctx(&sd, BuildMode::Poc)).unwrap();
         assert!(!sd.join(RUNTIME_FILENAME).exists());
     }
 

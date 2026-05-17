@@ -262,9 +262,7 @@ fn run() -> Result<ExitCode> {
     // T55: subcommand router. `Build` is the default for backwards
     // compat with `forge` (no subcommand).
     match args.command.as_ref() {
-        Some(Cmd::Verify { chain, signatures }) => {
-            return run_verify(&root, *chain, *signatures)
-        }
+        Some(Cmd::Verify { chain, signatures }) => return run_verify(&root, *chain, *signatures),
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Watch {
@@ -419,8 +417,7 @@ fn run() -> Result<ExitCode> {
     // chain_length=1.
     let reports_dir = root.join("reports");
     let prior_report = load_newest_prior_report(&reports_dir);
-    forge_core::attest::chain_step(prior_report.as_ref(), &mut report)
-        .context("chain_step")?;
+    forge_core::attest::chain_step(prior_report.as_ref(), &mut report).context("chain_step")?;
 
     // T56: if a signing key exists at reports/attest-key.b64,
     // sign the chain root. Missing key = unsigned build (silent
@@ -432,11 +429,13 @@ fn run() -> Result<ExitCode> {
             .and_then(|s| forge_core::attest::signing_key_from_base64(s.trim()))
         {
             Some(key) => {
-                forge_core::attest::sign_report(&mut report, &key)
-                    .context("sign chain root")?;
+                forge_core::attest::sign_report(&mut report, &key).context("sign chain root")?;
             }
             None => {
-                eprintln!("  warn  attest key at {} unreadable — build unsigned", key_path.display());
+                eprintln!(
+                    "  warn  attest key at {} unreadable — build unsigned",
+                    key_path.display()
+                );
             }
         }
     }
@@ -448,12 +447,20 @@ fn run() -> Result<ExitCode> {
     println!("  duration:            {}ms", report.duration_ms);
     println!("  chain length:        {}", report.chain_length);
     if let Some(h) = &report.prev_hash {
-        println!("  prev hash:           {}…{}", &h[..8], &h[h.len().saturating_sub(8)..]);
+        println!(
+            "  prev hash:           {}…{}",
+            &h[..8],
+            &h[h.len().saturating_sub(8)..]
+        );
     } else {
         println!("  prev hash:           (genesis)");
     }
     if let Some(s) = &report.signature {
-        println!("  signature:           {}…{} (Ed25519)", &s[..8], &s[s.len().saturating_sub(8)..]);
+        println!(
+            "  signature:           {}…{} (Ed25519)",
+            &s[..8],
+            &s[s.len().saturating_sub(8)..]
+        );
     } else {
         println!("  signature:           (unsigned — run `forge attest init` to enable)");
     }
@@ -659,11 +666,7 @@ fn print_finding(f: &Finding) {
 /// cleanly after N rebuilds (used for tests + CI smoke).
 ///
 /// AVP-PASS-T44: 2026-05-14.
-fn run_watch(
-    root: &std::path::Path,
-    debounce_ms: u64,
-    max_rebuilds: usize,
-) -> Result<ExitCode> {
+fn run_watch(root: &std::path::Path, debounce_ms: u64, max_rebuilds: usize) -> Result<ExitCode> {
     use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
     use std::sync::mpsc::{channel, RecvTimeoutError};
     use std::time::{Duration, Instant};
@@ -729,7 +732,9 @@ fn run_watch(
         let burst_started = Instant::now();
         let mut latest_path: Option<String> = first.ok().and_then(event_path_label);
         loop {
-            let remaining = debounce.checked_sub(burst_started.elapsed()).unwrap_or_default();
+            let remaining = debounce
+                .checked_sub(burst_started.elapsed())
+                .unwrap_or_default();
             if remaining.is_zero() {
                 break;
             }
@@ -793,11 +798,7 @@ fn event_path_label(ev: notify::Event) -> Option<String> {
 /// Re-exec the current binary as `forge build` (no watch flag)
 /// so we hit the existing build pipeline. Inherits stdio so
 /// findings stream live to the operator's terminal.
-fn rebuild_once(
-    root: &std::path::Path,
-    trigger: &str,
-    counter: &mut usize,
-) -> Result<()> {
+fn rebuild_once(root: &std::path::Path, trigger: &str, counter: &mut usize) -> Result<()> {
     *counter += 1;
     let n = *counter;
     eprintln!("---- forge watch rebuild #{n} (trigger: {trigger}) ----");
@@ -897,7 +898,9 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
 
 const SECRET_RULES: &[(&str, fn(&str) -> bool)] = &[
     ("ed25519-priv-key", |n| n.ends_with("-key.b64")),
-    ("pem-keystore", |n| n.ends_with(".pem") || n.ends_with(".p12") || n.ends_with(".pfx")),
+    ("pem-keystore", |n| {
+        n.ends_with(".pem") || n.ends_with(".p12") || n.ends_with(".pfx")
+    }),
     ("ssh-private-key", |n| {
         n == "id_rsa"
             || n == "id_ed25519"
@@ -908,11 +911,21 @@ const SECRET_RULES: &[(&str, fn(&str) -> bool)] = &[
             || n.starts_with("id_ecdsa.")
     }),
     ("dotenv", |n| n == ".env" || n.starts_with(".env.")),
-    ("password-store", |n| n.ends_with(".kdbx") || n.ends_with(".kdb")),
-    ("aws-credentials", |n| n == "credentials" || n == "credentials.json"),
-    ("gcp-service-account", |n| n.contains("service-account") && n.ends_with(".json")),
-    ("git-credentials", |n| n == ".git-credentials" || n == ".netrc"),
-    ("private-key-suffix", |n| n.ends_with(".key") || n.ends_with(".priv") || n.ends_with("-private.b64")),
+    ("password-store", |n| {
+        n.ends_with(".kdbx") || n.ends_with(".kdb")
+    }),
+    ("aws-credentials", |n| {
+        n == "credentials" || n == "credentials.json"
+    }),
+    ("gcp-service-account", |n| {
+        n.contains("service-account") && n.ends_with(".json")
+    }),
+    ("git-credentials", |n| {
+        n == ".git-credentials" || n == ".netrc"
+    }),
+    ("private-key-suffix", |n| {
+        n.ends_with(".key") || n.ends_with(".priv") || n.ends_with("-private.b64")
+    }),
 ];
 
 /// Scan a list of file paths for secret-shaped basenames.
@@ -923,10 +936,7 @@ fn scan_paths_for_secrets<P: AsRef<std::path::Path>>(
     let mut hits = Vec::new();
     for p in paths {
         let path = p.as_ref();
-        let name = path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("");
+        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
         for (rule_name, predicate) in SECRET_RULES {
             if predicate(name) {
                 hits.push((path.to_path_buf(), *rule_name));
@@ -1048,7 +1058,9 @@ fn run_audit_mutants(
         match status {
             Ok(s) if s.success() => {}
             Ok(s) => {
-                eprintln!("forge audit mutants: cargo mutants exited {s} (continuing to parse outcomes)");
+                eprintln!(
+                    "forge audit mutants: cargo mutants exited {s} (continuing to parse outcomes)"
+                );
             }
             Err(e) => {
                 eprintln!("forge audit mutants: cargo mutants failed: {e}");
@@ -1074,8 +1086,8 @@ fn run_audit_mutants(
     }
     let raw = std::fs::read_to_string(&outcomes_path)
         .with_context(|| format!("read {}", outcomes_path.display()))?;
-    let parsed: MutantsOutcomes = serde_json::from_str(&raw)
-        .with_context(|| format!("parse {}", outcomes_path.display()))?;
+    let parsed: MutantsOutcomes =
+        serde_json::from_str(&raw).with_context(|| format!("parse {}", outcomes_path.display()))?;
     let summary = MutantsSummary::from_outcomes(&parsed);
     let rate = summary.survival_rate();
 
@@ -1119,7 +1131,9 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
                 paths.clone()
             };
             if scan_targets.is_empty() {
-                println!("forge audit secrets: nothing staged + no paths supplied — nothing to scan");
+                println!(
+                    "forge audit secrets: nothing staged + no paths supplied — nothing to scan"
+                );
                 return Ok(ExitCode::SUCCESS);
             }
             let hits = scan_paths_for_secrets(&scan_targets);
@@ -1150,11 +1164,7 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
     }
 }
 
-fn run_verify(
-    root: &std::path::Path,
-    chain: bool,
-    signatures: bool,
-) -> Result<ExitCode> {
+fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<ExitCode> {
     if !chain {
         // Currently chain is the only verify mode; reject other
         // shapes politely so future flags surface their own help.
@@ -1189,10 +1199,10 @@ fn run_verify(
 
     let mut chain_reports: Vec<BuildReport> = Vec::with_capacity(entries.len());
     for path in &entries {
-        let raw = std::fs::read_to_string(path)
-            .with_context(|| format!("read {}", path.display()))?;
-        let report: BuildReport = serde_json::from_str(&raw)
-            .with_context(|| format!("parse {}", path.display()))?;
+        let raw =
+            std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
+        let report: BuildReport =
+            serde_json::from_str(&raw).with_context(|| format!("parse {}", path.display()))?;
         chain_reports.push(report);
     }
 
@@ -1205,9 +1215,7 @@ fn run_verify(
         Ok(()) => {
             let last = chain_reports.last();
             let head_len = last.map(|r| r.chain_length).unwrap_or(0);
-            let head_started = last
-                .map(|r| r.started.as_str())
-                .unwrap_or("?");
+            let head_started = last.map(|r| r.started.as_str()).unwrap_or("?");
             println!(
                 "  ok      chain intact — head chain_length={head_len} started={head_started}"
             );
@@ -1227,7 +1235,10 @@ fn run_verify(
                 let pubkey = match forge_core::attest::pubkey_from_base64(pub_b64.trim()) {
                     Some(p) => p,
                     None => {
-                        eprintln!("  FAIL    {} is not a valid base64 ed25519 pubkey", pub_path.display());
+                        eprintln!(
+                            "  FAIL    {} is not a valid base64 ed25519 pubkey",
+                            pub_path.display()
+                        );
                         return Ok(ExitCode::from(2));
                     }
                 };
@@ -1239,9 +1250,7 @@ fn run_verify(
                         continue;
                     }
                     if let Err(e) = forge_core::attest::verify_report(r, &pubkey) {
-                        eprintln!(
-                            "  FAIL    signature mismatch at index {idx}: {e}"
-                        );
+                        eprintln!("  FAIL    signature mismatch at index {idx}: {e}");
                         if let Some(p) = entries.get(idx) {
                             eprintln!("  bad     {}", p.display());
                         }
@@ -1287,8 +1296,9 @@ fn chain_error_index(e: &forge_core::attest::ChainError) -> Option<usize> {
     use forge_core::attest::ChainError;
     match e {
         ChainError::Broken { at_index, .. } => at_index.checked_sub(1),
-        ChainError::SequenceGap { at_index, .. }
-        | ChainError::MissingPrev { at_index, .. } => Some(*at_index),
+        ChainError::SequenceGap { at_index, .. } | ChainError::MissingPrev { at_index, .. } => {
+            Some(*at_index)
+        }
         ChainError::GenesisHasPrev | ChainError::Serialize(_) => None,
     }
 }

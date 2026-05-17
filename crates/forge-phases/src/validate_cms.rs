@@ -40,7 +40,10 @@ pub enum ValidateCmsFinding {
     /// One CMS file failed validation. STRICT.
     FileInvalid { path: String, message: String },
     /// `loom validate` errored unexpectedly (exit ≥ 2). STRICT.
-    LoomErrored { exit_code: i32, stderr_excerpt: String },
+    LoomErrored {
+        exit_code: i32,
+        stderr_excerpt: String,
+    },
 }
 
 impl ValidateCmsFinding {
@@ -65,20 +68,16 @@ impl ValidateCmsFinding {
                     ),
                 ))
             }
-            Self::FileInvalid { path, message } => Some(Finding::strict(
-                PHASE,
-                path.clone(),
-                message.clone(),
-            )),
+            Self::FileInvalid { path, message } => {
+                Some(Finding::strict(PHASE, path.clone(), message.clone()))
+            }
             Self::LoomErrored {
                 exit_code,
                 stderr_excerpt,
             } => Some(Finding::strict(
                 PHASE,
                 "loom validate",
-                format!(
-                    "loom validate errored (exit {exit_code}): {stderr_excerpt}"
-                ),
+                format!("loom validate errored (exit {exit_code}): {stderr_excerpt}"),
             )),
         }
     }
@@ -219,10 +218,7 @@ impl Phase for ValidateCmsPhase {
         let stderr = String::from_utf8_lossy(&output.stderr);
         let combined = format!("{stdout}\n{stderr}");
         let parsed = parse_loom_validate_output(&combined);
-        Ok(parsed
-            .into_iter()
-            .filter_map(|p| p.as_finding())
-            .collect())
+        Ok(parsed.into_iter().filter_map(|p| p.as_finding()).collect())
     }
 }
 

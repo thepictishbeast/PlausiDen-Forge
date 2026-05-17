@@ -284,10 +284,7 @@ fn is_inside_dark_media(css: &str, pos: usize) -> bool {
             return false;
         };
         let block_end = block_start + block_len;
-        if pos >= block_start
-            && pos < block_end
-            && media_query_matches_prefers_dark(media_query)
-        {
+        if pos >= block_start && pos < block_end && media_query_matches_prefers_dark(media_query) {
             return true;
         }
         cursor = block_end + 1;
@@ -589,7 +586,10 @@ mod tests {
         "#;
         let themes = parse_tokens(css);
         assert!(themes.contains_key("light"), "missing light theme");
-        assert!(themes.contains_key("dark"), "T68: missing dark theme from @media");
+        assert!(
+            themes.contains_key("dark"),
+            "T68: missing dark theme from @media"
+        );
         // Rgb is (f64, f64, f64) in [0.0, 1.0]. Compare with
         // tolerance instead of exact equality.
         let light_ink = themes["light"].get("ink").expect("light ink");
@@ -610,14 +610,20 @@ mod tests {
         "#;
         let themes = parse_tokens(css);
         assert!(themes.contains_key("light"));
-        assert!(!themes.contains_key("dark"), "must not auto-create dark from light @media");
+        assert!(
+            !themes.contains_key("dark"),
+            "must not auto-create dark from light @media"
+        );
     }
 
     #[test]
     fn parse_tokens_dark_media_compact_no_spaces() {
         let css = "@media(prefers-color-scheme:dark){:root{--loom-color-ink:#fff}}";
         let themes = parse_tokens(css);
-        assert!(themes.contains_key("dark"), "compact-spacing dark @media must parse");
+        assert!(
+            themes.contains_key("dark"),
+            "compact-spacing dark @media must parse"
+        );
     }
 
     #[test]
@@ -643,12 +649,22 @@ mod tests {
 
     #[test]
     fn media_query_matcher_basics() {
-        assert!(media_query_matches_prefers_dark("(prefers-color-scheme: dark)"));
-        assert!(media_query_matches_prefers_dark("(prefers-color-scheme:dark)"));
-        assert!(media_query_matches_prefers_dark(" ( prefers-color-scheme : dark ) "));
-        assert!(!media_query_matches_prefers_dark("(prefers-color-scheme: light)"));
+        assert!(media_query_matches_prefers_dark(
+            "(prefers-color-scheme: dark)"
+        ));
+        assert!(media_query_matches_prefers_dark(
+            "(prefers-color-scheme:dark)"
+        ));
+        assert!(media_query_matches_prefers_dark(
+            " ( prefers-color-scheme : dark ) "
+        ));
+        assert!(!media_query_matches_prefers_dark(
+            "(prefers-color-scheme: light)"
+        ));
         assert!(!media_query_matches_prefers_dark("(min-width: 768px)"));
         // Tricky: light mode + something else mentioning "dark" — must not match.
-        assert!(!media_query_matches_prefers_dark("(prefers-color-scheme: light) and (max-width: 768px) /* dark */"));
+        assert!(!media_query_matches_prefers_dark(
+            "(prefers-color-scheme: light) and (max-width: 768px) /* dark */"
+        ));
     }
 }

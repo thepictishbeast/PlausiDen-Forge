@@ -122,7 +122,10 @@ pub enum CrawlFinding {
     OpaqueFailure { exit_code: i32 },
     /// Crawler errored (exit ≥ 2). WARN — runtime audit could
     /// not complete.
-    CrawlerErrored { exit_code: i32, stderr_excerpt: String },
+    CrawlerErrored {
+        exit_code: i32,
+        stderr_excerpt: String,
+    },
     /// One specific axis regressed. STRICT.
     AxisRegression { axis: AxisName, new_strict: u32 },
 }
@@ -170,7 +173,10 @@ impl CrawlFinding {
                      parsed — inspect PlausiDen-Crawler/runs/ for details"
                 ),
             ),
-            Self::CrawlerErrored { exit_code, stderr_excerpt } => Finding::warn(
+            Self::CrawlerErrored {
+                exit_code,
+                stderr_excerpt,
+            } => Finding::warn(
                 PHASE,
                 "PlausiDen-Crawler",
                 format!(
@@ -290,8 +296,8 @@ fn diff_to_findings(diff: &CrawlDiff) -> Vec<CrawlFinding> {
     ];
     let mut out = Vec::new();
     for (name, events) in pairs {
-        let strict_count = u32::try_from(events.iter().filter(|e| e.is_strict()).count())
-            .unwrap_or(u32::MAX);
+        let strict_count =
+            u32::try_from(events.iter().filter(|e| e.is_strict()).count()).unwrap_or(u32::MAX);
         if strict_count > 0 {
             out.push(CrawlFinding::AxisRegression {
                 axis: AxisName::classify(name),
@@ -378,7 +384,9 @@ impl Phase for CrawlPhase {
         let journey = resolve_journey_path(&crawler_dir);
         if !journey.is_file() {
             tracing::warn!(path = ?journey, "crawl: journey not found");
-            return Ok(vec![CrawlFinding::JourneyMissing { path: journey }.as_finding()]);
+            return Ok(vec![
+                CrawlFinding::JourneyMissing { path: journey }.as_finding()
+            ]);
         }
 
         // 3. Probe dev server.
@@ -501,7 +509,10 @@ mod tests {
         ));
         // Empty string and shell metachars all classified, never panic.
         assert!(matches!(AxisName::classify(""), AxisName::Unknown(_)));
-        assert!(matches!(AxisName::classify("a;rm -rf /"), AxisName::Unknown(_)));
+        assert!(matches!(
+            AxisName::classify("a;rm -rf /"),
+            AxisName::Unknown(_)
+        ));
     }
 
     #[test]
@@ -567,7 +578,10 @@ mod tests {
         }"#;
         let diff: CrawlDiff = serde_json::from_str(raw).expect("parse");
         let findings = diff_to_findings(&diff);
-        assert!(findings.is_empty(), "warn-severity must not regress: {findings:?}");
+        assert!(
+            findings.is_empty(),
+            "warn-severity must not regress: {findings:?}"
+        );
     }
 
     #[test]

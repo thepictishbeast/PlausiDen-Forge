@@ -86,9 +86,7 @@ pub enum ChainError {
         actual: String,
     },
     /// Chain-length sequence numbers are non-contiguous.
-    #[error(
-        "chain_length jumped at index {at_index}: prior length {prior}, current {current}"
-    )]
+    #[error("chain_length jumped at index {at_index}: prior length {prior}, current {current}")]
     SequenceGap {
         /// Position in the input sequence (0-indexed).
         at_index: usize,
@@ -112,18 +110,14 @@ pub enum ChainError {
 /// Returns `ChainError::Serialize` if `prior` cannot be
 /// serialized to JSON — should never happen for a well-formed
 /// `BuildReport`.
-pub fn chain_step(
-    prior: Option<&BuildReport>,
-    new: &mut BuildReport,
-) -> Result<(), ChainError> {
+pub fn chain_step(prior: Option<&BuildReport>, new: &mut BuildReport) -> Result<(), ChainError> {
     match prior {
         None => {
             new.prev_hash = None;
             new.chain_length = 1;
         }
         Some(p) => {
-            let bytes = serde_json::to_vec(p)
-                .map_err(|e| ChainError::Serialize(e.to_string()))?;
+            let bytes = serde_json::to_vec(p).map_err(|e| ChainError::Serialize(e.to_string()))?;
             new.prev_hash = Some(hash_report_bytes(&bytes));
             new.chain_length = p.chain_length.saturating_add(1);
         }
@@ -169,8 +163,8 @@ pub fn verify_chain(reports: &[BuildReport]) -> Result<(), ChainError> {
                         length: current.chain_length,
                     });
                 };
-                let bytes = serde_json::to_vec(p)
-                    .map_err(|e| ChainError::Serialize(e.to_string()))?;
+                let bytes =
+                    serde_json::to_vec(p).map_err(|e| ChainError::Serialize(e.to_string()))?;
                 let actual = hash_report_bytes(&bytes);
                 if claim != actual {
                     return Err(ChainError::Broken {
@@ -201,7 +195,9 @@ mod tests {
     fn hash_is_64_hex_chars() {
         let h = hash_report_bytes(b"");
         assert_eq!(h.len(), 64);
-        assert!(h.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
+        assert!(h
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 
     #[test]
@@ -266,7 +262,10 @@ mod tests {
         chain_step(Some(&g), &mut n).expect("step");
         n.chain_length = 5; // forged ahead
         let r = verify_chain(&[g, n]);
-        assert!(matches!(r, Err(ChainError::SequenceGap { at_index: 1, .. })));
+        assert!(matches!(
+            r,
+            Err(ChainError::SequenceGap { at_index: 1, .. })
+        ));
     }
 
     #[test]
@@ -477,10 +476,7 @@ pub fn sign_report(report: &mut BuildReport, key: &SigningKey) -> Result<(), Sig
 ///
 /// # Errors
 /// See `SignError` variants.
-pub fn verify_report(
-    report: &BuildReport,
-    pub_key: &VerifyingKey,
-) -> Result<(), SignError> {
+pub fn verify_report(report: &BuildReport, pub_key: &VerifyingKey) -> Result<(), SignError> {
     let sig_b64 = report
         .signature
         .as_deref()

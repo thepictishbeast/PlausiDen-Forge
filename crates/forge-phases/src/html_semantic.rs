@@ -221,8 +221,19 @@ mod tests {
         "#;
         let hits = find_div_landmark_roles(body);
         let roles: Vec<_> = hits.iter().map(|h| h.role).collect();
-        for expected in ["banner", "main", "contentinfo", "navigation", "complementary", "search", "form"] {
-            assert!(roles.contains(&expected), "missing role={expected} in {roles:?}");
+        for expected in [
+            "banner",
+            "main",
+            "contentinfo",
+            "navigation",
+            "complementary",
+            "search",
+            "form",
+        ] {
+            assert!(
+                roles.contains(&expected),
+                "missing role={expected} in {roles:?}"
+            );
         }
     }
 
@@ -324,11 +335,15 @@ mod tests {
         let findings = HtmlSemanticPhase.run(&ctx).expect("run");
         let messages: Vec<_> = findings.iter().map(|f| f.message.as_str()).collect();
         assert!(
-            messages.iter().any(|m| m.contains("banner") && m.contains("<header>")),
+            messages
+                .iter()
+                .any(|m| m.contains("banner") && m.contains("<header>")),
             "missing banner→header finding: {messages:?}"
         );
         assert!(
-            messages.iter().any(|m| m.contains("main") && m.contains("<main>")),
+            messages
+                .iter()
+                .any(|m| m.contains("main") && m.contains("<main>")),
             "missing main→main finding: {messages:?}"
         );
         let _ = std::fs::remove_dir_all(&tmp);

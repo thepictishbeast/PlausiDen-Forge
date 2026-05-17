@@ -89,7 +89,13 @@ fn walk_for_iso(
         let ext = path.extension().and_then(|s| s.to_str());
         if !matches!(
             ext,
-            Some("md") | Some("toml") | Some("json") | Some("rs") | Some("html") | Some("yml") | Some("yaml")
+            Some("md")
+                | Some("toml")
+                | Some("json")
+                | Some("rs")
+                | Some("html")
+                | Some("yml")
+                | Some("yaml")
         ) {
             continue;
         }
@@ -252,10 +258,29 @@ fn scan_year_last_dashed(line: &str) -> Option<String> {
 /// Find `Jan 14 2026` / `14 Jan 2026` style.
 fn scan_english_month_date(line: &str) -> Option<String> {
     const MONTHS: &[&str] = &[
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-        "January", "February", "March", "April", "June",
-        "July", "August", "September", "October", "November", "December",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+        "January",
+        "February",
+        "March",
+        "April",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
     ];
     for &month in MONTHS {
         // Pattern A: `Mon DD YYYY` (with optional comma).
@@ -263,9 +288,7 @@ fn scan_english_month_date(line: &str) -> Option<String> {
         while let Some(idx) = search.find(month) {
             // Word-boundary: previous char not alphanumeric.
             let absolute_start = (line.len() - search.len()) + idx;
-            if absolute_start > 0
-                && line.as_bytes()[absolute_start - 1].is_ascii_alphanumeric()
-            {
+            if absolute_start > 0 && line.as_bytes()[absolute_start - 1].is_ascii_alphanumeric() {
                 search = &search[idx + month.len()..];
                 continue;
             }
@@ -378,14 +401,15 @@ fn match_year_after(after: &str) -> Option<usize> {
 
 fn take_digits(bytes: &[u8], i: &mut usize, min: usize, max: usize) -> usize {
     let start = *i;
-    while *i < bytes.len()
-        && (*i - start) < max
-        && bytes[*i].is_ascii_digit()
-    {
+    while *i < bytes.len() && (*i - start) < max && bytes[*i].is_ascii_digit() {
         *i += 1;
     }
     let n = *i - start;
-    if n < min { 0 } else { n }
+    if n < min {
+        0
+    } else {
+        n
+    }
 }
 
 #[cfg(test)]
@@ -401,24 +425,42 @@ mod tests {
 
     #[test]
     fn us_slash_format_flags() {
-        assert_eq!(find_non_iso_date("Released 5/14/2026."), Some("5/14/2026".to_owned()));
-        assert_eq!(find_non_iso_date("Released 05/14/2026."), Some("05/14/2026".to_owned()));
+        assert_eq!(
+            find_non_iso_date("Released 5/14/2026."),
+            Some("5/14/2026".to_owned())
+        );
+        assert_eq!(
+            find_non_iso_date("Released 05/14/2026."),
+            Some("05/14/2026".to_owned())
+        );
     }
 
     #[test]
     fn eu_slash_format_flags() {
-        assert_eq!(find_non_iso_date("Released 14/05/2026."), Some("14/05/2026".to_owned()));
+        assert_eq!(
+            find_non_iso_date("Released 14/05/2026."),
+            Some("14/05/2026".to_owned())
+        );
     }
 
     #[test]
     fn dot_format_flags() {
-        assert_eq!(find_non_iso_date("Released 5.14.2026."), Some("5.14.2026".to_owned()));
+        assert_eq!(
+            find_non_iso_date("Released 5.14.2026."),
+            Some("5.14.2026".to_owned())
+        );
     }
 
     #[test]
     fn dashed_year_last_flags() {
-        assert_eq!(find_non_iso_date("Released 14-5-2026."), Some("14-5-2026".to_owned()));
-        assert_eq!(find_non_iso_date("Released 5-14-2026."), Some("5-14-2026".to_owned()));
+        assert_eq!(
+            find_non_iso_date("Released 14-5-2026."),
+            Some("14-5-2026".to_owned())
+        );
+        assert_eq!(
+            find_non_iso_date("Released 5-14-2026."),
+            Some("5-14-2026".to_owned())
+        );
     }
 
     #[test]

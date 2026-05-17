@@ -101,10 +101,8 @@ mod tests {
 
     #[test]
     fn raw_colour_emits_strict_finding() {
-        let (ctx, tmp) = make_ctx_with_css(
-            "style.css",
-            ".btn { color: #ff0000; padding: 1rem; }\n",
-        );
+        let (ctx, tmp) =
+            make_ctx_with_css("style.css", ".btn { color: #ff0000; padding: 1rem; }\n");
         let findings = LoomLintPhase.run(&ctx).expect("run");
         assert!(
             findings
@@ -117,10 +115,7 @@ mod tests {
 
     #[test]
     fn raw_spacing_emits_warn_finding() {
-        let (ctx, tmp) = make_ctx_with_css(
-            "style.css",
-            ".btn { padding: 12px; }\n",
-        );
+        let (ctx, tmp) = make_ctx_with_css("style.css", ".btn { padding: 12px; }\n");
         let findings = LoomLintPhase.run(&ctx).expect("run");
         assert!(
             findings
@@ -133,10 +128,8 @@ mod tests {
 
     #[test]
     fn raw_time_emits_warn_finding() {
-        let (ctx, tmp) = make_ctx_with_css(
-            "style.css",
-            ".btn { transition: opacity 200ms ease; }\n",
-        );
+        let (ctx, tmp) =
+            make_ctx_with_css("style.css", ".btn { transition: opacity 200ms ease; }\n");
         let findings = LoomLintPhase.run(&ctx).expect("run");
         assert!(
             findings
@@ -154,17 +147,17 @@ mod tests {
             ":root { --loom-color-ink: #111; --loom-space-md: 16px; --loom-motion-fast: 200ms; }\n",
         );
         let findings = LoomLintPhase.run(&ctx).expect("run");
-        assert!(findings.is_empty(), "token block must pass clean: {findings:?}");
+        assert!(
+            findings.is_empty(),
+            "token block must pass clean: {findings:?}"
+        );
         let _ = std::fs::remove_dir_all(&tmp);
     }
 
     #[test]
     fn no_css_files_passes_silently() {
         // A project with no CSS at all should run cleanly.
-        let tmp = std::env::temp_dir().join(format!(
-            "loom-lint-t39-empty-{}",
-            std::process::id()
-        ));
+        let tmp = std::env::temp_dir().join(format!("loom-lint-t39-empty-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).expect("mk");
         let ctx = BuildCtx {
             root: tmp.clone(),

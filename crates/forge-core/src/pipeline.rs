@@ -231,7 +231,10 @@ pub struct StageOutput<A> {
 impl<A> StageOutput<A> {
     /// Convenience: stage that emits no findings.
     pub fn clean(artifacts: A) -> Self {
-        Self { artifacts, findings: Vec::new() }
+        Self {
+            artifacts,
+            findings: Vec::new(),
+        }
     }
 }
 
@@ -295,7 +298,9 @@ impl Pipeline<Discovered> {
     /// Borrow the discovered artifacts.
     pub fn discovered(&self) -> &DiscoveredArtifacts {
         // SAFETY: invariant of the Discovered marker.
-        self.discovered.as_ref().expect("Discovered marker invariant: discovered.is_some()")
+        self.discovered
+            .as_ref()
+            .expect("Discovered marker invariant: discovered.is_some()")
     }
 
     /// Run the parse stage.
@@ -331,7 +336,9 @@ impl Pipeline<Discovered> {
 impl Pipeline<Parsed> {
     /// Borrow the parsed artifacts.
     pub fn parsed(&self) -> &ParsedArtifacts {
-        self.parsed.as_ref().expect("Parsed marker invariant: parsed.is_some()")
+        self.parsed
+            .as_ref()
+            .expect("Parsed marker invariant: parsed.is_some()")
     }
 
     /// Borrow the discovered artifacts (still available).
@@ -377,7 +384,9 @@ impl Pipeline<Parsed> {
 impl Pipeline<Rendered> {
     /// Borrow the rendered artifacts.
     pub fn rendered(&self) -> &RenderedArtifacts {
-        self.rendered.as_ref().expect("Rendered marker invariant: rendered.is_some()")
+        self.rendered
+            .as_ref()
+            .expect("Rendered marker invariant: rendered.is_some()")
     }
 
     /// Borrow the parsed artifacts (still available).
@@ -429,7 +438,9 @@ impl Pipeline<Rendered> {
 impl Pipeline<Audited> {
     /// Borrow the audited artifacts.
     pub fn audited(&self) -> &AuditedArtifacts {
-        self.audited.as_ref().expect("Audited marker invariant: audited.is_some()")
+        self.audited
+            .as_ref()
+            .expect("Audited marker invariant: audited.is_some()")
     }
 
     /// View the accumulated findings without consuming the
@@ -440,7 +451,9 @@ impl Pipeline<Audited> {
 
     /// Pipeline-wide pass/fail in the build mode.
     pub fn passed(&self) -> bool {
-        self.findings.iter().all(|f| !f.severity.blocks_in(self.ctx.mode))
+        self.findings
+            .iter()
+            .all(|f| !f.severity.blocks_in(self.ctx.mode))
     }
 
     /// Consume the pipeline and emit a `BuildReport`. Optionally

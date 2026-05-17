@@ -90,12 +90,7 @@ impl CmsPath {
             return Err(CmsPathError::NoLeadingSlash);
         }
         for c in s.chars() {
-            if !(c.is_ascii_alphanumeric()
-                || c == '/'
-                || c == '.'
-                || c == '_'
-                || c == '-')
-            {
+            if !(c.is_ascii_alphanumeric() || c == '/' || c == '.' || c == '_' || c == '-') {
                 return Err(CmsPathError::InvalidChar(c));
             }
         }
@@ -147,11 +142,19 @@ pub enum PathConsistencyFinding {
     /// `path` field missing or unreadable.
     PathFieldMissing { source: String },
     /// `path` field present but fails `CmsPath::new` validation.
-    PathInvalid { source: String, raw: String, why: String },
+    PathInvalid {
+        source: String,
+        raw: String,
+        why: String,
+    },
     /// `path` doesn't follow the .html / / / "/" mapping rules.
     AmbiguousMapping { source: String, raw: String },
     /// `path` resolves but the target file doesn't exist.
-    TargetMissing { source: String, raw: String, target: PathBuf },
+    TargetMissing {
+        source: String,
+        raw: String,
+        target: PathBuf,
+    },
 }
 
 impl PathConsistencyFinding {
@@ -177,7 +180,11 @@ impl PathConsistencyFinding {
                      doesn't strip .html)"
                 ),
             ),
-            Self::TargetMissing { source, raw, target } => Finding::strict(
+            Self::TargetMissing {
+                source,
+                raw,
+                target,
+            } => Finding::strict(
                 PHASE,
                 source.clone(),
                 format!(
@@ -277,7 +284,10 @@ impl Phase for PathConsistencyPhase {
                 });
             }
         }
-        Ok(found.iter().map(PathConsistencyFinding::as_finding).collect())
+        Ok(found
+            .iter()
+            .map(PathConsistencyFinding::as_finding)
+            .collect())
     }
 }
 
@@ -300,12 +310,18 @@ mod tests {
     #[test]
     fn cms_path_rejects_invalid() {
         assert!(matches!(CmsPath::new(""), Err(CmsPathError::Empty)));
-        assert!(matches!(CmsPath::new("about"), Err(CmsPathError::NoLeadingSlash)));
+        assert!(matches!(
+            CmsPath::new("about"),
+            Err(CmsPathError::NoLeadingSlash)
+        ));
         assert!(matches!(
             CmsPath::new("/a b"),
             Err(CmsPathError::InvalidChar(' '))
         ));
-        assert!(matches!(CmsPath::new("/../etc"), Err(CmsPathError::Traversal)));
+        assert!(matches!(
+            CmsPath::new("/../etc"),
+            Err(CmsPathError::Traversal)
+        ));
         assert!(matches!(
             CmsPath::new("/foo?q"),
             Err(CmsPathError::InvalidChar('?'))
