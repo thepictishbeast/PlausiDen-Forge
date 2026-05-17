@@ -53,6 +53,27 @@ use sha2::{Digest, Sha256};
 /// signing with the classical Ed25519 backend.
 pub const ALG_ED25519: &str = "ed25519";
 
+/// Algorithm slug for ML-DSA-65 (FIPS 204, NIST level 3) —
+/// post-quantum signatures. Backend lands in a downstream crate
+/// `manifest-attest-mldsa`; this crate defines the wire shape
+/// + verifier dispatch path so existing consumers don't change.
+pub const ALG_ML_DSA_65: &str = "ml-dsa-65";
+
+/// Algorithm slug for the hybrid Ed25519 + ML-DSA-65 mode.
+/// In hybrid mode, an artifact is signed independently by both
+/// algorithms; verification requires BOTH to succeed (the
+/// quantum-broken side fails closed without compromising the
+/// classical-strong side).
+pub const ALG_HYBRID_ED25519_ML_DSA_65: &str = "hybrid-ed25519+ml-dsa-65";
+
+/// Algorithm slug for ML-KEM-768 (FIPS 203, NIST level 3) —
+/// post-quantum key encapsulation. Used for symmetric-key
+/// transport (e.g. content-encryption-key wrap in
+/// [`KemEncapsulation`]). Not a signature algorithm — wire-shape
+/// difference reflected in distinct typed surface ([`KemEncapsulation`]
+/// vs [`Attestation`]).
+pub const KEM_ML_KEM_768: &str = "ml-kem-768";
+
 /// Closed enum naming what an attestation covers. Lets the
 /// verifier choose the correct canonical-form policy without
 /// guessing from the bytes.
@@ -272,14 +293,201 @@ pub struct AttestedBundle<T> {
     pub attestation: Attestation,
 }
 
-/// Pluggable signature algorithm. Today only Ed25519; #65 adds
-/// ML-DSA (FIPS 204) + a hybrid variant. The verifier dispatches
-/// on [`Attestation::algorithm`].
+/// Pluggable signature algorithm. Ed25519 backend lives in this
+/// crate; ML-DSA + hybrid backends are registered by downstream
+/// crates that bring in the heavy PQ deps. The verifier
+/// dispatches on [`Attestation::algorithm`].
 pub trait SignatureAlgorithm {
     /// Algorithm slug (e.g. `"ed25519"`, `"ml-dsa-65"`).
     fn slug(&self) -> &'static str;
     /// Verify a signature over `payload`.
     fn verify(&self, payload: &[u8], signature: &[u8], pubkey: &[u8]) -> Result<(), AttestError>;
+}
+
+// ============================================================
+// POST-QUANTUM TYPES (task #65)
+//
+// Wire-shape + dispatch only. The actual ML-DSA + ML-KEM
+// implementations live in `manifest-attest-mldsa` (a downstream
+// crate bringing pqcrypto deps) so consumers that don't need PQ
+// don't pay the dep weight. The verifier in THIS crate routes
+// on the algorithm slug + falls back to UnsupportedAlgorithm
+// when the backend isn't registered.
+// ============================================================
+
+/// Hybrid attestation — two independent signatures over the same
+/// payload, one classical (Ed25519) and one post-quantum
+/// (ML-DSA-65). Verification requires BOTH to succeed.
+///
+/// Why hybrid: lets the platform ship PQ today without trusting
+/// any single algorithm. A future Shor-class attack against
+/// Ed25519 doesn't invalidate the ML-DSA attestation; a
+/// hypothetical ML-DSA classical break doesn't invalidate the
+/// Ed25519 one. Both algorithms must independently succeed for
+/// the bundle to verify.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+pub struct HybridAttestation {
+    /// What the attestation covers.
+    pub kind: AttestableKind,
+    /// Always [`ALG_HYBRID_ED25519_ML_DSA_65`].
+    pub algorithm: String,
+    /// SHA-256 of the signed payload, base64url-no-pad. Shared
+    /// across both signatures.
+    pub payload_sha256_b64: String,
+    /// Classical Ed25519 signature, base64url-no-pad.
+    pub ed25519_signature_b64: String,
+    /// Ed25519 signer fingerprint.
+    pub ed25519_signer_fingerprint: KeyFingerprint,
+    /// Post-quantum ML-DSA signature, base64url-no-pad.
+    pub mldsa_signature_b64: String,
+    /// ML-DSA signer fingerprint.
+    pub mldsa_signer_fingerprint: KeyFingerprint,
+}
+
+/// Public key for an ML-DSA backend. Backend-specific bytes are
+/// opaque; the slug discriminates against future PQ algorithms.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+pub struct PqPublicKey {
+    /// Algorithm slug ([`ALG_ML_DSA_65`] or future variant).
+    pub algorithm: String,
+    /// Public key bytes, base64url-no-pad. Size depends on
+    /// algorithm: ML-DSA-65 is 1952 bytes.
+    pub public_key_b64: String,
+    /// Fingerprint of the key (base64url(SHA256(pubkey_bytes))[..16]).
+    pub fingerprint: KeyFingerprint,
+}
+
+impl PqPublicKey {
+    /// Construct from raw public-key bytes. Caller is responsible
+    /// for ensuring the bytes match the declared algorithm.
+    pub fn from_bytes(algorithm: impl Into<String>, bytes: &[u8]) -> Self {
+        let pk_b64 = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes);
+        let fingerprint = KeyFingerprint::of_verifying_key_bytes(bytes);
+        Self {
+            algorithm: algorithm.into(),
+            public_key_b64: pk_b64,
+            fingerprint,
+        }
+    }
+}
+
+/// Hybrid public-key bundle — both algorithms' public keys.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+pub struct HybridPublicKey {
+    /// Always [`ALG_HYBRID_ED25519_ML_DSA_65`].
+    pub algorithm: String,
+    /// Classical Ed25519 component.
+    pub ed25519: AttestPublicKey,
+    /// Post-quantum ML-DSA component.
+    pub mldsa: PqPublicKey,
+}
+
+impl HybridPublicKey {
+    /// Build from the two component keys. Algorithm slug set
+    /// to [`ALG_HYBRID_ED25519_ML_DSA_65`].
+    pub fn new(ed25519: AttestPublicKey, mldsa: PqPublicKey) -> Self {
+        Self {
+            algorithm: ALG_HYBRID_ED25519_ML_DSA_65.to_string(),
+            ed25519,
+            mldsa,
+        }
+    }
+}
+
+impl HybridAttestation {
+    /// Verify the classical half (Ed25519) against the provided
+    /// hybrid public-key bundle. Use [`Self::verify_hybrid`] to
+    /// also check the post-quantum half; consumers that haven't
+    /// registered an ML-DSA backend yet can call this method to
+    /// at least gate on classical correctness.
+    pub fn verify_ed25519_half(
+        &self,
+        payload: &[u8],
+        pubkey: &HybridPublicKey,
+    ) -> Result<(), AttestError> {
+        // Reconstruct a single-algorithm Attestation for the
+        // classical half + verify normally.
+        let att = Attestation {
+            kind: self.kind,
+            algorithm: ALG_ED25519.to_string(),
+            payload_sha256_b64: self.payload_sha256_b64.clone(),
+            signature_b64: self.ed25519_signature_b64.clone(),
+            signer_fingerprint: self.ed25519_signer_fingerprint.clone(),
+        };
+        att.verify(payload, &pubkey.ed25519)
+    }
+
+    /// Verify the full hybrid attestation. Requires the
+    /// operator to have registered an ML-DSA verifier via
+    /// `mldsa_backend`. Both classical AND post-quantum
+    /// signatures must verify for this method to return Ok.
+    ///
+    /// Until `manifest-attest-mldsa` lands, callers can use
+    /// [`Self::verify_ed25519_half`] which gates on the
+    /// classical-strong signature alone.
+    pub fn verify_hybrid(
+        &self,
+        payload: &[u8],
+        pubkey: &HybridPublicKey,
+        mldsa_backend: &dyn SignatureAlgorithm,
+    ) -> Result<(), AttestError> {
+        // Algorithm slug sanity check.
+        if self.algorithm != ALG_HYBRID_ED25519_ML_DSA_65 {
+            return Err(AttestError::UnsupportedAlgorithm(self.algorithm.clone()));
+        }
+        if mldsa_backend.slug() != pubkey.mldsa.algorithm {
+            return Err(AttestError::UnsupportedAlgorithm(format!(
+                "backend slug {:?} vs pubkey slug {:?}",
+                mldsa_backend.slug(),
+                pubkey.mldsa.algorithm
+            )));
+        }
+        // Verify the classical half first — cheap check, fails
+        // fast on tampered payload.
+        self.verify_ed25519_half(payload, pubkey)?;
+        // Verify the PQ half.
+        if pubkey.mldsa.fingerprint != self.mldsa_signer_fingerprint {
+            return Err(AttestError::FingerprintMismatch {
+                expected: self.mldsa_signer_fingerprint.clone(),
+                got: pubkey.mldsa.fingerprint.clone(),
+            });
+        }
+        let sig_bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(&self.mldsa_signature_b64)
+            .map_err(|e| AttestError::Base64(e.to_string()))?;
+        let pk_bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .decode(&pubkey.mldsa.public_key_b64)
+            .map_err(|e| AttestError::Base64(e.to_string()))?;
+        mldsa_backend.verify(payload, &sig_bytes, &pk_bytes)
+    }
+}
+
+/// ML-KEM-768 (FIPS 203) encapsulation record. Used to wrap a
+/// symmetric key (e.g. content-encryption key) under a recipient's
+/// PQ public key without ever transmitting the symmetric key
+/// directly.
+///
+/// Wire shape only — actual key-encapsulation math lives in the
+/// `manifest-attest-mldsa` crate (or a future `manifest-attest-mlkem`).
+/// This crate defines the typed contract so encapsulation +
+/// transport + on-disk storage formats agree platform-wide.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+pub struct KemEncapsulation {
+    /// Algorithm slug ([`KEM_ML_KEM_768`]).
+    pub algorithm: String,
+    /// Recipient public key fingerprint.
+    pub recipient_fingerprint: KeyFingerprint,
+    /// Encapsulated ciphertext, base64url-no-pad.
+    /// ML-KEM-768 ciphertext is 1088 bytes.
+    pub ciphertext_b64: String,
+    /// Optional sender identity hint (operator-facing only —
+    /// not cryptographically bound).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sender_hint: Option<String>,
 }
 
 /// Errors at the attest boundary.
@@ -415,6 +623,219 @@ mod tests {
         back.attestation
             .verify(&payload_bytes, &k.public())
             .unwrap();
+    }
+
+    /// Mock ML-DSA backend for tests. Accepts any signature whose
+    /// first 4 bytes equal the first 4 bytes of the public key
+    /// (just enough to test dispatch logic without pulling pqcrypto).
+    struct MockMldsa;
+    impl SignatureAlgorithm for MockMldsa {
+        fn slug(&self) -> &'static str {
+            ALG_ML_DSA_65
+        }
+        fn verify(
+            &self,
+            _payload: &[u8],
+            signature: &[u8],
+            pubkey: &[u8],
+        ) -> Result<(), AttestError> {
+            if signature.len() >= 4 && pubkey.len() >= 4 && &signature[..4] == &pubkey[..4] {
+                Ok(())
+            } else {
+                Err(AttestError::InvalidSignature("mock-mismatch".into()))
+            }
+        }
+    }
+
+    fn mk_hybrid_pubkey(ed: AttestPublicKey, mldsa_pk_bytes: &[u8]) -> HybridPublicKey {
+        HybridPublicKey::new(ed, PqPublicKey::from_bytes(ALG_ML_DSA_65, mldsa_pk_bytes))
+    }
+
+    #[test]
+    fn pq_pubkey_round_trips_via_bytes() {
+        let bytes = vec![1u8; 64];
+        let pk = PqPublicKey::from_bytes(ALG_ML_DSA_65, &bytes);
+        assert_eq!(pk.algorithm, ALG_ML_DSA_65);
+        assert_eq!(pk.fingerprint.as_str().len(), 16);
+    }
+
+    #[test]
+    fn hybrid_pubkey_carries_both_halves() {
+        let ed = AttestKey::generate().public();
+        let pq_bytes = vec![7u8; 32];
+        let h = mk_hybrid_pubkey(ed.clone(), &pq_bytes);
+        assert_eq!(h.algorithm, ALG_HYBRID_ED25519_ML_DSA_65);
+        assert_eq!(h.ed25519.fingerprint, ed.fingerprint);
+    }
+
+    #[test]
+    fn hybrid_attestation_serde_round_trips() {
+        let ed_key = AttestKey::generate();
+        let ed_pub = ed_key.public();
+        let payload = b"hybrid-payload";
+        let classical = ed_key.sign(AttestableKind::BuildReport, payload);
+        let pq_pk_bytes = vec![9u8; 32];
+        let pq_pk = PqPublicKey::from_bytes(ALG_ML_DSA_65, &pq_pk_bytes);
+        let att = HybridAttestation {
+            kind: AttestableKind::BuildReport,
+            algorithm: ALG_HYBRID_ED25519_ML_DSA_65.to_string(),
+            payload_sha256_b64: classical.payload_sha256_b64.clone(),
+            ed25519_signature_b64: classical.signature_b64.clone(),
+            ed25519_signer_fingerprint: ed_pub.fingerprint.clone(),
+            mldsa_signature_b64: "ZmFrZS1tbGRzYS1zaWc".into(),
+            mldsa_signer_fingerprint: pq_pk.fingerprint.clone(),
+        };
+        let s = serde_json::to_string(&att).unwrap();
+        let back: HybridAttestation = serde_json::from_str(&s).unwrap();
+        assert_eq!(att, back);
+    }
+
+    #[test]
+    fn hybrid_verify_ed25519_half_uses_classical_path() {
+        let ed_key = AttestKey::generate();
+        let payload = b"hybrid-payload";
+        let classical = ed_key.sign(AttestableKind::BuildReport, payload);
+        let pq_pk_bytes = vec![9u8; 32];
+        let att = HybridAttestation {
+            kind: AttestableKind::BuildReport,
+            algorithm: ALG_HYBRID_ED25519_ML_DSA_65.to_string(),
+            payload_sha256_b64: classical.payload_sha256_b64.clone(),
+            ed25519_signature_b64: classical.signature_b64.clone(),
+            ed25519_signer_fingerprint: ed_key.public().fingerprint.clone(),
+            mldsa_signature_b64: "ZmFrZQ".into(),
+            mldsa_signer_fingerprint: PqPublicKey::from_bytes(ALG_ML_DSA_65, &pq_pk_bytes)
+                .fingerprint,
+        };
+        let hpub = mk_hybrid_pubkey(ed_key.public(), &pq_pk_bytes);
+        att.verify_ed25519_half(payload, &hpub)
+            .expect("classical half should verify");
+    }
+
+    #[test]
+    fn hybrid_verify_full_requires_both_halves() {
+        let ed_key = AttestKey::generate();
+        let payload = b"hybrid-payload";
+        let classical = ed_key.sign(AttestableKind::BuildReport, payload);
+        // The mock PQ backend accepts when sig[..4] == pubkey[..4],
+        // so build the key bytes + signature with the same prefix.
+        let pq_pk_bytes: Vec<u8> = (0..32).collect();
+        let mldsa_sig_bytes: Vec<u8> = (0..64).collect(); // first 4 bytes match
+        let mldsa_sig_b64 =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&mldsa_sig_bytes);
+        let pq_pk = PqPublicKey::from_bytes(ALG_ML_DSA_65, &pq_pk_bytes);
+        let att = HybridAttestation {
+            kind: AttestableKind::BuildReport,
+            algorithm: ALG_HYBRID_ED25519_ML_DSA_65.to_string(),
+            payload_sha256_b64: classical.payload_sha256_b64.clone(),
+            ed25519_signature_b64: classical.signature_b64.clone(),
+            ed25519_signer_fingerprint: ed_key.public().fingerprint.clone(),
+            mldsa_signature_b64: mldsa_sig_b64,
+            mldsa_signer_fingerprint: pq_pk.fingerprint.clone(),
+        };
+        let hpub = mk_hybrid_pubkey(ed_key.public(), &pq_pk_bytes);
+        att.verify_hybrid(payload, &hpub, &MockMldsa)
+            .expect("both halves should verify with mock backend");
+    }
+
+    #[test]
+    fn hybrid_verify_fails_when_pq_half_rejects() {
+        let ed_key = AttestKey::generate();
+        let payload = b"hybrid-payload";
+        let classical = ed_key.sign(AttestableKind::BuildReport, payload);
+        // MockMldsa requires sig[..4] == pubkey[..4]. We deliberately
+        // misalign them — pubkey starts with 0,1,2,3; signature
+        // starts with 9,9,9,9.
+        let pq_pk_bytes: Vec<u8> = (0..32).collect();
+        let mldsa_sig_bytes: Vec<u8> = vec![9u8; 64];
+        let mldsa_sig_b64 =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&mldsa_sig_bytes);
+        let pq_pk = PqPublicKey::from_bytes(ALG_ML_DSA_65, &pq_pk_bytes);
+        let att = HybridAttestation {
+            kind: AttestableKind::BuildReport,
+            algorithm: ALG_HYBRID_ED25519_ML_DSA_65.to_string(),
+            payload_sha256_b64: classical.payload_sha256_b64.clone(),
+            ed25519_signature_b64: classical.signature_b64.clone(),
+            ed25519_signer_fingerprint: ed_key.public().fingerprint.clone(),
+            mldsa_signature_b64: mldsa_sig_b64,
+            mldsa_signer_fingerprint: pq_pk.fingerprint.clone(),
+        };
+        let hpub = mk_hybrid_pubkey(ed_key.public(), &pq_pk_bytes);
+        let r = att.verify_hybrid(payload, &hpub, &MockMldsa);
+        assert!(matches!(r, Err(AttestError::InvalidSignature(_))));
+    }
+
+    #[test]
+    fn hybrid_verify_fails_when_classical_half_tampered() {
+        let ed_key = AttestKey::generate();
+        let classical = ed_key.sign(AttestableKind::BuildReport, b"original");
+        let pq_pk_bytes: Vec<u8> = (0..32).collect();
+        let mldsa_sig_bytes: Vec<u8> = (0..64).collect();
+        let mldsa_sig_b64 =
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&mldsa_sig_bytes);
+        let pq_pk = PqPublicKey::from_bytes(ALG_ML_DSA_65, &pq_pk_bytes);
+        let att = HybridAttestation {
+            kind: AttestableKind::BuildReport,
+            algorithm: ALG_HYBRID_ED25519_ML_DSA_65.to_string(),
+            payload_sha256_b64: classical.payload_sha256_b64.clone(),
+            ed25519_signature_b64: classical.signature_b64.clone(),
+            ed25519_signer_fingerprint: ed_key.public().fingerprint.clone(),
+            mldsa_signature_b64: mldsa_sig_b64,
+            mldsa_signer_fingerprint: pq_pk.fingerprint.clone(),
+        };
+        let hpub = mk_hybrid_pubkey(ed_key.public(), &pq_pk_bytes);
+        // Tampered payload — classical half should fail first.
+        let r = att.verify_hybrid(b"tampered", &hpub, &MockMldsa);
+        assert!(matches!(r, Err(AttestError::DigestMismatch)));
+    }
+
+    #[test]
+    fn hybrid_verify_refuses_wrong_algorithm_slug() {
+        let ed_key = AttestKey::generate();
+        let classical = ed_key.sign(AttestableKind::BuildReport, b"x");
+        let pq_pk_bytes: Vec<u8> = (0..32).collect();
+        let pq_pk = PqPublicKey::from_bytes(ALG_ML_DSA_65, &pq_pk_bytes);
+        let att = HybridAttestation {
+            kind: AttestableKind::BuildReport,
+            algorithm: "not-a-real-algorithm".into(),
+            payload_sha256_b64: classical.payload_sha256_b64.clone(),
+            ed25519_signature_b64: classical.signature_b64.clone(),
+            ed25519_signer_fingerprint: ed_key.public().fingerprint.clone(),
+            mldsa_signature_b64: "x".into(),
+            mldsa_signer_fingerprint: pq_pk.fingerprint.clone(),
+        };
+        let hpub = mk_hybrid_pubkey(ed_key.public(), &pq_pk_bytes);
+        let r = att.verify_hybrid(b"x", &hpub, &MockMldsa);
+        assert!(matches!(r, Err(AttestError::UnsupportedAlgorithm(_))));
+    }
+
+    #[test]
+    fn kem_encapsulation_serde_round_trips() {
+        let pq_pk_bytes = vec![1u8; 64];
+        let recipient = PqPublicKey::from_bytes(KEM_ML_KEM_768, &pq_pk_bytes);
+        let enc = KemEncapsulation {
+            algorithm: KEM_ML_KEM_768.to_string(),
+            recipient_fingerprint: recipient.fingerprint.clone(),
+            ciphertext_b64: "ZmFrZS1jaXBoZXJ0ZXh0".into(),
+            sender_hint: Some("admin@example.com".into()),
+        };
+        let s = serde_json::to_string(&enc).unwrap();
+        let back: KemEncapsulation = serde_json::from_str(&s).unwrap();
+        assert_eq!(enc, back);
+    }
+
+    #[test]
+    fn kem_encapsulation_refuses_unknown_field() {
+        let bad = r#"{"algorithm":"ml-kem-768","recipient-fingerprint":"x","ciphertext-b64":"y","ahem":1}"#;
+        let r: Result<KemEncapsulation, _> = serde_json::from_str(bad);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn pq_constants_are_distinct() {
+        assert_ne!(ALG_ED25519, ALG_ML_DSA_65);
+        assert_ne!(ALG_ED25519, ALG_HYBRID_ED25519_ML_DSA_65);
+        assert_ne!(ALG_ML_DSA_65, ALG_HYBRID_ED25519_ML_DSA_65);
+        assert_ne!(KEM_ML_KEM_768, ALG_ML_DSA_65);
     }
 
     #[test]
