@@ -36,6 +36,7 @@ pub mod locale_html_lang;
 pub mod loom_lint;
 pub mod loom_sync;
 pub mod motion;
+pub mod motion_respects_reduced;
 pub mod path_consistency;
 pub mod perf_budget;
 pub mod phantom_button;

@@ -41,6 +41,7 @@ use forge_phases::link_check::LinkCheckPhase;
 use forge_phases::locale_html_lang::LocaleHtmlLangPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
+use forge_phases::motion_respects_reduced::MotionRespectsReducedPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
@@ -373,6 +374,11 @@ fn run() -> Result<ExitCode> {
         Box::new(LabelConsistencyPhase),
         Box::new(LinkCheckPhase),
         Box::new(MotionPhase),
+        // phase_motion_respects_reduced — every CSS animation /
+        // transition / scroll-behavior must be guarded by
+        // @media (prefers-reduced-motion). WCAG 2.1 SC 2.3.3.
+        // Silent skip when [motion_respects_reduced] missing.
+        Box::new(MotionRespectsReducedPhase),
         Box::new(ContrastPhase),
         // T432 (closes #432): emit SPA client runtime + inject
         // <script> tag into every page WHEN mode is Dynamic or
