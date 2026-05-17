@@ -263,6 +263,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "deploy-onion"
+version = "0.1.0"
+dependencies = [
+ "deploy-core",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
 name = "der"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
