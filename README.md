@@ -129,25 +129,42 @@ theme = "loom-default"
 
 ## Test matrix
 
-Every rendered page is validated across:
+Every rendered page is validated across **24 combinations**:
 
 ```
-static (pre-rendered HTML)  ×  dynamic (server-rendered live)
-desktop viewport            ×  mobile viewport
-light theme                 ×  dark theme
-= 8 combinations per page
+3 themes (light, dark, dark-amoled)
+×
+2 viewports (desktop, mobile)         [tablet is opt-in]
+×
+2 modes (static, dynamic)
+×
+2 debug modes (production, debug)
+= 24 runs per page
 ```
 
 Driven by [PlausiDen-Crawler](https://github.com/thepictishbeast/PlausiDen-Crawler)
-journeys (`journeys/plausiden-smoke{,-mobile,-tablet}.json`) which
-drive Forge's dev server through scripted user flows, capturing
-per-step PNGs + a typed `Report` per combination. The Rust crawler
-(via `audit:rust:*` npm scripts) is the canonical runner; the
-legacy TS path is being deprecated.
+journeys (`journeys/plausiden-smoke{,-mobile,-tablet}{,-dark}.json`).
+The Rust crawler (`audit:rust:matrix` npm script) is canonical;
+the legacy TS path is being deprecated.
 
-Theme variations are simulated via the journey setting
-`prefers-color-scheme` before screenshot — light + dark are CSS-
-variable swaps in the page-shell, not separate bundles.
+Each combo captures per-step PNGs, full HAR (debug mode), video
+of animations + transitions (debug mode), and a typed `Report` of
+findings. Reviewing the recordings + screenshots is the
+perfection-iteration loop — fix the underlying Loom primitive or
+Forge phase, re-run, until pixel-and-behavior perfect.
+
+Themes: `light` / `dark` / `dark-amoled` are SITE-side token sets
+(Loom ships `tokens-light.json`, `tokens-dark.json`, optional
+`tokens-dark-amoled.json`). Browsers report `prefers-color-scheme:
+dark` for both dark variants; the Crawler passes a `?_theme=dark-amoled`
+URL param for the AMOLED-specific variant. AMOLED dark uses pure
+`#000000` background so OLED pixels turn off — saves battery + max
+contrast.
+
+Developers can scope the matrix down via `forge.toml`
+`[test_matrix]`, but production-ready sites should target all 24.
+See [`docs/TESTING.md`](docs/TESTING.md) for full axis definitions,
+opt-out semantics, acceptance gates, and ISO/IEC 25010 mapping.
 
 ## Repository layout
 
