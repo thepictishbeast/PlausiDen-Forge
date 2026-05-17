@@ -62,7 +62,7 @@ fn extract_internal_hrefs(body: &str) -> Vec<String> {
         let after = &search[idx + needle.len()..];
         if let Some(end) = after.find('"') {
             let val = &after[..end];
-            if !is_absolute(val) && !is_special_scheme(val) {
+            if !has_url_scheme(val) && !val.starts_with('#') && !val.starts_with("//") {
                 out.push(val.to_owned());
             }
             search = &after[end + 1..];
@@ -73,12 +73,37 @@ fn extract_internal_hrefs(body: &str) -> Vec<String> {
     out
 }
 
-fn is_absolute(href: &str) -> bool {
-    href.starts_with("http://") || href.starts_with("https://") || href.starts_with("//")
-}
-
-fn is_special_scheme(href: &str) -> bool {
-    href.starts_with("mailto:") || href.starts_with("tel:") || href.starts_with('#')
+/// True for any href that begins with a URL scheme per RFC 3986 §3.1
+/// (`ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) ":"`). Catches every
+/// schemed URL — `http:`, `https:`, `mailto:`, `tel:`, `data:`,
+/// `javascript:`, `blob:`, `file:`, `ws:`, `wss:`, `chrome:`,
+/// `view-source:`, `about:`, `ssh:`, custom schemes — without
+/// maintaining an explicit allowlist. Internal-route validation
+/// applies only to relative paths; everything with a scheme is
+/// considered external + skipped.
+///
+/// BUG ASSUMPTION: an href like `path:foo` (relative path that
+/// happens to contain a colon) would be misclassified as schemed.
+/// In practice URLs of that shape don't appear in PlausiDen
+/// rendered HTML — content paths never contain bare colons. If a
+/// real case surfaces, switch to checking that the colon appears
+/// before the first `/` (which IS how RFC 3986 actually disambiguates).
+fn has_url_scheme(href: &str) -> bool {
+    let mut chars = href.chars();
+    let first = match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() => c,
+        _ => return false,
+    };
+    let _ = first;
+    for c in chars {
+        if c == ':' {
+            return true;
+        }
+        if !(c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.') {
+            return false;
+        }
+    }
+    false
 }
 
 /// Normalize an internal href to a relative-from-static path.
@@ -145,6 +170,84 @@ mod tests {
     #[test]
     fn normalize_fragment_only_returns_none() {
         assert_eq!(normalize_href("#"), None);
+    }
+
+    #[test]
+    fn has_url_scheme_recognizes_known_schemes() {
+        // Every scheme that should be SKIPPED — they're URLs to external
+        // resources, not relative routes for filesystem lookup.
+        for href in [
+            "http://example.com/",
+            "https://example.com/",
+            "mailto:hi@example.com",
+            "tel:+15551234567",
+            "data:image/svg+xml,%3Csvg%3E%3C/svg%3E",
+            "data:text/plain;base64,SGVsbG8=",
+            "javascript:void(0)",
+            "blob:https://example.com/abc-123",
+            "file:///etc/hosts",
+            "about:blank",
+            "view-source:https://example.com/",
+            "chrome://flags",
+            "ws://localhost:8080/",
+            "wss://example.com/socket",
+            "ssh://user@host",
+            "ftp://files.example.com/",
+        ] {
+            assert!(has_url_scheme(href), "should detect scheme on: {href}");
+        }
+    }
+
+    #[test]
+    fn has_url_scheme_rejects_relative_paths() {
+        for href in [
+            "/",
+            "/page.html",
+            "/page.html#frag",
+            "./contact.html",
+            "../parent.html",
+            "contact.html",
+            "#fragment-only",
+        ] {
+            assert!(!has_url_scheme(href), "should NOT detect scheme on: {href}");
+        }
+    }
+
+    #[test]
+    fn extract_skips_data_uris() {
+        // Regression: pre-fix, data:image/svg+xml,... was treated as a
+        // relative route and reported as "static/data:image/...
+        // does not exist", producing dozens of false-positive blockers
+        // on any page with inline SVG references.
+        let body = r##"
+            <link rel="icon" href="data:image/svg+xml,%3Csvg%3E%3C/svg%3E">
+            <a href="/real-route">y</a>
+            <img src="data:image/png;base64,iVBOR..." href="data:image/png;base64,iVBOR...">
+        "##;
+        let hrefs = extract_internal_hrefs(body);
+        assert_eq!(hrefs, vec!["/real-route".to_owned()]);
+    }
+
+    #[test]
+    fn extract_skips_javascript_uris() {
+        let body = r##"
+            <a href="javascript:void(0)">noop</a>
+            <a href="/real">real</a>
+        "##;
+        let hrefs = extract_internal_hrefs(body);
+        assert_eq!(hrefs, vec!["/real".to_owned()]);
+    }
+
+    #[test]
+    fn extract_skips_protocol_relative() {
+        // `//cdn.example.com/x.js` is protocol-relative; treat as
+        // external (not in our static/ tree).
+        let body = r##"
+            <a href="//cdn.example.com/script.js">x</a>
+            <a href="/internal">i</a>
+        "##;
+        let hrefs = extract_internal_hrefs(body);
+        assert_eq!(hrefs, vec!["/internal".to_owned()]);
     }
 
     #[test]
