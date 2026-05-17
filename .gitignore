@@ -19,3 +19,4 @@ __pycache__/
 # T56: private signing key — NEVER commit. attest-pubkey.b64 IS
 # committed (trust anchor); attest-key.b64 is the private half.
 reports/attest-key.b64
+.cargo/

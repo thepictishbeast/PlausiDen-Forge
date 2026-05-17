@@ -25,20 +25,28 @@ toml = { workspace = true }
 # T70: phase_render uses Loom's CMS renderer IN-PROCESS, not via
 # subprocess. Owner directive 2026-05-13: forge actually
 # generates content via the CMS, doesn't merely delegate.
-# Path dep on the sibling repo for now; vendoring or a workspace
-# merge tracked in T70b/T70c.
-loom-cms-render = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-cms-render" }
+#
+# 2026-05-17: switched from local-absolute path dep to git dep so
+# CI on ubuntu-latest can resolve without needing PlausiDen-Loom
+# checked out as a sibling. Local dev that wants edit-then-test
+# can override via .cargo/config.toml with a [patch] entry:
+#
+#   [patch."https://github.com/thepictishbeast/PlausiDen-Loom"]
+#   loom-cms-render = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-cms-render" }
+#   loom-tokens     = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens" }
+#   loom-lint       = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-lint" }
+loom-cms-render = { git = "https://github.com/thepictishbeast/PlausiDen-Loom.git", branch = "main" }
 # T69 (cycle 96 iter 13): pull SKIN_CSS (the loom-tokens skin.css
 # bytes) via include_str! so render phase writes the CURRENT
 # bytes to <static_dir>/loom-skin.css on every build. Closes the
 # silent-stale-skin bug class that caused cycles 95a-g to need
 # manual `cp /home/user/.../loom-tokens/src/skin.css static/`
 # every iteration.
-loom-tokens = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens" }
+loom-tokens = { git = "https://github.com/thepictishbeast/PlausiDen-Loom.git", branch = "main" }
 # T39: phase_loom_lint wraps loom-lint's CSS rules + view-class
 # rules into a Forge phase. RawColour = strict; RawSpacing /
-# RawTime = warn. Same path-dep shape as loom-cms-render.
-loom-lint = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-lint" }
+# RawTime = warn.
+loom-lint = { git = "https://github.com/thepictishbeast/PlausiDen-Loom.git", branch = "main" }
 
 [dev-dependencies]
 # T51: property-based tests on the theme_consistency parser.
