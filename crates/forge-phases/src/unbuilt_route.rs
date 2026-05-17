@@ -11,6 +11,7 @@
 //! pure fragments (`#section`).
 
 use std::collections::BTreeSet;
+use std::path::Path;
 
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 
@@ -27,6 +28,7 @@ impl Phase for UnbuiltRoutePhase {
 
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
         let files = walk_html(&ctx.static_dir, self.name())?;
+        let suppress = forge_toml_suppress_unbuilt_route(&ctx.root);
         let mut findings = Vec::new();
 
         for file in &files {
@@ -40,17 +42,41 @@ impl Phase for UnbuiltRoutePhase {
                 };
                 let path = ctx.static_dir.join(&target);
                 if !path.exists() {
-                    findings.push(Finding::strict(
-                        self.name(),
-                        file.name.clone(),
-                        format!("href=\"{href}\" → static/{target} does not exist"),
-                    ));
+                    let msg = format!("href=\"{href}\" → static/{target} does not exist");
+                    findings.push(if suppress {
+                        Finding::warn(self.name(), file.name.clone(), msg)
+                    } else {
+                        Finding::strict(self.name(), file.name.clone(), msg)
+                    });
                 }
             }
         }
 
         Ok(findings)
     }
+}
+
+/// Read `[poc] suppress_unbuilt_route = true` from `<root>/forge.toml`.
+/// Returns false for any non-true value (missing file, parse error,
+/// key absent, anything other than the literal boolean `true`).
+///
+/// Mirrors the documented poc-mode semantics in forge.toml: in poc
+/// mode, unbuilt routes are warnings (surface in the in-page errors
+/// overlay) rather than fatal build failures. Production mode flips
+/// the suppress flag off and these become strict blockers.
+fn forge_toml_suppress_unbuilt_route(root: &Path) -> bool {
+    let path = root.join("forge.toml");
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return false;
+    };
+    let Ok(parsed) = content.parse::<toml::Value>() else {
+        return false;
+    };
+    parsed
+        .get("poc")
+        .and_then(|p| p.get("suppress_unbuilt_route"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
 }
 
 /// Pull every `href="..."` where the value is not absolute.
@@ -248,6 +274,38 @@ mod tests {
         "##;
         let hrefs = extract_internal_hrefs(body);
         assert_eq!(hrefs, vec!["/internal".to_owned()]);
+    }
+
+    #[test]
+    fn suppress_flag_reads_true() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(
+            dir.path().join("forge.toml"),
+            "[forge]\nmode = \"poc\"\n\n[poc]\nsuppress_unbuilt_route = true\n",
+        )
+        .unwrap();
+        assert!(forge_toml_suppress_unbuilt_route(dir.path()));
+    }
+
+    #[test]
+    fn suppress_flag_reads_false_when_explicit_false() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        std::fs::write(
+            dir.path().join("forge.toml"),
+            "[poc]\nsuppress_unbuilt_route = false\n",
+        )
+        .unwrap();
+        assert!(!forge_toml_suppress_unbuilt_route(dir.path()));
+    }
+
+    #[test]
+    fn suppress_flag_defaults_false_when_missing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        // no forge.toml at all
+        assert!(!forge_toml_suppress_unbuilt_route(dir.path()));
+        // forge.toml exists but no [poc] section
+        std::fs::write(dir.path().join("forge.toml"), "[forge]\nmode = \"poc\"\n").unwrap();
+        assert!(!forge_toml_suppress_unbuilt_route(dir.path()));
     }
 
     #[test]
