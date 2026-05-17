@@ -1,0 +1,122 @@
+{
+  "$schema": "../../../cms-schema.json",
+  "title": "Marco De Luca — Brand designer & art director",
+  "description": "T662 / T74 dogfood: structural mirror of marcodeluca.me as a Forge CmsPage. Phase 1 = HTML+CSS skeleton. Phases 2-3 (interactivity + animation, visual diff) tracked in FORGE_ANIMATION_GAPS.md.",
+  "path": "/",
+  "nav_links": [
+    {"label": "Work", "href": "#work", "current": false},
+    {"label": "About", "href": "#about", "current": false},
+    {"label": "Contact", "href": "#contact", "current": false}
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Brand designer & art director · Milan",
+      "title": "Crafting brands that move people",
+      "lede": "Independent designer working with founders and agencies on identity systems, art direction, and end-to-end brand experiences for music, fashion, and consumer tech."
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-1 — kinetic-type hero",
+      "body": [
+        "The original landing presents the headline as a 3-line kinetic typography rig: each word animates in with a custom split-letter mask + a per-character rotation easing curve. Hovering any word flips its color + drops a subtle drop-shadow on adjacent words.",
+        "Forge has no typography-animation primitive. The Hero variant above degrades gracefully to static text. A CmsSection::KineticTitle { words: Vec<KineticWord>, easing: TimingCurve, on_hover: HoverEffect } variant is queued (T70 sub-task)."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Selected work"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": null,
+      "items": [
+        {
+          "title": "Acme Records — visual identity",
+          "host_sub": "2025 · Music label rebrand",
+          "primary_link": {"label": "Case study", "href": "/work/acme-records"},
+          "avatar": {"kind": "letter", "letter": "A", "color": "violet"}
+        },
+        {
+          "title": "Saona — D2C tea brand launch",
+          "host_sub": "2024 · Brand system + e-commerce art direction",
+          "primary_link": {"label": "Case study", "href": "/work/saona"},
+          "avatar": {"kind": "letter", "letter": "S", "color": "amber"}
+        },
+        {
+          "title": "Lumen — health tracker UI direction",
+          "host_sub": "2024 · App + onboarding visual system",
+          "primary_link": {"label": "Case study", "href": "/work/lumen"},
+          "avatar": {"kind": "letter", "letter": "L", "color": "cyan"}
+        },
+        {
+          "title": "Forma — architecture studio identity",
+          "host_sub": "2023 · Mark + typography + signage program",
+          "primary_link": {"label": "Case study", "href": "/work/forma"},
+          "avatar": {"kind": "letter", "letter": "F", "color": "slate"}
+        }
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-2 — case-study cards with hover video preview",
+      "body": [
+        "The original site replaces the card cover image with an autoplaying muted video on hover (per-card mp4, lazy-loaded, ≤2.4 MB). Forge's CardFeed has no media-on-hover affordance — the Phase 1 mirror uses letter avatars as placeholders.",
+        "Adding CmsCard.hover_video: Option<HoverVideoSpec> with size budgets and a preload strategy field is queued. Without it the lazy-load + decode path needs to live in JS the runtime injects on `mouseenter` — possibly via the T432 dynamic_runtime that just landed."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "About"
+    },
+
+    {
+      "kind": "kv_pair",
+      "heading": null,
+      "items": [
+        {"key": "Based in", "value": "Milan, Italy"},
+        {"key": "Years independent", "value": "Since 2019"},
+        {"key": "Disciplines", "value": "Brand identity, art direction, packaging, motion direction"},
+        {"key": "Recognised by", "value": "Brand New, Awwwards, FWA, It's Nice That, Type Directors Club"},
+        {"key": "Past collaborators", "value": "Pentagram, Sagmeister & Walsh, Apple Music, Spotify, Vogue Italia"}
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-3 — scroll-pinned visual marquee",
+      "body": [
+        "Below About, the original has a horizontally-scrolling client-logo marquee that pins to the viewport for ~120vh of vertical scroll, with logos sweeping past at parallax-coupled speed. Forge has no scroll-coupled animation primitive. A CmsSection::ScrollMarquee { items, pin_height_vh, speed_multiplier } variant is queued.",
+        "Adjacent gap: the marquee items use brand SVG logos at varied aspect ratios. loom-icons currently only ships abstract UI glyphs. A CmsSection::LogoWall { items: Vec<BrandLogo> } variant — also surfaced by the T660 Stripe rebuild — would feed it."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Contact"
+    },
+
+    {
+      "kind": "group",
+      "title": "Get in touch",
+      "body": [
+        "I take on 4-6 brand engagements per year. Booking inquiries: hello@marcodeluca.me",
+        "I respond within 48 hours during business days. For agency collaboration, please include rough scope, timeline, and budget bracket."
+      ]
+    },
+
+    {
+      "kind": "banner",
+      "tone": "info",
+      "text": "Phase-1 structural mirror only — no animation. Phases 2+3 (interactivity + visual diff) tracked in FORGE_ANIMATION_GAPS.md."
+    }
+  ]
+}
