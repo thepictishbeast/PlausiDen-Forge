@@ -1,8 +1,8 @@
 //! `label_consistency` — every (kind, key) pair (where kind is
 //! `a` keyed on `href` or `button` keyed on `data-backend`) must
 //! carry exactly one distinct visible label across the whole
-//! site, UNLESS every element in the group declares
-//! `data-loom-poly-action="true"` to opt out (T513).
+//! site, UNLESS every element in the group declares an opt-out
+//! attribute (T513).
 //!
 //! Bash parity: `phase_label_consistency`. Owner-surfaced bug it
 //! catches: nav link said "Post a Skill" while CTA button said
@@ -16,6 +16,16 @@
 //! * **Partial opt-out** → `Warn`. Annotation is incomplete; the
 //!   author meant to declare polymorphism but missed an element.
 //! * **No opt-out** → `Strict`. Real label-drift bug.
+//!
+//! Opt-out attributes (any one is sufficient):
+//!
+//! * `data-loom-poly-action="true"` — canonical T513 marker for
+//!   polymorphic-action groups (backends keyed to N labels).
+//! * `data-loom-rich-link="true"` — Loom's marker for rich-preview
+//!   anchors (card-feed items, panel rows, brand wordmark). The
+//!   inner text is preview metadata, not a navigation label, so by
+//!   construction it varies across surfaces. Recognized here as an
+//!   equivalent opt-out signal to avoid double-emission in Loom.
 
 use std::collections::BTreeMap;
 
@@ -160,12 +170,13 @@ fn extract_pair(
         // `data-loom-poly-action="true"` and the bare attribute
         // form `data-loom-poly-action`. Anything other than
         // "false" counts as opted-out.
-        let optout_val = extract_attr(tag_open, "data-loom-poly-action=\"");
-        let optout = match optout_val.as_deref() {
-            Some("false") | Some("0") => false,
-            Some(_) => true,
-            None => tag_open.contains("data-loom-poly-action"),
-        };
+        //
+        // Also accepts `data-loom-rich-link` (Loom's marker for
+        // rich-preview anchors / panel rows / brand wordmark)
+        // since inner text on those elements is preview metadata,
+        // not a navigation label.
+        let optout = has_optout_attr(tag_open, "data-loom-poly-action")
+            || has_optout_attr(tag_open, "data-loom-rich-link");
         let Some(close_idx) = after_open.find(close_tag) else {
             break;
         };
@@ -181,6 +192,21 @@ fn extract_attr(tag: &str, prefix: &str) -> Option<String> {
     let after = &tag[idx + prefix.len()..];
     let end = after.find('"')?;
     Some(after[..end].to_owned())
+}
+
+/// Detect opt-out attribute `attr_name`. Accepts:
+///   * `attr_name="true"` (or any value except `"false"` / `"0"`)
+///   * bare attribute form `attr_name`
+/// Returns false for absent attribute, `attr_name="false"`,
+/// `attr_name="0"`.
+fn has_optout_attr(tag: &str, attr_name: &str) -> bool {
+    let quoted = format!("{attr_name}=\"");
+    let val = extract_attr(tag, &quoted);
+    match val.as_deref() {
+        Some("false") | Some("0") => false,
+        Some(_) => true,
+        None => tag.contains(attr_name),
+    }
 }
 
 /// Strip nested tags + entities + collapse whitespace.
@@ -266,6 +292,48 @@ mod tests {
         let body = r#"<button data-backend="x" data-loom-poly-action>Click</button>"#;
         let pairs = extract_button(body);
         assert!(pairs[0].2, "bare attribute counts as opt-out");
+    }
+
+    #[test]
+    fn extract_anchor_recognizes_rich_link_as_optout() {
+        // Loom emits data-loom-rich-link="true" on card-feed items,
+        // panel-list rows, and the brand wordmark anchor. By
+        // construction the inner text is rich preview metadata that
+        // varies across surfaces; label_consistency should treat
+        // this as an equivalent opt-out signal.
+        let body = r#"<a href="/c/x" data-loom-rich-link="true">Rich card content</a>"#;
+        let pairs = extract_anchor(body);
+        assert!(pairs[0].2, "rich-link attribute must count as opt-out");
+    }
+
+    #[test]
+    fn extract_anchor_rich_link_false_is_not_optout() {
+        let body = r#"<a href="/x" data-loom-rich-link="false">x</a>"#;
+        let pairs = extract_anchor(body);
+        assert!(
+            !pairs[0].2,
+            "explicit rich-link=\"false\" must NOT count as opt-out"
+        );
+    }
+
+    #[test]
+    fn extract_button_recognizes_rich_link_as_optout() {
+        // Loom uses rich-link on form buttons too (e.g. Save draft /
+        // Continue → upload on the same data-backend) to signal that
+        // visible text is a CTA per-context, not a stable label.
+        let body = r#"<button data-backend="post-skill" data-loom-rich-link="true">Save draft</button>"#;
+        let pairs = extract_button(body);
+        assert!(pairs[0].2, "button with rich-link must count as opt-out");
+    }
+
+    #[test]
+    fn extract_recognizes_both_polyaction_and_rich_link() {
+        // Either attribute is sufficient — both are accepted as
+        // equivalent opt-out signals.
+        let body_poly = r#"<a href="/" data-loom-poly-action="true">x</a>"#;
+        let body_rich = r#"<a href="/" data-loom-rich-link="true">x</a>"#;
+        assert!(extract_anchor(body_poly)[0].2);
+        assert!(extract_anchor(body_rich)[0].2);
     }
 
     #[test]
