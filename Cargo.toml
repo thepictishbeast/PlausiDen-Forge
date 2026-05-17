@@ -106,6 +106,10 @@ members = [
     # T55: editor-ux-core — typed editor UX state (zoom levels,
     # inspector mode, palette state, AI bar lifecycle).
     "crates/editor-ux-core",
+    # T56: ai-pipeline-core — typed 6-stage AI generation pipeline
+    # (Brief → IA → Wireframe → Content → Tokens → Audit). LLM/LFI
+    # backends are out-of-tree implementations of the Generator trait.
+    "crates/ai-pipeline-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
