@@ -1,0 +1,17 @@
+[package]
+name = "extension-abi"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed ABI every PlausiDen extension projects through. Defines ExtensionManifest + Capability + host-export shape; backend-independent (Wasm Component Model planned, NullHost ships today for tests)."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }

@@ -84,6 +84,13 @@ members = [
     # primitives. Every multi-tenant subsystem (CMS, edit-serve,
     # per-customer Forge build) projects through this surface.
     "crates/tenancy-core",
+    # T45: extension-abi — typed ABI every PlausiDen extension
+    # projects through. Backend-independent.
+    "crates/extension-abi",
+    # T45: extension-host — trait every backend implements + NullHost
+    # reference impl. Wasmtime backend lands in a separate crate so
+    # the heavy dep doesn't pollute consumers.
+    "crates/extension-host",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the

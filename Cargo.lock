@@ -402,6 +402,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "extension-abi"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "extension-host"
+version = "0.1.0"
+dependencies = [
+ "extension-abi",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
