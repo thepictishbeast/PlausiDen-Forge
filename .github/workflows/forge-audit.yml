@@ -27,11 +27,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: thepictishbeast/PlausiDen-Crawler
-          # PlausiDen-Crawler tracks `master` (history diverged from
-          # `main` 2026-04ish; reconverge is queued separately).
-          # Pin explicitly so this CI sees the same branch local
-          # development pushes to.
-          ref: master
+          # 2026-05-17: main and master have converged (#665 close).
+          # Either works; main is the active dev branch per AVP §8b.
+          ref: main
           path: _crawler
 
       - name: setup-python
@@ -44,14 +42,26 @@ jobs:
         with:
           node-version: '20'
 
+      - name: setup-rust
+        uses: dtolnay/rust-toolchain@stable
+
       # --------------------------------------------------------
       # 1. Forge build: every detection phase strict-clean.
+      #    bash forge.sh was retired (T54 2026-05-06). The Rust
+      #    forge-cli is now canonical; this step builds it with
+      #    --release (fast) and runs `forge build` in PoC mode
+      #    (default) so warnings are advisory and only strict
+      #    findings can fail the audit.
       # --------------------------------------------------------
       - name: forge-build
+        env:
+          RUST_BACKTRACE: 1
+          RUST_LOG: info
         run: |
-          bash forge.sh
-          # forge.sh exits non-zero on strict findings; failure here
-          # blocks the merge before crawler even runs.
+          cargo build --release -p forge-cli --locked --verbose
+          ./target/release/forge build
+          # forge-cli exits non-zero on strict findings; failure
+          # here blocks the audit before crawler even runs.
 
       # --------------------------------------------------------
       # 2. Crawler deps + Playwright browsers.
