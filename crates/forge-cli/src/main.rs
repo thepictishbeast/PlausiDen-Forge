@@ -42,6 +42,7 @@ use forge_phases::locale_html_lang::LocaleHtmlLangPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
 use forge_phases::motion_respects_reduced::MotionRespectsReducedPhase;
+use forge_phases::network_target_enforcement::NetworkTargetEnforcementPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
@@ -385,6 +386,11 @@ fn run() -> Result<ExitCode> {
         // background normalization). Silent skip when
         // [print_stylesheet] missing.
         Box::new(PrintStylesheetPhase),
+        // phase_network_target_enforcement — sites declaring a
+        // non-clearnet deploy target (Tor/I2P/IPFS/Gemini/Lokinet)
+        // must not contain clearnet-URL references. Silent skip
+        // for clearnet-only or no-[networks] sites.
+        Box::new(NetworkTargetEnforcementPhase),
         Box::new(ContrastPhase),
         // T432 (closes #432): emit SPA client runtime + inject
         // <script> tag into every page WHEN mode is Dynamic or
