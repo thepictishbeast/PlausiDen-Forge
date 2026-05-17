@@ -1,0 +1,20 @@
+[package]
+name = "region-adaptation"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed RegionProfile — bundles compliance regime + payment providers + search engines per ISO 3166 region. Drives jurisdiction phase, payment-form rendering, sitemap submission."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+i18n-core = { path = "../i18n-core" }
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
