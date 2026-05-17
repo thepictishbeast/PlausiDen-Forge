@@ -1,0 +1,96 @@
+{
+  "$schema": "../../../cms-schema.json",
+  "title": "Stripe — Pricing",
+  "description": "Reproduction of stripe.com/pricing as a Forge CmsPage. T660 / T73 dogfood: every gap surfaced becomes a Forge ticket.",
+  "path": "/pricing.html",
+  "nav_links": [
+    {"label": "Products", "href": "/products.html", "current": false},
+    {"label": "Solutions", "href": "/solutions.html", "current": false},
+    {"label": "Developers", "href": "/developers.html", "current": false},
+    {"label": "Resources", "href": "/resources.html", "current": false},
+    {"label": "Pricing", "href": "/pricing.html", "current": true}
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Pricing",
+      "title": "Only pay for what you use",
+      "lede": "Integrated per-transaction pricing with no setup fees, monthly fees, or hidden costs. Start your integration to get instant access to the Stripe API.",
+      "cta": {
+        "label": "Start now",
+        "href": "/register"
+      }
+    },
+
+    {
+      "kind": "group",
+      "title": "Integrated pricing",
+      "body": [
+        "Combine Stripe's products to build a custom solution and only pay for what you use.",
+        "GAP-T660-1: Stripe shows three tier cards (Integrated · Customized · In-person) here. Forge has no Pricing section variant — the cards collapse into prose paragraphs until we add one. See FORGE_GAPS.md."
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "Integrated — 2.9% + 30¢ per successful card charge",
+      "body": [
+        "Online: 2.9% + 30¢ per successful card charge.",
+        "International cards: +1.5%.",
+        "Currency conversion: +1%.",
+        "All transactions are secured with PCI-DSS Level 1 compliance, end-to-end encryption, and Radar machine-learning fraud protection — included at no additional cost."
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "Customized — let's talk",
+      "body": [
+        "Designed for businesses with large payment volumes or unique business models. Includes Interchange-Plus pricing, country-specific overrides, custom payout schedules, and dedicated account management.",
+        "Contact sales to discuss your volume + product mix."
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "In-person — 2.7% + 5¢ per successful card swipe",
+      "body": [
+        "Stripe Terminal: 2.7% + 5¢ per successful card swipe, dip, or tap.",
+        "Compatible card readers from $59."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Always included, free of charge"
+    },
+
+    {
+      "kind": "kv_pair",
+      "rows": [
+        {"k": "Fraud prevention (Radar)", "v": "Machine-learning + 100k+ adaptive rules across the Stripe network."},
+        {"k": "Dispute mediation", "v": "Stripe handles chargebacks + represents you to the issuer."},
+        {"k": "PCI compliance", "v": "Level 1 PCI-DSS certified. Pass-through compliance via Elements."},
+        {"k": "Dashboard + reporting", "v": "Real-time revenue, payouts, customer cohorts, recurring metrics."},
+        {"k": "Mobile + web SDKs", "v": "Stripe.js, iOS, Android, React Native, with TypeScript types first-class."},
+        {"k": "200+ third-party plugins", "v": "Shopify, Squarespace, WooCommerce, BigCommerce, Wix — pre-built integrations."}
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "Volume discounts and country-specific overrides",
+      "body": [
+        "Custom pricing is available for companies with large payment volumes, high average transaction value, or unique business models. Contact sales to learn more about Stripe Premium support, multi-product discounts, and country-specific Interchange-Plus rates.",
+        "GAP-T660-2: Stripe's actual pricing page includes a country picker (changes currency + rates) and a savings calculator (input monthly volume → discount tier). Both are interactive widgets. Forge currently has no widget primitives. Surfaces a T70 sub-task for typed interactive widgets in the CMS schema."
+      ]
+    },
+
+    {
+      "kind": "banner",
+      "tone": "info",
+      "text": "GAP-T660-3: this rebuild uses only the seven CmsSection variants Forge ships today (Hero, Group, CardFeed, Banner, Form, Heading, KvPair). Stripe's actual page uses ~15 distinct section archetypes. Visual diff against the original screenshot is intentionally NON-pixel-faithful; the gap report (FORGE_GAPS.md) is the deliverable."
+    }
+  ]
+}
