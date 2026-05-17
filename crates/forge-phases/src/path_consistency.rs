@@ -59,11 +59,17 @@ use serde::Deserialize;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CmsPath(String);
 
+/// Why a string failed to parse as a [`CmsPath`].
 #[derive(Debug, PartialEq, Eq)]
 pub enum CmsPathError {
+    /// Input string had zero length.
     Empty,
+    /// Input didn't begin with `/`. CMS paths are always rooted.
     NoLeadingSlash,
+    /// Input contained a character outside `[A-Za-z0-9._/-]`.
     InvalidChar(char),
+    /// Input contained a `..` segment. Rejected to prevent escape
+    /// from the static root during resolution.
     Traversal,
 }
 
@@ -82,6 +88,10 @@ impl std::fmt::Display for CmsPathError {
 }
 
 impl CmsPath {
+    /// Parse + validate `s` as a CMS path. Enforces leading slash,
+    /// allowed-char-set, and the no-traversal rule. Returns the
+    /// typed `CmsPath` on success or `CmsPathError` describing
+    /// the first rule violated.
     pub fn new(s: &str) -> Result<Self, CmsPathError> {
         if s.is_empty() {
             return Err(CmsPathError::Empty);
@@ -106,6 +116,8 @@ impl CmsPath {
         Ok(Self(s.to_owned()))
     }
 
+    /// Borrow the underlying path string. Always starts with `/`
+    /// and contains only allowed characters per [`CmsPath::new`].
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -140,24 +152,41 @@ impl CmsPath {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PathConsistencyFinding {
     /// `path` field missing or unreadable.
-    PathFieldMissing { source: String },
+    PathFieldMissing {
+        /// CMS source file the field is missing from.
+        source: String,
+    },
     /// `path` field present but fails `CmsPath::new` validation.
     PathInvalid {
+        /// CMS source file containing the invalid path.
         source: String,
+        /// The raw string from the `path` field, as authored.
         raw: String,
+        /// Human-readable explanation of which validation rule fired.
         why: String,
     },
     /// `path` doesn't follow the .html / / / "/" mapping rules.
-    AmbiguousMapping { source: String, raw: String },
+    AmbiguousMapping {
+        /// CMS source file containing the ambiguous path.
+        source: String,
+        /// The raw string from the `path` field, as authored.
+        raw: String,
+    },
     /// `path` resolves but the target file doesn't exist.
     TargetMissing {
+        /// CMS source file declaring the path.
         source: String,
+        /// The raw string from the `path` field, as authored.
         raw: String,
+        /// Expected location of the static file (under `static_dir`).
         target: PathBuf,
     },
 }
 
 impl PathConsistencyFinding {
+    /// Render this ADT finding as a forge-core `Finding`. All
+    /// variants emit `Severity::Strict` — path drift is never
+    /// safe to ship.
     pub fn as_finding(&self) -> Finding {
         const PHASE: &str = "path_consistency";
         match self {
@@ -210,6 +239,9 @@ struct CmsPagePathField {
 // Phase impl
 // ============================================================
 
+/// `path_consistency` phase — verifies every `cms/*.json` page's
+/// declared `path` resolves to an existing static file under the
+/// configured `static_dir`.
 #[derive(Debug, Default)]
 pub struct PathConsistencyPhase;
 
