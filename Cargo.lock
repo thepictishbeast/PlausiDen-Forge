@@ -263,6 +263,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "deploy-gemini"
+version = "0.1.0"
+dependencies = [
+ "deploy-core",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "deploy-i2p"
 version = "0.1.0"
 dependencies = [
@@ -282,6 +292,16 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror",
+]
+
+[[package]]
+name = "deploy-lokinet"
+version = "0.1.0"
+dependencies = [
+ "deploy-core",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
