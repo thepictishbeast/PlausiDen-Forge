@@ -21,36 +21,55 @@ jobs:
   fmt:
     name: rustfmt
     runs-on: ubuntu-latest
+
+    env:
+      RUST_BACKTRACE: 1
+      RUST_LOG: info
+      CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-      - run: cargo fmt --all -- --check
+      - run: cargo fmt --all -- --check --verbose
 
   clippy:
     name: clippy
     runs-on: ubuntu-latest
+
+    env:
+      RUST_BACKTRACE: 1
+      RUST_LOG: info
+      CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-      - run: cargo clippy --workspace --all-targets --locked
+      - run: cargo clippy --workspace --all-targets --locked --verbose
 
   test:
     name: test
     runs-on: ubuntu-latest
+
+    env:
+      RUST_BACKTRACE: 1
+      RUST_LOG: info
+      CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --workspace --locked
+      - run: cargo test --workspace --locked --verbose -- --nocapture
 
   doc:
     name: doc
     runs-on: ubuntu-latest
-    # T-doc-debt: re-enable RUSTDOCFLAGS=-D warnings when missing_docs gap closed
+
+    env:
+      RUST_BACKTRACE: 1
+      RUST_LOG: info
+      CARGO_TERM_COLOR: always    # T-doc-debt: re-enable RUSTDOCFLAGS=-D warnings when missing_docs gap closed
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo doc --workspace --no-deps --locked
+      - run: cargo doc --workspace --no-deps --locked --verbose
