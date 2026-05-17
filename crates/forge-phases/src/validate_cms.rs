@@ -88,7 +88,20 @@ impl ValidateCmsFinding {
 // ============================================================
 
 /// Resolve the loom binary path. Returns the FIRST candidate
-/// that exists and is executable.
+/// that exists and is executable. Search order:
+///
+///   1. `LOOM_BIN` env (operator override; explicit absolute path).
+///   2. `$CARGO_TARGET_DIR/release/loom`, then `.../debug/loom`
+///      (honors a shared cargo target dir — the common
+///      out-of-tree layout for multi-crate workspaces).
+///   3. `./target/release/loom`, `./target/debug/loom` (cwd-local
+///      cargo build — works when forge is run from a workspace
+///      root that includes loom-cli as a member).
+///   4. `../PlausiDen-Loom/target/{release,debug}/loom` (sibling-
+///      repo convention — Forge and Loom live as sibling
+///      `PlausiDen-*` checkouts under one parent dir on every
+///      PlausiDen contributor's machine).
+///   5. `$PATH` lookup as a last resort.
 fn resolve_loom_bin() -> Result<PathBuf, Vec<PathBuf>> {
     if let Ok(env) = std::env::var("LOOM_BIN") {
         let p = PathBuf::from(&env);
@@ -97,12 +110,17 @@ fn resolve_loom_bin() -> Result<PathBuf, Vec<PathBuf>> {
         }
         return Err(vec![p]);
     }
-    let candidates = [
-        PathBuf::from("/home/user/cargo-target/release/loom"),
-        PathBuf::from("/home/user/cargo-target/debug/loom"),
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    if let Ok(target_dir) = std::env::var("CARGO_TARGET_DIR") {
+        candidates.push(Path::new(&target_dir).join("release/loom"));
+        candidates.push(Path::new(&target_dir).join("debug/loom"));
+    }
+    candidates.extend([
         PathBuf::from("./target/release/loom"),
         PathBuf::from("./target/debug/loom"),
-    ];
+        PathBuf::from("../PlausiDen-Loom/target/release/loom"),
+        PathBuf::from("../PlausiDen-Loom/target/debug/loom"),
+    ]);
     for c in &candidates {
         if is_exec(c) {
             return Ok(c.clone());
@@ -117,7 +135,7 @@ fn resolve_loom_bin() -> Result<PathBuf, Vec<PathBuf>> {
             }
         }
     }
-    Err(candidates.to_vec())
+    Err(candidates)
 }
 
 fn is_exec(p: &Path) -> bool {
