@@ -917,6 +917,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "manifest-attest"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "ed25519-dalek",
+ "rand_core 0.6.4",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
+]
+
+[[package]]
 name = "manifest-codegen"
 version = "0.1.0"
 dependencies = [
