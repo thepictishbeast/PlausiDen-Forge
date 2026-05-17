@@ -45,6 +45,9 @@ loom-lint = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-lint"
 # AVP-2 Tier 6 mandates proptest for any phase that ingests
 # arbitrary input (here: arbitrary CSS bytes).
 proptest = { workspace = true }
+# T432: dynamic_runtime phase mutates the static dir; tests use
+# isolated tempdirs to avoid cross-test interference.
+tempfile = { workspace = true }
 
 [lints.rust]
 # AVP-2 Tier 1: deny unsafe outside annotated SAFETY blocks.

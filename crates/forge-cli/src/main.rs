@@ -29,6 +29,7 @@ use forge_phases::contrast::ContrastPhase;
 use forge_phases::crawl::CrawlPhase;
 use forge_phases::csp::CspPhase;
 use forge_phases::csp_devmode::CspDevmodePhase;
+use forge_phases::dynamic_runtime::DynamicRuntimePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
@@ -347,6 +348,14 @@ fn run() -> Result<ExitCode> {
         Box::new(LinkCheckPhase),
         Box::new(MotionPhase),
         Box::new(ContrastPhase),
+        // T432 (closes #432): emit SPA client runtime + inject
+        // <script> tag into every page WHEN mode is Dynamic or
+        // Hybrid. No-op in Poc/Production/Static so legacy SSG
+        // workflows are byte-identical. Runs after all linting
+        // and audit phases so they see the pre-injection HTML,
+        // but before CrawlPhase so the runtime gets exercised
+        // by the headless browser audit.
+        Box::new(DynamicRuntimePhase),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
         // infra issues surface earlier; runtime-only regressions
         // (placeholder text in DOM, ARIA drift, axe runtime) get

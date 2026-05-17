@@ -84,6 +84,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # its deterministic unit tests.
 proptest = "1"
 
+# T432: phases that mutate the static dir use tempfile to keep
+# tests hermetic. RAII cleanup, no test cross-contamination.
+tempfile = "3"
+
 # T56: Ed25519 keypair + signature for the build-report Merkle
 # chain attestation. ed25519-dalek is the canonical RustCrypto
 # implementation, audited, no_std-capable, used by Solana / Tor /
