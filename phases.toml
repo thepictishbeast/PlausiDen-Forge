@@ -1,0 +1,230 @@
+# phases.toml — declared Forge build-phase surface.
+#
+# Each [phases.NAME] entry is projected through manifest_core::
+# projections::phases_toml::to_descriptors() into a typed
+# PhaseDescriptor that downstream consumers (forge-cli pipeline
+# assembly, admin UI, coverage gate) read.
+#
+# Schema:
+#   summary          — one-line human description.
+#   default_severity — "info" | "warn" | "strict".
+#   depends_on       — phase IDs that must run before this one
+#                      (used for topo-sort, must be acyclic).
+#   implements       — optional capability ID. When set, the
+#                      coverage gate counts this phase as a
+#                      handler for that capability.
+#
+# This file is the declarative source of truth. Adding a phase
+# module under crates/forge-phases/src/ without an entry here
+# makes the manifest gate fail.
+
+[meta]
+schema_version = 1
+
+# ============================================================
+# Token + theme layer (no upstream deps)
+# ============================================================
+[phases.tokens]
+summary          = "Loom token surface presence + minimum coverage check"
+default_severity = "warn"
+
+[phases.dual-theme]
+summary          = "Light + dark theme parity across components"
+default_severity = "warn"
+
+[phases.theme-consistency]
+summary          = "Theme-token usage consistent across pages"
+default_severity = "warn"
+
+[phases.theme-contrast]
+summary          = "WCAG 2.1 AA contrast ratio across every theme"
+default_severity = "strict"
+depends_on       = ["tokens", "dual-theme"]
+
+[phases.contrast]
+summary          = "Per-page contrast audit (single-theme path)"
+default_severity = "strict"
+
+# ============================================================
+# HTML structural + semantic layer
+# ============================================================
+[phases.html-semantic]
+summary          = "Sectioning + heading hierarchy + landmark rules"
+default_severity = "strict"
+
+[phases.html-walk]
+summary          = "Shared HTML traversal primitive (no findings)"
+default_severity = "info"
+
+[phases.a11y-landmarks]
+summary          = "ARIA landmark coverage (main / nav / footer / etc.)"
+default_severity = "strict"
+
+[phases.id-strategy]
+summary          = "Unique + stable IDs across pages"
+default_severity = "warn"
+
+[phases.label-consistency]
+summary          = "Form labels reference inputs by stable IDs"
+default_severity = "strict"
+
+[phases.path-consistency]
+summary          = "Internal link paths match generated routes"
+default_severity = "strict"
+
+# ============================================================
+# Security + CSP layer
+# ============================================================
+[phases.csp]
+summary          = "Content-Security-Policy meta + header validation"
+default_severity = "strict"
+
+[phases.csp-devmode]
+summary          = "CSP relaxation gate for `forge serve` dev mode"
+default_severity = "warn"
+
+[phases.sri]
+summary          = "Sub-resource integrity hashes for external scripts"
+default_severity = "strict"
+
+[phases.external-assets]
+summary          = "External-asset allowlist (no surprise CDN pulls)"
+default_severity = "strict"
+
+# ============================================================
+# Backend wiring layer
+# ============================================================
+[phases.phantom-button]
+summary          = "Buttons/forms reference declared backends only"
+default_severity = "strict"
+implements       = "backend-coverage"
+
+[phases.backend-coverage]
+summary          = "WIRED/DECLARED/PHANTOM/PARTIAL backend audit"
+default_severity = "strict"
+implements       = "backend-coverage"
+
+[phases.unbuilt-route]
+summary          = "All declared backend routes have impl files"
+default_severity = "strict"
+
+# ============================================================
+# Performance + budget layer
+# ============================================================
+[phases.perf-budget]
+summary          = "Per-page byte budget — page weight cap"
+default_severity = "strict"
+
+[phases.asset-optimization]
+summary          = "Images use modern formats (AVIF/WebP) + alt text"
+default_severity = "warn"
+
+[phases.carbon-budget]
+summary          = "Sustainable Web Design v4 g CO2/page budget"
+default_severity = "warn"
+
+# ============================================================
+# Loom design-system layer
+# ============================================================
+[phases.loom-lint]
+summary          = "No raw class strings outside loom-components"
+default_severity = "strict"
+implements       = "loom-discipline"
+
+[phases.loom-sync]
+summary          = "loom-tokens output in sync with consumed CSS"
+default_severity = "strict"
+
+# ============================================================
+# Locale + jurisdiction layer
+# ============================================================
+[phases.locale-html-lang]
+summary          = "html[lang] matches declared locale (WCAG SC 3.1.1)"
+default_severity = "strict"
+
+[phases.iso-8601]
+summary          = "All dates render in ISO 8601 form"
+default_severity = "warn"
+
+[phases.jurisdiction-compliance]
+summary          = "Runtime compliance markers per declared jurisdiction"
+default_severity = "strict"
+
+[phases.required-pages]
+summary          = "Site-type + jurisdiction required pages present"
+default_severity = "strict"
+
+# ============================================================
+# SEO + discoverability
+# ============================================================
+[phases.seo]
+summary          = "Per-page title + meta description + OG/Twitter meta"
+default_severity = "warn"
+
+[phases.structured-data]
+summary          = "Schema.org JSON-LD validation per page"
+default_severity = "warn"
+
+[phases.link-check]
+summary          = "Internal + external link reachability"
+default_severity = "warn"
+
+# ============================================================
+# Motion + accessibility
+# ============================================================
+[phases.motion]
+summary          = "Motion primitives declared + guarded"
+default_severity = "warn"
+
+[phases.motion-respects-reduced]
+summary          = "WCAG 2.1 SC 2.3.3 prefers-reduced-motion guard"
+default_severity = "strict"
+
+[phases.print-stylesheet]
+summary          = "Print @media stylesheet present + valid"
+default_severity = "info"
+
+# ============================================================
+# Alt-network deploy targets
+# ============================================================
+[phases.network-target-enforcement]
+summary          = "Refuse clearnet/protocol-relative refs on Tor/I2P/Gemini targets"
+default_severity = "strict"
+
+[phases.reader-safety]
+summary          = "Tor-mode reader-side audit (no inline JS / cookies / @font-face)"
+default_severity = "strict"
+
+[phases.dns-hygiene-lint]
+summary          = "DNS record checklist per declared site features"
+default_severity = "warn"
+
+# ============================================================
+# CMS + content layer
+# ============================================================
+[phases.validate-cms]
+summary          = "Typed cms-core::Page validation pre-render"
+default_severity = "strict"
+
+[phases.annotation-review]
+summary          = "Annotator session JSON → Forge Findings"
+default_severity = "warn"
+
+# ============================================================
+# Runtime / dynamic layer
+# ============================================================
+[phases.crawl]
+summary          = "Live-site crawl handoff to PlausiDen-Crawler"
+default_severity = "warn"
+
+[phases.dynamic-runtime]
+summary          = "Dynamic-rendering surface assertions"
+default_severity = "warn"
+
+[phases.render]
+summary          = "Final HTML render correctness check"
+default_severity = "strict"
+
+[phases.self-check]
+summary          = "Forge pipeline self-consistency assertions"
+default_severity = "strict"

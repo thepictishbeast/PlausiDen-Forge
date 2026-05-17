@@ -9,5 +9,7 @@
 //!
 //! Currently shipping:
 //!   * [`backends_toml`] — app-level `backends.toml` (T31)
+//!   * [`phases_toml`]   — workspace-level `phases.toml` (T32)
 
 pub mod backends_toml;
+pub mod phases_toml;
