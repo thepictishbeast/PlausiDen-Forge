@@ -228,6 +228,42 @@ mode = "production"
 theme = "loom-default"
 ```
 
+## Pre-commit secrets gate
+
+`forge audit secrets` refuses to ship filenames that match
+dangerous secret-shaped patterns (private keys, certificates,
+dotenv, password stores). Install the pre-commit hook in any
+git repo with one command:
+
+```sh
+forge audit init-hook
+# → wrote .githooks/pre-commit (mode 0755)
+git config core.hooksPath .githooks   # one-time, per clone
+```
+
+The hook runs `forge audit secrets --explain` against the
+staged-paths set on every commit. Non-zero exit refuses the
+commit. The hook fails-open with a warning if `forge` isn't on
+`$PATH` (so cloned-but-not-built repos don't break commits) —
+re-install via `forge audit init-hook --force` once you've
+rebuilt the binary.
+
+Idempotent: re-running `forge audit init-hook` against an
+identical existing hook is a no-op. If the existing hook
+differs (operator customized it), the command refuses to
+overwrite without `--force`.
+
+Verify the gate works:
+
+```sh
+touch test-private-key.pem
+git add test-private-key.pem
+git commit -m 'should be rejected'
+# → 'forge audit secrets: 1 secret-shaped path(s) found — refuse to commit'
+git restore --staged test-private-key.pem
+rm test-private-key.pem
+```
+
 ## Test matrix
 
 Every rendered page is validated across **24 combinations**:

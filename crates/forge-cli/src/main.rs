@@ -200,6 +200,25 @@ enum AuditAction {
         #[arg(long, default_value_t = 5.0)]
         threshold: f64,
     },
+    /// Install a pre-commit hook that runs `forge audit secrets`
+    /// against staged changes + refuses commits that introduce
+    /// secret-shaped filenames.
+    ///
+    /// Writes `.githooks/pre-commit` (chmod 0755), prints the
+    /// `git config core.hooksPath .githooks` command the operator
+    /// needs to run to activate it, and reports success.
+    ///
+    /// Exit codes:
+    ///   0 — hook written (or already up-to-date)
+    ///   1 — hook present but content differs (use --force to overwrite)
+    ///   2 — fatal (can't write to .githooks/, etc.)
+    InitHook {
+        /// Overwrite an existing `.githooks/pre-commit` with a
+        /// different body. Without this, the command refuses to
+        /// replace any non-identical existing hook.
+        #[arg(long, default_value_t = false)]
+        force: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1190,6 +1209,7 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
             crate_name,
             threshold,
         } => run_audit_mutants(root, *run, crate_name, *threshold),
+        AuditAction::InitHook { force } => cmd_audit_init_hook(root, *force),
         AuditAction::Secrets { paths, explain } => {
             let scan_targets: Vec<std::path::PathBuf> = if paths.is_empty() {
                 git_staged_paths(root)
@@ -1228,6 +1248,87 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
             Ok(ExitCode::from(1))
         }
     }
+}
+
+/// Pre-commit hook script body. Invokes `forge audit secrets`
+/// against the staged-paths set; non-zero exit refuses the
+/// commit. Stable + idempotent — same body on every install so
+/// re-running `forge audit init-hook` is a no-op unless the
+/// canonical body has been edited deliberately.
+const PRECOMMIT_HOOK_BODY: &str = "#!/usr/bin/env bash
+# pre-commit hook installed by `forge audit init-hook`.
+# Refuses commits that introduce filenames matching dangerous
+# secret-shaped patterns (private keys, certs, dotenv, password
+# stores). If `forge` is missing, the hook fails open with a
+# warning rather than blocking — operator can re-install via
+# `forge audit init-hook --force` once forge is rebuilt.
+set -euo pipefail
+if ! command -v forge >/dev/null 2>&1; then
+    echo 'pre-commit: forge binary not on PATH — secret scan skipped' >&2
+    exit 0
+fi
+exec forge audit secrets --explain
+";
+
+fn cmd_audit_init_hook(root: &std::path::Path, force: bool) -> Result<ExitCode> {
+    let hooks_dir = root.join(".githooks");
+    let hook_path = hooks_dir.join("pre-commit");
+
+    std::fs::create_dir_all(&hooks_dir)
+        .with_context(|| format!("create_dir_all {}", hooks_dir.display()))?;
+
+    if hook_path.exists() {
+        let existing = std::fs::read_to_string(&hook_path)
+            .with_context(|| format!("read existing {}", hook_path.display()))?;
+        if existing == PRECOMMIT_HOOK_BODY {
+            println!("forge audit init-hook: .githooks/pre-commit already up-to-date — no change.");
+            return Ok(ExitCode::SUCCESS);
+        }
+        if !force {
+            eprintln!(
+                "forge audit init-hook: .githooks/pre-commit exists with different content. \
+                 Use --force to overwrite (review the existing hook first; the operator may \
+                 have customized it)."
+            );
+            return Ok(ExitCode::from(1));
+        }
+    }
+
+    std::fs::write(&hook_path, PRECOMMIT_HOOK_BODY)
+        .with_context(|| format!("write {}", hook_path.display()))?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(&hook_path)
+            .with_context(|| format!("metadata {}", hook_path.display()))?
+            .permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&hook_path, perms)
+            .with_context(|| format!("chmod 0755 {}", hook_path.display()))?;
+    }
+
+    println!(
+        "forge audit init-hook: wrote {} ({} bytes, mode 0755).
+
+To activate (one-time per clone):
+    git config core.hooksPath .githooks
+
+To verify before committing real changes:
+    touch test-private-key.pem
+    git add test-private-key.pem
+    git commit -m 'should be rejected'
+    # → 'forge audit secrets: 1 secret-shaped path(s) found — refuse to commit'
+    git restore --staged test-private-key.pem
+    rm test-private-key.pem
+
+To re-install if the canonical body changes in a future Forge
+release:
+    forge audit init-hook --force",
+        hook_path.display(),
+        PRECOMMIT_HOOK_BODY.len(),
+    );
+    Ok(ExitCode::SUCCESS)
 }
 
 fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<ExitCode> {
