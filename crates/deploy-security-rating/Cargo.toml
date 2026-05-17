@@ -1,0 +1,17 @@
+[package]
+name = "deploy-security-rating"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed per-deploy-target security rating — projects deploy-core::SecurityProfile into a comparable score the admin UI + manifest gate consume."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+deploy-core = { path = "../deploy-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
