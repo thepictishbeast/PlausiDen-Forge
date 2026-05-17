@@ -59,6 +59,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod coverage;
 pub mod ownership;
+pub mod projections;
 
 pub use coverage::{CoverageGap, CoveragePolicy, CoverageReport};
 pub use ownership::Ownership;
