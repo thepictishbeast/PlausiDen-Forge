@@ -32,6 +32,13 @@ jobs:
           ref: main
           path: _crawler
 
+      - name: checkout-loom
+        uses: actions/checkout@v4
+        with:
+          repository: thepictishbeast/PlausiDen-Loom
+          ref: main
+          path: _loom
+
       - name: setup-python
         uses: actions/setup-python@v5
         with:
@@ -53,6 +60,17 @@ jobs:
       #    (default) so warnings are advisory and only strict
       #    findings can fail the audit.
       # --------------------------------------------------------
+      - name: build-loom-cli
+        # Forge's validate_cms + theme_contrast phases shell out to the
+        # `loom` binary. Build it from the sibling _loom checkout and
+        # export LOOM_BIN so Forge picks it up.
+        working-directory: _loom
+        env:
+          RUST_BACKTRACE: 1
+        run: |
+          cargo build --release -p loom-cli --locked --verbose
+          echo "LOOM_BIN=$PWD/target/release/loom" >> "$GITHUB_ENV"
+
       - name: forge-build
         env:
           RUST_BACKTRACE: 1
