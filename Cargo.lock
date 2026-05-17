@@ -797,6 +797,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "manifest-codegen-macros"
+version = "0.1.0"
+dependencies = [
+ "manifest-codegen",
+ "manifest-core",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "manifest-core"
 version = "0.1.0"
 dependencies = [

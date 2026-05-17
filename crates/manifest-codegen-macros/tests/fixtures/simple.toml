@@ -1,0 +1,18 @@
+platform = "plausiden-test"
+schema-version = "1"
+
+[[capabilities]]
+id = "auth"
+summary = "user auth"
+ownership = "forge"
+handlers = ["forge-phases::auth"]
+ui = ["cms-admin::auth"]
+tests = ["forge-phases::auth::tests::ok"]
+docs = ["docs/auth.md"]
+
+[[phases]]
+id = "p-auth"
+implements = "auth"
+summary = "auth phase"
+default-severity = "strict"
+depends-on = []

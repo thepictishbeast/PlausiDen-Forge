@@ -1,0 +1,22 @@
+[package]
+name = "manifest-codegen-macros"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Function-like proc-macros that project a PlatformManifest into Rust at compile time (companion to build.rs path in manifest-codegen)."
+
+[lib]
+proc-macro = true
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+manifest-core = { path = "../manifest-core" }
+manifest-codegen = { path = "../manifest-codegen" }
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }
