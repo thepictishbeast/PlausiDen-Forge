@@ -303,6 +303,38 @@ Developers can scope the matrix down via `forge.toml`
 See [`docs/TESTING.md`](docs/TESTING.md) for full axis definitions,
 opt-out semantics, acceptance gates, and ISO/IEC 25010 mapping.
 
+## Replay (trend + churn analysis)
+
+The build-report chain (`reports/build-*.json`) grows on every
+`forge build`. `forge-replay` walks that history + surfaces three
+views useful for triage:
+
+```sh
+cargo run --release -p forge-replay -- --last 10
+```
+
+- **Build trend table** — last N builds with strict / warn /
+  duration columns. Spot drift over time (warn count slowly
+  climbing? duration regressing? strict appearing mid-week?)
+- **Findings churn** — what was added / removed since the
+  previous build, grouped by phase. Surfaces flapping detectors
+  (a finding that appears + disappears across builds is more
+  interesting than a stable one).
+- **Slow-URL hotspots** — top URLs by mean + max ms, aggregated
+  from the dev-server slow log (`forge-serve` writes here when
+  `SLOW_REQUEST_MS_THRESHOLD` is exceeded). Catches per-route
+  regressions before users do.
+
+`--root <path>` to point at a different project. `--slow-log
+<path>` to use a non-default slow-log location. The tool is
+read-only — it doesn't modify reports, doesn't trigger builds,
+and exits 0 unless file I/O fails.
+
+`forge-replay` is the triage helper; **forge build** is the
+gate. Pair them: build cleanly → confirm via `forge verify
+--chain --signatures` → run `forge-replay` to see the new build
+in trend context.
+
 ## Repository layout
 
 ```
@@ -311,7 +343,7 @@ crates/
   forge-phases/    Each phase as its own module
   forge-cli/       `forge` binary
   forge-serve/     Static file server for local preview
-  forge-replay/    Re-run a recorded build against a new tree
+  forge-replay/    Trend + churn analysis over the build-report history (see §Replay below)
 ```
 
 ## Ecosystem integration

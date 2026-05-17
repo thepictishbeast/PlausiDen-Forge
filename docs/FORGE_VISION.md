@@ -397,7 +397,7 @@ What an agent gets:
 | Inline annotation grammar (`AVP-PASS-N:` etc.) | shipped (doctrine) |
 | `forge-watch` — inotify re-run | queued |
 | `forge serve` — local preview server | partial (forge-serve crate scaffolded) |
-| `forge replay` — replay a build report | partial (forge-replay scaffolded) |
+| `forge replay` — trend + churn + slow-URL analysis over build-report history | ✅ shipped (`forge-replay` binary; `--last N` for trend table; findings churn vs previous; slow-URL hotspots from forge-serve log) |
 | Cross-repo CROSSFIX commits | doctrine — happens organically |
 
 ### 4.9 Documentation
@@ -1007,8 +1007,10 @@ These are owner-implied or persona-derived:
   from CLI for SaaS deployment.
 - **`forge serve`** — local preview server with hot reload (the
   scaffolded `forge-serve` crate completed).
-- **`forge replay`** — replay a build report into a future
-  audit run (the scaffolded `forge-replay` crate completed).
+- **`forge replay`** — trend + churn + slow-URL triage over the
+  build-report chain history. **Shipped** as the `forge-replay`
+  binary (cargo run --release -p forge-replay -- --last 10).
+  Read-only triage helper, not a gate.
 - **Annotator integration** — Forge phase consumes Annotator
   session JSON, surfaces the human-flagged elements as findings.
 - **API-key auth** for agentic + CI integrations.
