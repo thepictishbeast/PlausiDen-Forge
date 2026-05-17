@@ -1,0 +1,19 @@
+[package]
+name = "i18n-fonts"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Per-script typed FontStack + Unicode-range emitter. Companion to i18n-core::Script — picks an appropriate font fallback chain per writing system."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+i18n-core = { path = "../i18n-core" }
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

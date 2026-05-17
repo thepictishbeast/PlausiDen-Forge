@@ -741,6 +741,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "i18n-fonts"
+version = "0.1.0"
+dependencies = [
+ "i18n-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "id-arena"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
