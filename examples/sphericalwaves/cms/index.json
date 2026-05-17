@@ -1,0 +1,106 @@
+{
+  "$schema": "../../../cms-schema.json",
+  "title": "Spherical Waves — sound + form",
+  "description": "T662 / T74 cycle 2: structural mirror of sphericalwaves.com. 3D + soundscape interactivity is the headline gap; the Phase-1 mirror reduces the page to its IA + content.",
+  "path": "/",
+  "nav_links": [
+    {"label": "Works", "href": "#works", "current": false},
+    {"label": "Process", "href": "#process", "current": false},
+    {"label": "Contact", "href": "#contact", "current": false}
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Sound design · 3D direction · Studio",
+      "title": "Sculpting sound into space",
+      "lede": "An independent studio crafting spatial audio, 3D environments, and synesthetic experiences for cultural institutions, brands, and music labels."
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-6 — Three.js / WebGL canvas section variant",
+      "body": [
+        "The original landing is a full-bleed WebGL canvas (Three.js) rendering a generative sphere of particles that respond to the cursor + an FFT of a looping ambient pad. Forge has zero 3D / WebGL section primitives. This is a NEW gap class: not just a missing component but a missing rendering surface. Proposed shape:",
+        "Canvas3D { scene_module: String, audio_src: Option<String>, controls: CanvasControls }. The scene_module is the URL of an ES module that exports a default function (scene, audio) => animator. The runtime injects Three.js as a stable known-version peer dep (defense-in-depth: vendored, not CDN-loaded).",
+        "Risk: 3D canvas content is heavy — 1.5-3 MB for the typical Three.js+audio bundle. Need a deliberate fallback poster image + lazy bootstrap so non-WebGL clients get the IA without the bytes."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Selected works"
+    },
+
+    {
+      "kind": "card_feed",
+      "heading": null,
+      "items": [
+        {
+          "title": "Resonance Hall — V&A Museum installation",
+          "host_sub": "2025 · Spatial audio + projection-mapped sculpture",
+          "primary_link": {"label": "View piece", "href": "/works/resonance-hall"},
+          "avatar": {"kind": "letter", "letter": "R", "color": "violet"}
+        },
+        {
+          "title": "Cygnus EP — Nika Records",
+          "host_sub": "2024 · Cover art + 3D music-video direction",
+          "primary_link": {"label": "View piece", "href": "/works/cygnus"},
+          "avatar": {"kind": "letter", "letter": "C", "color": "cyan"}
+        },
+        {
+          "title": "Volta Sessions — Bose Pro",
+          "host_sub": "2024 · Brand sonic identity + product audio",
+          "primary_link": {"label": "View piece", "href": "/works/volta"},
+          "avatar": {"kind": "letter", "letter": "V", "color": "amber"}
+        }
+      ]
+    },
+
+    {
+      "kind": "group",
+      "title": "GAP-T662-7 — case-study card with audio preview on hover",
+      "body": [
+        "Companion to GAP-T662-2 (hover-video). Same shape but audio: cards swap a static cover for a 4-second muted-by-default loop on hover, with an inline mute/unmute affordance. Cards on this site are smaller (avg 80 KB MP3 vs 2.4 MB MP4) so the budget is easier. Proposed: CmsCard.hover_audio: Option<HoverAudioSpec> { src, loop_seconds, default_muted }. Reuses the T432 dynamic_runtime."
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Process"
+    },
+
+    {
+      "kind": "kv_pair",
+      "heading": null,
+      "items": [
+        {"key": "Discovery", "value": "Listening sessions, mood-board exchange, sonic palette agreement."},
+        {"key": "Sketch", "value": "Rapid 2-3 minute audio sketches; client picks one direction in week 1."},
+        {"key": "Production", "value": "Final piece produced in our studio; surround + binaural masters by default."},
+        {"key": "Delivery", "value": "All raw stems + a documented session file. Future remixes are yours, not ours."}
+      ]
+    },
+
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Contact"
+    },
+
+    {
+      "kind": "group",
+      "title": "Reach the studio",
+      "body": [
+        "We take on 6-8 commissions a year. Booking inquiries: studio@sphericalwaves.com",
+        "Press, festival programming, and artist-residency requests: please include your timeline + any relevant references."
+      ]
+    },
+
+    {
+      "kind": "banner",
+      "tone": "info",
+      "text": "Phase-1 mirror — IA + content only. WebGL + audio sections are catalogued as gaps and queued for the typed Canvas3D primitive."
+    }
+  ]
+}

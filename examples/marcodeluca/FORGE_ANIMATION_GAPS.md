@@ -145,5 +145,24 @@ the difference." The faithful path requires shipping the 4-5
 primitives above, NOT hacking a one-off `<style>` blob into this
 page. The DELIVERABLE for cycle 1 is THIS GAP REPORT plus the
 structural mirror; cycles 2-3 land the primitives and re-build
-this page (+ a second animated site, probably sphericalwaves.com,
-to drive the registry to convergence).
+this page (+ a second animated site, sphericalwaves.com, to drive
+the registry to convergence).
+
+## Cross-rebuild gap dedup (T662 cycle 2 — added sphericalwaves.com)
+
+| Variant needed                | marcodeluca | sphericalwaves | Hits | Priority |
+|-------------------------------|-------------|----------------|------|----------|
+| `LogoWall` / loom-brand-icons | ✓           | —              | 1+   | (also in T660 → HIGHEST overall) |
+| `KineticTitle`                | ✓           | —              | 1    | LOW      |
+| `CmsCard.hover_video`         | ✓           | —              | 1    | LOW      |
+| `CmsCard.hover_audio`         | —           | ✓              | 1    | LOW      |
+| `ScrollMarquee`               | ✓           | —              | 1    | LOW      |
+| `Canvas3D` (Three.js/WebGL)   | —           | ✓              | 1    | NEW      |
+| Animated avatars              | ✓           | —              | 1    | LOW      |
+
+The animation-site rebuilds each surface VERY DIFFERENT primitives
+(typography vs 3D vs hover-media), so the dedup signal is weaker
+than the T660 marketing-site rebuilds (which all need Pricing /
+LogoWall / Quote). Conclusion: ship the T660 universal primitives
+first; the T662 site-specific primitives land as the user
+prioritizes them.
