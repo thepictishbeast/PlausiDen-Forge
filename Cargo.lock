@@ -547,9 +547,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
+checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
 name = "heck"
@@ -650,7 +650,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
 dependencies = [
  "equivalent",
- "hashbrown 0.17.0",
+ "hashbrown 0.17.1",
  "serde",
  "serde_core",
 ]
@@ -699,9 +699,9 @@ dependencies = [
 
 [[package]]
 name = "kqueue-sys"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "285efcf12ef41bec907b3000d5ffaeb54191d4d9d83c0d6157e6cbc2db255e64"
+checksum = "07293a4e297ac234359b510362495713f75ea345d5307140414f20c69ffeb087"
 dependencies = [
  "bitflags 2.11.1",
  "libc",
@@ -740,6 +740,7 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 [[package]]
 name = "loom-cms-render"
 version = "0.1.0"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#2652c582e8356586d7b7d3acef739001afa64218"
 dependencies = [
  "base64",
  "loom-components",
@@ -753,6 +754,7 @@ dependencies = [
 [[package]]
 name = "loom-components"
 version = "0.1.0"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#2652c582e8356586d7b7d3acef739001afa64218"
 dependencies = [
  "loom-icons",
  "loom-tokens",
@@ -763,10 +765,12 @@ dependencies = [
 [[package]]
 name = "loom-icons"
 version = "0.1.0"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#2652c582e8356586d7b7d3acef739001afa64218"
 
 [[package]]
 name = "loom-lint"
 version = "0.1.0"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#2652c582e8356586d7b7d3acef739001afa64218"
 dependencies = [
  "anyhow",
  "regex",
@@ -777,6 +781,7 @@ dependencies = [
 [[package]]
 name = "loom-tokens"
 version = "0.1.0"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#2652c582e8356586d7b7d3acef739001afa64218"
 dependencies = [
  "serde",
  "serde_json",
@@ -1420,9 +1425,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.52.2"
+version = "1.52.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "110a78583f19d5cdb2c5ccf321d1290344e71313c6c37d43520d386027d18386"
+checksum = "8fc7f01b389ac15039e4dc9531aa973a135d7a4135281b12d7c1bc79fd57fffe"
 dependencies = [
  "bytes",
  "libc",
