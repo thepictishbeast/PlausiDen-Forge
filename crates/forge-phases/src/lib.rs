@@ -17,6 +17,7 @@ pub mod a11y_landmarks;
 pub mod annotation_review;
 pub mod asset_optimization;
 pub mod backend_coverage;
+pub mod carbon_budget;
 pub mod contrast;
 pub mod crawl;
 pub mod csp;

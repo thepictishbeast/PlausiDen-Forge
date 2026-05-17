@@ -26,6 +26,7 @@ use forge_phases::a11y_landmarks::A11yLandmarksPhase;
 use forge_phases::annotation_review::AnnotationReviewPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
 use forge_phases::backend_coverage::BackendCoveragePhase;
+use forge_phases::carbon_budget::CarbonBudgetPhase;
 use forge_phases::contrast::ContrastPhase;
 use forge_phases::crawl::CrawlPhase;
 use forge_phases::csp::CspPhase;
@@ -346,6 +347,10 @@ fn run() -> Result<ExitCode> {
         // [structured_data] missing from forge.toml.
         Box::new(StructuredDataPhase),
         Box::new(PerfBudgetPhase),
+        // phase_carbon_budget — per-page byte total tracked against
+        // [carbon_budget] kb_per_page in forge.toml + Sustainable
+        // Web Design g-CO2 estimate. Silent skip when unconfigured.
+        Box::new(CarbonBudgetPhase),
         Box::new(AssetOptimizationPhase),
         Box::new(SriPhase),
         Box::new(PhantomButtonPhase),
