@@ -74,23 +74,14 @@ jobs:
         continue-on-error: true
         run: cargo geiger --output-format Ascii --update-readme=false
 
-  lockfile-drift:
-    name: Cargo.lock drift check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - name: check
-        # --locked + --offline forces a no-op resolve. Any diff to
-        # Cargo.lock means the lock doesn't match the manifests —
-        # someone committed Cargo.toml without bumping the lock.
-        run: |
-          cargo metadata --locked --offline > /dev/null
-          if ! git diff --quiet Cargo.lock; then
-            echo "Cargo.lock drifted from Cargo.toml — commit lock updates"
-            git diff Cargo.lock | head -50
-            exit 1
-          fi
+  # NOTE: the original `lockfile-drift` job was removed 2026-05-17.
+  # It used `cargo metadata --locked --offline` to detect Cargo.toml
+  # ↔ Cargo.lock skew, but --offline doesn't work with git-source
+  # deps (Forge depends on Loom via git after the 2026-05-17 path-
+  # to-git migration) — every run failed before the git fetch could
+  # complete. The other --locked jobs (test, clippy, doc) already
+  # fail on real lockfile skew, so this gate is redundant in
+  # practice. Re-introduce only if we revert to all-path deps.
 
   doc-private:
     name: cargo doc --document-private-items
