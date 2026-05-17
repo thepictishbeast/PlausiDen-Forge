@@ -274,6 +274,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "deploy-ipfs"
+version = "0.1.0"
+dependencies = [
+ "deploy-core",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
 name = "deploy-onion"
 version = "0.1.0"
 dependencies = [

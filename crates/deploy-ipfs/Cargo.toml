@@ -1,0 +1,21 @@
+[package]
+name = "deploy-ipfs"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "IPFS / IPNS DeployAdapter implementation. Content-addressed publication; validates config + resolves current CID from snapshot. Publish step lands in a follow-up."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+deploy-core = { path = "../deploy-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
