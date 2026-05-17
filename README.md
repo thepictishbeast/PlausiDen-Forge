@@ -21,20 +21,102 @@
 
 # PlausiDen-Forge
 
-A static-site generator + audit pipeline for the PlausiDen ecosystem.
-Reads typed CMS pages (`cms/*.json`), renders them through
-[`loom-cms-render`](https://github.com/thepictishbeast/PlausiDen-Loom),
-then runs 25+ build phases that gate the output on accessibility,
-performance, security headers, semantic HTML, token consistency, and
-runtime browser audit.
+**A typed-CMS-driven, cryptographically-attested build pipeline
+for static, hybrid, or full-SPA output — same source, same audit
+gates, three deployment shapes.** Forge takes typed CMS pages
+(`cms/*.json`), renders them in-process via
+[`loom-cms-render`](https://github.com/thepictishbeast/PlausiDen-Loom)
+(serde with `deny_unknown_fields` — schema drift fails closed at
+the boundary, not at runtime), then runs **27 build phases** that
+gate output on accessibility (WCAG 2.1 AA), performance (Core
+Web Vitals), security headers (CSP, SRI, HSTS), semantic HTML,
+theme + token consistency, multi-network safety (no clearnet
+leakage on Tor-mode sites), backend-frontend drift, and runtime
+browser audit via the sibling Crawler.
 
-Forge is a **general-purpose engine**. There are no committed clones
-of third-party sites in this repo — the `examples/` holding pen that
-existed briefly between 2026-05-13 and 2026-05-17 was a debug input
-for the variant dedup table at [`docs/DEDUP_TABLE.md`](docs/DEDUP_TABLE.md)
-and was deleted once the signal was extracted. If you want to see
-what Forge produces, run it against your own `cms/*.json` or against
-one of the customer sites listed in `docs/PERSONAS.md`.
+What's actually shipping today:
+
+- **Three output modes** (`static` / `dynamic` / `hybrid`) — the
+  `dynamic_runtime` phase emits `forge-spa-runtime.js` (~2.2 KB,
+  CSP-safe vanilla JS, no `eval`, handles modifier keys + middle-
+  click + target=_blank + download + rel=external correctly,
+  falls back to `location.assign` on any error). Same primitives,
+  same audit gates across all three modes.
+- **Cryptographic build attestation.** T26 Merkle-chained build
+  reports (`prev_hash` + `chain_length` on every JSON report).
+  T56 Ed25519 signatures on chain roots via
+  `forge attest init` + `forge verify --chain --signatures`.
+  Externally-publishable public key for auditor trust-pinning.
+  Comparable in posture to SLSA / Sigstore / in-toto.
+- **`backends.toml` capability manifest.** Every backend endpoint
+  declared once with method, path, purpose, `impl_files` array.
+  CI surfaces four drift-type findings: `WIRED` (declared + UI +
+  impl), `DECLARED` (no UI yet), `PHANTOM` (UI references
+  undeclared backend — fatal in production), `PARTIAL` (declared
+  but empty `impl_files` — fatal in production). The
+  orphan-button / orphan-endpoint drift class is structurally
+  prevented.
+- **Live dev loop.** `forge watch` (notify-based, 300 ms debounce,
+  re-runs full pipeline on save) + `forge serve` (tokio + hyper
+  1.x, replaced the Python `serve.py` per the retire-non-Rust
+  directive). Edit a CMS JSON → findings stream + browser sees
+  rebuilt page.
+- **In-process render with atomic writes.** Forge calls
+  `loom_cms_render::render_page()` as a Cargo dep — no
+  subprocess, no JSON-roundtrip-through-CLI escape risk.
+  Temp-file + POSIX-atomic rename.
+- **AVP-2 mutation + secrets gates.** `forge audit mutants`
+  reads `mutants.out/outcomes.json` and fails on survivor rate
+  above threshold (default 5%). `forge audit secrets` scans
+  for private keys / certs / dotenv / password stores; with
+  no paths, reads `git diff --cached --name-only` so a
+  pre-commit hook can refuse on any match.
+- **Type-state build pipeline.** `FORGE_PIPELINE=1` routes phases
+  through explicit Discover → Parse → Render → Audit stages with
+  typed artifacts. Stage ordering enforced by the compiler.
+  Currently opt-in for zero-risk prod migration; eventually
+  replaces the flat loop.
+- **Dual theme + AMOLED variant.** Loom ships `tokens-light.json`,
+  `tokens-dark.json`, optional `tokens-dark-amoled.json` (pure
+  `#000000` so OLED pixels turn off). `phase_dual_theme` enforces
+  parity (every light token defined in dark); `phase_theme_contrast`
+  enforces WCAG 2.1 AA in both themes.
+- **Multi-network publishing aware.** `[networks]` declares a site
+  reachable on clearnet / Tor / I2P / IPFS / Gemini; the primitive
+  system enforces no-clearnet-leakage on Tor-mode sites at the
+  primitive layer, not as an afterthought. See
+  [`docs/SITE_OPERATIONS.md`](docs/SITE_OPERATIONS.md) for the
+  threat-model tiers + security rating dashboard.
+
+Forge is **not a generic static-site generator.** It generates
+static output today as one of three deployment shapes; the
+static-vs-dynamic distinction is a deployment property, not the
+product's identity. The product's identity is the **correctness
+substrate** that makes AI-built UI reliable — every audit phase
+is a check the agent gets BEFORE the page reaches a human
+reviewer. The Crawler runtime-audit feedback closes the loop;
+the Annotator captures the human-in-the-loop signal when one is
+needed.
+
+Forge is **substrate-flexible, product-opinionated.** The same
+substrate serves a mainstream marketing site (Stripe + mainstream
+cloud + GA opt-in) and a sovereign Tor-only publication (no
+clearnet leakage, hardened defaults, plausible-deniability
+integration) — with per-dimension values choices, not a forced
+binary. The product layer commits to **AI agents building UI** as
+the primary audience.
+
+For the architectural depth see the companion documents in
+[`docs/`](docs/):
+
+- [`FORGE_VISION.md`](docs/FORGE_VISION.md) — what Forge does, where it's going, personas, capability matrix, acceptance criteria
+- [`ARCHITECTURE_PRINCIPLES.md`](docs/ARCHITECTURE_PRINCIPLES.md) — why the substrate is shaped this way (WordPress-inversion, capability manifest, primitives as constraint system, AI as bounded search)
+- [`SITE_OPERATIONS.md`](docs/SITE_OPERATIONS.md) — what every published site needs (required pages, jurisdiction-aware compliance, multi-network publishing, site-success operational layer)
+- [`ENGINEERING_DISCIPLINES.md`](docs/ENGINEERING_DISCIPLINES.md) — load-bearing engineering practices (caching with surrogate keys, concurrency, time, jobs, webhooks, crypto, secrets, multi-region, incident handling)
+- [`COMMERCIALIZATION.md`](docs/COMMERCIALIZATION.md) — tiered commercial framing + what changes when scope expands from operator-toolkit to platform-we-sell
+
+Read them as one connected design at different abstraction
+layers, not as separate artifacts.
 
 > ## ⚠ Status: pre-1.0, AVP-2 in flight — NOT production-ready
 >
@@ -57,16 +139,35 @@ one of the customer sites listed in `docs/PERSONAS.md`.
 
 ## What this replaces
 
-- **Hugo / Jekyll / Eleventy** — when "render templates" is one of
-  twenty things you need a static site to do, a generic SSG is
-  the wrong axis. Forge bundles render + audit + deploy in one
-  CLI with typed phases.
+Forge competes against different tools depending on the
+deployment shape — but **across all three modes** the
+differentiator is the typed correctness substrate + cryptographic
+attestation, not the rendering itself:
+
+- **Astro / Eleventy / Hugo / Jekyll** (the SSG axis) — Forge
+  bundles render + audit + attestation + deploy in one CLI with
+  typed phases. Audit and attestation are platform features, not
+  things you bolt on with separate tools.
+- **Next.js / Remix / Vercel** (the hybrid/dynamic axis) — Forge
+  emits SPA runtime + hybrid rendering from the same source as
+  the static path, with the same audit gates. No hosting
+  commitment (deploy anywhere); no per-request server cost for
+  static-shaped traffic; same CSP / a11y / token gates regardless
+  of mode.
+- **Webflow / Framer** (the no-code-CMS axis) — Forge has a typed
+  CMS schema, an AI generation path that respects the schema,
+  primitive contracts that make broken layouts unreachable, and a
+  Tor-mode story. Webflow has none of these. Forge is the
+  serious-operator's CMS where Webflow is the casual one.
 - **Bespoke build scripts** — every site I've owned had a 500-line
   `make build` that drifted between sites. Forge phases compose
   the same way for every site.
-- **Manual accessibility / security review** — every phase is a
+- **Manual accessibility / security review** — every phase is
   doctrine encoded in code; output fails the build on regressions
-  instead of degrading silently between releases.
+  instead of degrading silently between releases. The build's
+  attestation chain means a customer can hand auditors a
+  cryptographic record of every build that produced production
+  output.
 
 ## Build modes
 
