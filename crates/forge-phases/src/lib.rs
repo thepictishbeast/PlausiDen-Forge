@@ -42,6 +42,7 @@ pub mod path_consistency;
 pub mod perf_budget;
 pub mod phantom_button;
 pub mod print_stylesheet;
+pub mod reader_safety;
 pub mod render;
 pub mod required_pages;
 pub mod self_check;

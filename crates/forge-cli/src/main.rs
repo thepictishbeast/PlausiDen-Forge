@@ -47,6 +47,7 @@ use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::print_stylesheet::PrintStylesheetPhase;
+use forge_phases::reader_safety::ReaderSafetyPhase;
 use forge_phases::render::RenderPhase;
 use forge_phases::required_pages::RequiredPagesPhase;
 use forge_phases::self_check::SelfCheckPhase;
@@ -391,6 +392,12 @@ fn run() -> Result<ExitCode> {
         // must not contain clearnet-URL references. Silent skip
         // for clearnet-only or no-[networks] sites.
         Box::new(NetworkTargetEnforcementPhase),
+        // phase_reader_safety — Tor-mode reader-side checks
+        // (no inline script / no @font-face / no recaptcha /
+        // cookie+localStorage warnings / etc). Auto-fires when
+        // [networks].targets includes tor/i2p/lokinet; opt-in for
+        // clearnet via explicit [reader_safety] section.
+        Box::new(ReaderSafetyPhase),
         Box::new(ContrastPhase),
         // T432 (closes #432): emit SPA client runtime + inject
         // <script> tag into every page WHEN mode is Dynamic or
