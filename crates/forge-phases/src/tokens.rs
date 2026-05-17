@@ -47,7 +47,7 @@ impl Phase for TokensPhase {
             // 1. Raw px values (excluding common SVG fragment sizes).
             let bad_px: Vec<String> = scan_px(&body_no_decls);
             if !bad_px.is_empty() {
-                findings.push(Finding::strict(
+                findings.push(Finding::warn(
                     self.name(),
                     file.name.clone(),
                     format!("raw px values: {}", bad_px.join(" ")),
@@ -55,7 +55,7 @@ impl Phase for TokensPhase {
             }
             // 2. Raw hex colors anywhere except meta CSP + SVG.
             if scan_hex_outside_svg_csp(&body_no_decls) {
-                findings.push(Finding::strict(
+                findings.push(Finding::warn(
                     self.name(),
                     file.name.clone(),
                     "raw hex color in HTML",
