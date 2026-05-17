@@ -109,13 +109,16 @@ jobs:
       - name: scan
         # Find non-test code paths with .unwrap() or .expect(...).
         # Allowed: lines with `// SAFETY:` or `// test-only` justification.
-        # Allowed: anywhere under #[cfg(test)] / tests/ / examples/.
+        # Allowed: anywhere under #[cfg(test)] / tests/.
+        # NOTE: examples/ skip removed 2026-05-17 with the dedup-table
+        # migration — examples/ no longer exists in this repo and won't
+        # come back per the canonical-engine doctrine.
         run: |
           bad=0
           while IFS= read -r f; do
-            # skip test files + examples
+            # skip test files
             case "$f" in
-              */tests/*|*/examples/*|*test.rs|*tests.rs) continue ;;
+              */tests/*|*test.rs|*tests.rs) continue ;;
             esac
             # grep for unwrap/expect not on a line with SAFETY or test-only
             if grep -nE '\.(unwrap|expect)\s*\(' "$f" | grep -v "// SAFETY:" | grep -v "// test-only" | grep -v "// AVP-OK:"; then
