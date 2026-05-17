@@ -160,7 +160,9 @@ What Mom does:
 4. She uploads a photo from her iPhone. **GPS / EXIF stripped
    automatically** before storage. Her home address never leaks.
 5. **An interactive in-browser tour** walks her through the
-   editor on first visit [in-flight T64b].
+   editor on first visit [shipped T64b — query-string-driven
+   tour via `?tour=N` URL param; `parse_tour_query()` +
+   contextual overlay in `loom edit-serve`].
 6. She clicks "Publish". Atomic deploy ships a signed bundle.
 7. She breaks something? **`loom deploy rollback` flips back in
    one command.** [shipped T47]
@@ -298,7 +300,7 @@ What an agent gets:
 | Click-to-edit inline editing in live preview | shipped (T62 step 10) |
 | Section reorder / delete / add | shipped |
 | Bundled site templates (`basic`) | shipped (T48 + T48c v1) |
-| Bundled portfolio + blog templates | queued (T48b) |
+| Bundled portfolio + blog templates | ✅ shipped (T48b) — `loom site init --template portfolio` / `--template blog` (run `loom site templates` for the list) |
 | Compound-field inline editing (group.body[N], cards) | queued (T62 step 10b) |
 | Markdown import → CmsSection | queued (T63b — extend importer) |
 | WordPress export → CmsSection | concept |
@@ -326,7 +328,7 @@ What an agent gets:
 | WCAG 2.1 AA contrast verified at compile + runtime | shipped (T29, T29b) |
 | Semantic HTML enforced (`<div role="banner">` blocked) | shipped (T67) |
 | Dual-theme presence enforced | shipped (T66) |
-| Dual-theme contrast audit (both palettes) | queued (T68) |
+| Dual-theme contrast audit (both palettes) | ✅ shipped (T68) — `phase_theme_contrast` delegates to `loom theme contrast` which enumerates per-theme; current dogfood walks 12 themes (auto / dark / default / forest / hc-dark / hc-light / light / ocean / rose / sepia / violet / warm), all clear @ 4.5:1 WCAG AA |
 | Zero-JS theme/density/font switcher (form-POST cookie) | queued (T37) |
 | Keyboard-only navigation audit | concept |
 
@@ -408,7 +410,7 @@ What an agent gets:
 | ISO standards adoption doc | queued (T69) |
 | Per-phase `--help` with full doctrine | partial |
 | In-GUI tutorial (Loom editor) | shipped (T64) |
-| Interactive query-string tour mode | queued (T64b) |
+| Interactive query-string tour mode | ✅ shipped (T64b) — `?tour=N` URL param activates step-by-step in-context overlay in `loom edit-serve`; `parse_tour_query()` validates step range; tests cover valid + out-of-range + garbage inputs |
 | Architecture decision records (ADRs) | concept |
 
 ## 5. Architecture (when fully built)
@@ -945,9 +947,19 @@ what to do with it.
 - [shipped] T70 — `phase_render` (Forge generates content in-process)
 - [shipped] T71 — this doc
 - [in-flight] T615 — GUI site/app builder (rolling)
-- [queued] T68 — extend `phase_theme_contrast` to dual theme
-- [queued] T48b — portfolio + blog bundled templates
-- [queued] T64b — interactive query-string tour mode
+- [shipped] T68 — `phase_theme_contrast` enumerates per-theme via
+  `loom theme contrast`; current dogfood walks 12 themes,
+  WCAG AA gate enforced
+- [shipped] T48b — `loom site init --template portfolio` /
+  `--template blog` (see `loom site templates` for the bundled
+  list)
+- [shipped] T64b — `?tour=N` query-string-driven step-by-step
+  overlay in `loom edit-serve`; `parse_tour_query()` validates
+  step range
+- [shipped 2026-05-17] `phase_annotation_review` — closes the
+  Annotator↔Forge integration; reads `[review] session_dir`
+  from `forge.toml`, surfaces operator-flagged elements as
+  typed `Finding`s with severity per tag
 
 ### Sprint 2 — close the supersociety stack
 
