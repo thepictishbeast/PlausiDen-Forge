@@ -73,24 +73,34 @@ NYT, ProductHunt. Each will surface a different gap set. Expectation
 is that after ~4 sites the gap-list deduplicates and the CmsSection
 enum stabilizes around 15–20 variants.
 
-## Dedup roll-up (updated 2026-05-17 cycle 2)
+## Dedup roll-up (updated 2026-05-17 cycle 3 — added Vercel)
 
-Two rebuilds done (Stripe pricing, Linear landing). Cross-site gap
-dedup:
+Three marketing rebuilds done (Stripe pricing, Linear landing,
+Vercel landing) + two animated rebuilds (marcodeluca,
+sphericalwaves). Cross-site gap dedup:
 
-| Variant needed       | Stripe | Linear | marcodeluca | Hits | Priority |
-|----------------------|--------|--------|-------------|------|----------|
-| `Pricing` tier-cards | ✓      | ✓      | —           | 2    | HIGH     |
-| `LogoWall`           | ✓      | ✓      | ✓           | 3    | HIGHEST  |
-| `Quote` testimonial  | ✓      | ✓      | —           | 2    | HIGH     |
-| `Faq` disclosure     | ✓      | —      | —           | 1    | MED      |
-| `ComparisonTable`    | ✓      | —      | —           | 1    | MED      |
-| `FooterSitemap`      | ✓      | —      | —           | 1    | MED      |
-| `CountryPicker`      | ✓      | —      | —           | 1    | LOW      |
-| `KineticTitle`       | —      | —      | ✓           | 1    | LOW      |
-| `CmsCard.hover_video`| —      | —      | ✓           | 1    | LOW      |
-| `ScrollMarquee`      | —      | —      | ✓           | 1    | LOW      |
+| Variant needed       | Stripe | Linear | Vercel | marcodeluca | sphericalwaves | Hits | Priority |
+|----------------------|--------|--------|--------|-------------|----------------|------|----------|
+| `LogoWall`           | ✓      | ✓      | ✓      | ✓           | —              | 4    | **P1**   |
+| `Pricing` tier-cards | ✓      | ✓      | ✓      | —           | —              | 3    | **P2**   |
+| `Quote` testimonial  | ✓      | ✓      | ✓      | —           | —              | 3    | **P2**   |
+| `Code` / terminal    | ✓      | —      | ✓      | —           | —              | 2    | **P3**   |
+| `Faq` disclosure     | ✓      | —      | —      | —           | —              | 1    | MED      |
+| `ComparisonTable`    | ✓      | —      | —      | —           | —              | 1    | MED      |
+| `FooterSitemap`      | ✓      | —      | —      | —           | —              | 1    | MED      |
+| `CountryPicker`      | ✓      | —      | —      | —           | —              | 1    | LOW      |
+| `KineticTitle`       | —      | —      | —      | ✓           | —              | 1    | LOW      |
+| `CmsCard.hover_video`| —      | —      | —      | ✓           | —              | 1    | LOW      |
+| `CmsCard.hover_audio`| —      | —      | —      | —           | ✓              | 1    | LOW      |
+| `ScrollMarquee`      | —      | —      | —      | ✓           | —              | 1    | LOW      |
+| `Canvas3D` (WebGL)   | —      | —      | —      | —           | ✓              | 1    | LOW      |
 
-After 4 rebuilds the LogoWall / Pricing / Quote variants will be the
-clear top-3 — implement those first and the next rebuilds' gap
-inventory falls.
+**T70 backlog priority (locked at 5 rebuilds):**
+  P1: LogoWall — 4/5 surfaces. Ship first.
+  P2 (tied): Pricing + Quote — 3/3 marketing surfaces.
+  P3: Code/terminal block — 2/3 marketing surfaces.
+
+Next 2 rebuilds (GitHub + Apple product page) expected to push
+Code to 3/4 and surface 1-2 new MED-priority variants. After 4-5
+rebuilds the dedup signal is strong enough — implement P1-P3 first,
+then iterate.
