@@ -1,0 +1,104 @@
+Functional Source License, Version 1.1, MIT Future License
+
+Abbreviation:  FSL-1.1-MIT
+Licensor:      William Armstrong / PlausiDen
+Software:      PlausiDen-Forge — see README
+
+# Purpose
+
+The Functional Source License (FSL) is a source-available license that
+gives users freedom to use, copy, modify, create derivative works, and
+redistribute, with two limitations on commercial use, and a guaranteed
+future grant of full open source rights under MIT.
+
+## License Grant
+
+Subject to your compliance with this License, the Licensor grants you a
+non-exclusive, royalty-free, worldwide, non-sublicensable, non-transferable
+license to use, copy, modify, create derivative works, publicly perform,
+publicly display, and redistribute the Software for any Permitted Purpose.
+
+## Permitted Purpose
+
+A "Permitted Purpose" is any purpose other than a Competing Use. A
+"Competing Use" is making the Software available to third parties as a
+hosted or embedded service that competes with the Licensor's paid
+version(s) of the Software. For the avoidance of doubt, Competing Use
+does NOT include:
+
+  1. Use for internal purposes by employees and contractors of your business.
+  2. Use by customers of your business for their own internal purposes.
+  3. Use to develop software that is not made available to third parties.
+  4. Personal use, including for research or experimentation.
+  5. Security review, auditing, vulnerability disclosure, or academic study.
+
+## Patents
+
+To the extent your use for a Permitted Purpose would necessarily infringe
+the Licensor's patents, the License grant above includes a license under
+such patents. If you make any written claim that the Software infringes or
+contributes to infringement of any patent, your patent license for the
+Software terminates immediately. If your company makes such a claim, your
+patent license terminates immediately for work on behalf of your company.
+
+## Notices
+
+You must ensure that anyone who gets a copy of any part of the Software
+from you also gets a copy of this License.
+
+If you modify the Software, you must include in any modified copies of
+the Software prominent notices stating that you have modified the Software.
+
+## No Other Rights
+
+These terms do not imply any licenses other than those expressly granted
+in these terms.
+
+## Termination
+
+If you use the Software in violation of these terms, such use is not
+licensed, and your licenses will automatically terminate. If the Licensor
+provides you with a notice of your violation, and you cease all violation
+of this License no later than 30 days after you receive that notice, your
+licenses will be reinstated retroactively. However, if you violate these
+terms after such reinstatement, any additional violation of these terms
+will cause your licenses to terminate automatically and permanently.
+
+## No Liability
+
+*As far as the law allows, the Software comes as is, without any warranty
+or condition, and the Licensor will not be liable to you for any damages
+arising out of these terms or the use or nature of the Software, under
+any kind of legal claim.*
+
+## Future License
+
+The Licensor will publish this version of the Software under the MIT
+License (the "Future License") on the second anniversary of the date the
+initial version of the Software was published under this License. After
+the date of publication of a Future License version, you may use the
+Software under that Future License.
+
+## MIT License (the "Future License")
+
+MIT License
+
+Copyright (c) [year of initial publication] William Armstrong / PlausiDen
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
