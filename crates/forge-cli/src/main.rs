@@ -45,6 +45,7 @@ use forge_phases::motion_respects_reduced::MotionRespectsReducedPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
+use forge_phases::print_stylesheet::PrintStylesheetPhase;
 use forge_phases::render::RenderPhase;
 use forge_phases::required_pages::RequiredPagesPhase;
 use forge_phases::self_check::SelfCheckPhase;
@@ -379,6 +380,11 @@ fn run() -> Result<ExitCode> {
         // @media (prefers-reduced-motion). WCAG 2.1 SC 2.3.3.
         // Silent skip when [motion_respects_reduced] missing.
         Box::new(MotionRespectsReducedPhase),
+        // phase_print_stylesheet — verify print CSS exists +
+        // optionally meets minimum quality (link-URL expansion,
+        // background normalization). Silent skip when
+        // [print_stylesheet] missing.
+        Box::new(PrintStylesheetPhase),
         Box::new(ContrastPhase),
         // T432 (closes #432): emit SPA client runtime + inject
         // <script> tag into every page WHEN mode is Dynamic or

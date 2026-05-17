@@ -40,6 +40,7 @@ pub mod motion_respects_reduced;
 pub mod path_consistency;
 pub mod perf_budget;
 pub mod phantom_button;
+pub mod print_stylesheet;
 pub mod render;
 pub mod required_pages;
 pub mod self_check;
