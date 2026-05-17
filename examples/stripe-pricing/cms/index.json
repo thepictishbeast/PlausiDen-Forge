@@ -68,13 +68,14 @@
 
     {
       "kind": "kv_pair",
-      "rows": [
-        {"k": "Fraud prevention (Radar)", "v": "Machine-learning + 100k+ adaptive rules across the Stripe network."},
-        {"k": "Dispute mediation", "v": "Stripe handles chargebacks + represents you to the issuer."},
-        {"k": "PCI compliance", "v": "Level 1 PCI-DSS certified. Pass-through compliance via Elements."},
-        {"k": "Dashboard + reporting", "v": "Real-time revenue, payouts, customer cohorts, recurring metrics."},
-        {"k": "Mobile + web SDKs", "v": "Stripe.js, iOS, Android, React Native, with TypeScript types first-class."},
-        {"k": "200+ third-party plugins", "v": "Shopify, Squarespace, WooCommerce, BigCommerce, Wix — pre-built integrations."}
+      "heading": "Always included, free of charge",
+      "items": [
+        {"key": "Fraud prevention (Radar)", "value": "Machine-learning + 100k+ adaptive rules across the Stripe network."},
+        {"key": "Dispute mediation", "value": "Stripe handles chargebacks + represents you to the issuer."},
+        {"key": "PCI compliance", "value": "Level 1 PCI-DSS certified. Pass-through compliance via Elements."},
+        {"key": "Dashboard + reporting", "value": "Real-time revenue, payouts, customer cohorts, recurring metrics."},
+        {"key": "Mobile + web SDKs", "value": "Stripe.js, iOS, Android, React Native, with TypeScript types first-class."},
+        {"key": "200+ third-party plugins", "value": "Shopify, Squarespace, WooCommerce, BigCommerce, Wix — pre-built integrations."}
       ]
     },
 
