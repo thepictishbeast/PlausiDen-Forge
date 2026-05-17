@@ -1,0 +1,152 @@
+name: supply-chain
+
+# T67: supply chain hardening.
+#
+# Runs the supply-chain gate on every push + a scheduled weekly
+# deep scan. Refuses builds that:
+#   * have an open RustSec advisory in any transitive dep
+#     (cargo-deny advisories)
+#   * pull a non-allowlisted license (cargo-deny licenses)
+#   * pull a banned / wildcard-versioned / non-registry crate
+#     (cargo-deny bans + sources)
+#
+# Additional jobs:
+#   * cargo-audit — separate run of the RustSec advisory DB
+#                   (defense in depth; covers the case where
+#                   cargo-deny's snapshot is stale)
+#   * cargo-cyclonedx — emits a CycloneDX 1.5 SBOM for downstream
+#                   compliance use
+#   * GitHub artifact-attestation — SLSA-style build provenance for
+#                   workflow-produced artifacts
+#
+# Config:
+#   deny.toml at workspace root drives the cargo-deny gate.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/*/Cargo.toml"
+      - "deny.toml"
+      - ".github/workflows/supply-chain.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "crates/*/Cargo.toml"
+      - "deny.toml"
+      - ".github/workflows/supply-chain.yml"
+  # Weekly deep scan even if no deps changed — catches new
+  # advisories published against existing pinned versions.
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+
+permissions:
+  contents: read
+  # SLSA artifact-attestation requires id-token + attestations
+  # write scopes. Only the SBOM job uses them.
+  id-token: write
+  attestations: write
+
+jobs:
+  cargo-deny:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install rust toolchain
+        run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - name: Cache cargo-deny binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-deny
+          key: cargo-deny-${{ runner.os }}-0.16
+
+      - name: Install cargo-deny
+        run: |
+          if [ ! -x ~/.cargo/bin/cargo-deny ]; then
+            cargo install --locked --version 0.16 cargo-deny
+          fi
+
+      - name: Run cargo deny check
+        run: cargo deny --workspace check
+
+  cargo-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install rust toolchain
+        run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - name: Cache cargo-audit binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: cargo-audit-${{ runner.os }}-0.20
+
+      - name: Install cargo-audit
+        run: |
+          if [ ! -x ~/.cargo/bin/cargo-audit ]; then
+            cargo install --locked --version 0.20 cargo-audit
+          fi
+
+      - name: Run cargo audit
+        run: cargo audit --deny warnings
+
+  sbom-cyclonedx:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install rust toolchain
+        run: rustup toolchain install stable --profile minimal --no-self-update
+
+      - name: Cache cargo-cyclonedx binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-cyclonedx
+          key: cargo-cyclonedx-${{ runner.os }}-0.5
+
+      - name: Install cargo-cyclonedx
+        run: |
+          if [ ! -x ~/.cargo/bin/cargo-cyclonedx ]; then
+            cargo install --locked --version 0.5 cargo-cyclonedx
+          fi
+
+      - name: Emit CycloneDX 1.5 SBOM
+        run: |
+          cargo cyclonedx --format json --spec-version 1.5 \
+            --all --override-filename sbom-forge.cdx
+          ls -la *.cdx.json || true
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-forge-cyclonedx
+          path: "*.cdx.json"
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Attest SBOM provenance (SLSA-style)
+        # Generates a sigstore-signed attestation tying the SBOM
+        # artifact to this workflow run. Verifiable via:
+        #   gh attestation verify sbom-forge.cdx.json \
+        #       --repo thepictishbeast/PlausiDen-Forge
+        uses: actions/attest-build-provenance@v2
+        if: ${{ hashFiles('*.cdx.json') != '' }}
+        with:
+          subject-path: "*.cdx.json"
