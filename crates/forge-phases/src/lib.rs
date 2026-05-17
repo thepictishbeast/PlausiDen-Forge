@@ -28,6 +28,7 @@ pub mod html_semantic;
 pub mod html_walk;
 pub mod id_strategy;
 pub mod iso_8601;
+pub mod jurisdiction_compliance;
 pub mod label_consistency;
 pub mod link_check;
 pub mod locale_html_lang;

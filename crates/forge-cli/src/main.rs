@@ -34,6 +34,7 @@ use forge_phases::dynamic_runtime::DynamicRuntimePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
+use forge_phases::jurisdiction_compliance::JurisdictionCompliancePhase;
 use forge_phases::label_consistency::LabelConsistencyPhase;
 use forge_phases::link_check::LinkCheckPhase;
 use forge_phases::locale_html_lang::LocaleHtmlLangPhase;
@@ -359,6 +360,10 @@ fn run() -> Result<ExitCode> {
         // baseline. Silent skip when [locale] missing from
         // forge.toml.
         Box::new(LocaleHtmlLangPhase),
+        // phase_jurisdiction_compliance — runtime compliance
+        // markers (cookie banner / CCPA / LGPD / age gate) per
+        // declared jurisdictions in forge.toml.
+        Box::new(JurisdictionCompliancePhase),
         Box::new(UnbuiltRoutePhase),
         Box::new(LabelConsistencyPhase),
         Box::new(LinkCheckPhase),
