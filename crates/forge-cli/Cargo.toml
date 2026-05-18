@@ -57,6 +57,12 @@ forms-core = { path = "../forms-core" }
 # discriminated FederationAddress and asserts protocol/address
 # match + no duplicate destinations.
 federation-core = { path = "../federation-core" }
+# T91 (eighth wiring): email-core (T83) drives the new
+# `forge email validate` subcommand — projects email.toml's
+# declared sender domains + DMARC posture through MessageKind
+# / DmarcResult / BimiReference + enforces RFC 8058 list-
+# unsubscribe rules for marketing messages.
+email-core = { path = "../email-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

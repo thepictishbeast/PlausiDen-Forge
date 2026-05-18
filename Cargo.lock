@@ -571,6 +571,7 @@ dependencies = [
  "base64",
  "clap",
  "domains-core",
+ "email-core",
  "federation-core",
  "forge-core",
  "forge-phases",

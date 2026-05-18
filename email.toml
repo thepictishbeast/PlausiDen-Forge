@@ -1,0 +1,43 @@
+# PlausiDen-Forge email message catalog.
+#
+# Projected through email-core (T83) by `forge email validate`
+# (T91 eighth wiring). Each [[message]] is checked via
+# email-core::OutgoingMessage::validate:
+#
+#   * from / subject non-empty + to non-empty
+#   * Marketing kind ⇒ https:// list-unsubscribe URL required
+#     (RFC 8058 §2.1 — one-click)
+#   * Transactional kind MAY include unsubscribe (not required)
+#
+# kind values (closed enum):
+#   transactional — signup / password reset / order confirmation
+#   marketing     — newsletter / campaign / opt-in send
+#
+# Real MTA / SMTP / DMARC monitoring lives downstream
+# (email-smtp-submit / email-dmarc-aggregate); this file
+# declares the operator's outgoing message template catalog.
+
+# Transactional: account signup confirmation
+[[message]]
+id = "signup-confirm"
+kind = "transactional"
+from = "noreply@plausiden.com"
+to = ["${recipient}"]
+subject = "Confirm your PlausiDen account"
+
+# Transactional: password reset
+[[message]]
+id = "password-reset"
+kind = "transactional"
+from = "noreply@plausiden.com"
+to = ["${recipient}"]
+subject = "Reset your PlausiDen password"
+
+# Marketing: monthly newsletter — requires unsubscribe URL
+[[message]]
+id = "monthly-newsletter"
+kind = "marketing"
+from = "newsletter@plausiden.com"
+to = ["${subscriber}"]
+subject = "PlausiDen — what shipped this month"
+list-unsubscribe = "https://plausiden.com/unsubscribe?token=${unsub-token}"

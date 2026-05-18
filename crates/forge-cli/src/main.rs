@@ -284,6 +284,19 @@ enum Cmd {
         #[command(subcommand)]
         action: FederationAction,
     },
+    /// T91 (eighth wiring): email-core gate. Loads
+    /// `email.toml` and projects through email-core's typed
+    /// OutgoingMessage surface (T83). Enforces:
+    ///   * every declared message has a non-empty from /
+    ///     subject and at least one recipient
+    ///   * Marketing messages have an RFC 8058 https://
+    ///     list-unsubscribe URL
+    ///   * Transactional messages MAY include unsubscribe
+    ///     but it's not required
+    Email {
+        #[command(subcommand)]
+        action: EmailAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -401,6 +414,17 @@ enum DomainsAction {
     Validate {
         /// Emit a JSON-form summary of domain validation to
         /// stdout. Default is human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum EmailAction {
+    /// Validate `email.toml` against the typed email-core surface
+    /// (T83).
+    Validate {
+        /// Emit a JSON-form summary to stdout.
         #[arg(long, default_value_t = false)]
         json: bool,
     },
@@ -539,6 +563,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::AuditLog { action }) => return run_audit_log(&root, action),
         Some(Cmd::Forms { action }) => return run_forms(&root, action),
         Some(Cmd::Federation { action }) => return run_federation(&root, action),
+        Some(Cmd::Email { action }) => return run_email(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -3485,6 +3510,239 @@ mod federation_gate_tests {
         );
         let code = run_federation_validate(td.path(), false).unwrap();
         assert_eq!(code, ExitCode::from(2));
+    }
+}
+
+// ============================================================
+// T91 (eighth wiring): email gate — `forge email validate`
+//
+// TOML schema:
+//   [[message]]
+//   id = "welcome"
+//   kind = "transactional"  # transactional | marketing
+//   from = "hello@example.com"
+//   to = ["alice@example.com"]
+//   subject = "Welcome"
+//
+//   [[message]]
+//   id = "may-newsletter"
+//   kind = "marketing"
+//   from = "newsletter@example.com"
+//   to = ["all-subs"]
+//   subject = "May newsletter"
+//   list-unsubscribe = "https://example.com/unsub?id=abc"
+//
+// Invariants enforced by OutgoingMessage::validate():
+//   * from / subject non-empty + to non-empty
+//   * marketing messages MUST have an https:// list-unsubscribe
+//     URL (RFC 8058)
+//   * transactional messages MAY include unsubscribe; not
+//     required
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct EmailToml {
+    #[serde(default)]
+    message: Vec<EmailMessage>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct EmailMessage {
+    id: String,
+    kind: email_core::MessageKind,
+    from: String,
+    to: Vec<String>,
+    subject: String,
+    #[serde(default, rename = "list-unsubscribe")]
+    list_unsubscribe: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct EmailGateSummary {
+    email_path: String,
+    message_count: usize,
+    transactional_count: usize,
+    marketing_count: usize,
+    violations: Vec<String>,
+}
+
+fn run_email(root: &std::path::Path, action: &EmailAction) -> Result<ExitCode> {
+    match action {
+        EmailAction::Validate { json } => run_email_validate(root, *json),
+    }
+}
+
+fn run_email_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path = root.join("email.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let mut summary = EmailGateSummary {
+        email_path: path.display().to_string(),
+        message_count: 0,
+        transactional_count: 0,
+        marketing_count: 0,
+        violations: Vec::new(),
+    };
+
+    if !path.exists() {
+        violations.push(format!("missing email.toml at {}", path.display()));
+        summary.violations = violations.clone();
+        emit_email_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let parsed: EmailToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("email.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_email_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.message_count = parsed.message.len();
+
+    let now = time::OffsetDateTime::now_utc();
+    for m in &parsed.message {
+        match m.kind {
+            email_core::MessageKind::Transactional => summary.transactional_count += 1,
+            email_core::MessageKind::Marketing => summary.marketing_count += 1,
+        }
+        // Project to email-core's OutgoingMessage so the
+        // typed validator runs.
+        let om = email_core::OutgoingMessage {
+            id: m.id.clone(),
+            kind: m.kind,
+            from: m.from.clone(),
+            to: m.to.clone(),
+            subject: m.subject.clone(),
+            list_unsubscribe: m.list_unsubscribe.clone(),
+            bimi: None,
+            queued_at: now,
+        };
+        if let Err(e) = om.validate() {
+            violations.push(format!("message {:?}: {e}", m.id));
+        }
+    }
+
+    summary.violations = violations.clone();
+    emit_email_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_email_summary(summary: &EmailGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "email-gate: {} messages ({} transactional, {} marketing)",
+            summary.message_count, summary.transactional_count, summary.marketing_count,
+        );
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod email_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_email(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("email.toml"), body).unwrap();
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_email(td.path(), "this is not toml [[[");
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn empty_list_passes() {
+        let td = TempDir::new().unwrap();
+        write_email(td.path(), "");
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn valid_transactional_message_passes() {
+        let td = TempDir::new().unwrap();
+        write_email(
+            td.path(),
+            "[[message]]\nid = \"welcome\"\nkind = \"transactional\"\nfrom = \"hello@example.com\"\nto = [\"alice@example.com\"]\nsubject = \"Welcome\"\n",
+        );
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn marketing_without_unsubscribe_violates() {
+        let td = TempDir::new().unwrap();
+        write_email(
+            td.path(),
+            "[[message]]\nid = \"newsletter\"\nkind = \"marketing\"\nfrom = \"news@example.com\"\nto = [\"all\"]\nsubject = \"Hi\"\n",
+        );
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn marketing_with_https_unsubscribe_passes() {
+        let td = TempDir::new().unwrap();
+        write_email(
+            td.path(),
+            "[[message]]\nid = \"newsletter\"\nkind = \"marketing\"\nfrom = \"news@example.com\"\nto = [\"all\"]\nsubject = \"Hi\"\nlist-unsubscribe = \"https://example.com/unsub\"\n",
+        );
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn marketing_with_http_unsubscribe_violates() {
+        let td = TempDir::new().unwrap();
+        write_email(
+            td.path(),
+            "[[message]]\nid = \"newsletter\"\nkind = \"marketing\"\nfrom = \"news@example.com\"\nto = [\"all\"]\nsubject = \"Hi\"\nlist-unsubscribe = \"http://example.com/unsub\"\n",
+        );
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn empty_from_violates() {
+        let td = TempDir::new().unwrap();
+        write_email(
+            td.path(),
+            "[[message]]\nid = \"x\"\nkind = \"transactional\"\nfrom = \"\"\nto = [\"a\"]\nsubject = \"s\"\n",
+        );
+        let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
     }
 }
 
