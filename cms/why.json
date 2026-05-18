@@ -1,0 +1,148 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Why PlausiDen exists",
+  "description": "Software written today should outlive its dependencies. The platform behind that claim.",
+  "path": "/why.html",
+  "nav_links": [
+    {
+      "label": "Platform",
+      "href": "/platform.html",
+      "current": false,
+      "data_backend": "view-platform"
+    },
+    {
+      "label": "Why",
+      "href": "/why.html",
+      "current": true,
+      "data_backend": "view-why"
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing.html",
+      "current": false,
+      "data_backend": "view-pricing"
+    },
+    {
+      "label": "Docs",
+      "href": "/docs.html",
+      "current": false,
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog.html",
+      "current": false,
+      "data_backend": "view-blog"
+    },
+    {
+      "label": "About",
+      "href": "/about.html",
+      "current": false,
+      "data_backend": "view-about"
+    }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "The manifesto",
+      "title": "We engineer for the next thousand years.",
+      "lede": "Not because we expect software written today to literally run for a millennium — but because the discipline of designing as though it should produces fundamentally better software right now."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Six axes, simultaneously"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Most stacks ask you to pick two or three axes from the list — fast or anonymous, reliable or private. PlausiDen refuses the tradeoff. Every architectural decision scores against all six at once:"
+    },
+    {
+      "kind": "kv_pair",
+      "items": [
+        {
+          "key": "Fast",
+          "value": "P95 SLO at the edge",
+          "hint": "Static-first, audit-gated, no runtime database for content."
+        },
+        {
+          "key": "Reliable",
+          "value": "Reproducible builds",
+          "hint": "Every commit produces a deterministic artifact + signed audit report."
+        },
+        {
+          "key": "Robust",
+          "value": "Typed contracts at every seam",
+          "hint": "If the types compile, the system doesn't break at runtime."
+        },
+        {
+          "key": "Secure",
+          "value": "WCAG, CSP, SLSA, forbid(unsafe_code)",
+          "hint": "Gated at build time, not bolted on after."
+        },
+        {
+          "key": "Anonymous",
+          "value": "Multi-network publish (Tor, I2P, IPFS, Gemini, Lokinet)",
+          "hint": "Your audience picks the network — not us."
+        },
+        {
+          "key": "Private",
+          "value": "Self-hosted, no telemetry, no CDNs",
+          "hint": "We keep no copy of your content. The platform respects the user's data class."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "The architectural inversion"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Most AI platforms put the LLM at the center and audit its output retroactively. PlausiDen inverts that. The LLM is a constrained candidate generator. The Lattice of Formal Inference — LFI — is the upstream evaluator. Every AI proposal flows through a typed Critic that returns Accept, Reject, or Refine. There is no code path where an LLM's output reaches the commit boundary without that gate. It's a type signature, not a code-review policy."
+    },
+    {
+      "kind": "quote",
+      "body": "We weren't trying to make AI go away. We were trying to make AI accountable. The Critic trait is what makes that possible — it's the seam where 'the model said so' becomes 'these specific rules fired with these specific weights.'",
+      "attribution": "PlausiDen architecture team"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Why typed CMS"
+    },
+    {
+      "kind": "paragraph",
+      "text": "WordPress, Contentful, Sanity, Strapi — they all store content in a database, render through a template language, and validate at publish time. The result: 60% of CMS migration cost is fixing content that the template-language compiler couldn't catch. PlausiDen CMS treats content as a typed value. Your pages are JSON. JSON deserialises to closed-enum Rust variants. The compiler catches missing alt-text and broken slugs at the boundary — before the publish, before the deploy, before the user."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Why static-first"
+    },
+    {
+      "kind": "paragraph",
+      "text": "A static site is a Merkle tree of bytes. It can't have a SQL injection. It can't have a row-level permission bug. It can't accidentally ship a debug logger to production. The cost of static-first is dynamic-feature friction; the cost of dynamic-first is the cumulative attack surface of every runtime your stack imports. PlausiDen makes the static path cheap and the dynamic path opt-in."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Why multi-network"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The clearnet is one network. Tor is another. IPFS is another. Gemini, I2P, Lokinet — others still. PlausiDen treats every network as a typed DeployAdapter with a SecurityProfile projection. Your audience picks the network. You publish once, the platform packages for each adapter's constraints automatically. The web isn't a single substrate; we stopped pretending it was."
+    },
+    {
+      "kind": "hero",
+      "eyebrow": "Start where you are",
+      "title": "Read the docs.",
+      "lede": "PlausiDen is in beta. The contracts are stable; the runtime is hardening. If you're building something you want to ship in five years and still own in twenty, this is for you.",
+      "cta": {
+        "label": "Platform",
+        "href": "/platform.html",
+        "data_backend": "cta-platform"
+      }
+    }
+  ]
+}

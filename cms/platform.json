@@ -1,0 +1,153 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "PlausiDen — the platform",
+  "description": "Six tools, one typed substrate. Forge, Loom, Crawler, Annotator, CMS, LFI.",
+  "path": "/platform.html",
+  "nav_links": [
+    {
+      "label": "Platform",
+      "href": "/platform.html",
+      "current": true,
+      "data_backend": "view-platform"
+    },
+    {
+      "label": "Why",
+      "href": "/why.html",
+      "current": false,
+      "data_backend": "view-why"
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing.html",
+      "current": false,
+      "data_backend": "view-pricing"
+    },
+    {
+      "label": "Docs",
+      "href": "/docs.html",
+      "current": false,
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog.html",
+      "current": false,
+      "data_backend": "view-blog"
+    },
+    {
+      "label": "About",
+      "href": "/about.html",
+      "current": false,
+      "data_backend": "view-about"
+    }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "The platform",
+      "title": "Six tools. One substrate.",
+      "lede": "Every PlausiDen tool shares the same typed contracts. Compose what you need; ignore what you don't."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Forge"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The typed build pipeline. 27 audit phases run on every build: tokens, CSP, a11y landmarks, semantic HTML, theme contrast, phantom-button detection, unbuilt-route detection, external-asset blocking, jurisdiction compliance, label consistency, link check, locale html-lang, motion preferences, path consistency, perf budget, print stylesheet, reader safety, render correctness, required pages, self-check, SEO, SRI, structured data, theme consistency, viewport audit. Every commit produces a Merkle-chained Ed25519-signed report."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Loom"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The typed UI primitive library. Closed-enum CmsSection variants render through a single render_page() function. 13 themes including AMOLED-true dark and WCAG-AA-targeted high-contrast pair. OKLCH-based palette, system-font stack, dual-theme by default, reduced-motion honoured automatically."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Crawler"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The runtime auditor. Walks the rendered DOM with a headless browser, runs 120+ typed detectors against the actual page state, emits a journey schema that Forge consumes as a phase. Catches what static analysis cannot — focus traps in modals, hydration mismatches, broken aria-controls links, layout shifts under real network conditions."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Annotator"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Operator capture. Records what your users actually do — typed event stream, lossless replay, local-first storage, opt-in by user. No cloud upload, no third-party telemetry. Use it to derive new audit detectors, debug a regression, or hand a session to support."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "CMS"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Content as typed data. Your pages are JSON files in version control. Sections are closed-enum variants validated at parse time. No database, no editor lock-in, no migration scripts when your schema evolves — types are the migration."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "LFI"
+    },
+    {
+      "kind": "paragraph",
+      "text": "AI evaluation, not generation. The Critic trait gates every AI proposal — Claude, Gemini, GPT, or a locally-run model — through a typed Decision: Accept, Reject, or Refine with explicit regeneration guidance. Pluggable provider, pluggable critic. Today: LLM-only Critic ships immediately. Tomorrow: neurosymbolic LFI Critic drops in via a feature flag, zero changes at the call site."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Built on standards",
+      "items": [
+        {
+          "key": "Type system",
+          "value": "Rust",
+          "hint": "#[forbid(unsafe_code)] across every workspace crate."
+        },
+        {
+          "key": "Date format",
+          "value": "ISO 8601 / RFC 3339",
+          "hint": "No bespoke timestamps."
+        },
+        {
+          "key": "Accessibility",
+          "value": "WCAG 2.1 AA",
+          "hint": "Gated at build time, not retrofitted."
+        },
+        {
+          "key": "Schema",
+          "value": "JSON Schema 2020-12",
+          "hint": "Editor-validated content authoring."
+        },
+        {
+          "key": "Supply chain",
+          "value": "SLSA + CycloneDX 1.5",
+          "hint": "Sigstore-attested SBOM per workspace member."
+        },
+        {
+          "key": "Quality model",
+          "value": "ISO/IEC 25010",
+          "hint": "Functional suitability, performance, compatibility, usability, reliability, security, maintainability, portability."
+        }
+      ]
+    },
+    {
+      "kind": "hero",
+      "eyebrow": "Compose your stack",
+      "title": "Use one. Or all six.",
+      "lede": "PlausiDen is opinionated about types and unopinionated about adoption. Bring just Forge for typed CMS builds, or layer Loom + Crawler + LFI for full coverage.",
+      "cta": {
+        "label": "Docs",
+        "href": "/docs.html",
+        "data_backend": "cta-docs"
+      }
+    }
+  ]
+}

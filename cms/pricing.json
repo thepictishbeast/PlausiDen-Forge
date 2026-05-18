@@ -1,0 +1,191 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "PlausiDen — pricing",
+  "description": "Free for solo. $0 for the first three seats. Then by build-minute, not by user.",
+  "path": "/pricing.html",
+  "nav_links": [
+    {
+      "label": "Platform",
+      "href": "/platform.html",
+      "current": false,
+      "data_backend": "view-platform"
+    },
+    {
+      "label": "Why",
+      "href": "/why.html",
+      "current": false,
+      "data_backend": "view-why"
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing.html",
+      "current": true,
+      "data_backend": "view-pricing"
+    },
+    {
+      "label": "Docs",
+      "href": "/docs.html",
+      "current": false,
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog.html",
+      "current": false,
+      "data_backend": "view-blog"
+    },
+    {
+      "label": "About",
+      "href": "/about.html",
+      "current": false,
+      "data_backend": "view-about"
+    }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Pricing",
+      "title": "Pay for compute, not for seats.",
+      "lede": "Free forever for solo developers. Team plans scale by build-minute and storage — never by user count. Bring your own LLM provider; we never see your prompts."
+    },
+    {
+      "kind": "card_feed",
+      "heading": "Plans",
+      "items": [
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "So"
+          },
+          "title": "Solo",
+          "host": "For one developer",
+          "stats": [
+            {
+              "label": "Monthly",
+              "value": "$0"
+            },
+            {
+              "label": "Build min",
+              "value": "Unlimited"
+            },
+            {
+              "label": "Sites",
+              "value": "5"
+            },
+            {
+              "label": "Storage",
+              "value": "10 GB"
+            }
+          ],
+          "tag": "Free",
+          "href": "/start",
+          "data_backend": "cta-start"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "Te"
+          },
+          "title": "Team",
+          "host": "For shipping teams",
+          "stats": [
+            {
+              "label": "Monthly",
+              "value": "From $0"
+            },
+            {
+              "label": "Seats",
+              "value": "3 free + $9/extra"
+            },
+            {
+              "label": "Sites",
+              "value": "Unlimited"
+            },
+            {
+              "label": "Storage",
+              "value": "100 GB"
+            }
+          ],
+          "tag": "Beta",
+          "href": "/start",
+          "data_backend": "cta-start"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "En"
+          },
+          "title": "Enterprise",
+          "host": "For compliance-bound shops",
+          "stats": [
+            {
+              "label": "Monthly",
+              "value": "Custom"
+            },
+            {
+              "label": "SLA",
+              "value": "99.97%"
+            },
+            {
+              "label": "Audit",
+              "value": "SOC 2 II"
+            },
+            {
+              "label": "Support",
+              "value": "Same-day"
+            }
+          ],
+          "tag": "Contact",
+          "href": "/contact",
+          "data_backend": "view-contact"
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "What we don't charge for"
+    },
+    {
+      "kind": "kv_pair",
+      "items": [
+        {
+          "key": "User seats",
+          "value": "First 3 free",
+          "hint": "Then $9/seat. No 'collaborator' loophole pricing."
+        },
+        {
+          "key": "Pages built",
+          "value": "Unlimited",
+          "hint": "Page count doesn't determine your bill. Build minutes do."
+        },
+        {
+          "key": "Themes",
+          "value": "All 13 included",
+          "hint": "AMOLED, high-contrast pair, sepia, ocean, forest — every theme on every plan."
+        },
+        {
+          "key": "Bring-your-own LLM",
+          "value": "Always",
+          "hint": "Anthropic, OpenAI, Google, Mistral, local llama.cpp — we never see your prompts."
+        },
+        {
+          "key": "Egress",
+          "value": "Free at edge",
+          "hint": "Tor / I2P / IPFS / Gemini / Lokinet publish included on Team+."
+        }
+      ]
+    },
+    {
+      "kind": "hero",
+      "eyebrow": "No card up-front",
+      "title": "Start free. Stay free until you outgrow it.",
+      "lede": "Pre-order with no card. We'll email when your tenant is provisioned. Everything you ship is yours; we keep no copy.",
+      "cta": {
+        "label": "Pre-order",
+        "href": "/start",
+        "data_backend": "cta-start"
+      }
+    }
+  ]
+}

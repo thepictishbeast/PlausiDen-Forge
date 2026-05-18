@@ -1,169 +1,170 @@
-# backends.toml — declared backend surface for the app.
-#
-# Forge cross-references this against every interactive element
-# in the built HTML. Buttons / links / forms declare the action
-# they trigger via:
-#
-#   <button data-backend="enter-challenge">Enter for $60</button>
-#   <a    data-backend="view-challenge">…</a>
-#   <form data-backend="post-skill">…</form>
-#
-# Each `data-backend` value MUST appear as a key under [backends.*]
-# below. Forge reports:
-#
-#   - WIRED:    UI uses a declared backend; backend has impl files.
-#   - DECLARED: backend declared but no UI references it (dead spec).
-#   - PHANTOM:  UI references undeclared backend (broken UI).
-#   - PARTIAL:  backend declared with `impl_files` empty (stub).
-#
-# Production mode: PHANTOM and PARTIAL are fatal.
-# PoC mode:        warns only; visible in the in-browser overlay.
+# backends.toml — declared backend surface for the PlausiDen
+# marketing site. PoC build; nothing here is actually wired to a
+# live API — the data-backend slugs are documentation of intent,
+# not real handlers.
 
 [meta]
-project = "SkillShots"
-api_base = "https://api.skillshots.com"
+project = "PlausiDen Marketing"
+api_base = "https://plausiden.com/api"
 schema_version = 1
 
-# ============================================================ *
-# AUTH                                                         *
-# ============================================================ *
-[backends.sign-in]
-method   = "POST"
-path     = "/auth/sign-in"
-purpose  = "operator sign-in"
-impl_files = ["src/handlers/sign_in.rs"]
+# Navigation
+[backends.view-home]
+method = "GET"
+path = "/"
+purpose = "Landing"
+impl_files = []
 
-[backends.sign-up]
-method   = "POST"
-path     = "/auth/sign-up"
-purpose  = "new operator registration + age-verify gate"
-impl_files = ["src/handlers/sign_up.rs"]
+[backends.view-platform]
+method = "GET"
+path = "/platform"
+purpose = "Platform overview"
+impl_files = []
 
-[backends.sign-out]
-method   = "POST"
-path     = "/auth/sign-out"
-purpose  = "operator sign-out"
-impl_files = ["src/handlers/sign_out.rs"]
+[backends.view-why]
+method = "GET"
+path = "/why"
+purpose = "Manifesto"
+impl_files = []
 
-# ============================================================ *
-# CHALLENGES                                                   *
-# ============================================================ *
-[backends.list-challenges]
-method   = "GET"
-path     = "/challenges"
-purpose  = "battle feed list"
-impl_files = ["src/handlers/list_challenges.rs"]
+[backends.view-pricing]
+method = "GET"
+path = "/pricing"
+purpose = "Pricing"
+impl_files = []
 
-[backends.view-challenge]
-method   = "GET"
-path     = "/challenges/:id"
-purpose  = "open challenge detail (clicked feed card)"
-impl_files = ["src/handlers/view_challenge.rs"]
+[backends.view-docs]
+method = "GET"
+path = "/docs"
+purpose = "Docs hub"
+impl_files = []
 
-[backends.post-skill]
-method   = "POST"
-path     = "/challenges"
-purpose  = "operator publishes a new challenge"
-impl_files = ["src/handlers/post_skill.rs"]
+[backends.view-blog]
+method = "GET"
+path = "/blog"
+purpose = "Blog index"
+impl_files = []
 
-# Composer (T528) prompt-bar action wires. Stubs declared here so
-# phase_phantom_button doesn't fire strict on the new Composer-
-# emitted markup before backend impl lands.
-[backends.challenge-create]
-method   = "POST"
-path     = "/challenges/new"
-purpose  = "user opens the challenge-creation flow from the feed-top composer"
-impl_files = ["src/handlers/challenge_create.rs"]
+[backends.view-about]
+method = "GET"
+path = "/about"
+purpose = "About"
+impl_files = []
 
-[backends.live-start]
-method   = "POST"
-path     = "/live/start"
-purpose  = "user starts a live skill stream from the feed-top composer"
-impl_files = ["src/handlers/live_start.rs"]
+[backends.view-contact]
+method = "GET"
+path = "/contact"
+purpose = "Contact"
+impl_files = []
 
-[backends.post-photo]
-method   = "POST"
-path     = "/posts/photo"
-purpose  = "user posts an image-only entry from the feed-top composer"
-impl_files = ["src/handlers/post_photo.rs"]
+# CTAs
+[backends.cta-platform]
+method = "GET"
+path = "/platform"
+purpose = "CTA: see the platform"
+impl_files = []
 
-[backends.enter-challenge]
-method   = "POST"
-path     = "/challenges/:id/entries"
-purpose  = "operator pays entry fee + opens upload slot"
-impl_files = ["src/handlers/enter_challenge.rs"]
+[backends.cta-why]
+method = "GET"
+path = "/why"
+purpose = "CTA: read the manifesto"
+impl_files = []
 
-[backends.upload-entry]
-method   = "POST"
-path     = "/entries/:id/video"
-purpose  = "video upload pipeline (S3 multipart)"
-impl_files = ["src/handlers/upload_entry.rs"]
+[backends.cta-docs]
+method = "GET"
+path = "/docs"
+purpose = "CTA: read the docs"
+impl_files = []
 
-# ============================================================ *
-# VOTING                                                       *
-# ============================================================ *
-[backends.list-open-votes]
-method   = "GET"
-path     = "/votes"
-purpose  = "open-vote queue (sidebar)"
-impl_files = ["src/handlers/list_open_votes.rs"]
+[backends.cta-pricing]
+method = "GET"
+path = "/pricing"
+purpose = "CTA: see pricing"
+impl_files = []
 
-[backends.cast-vote]
-method   = "POST"
-path     = "/entries/:id/vote"
-purpose  = "operator votes for one entry on a challenge"
-impl_files = ["src/handlers/cast_vote.rs"]
+[backends.cta-start]
+method = "GET"
+path = "/start"
+purpose = "CTA: start"
+impl_files = []
 
-# ============================================================ *
-# WALLET / PAYMENTS                                            *
-# ============================================================ *
-[backends.list-touches]
-method   = "GET"
-path     = "/wallet"
-purpose  = "wallet dashboard (My Wins)"
-impl_files = ["src/handlers/list_touches.rs"]
+[backends.cta-contact]
+method = "GET"
+path = "/contact"
+purpose = "CTA: contact"
+impl_files = []
 
-[backends.cash-out]
-method   = "POST"
-path     = "/wallet/cashout"
-purpose  = "operator triggers Stripe Connect payout"
-impl_files = ["src/handlers/cash_out.rs"]
+[backends.cta-subscribe]
+method = "POST"
+path = "/subscribe"
+purpose = "CTA: email newsletter (mailto)"
+impl_files = []
 
-# ============================================================ *
-# LEADERBOARD                                                  *
-# ============================================================ *
-[backends.list-leaderboard]
-method   = "GET"
-path     = "/leaderboard"
-purpose  = "weekly + all-time rankings (Leaderboard page)"
-impl_files = ["src/handlers/list_leaderboard.rs"]
+[backends.cta-github]
+method = "GET"
+path = "https://github.com/thepictishbeast"
+purpose = "CTA: GitHub org"
+impl_files = []
 
-# ============================================================ *
-# PROFILE                                                      *
-# ============================================================ *
-[backends.view-profile]
-method   = "GET"
-path     = "/users/:handle"
-purpose  = "public profile page"
-impl_files = ["src/handlers/view_profile.rs"]
+# Platform card jumps
+[backends.view-forge]
+method = "GET"
+path = "/platform#forge"
+purpose = "Card: Forge"
+impl_files = []
 
-[backends.follow]
-method   = "POST"
-path     = "/users/:handle/follow"
-purpose  = "follow/unfollow operator action"
-impl_files = ["src/handlers/follow.rs"]
+[backends.view-loom]
+method = "GET"
+path = "/platform#loom"
+purpose = "Card: Loom"
+impl_files = []
 
-# ============================================================ *
-# REPORTING / SAFETY                                           *
-# ============================================================ *
-[backends.report-challenge]
-method   = "POST"
-path     = "/challenges/:id/report"
-purpose  = "challenge report → 24h pot freeze + manual review"
-impl_files = ["src/handlers/report_challenge.rs"]
+[backends.view-crawler]
+method = "GET"
+path = "/platform#crawler"
+purpose = "Card: Crawler"
+impl_files = []
 
-[backends.report-profile]
-method   = "POST"
-path     = "/users/:handle/report"
-purpose  = "profile report → moderation queue"
-impl_files = ["src/handlers/report_profile.rs"]
+[backends.view-annotator]
+method = "GET"
+path = "/platform#annotator"
+purpose = "Card: Annotator"
+impl_files = []
+
+[backends.view-cms]
+method = "GET"
+path = "/platform#cms"
+purpose = "Card: CMS"
+impl_files = []
+
+[backends.view-lfi]
+method = "GET"
+path = "/platform#lfi"
+purpose = "Card: LFI"
+impl_files = []
+
+# Pricing tier cards
+[backends.view-tier-solo]
+method = "GET"
+path = "/pricing#solo"
+purpose = "Tier: Solo"
+impl_files = []
+
+[backends.view-tier-team]
+method = "GET"
+path = "/pricing#team"
+purpose = "Tier: Team"
+impl_files = []
+
+[backends.view-tier-enterprise]
+method = "GET"
+path = "/pricing#enterprise"
+purpose = "Tier: Enterprise"
+impl_files = []
+
+# Blog post placeholder
+[backends.view-post]
+method = "GET"
+path = "/blog/{slug}"
+purpose = "Blog post (placeholder)"
+impl_files = []

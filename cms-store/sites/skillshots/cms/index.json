@@ -1,0 +1,267 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "SkillShots \u2014 voted skill battles",
+  "description": "Skill battles, voted by your crew. Pots split at round close.",
+  "path": "/",
+  "nav_links": [
+    {
+      "label": "Battle Feed",
+      "href": "/",
+      "data_backend": "list-challenges",
+      "current": true
+    },
+    {
+      "label": "Leaderboard",
+      "href": "/leaderboard.html",
+      "data_backend": "list-leaderboard",
+      "current": false
+    },
+    {
+      "label": "My Wins",
+      "href": "/my-wins.html",
+      "data_backend": "list-touches",
+      "current": false
+    },
+    {
+      "label": "Profile",
+      "href": "/profile.html",
+      "data_backend": "view-profile",
+      "current": false
+    }
+  ],
+  "sections": [
+    {
+      "kind": "banner",
+      "tone": "info",
+      "text": "PoC build \u2014 voted-skill battles UX preview. Data is fake.",
+      "dismissible": true,
+      "id": "poc-banner-2026-05"
+    },
+    {
+      "kind": "hero",
+      "eyebrow": "Featured",
+      "title": "Half-court shot \u2014 single arc",
+      "lede": "Hosted by @marcus_h \u00b7 3 entries \u00b7 pot $240 \u00b7 vote closes 4d.",
+      "cta": {
+        "label": "Watch + vote",
+        "href": "/c/half-court-arc",
+        "data_backend": "view-challenge"
+      }
+    },
+    {
+      "kind": "composer",
+      "prompt": "What did you nail today?",
+      "submit_endpoint": "/post-skill",
+      "actions": [
+        "upload_clip",
+        "challenge_opponent",
+        "go_live"
+      ],
+      "avatar": {
+        "kind": "initials",
+        "letters": "DA"
+      },
+      "size": "comfortable"
+    },
+    {
+      "kind": "card_feed",
+      "heading": "Battle feed",
+      "items": [
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "PK"
+          },
+          "title": "One-take parkour line \u2014 top of stairwell to ground in under 9s.",
+          "host": "@vault_kit \u00b7 4d left",
+          "stats": [
+            {
+              "label": "Votes",
+              "value": "78%"
+            },
+            {
+              "label": "Pot",
+              "value": "$240"
+            }
+          ],
+          "href": "/c/parkour-stairwell",
+          "data_backend": "view-challenge",
+          "tag": "Parkour"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "9B"
+          },
+          "title": "Pool: clear the table in two innings, no scratches.",
+          "host": "@9ball_lori \u00b7 12m left",
+          "stats": [
+            {
+              "label": "Votes",
+              "value": "62%"
+            },
+            {
+              "label": "Pot",
+              "value": "$120"
+            }
+          ],
+          "href": "/c/pool-clear-9lori",
+          "data_backend": "view-challenge",
+          "tag": "Billiards"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "SC"
+          },
+          "title": "Speed-cube: solve a scrambled 3\u00d73 in under 18 seconds, single take.",
+          "host": "@dax \u00b7 2d left",
+          "stats": [
+            {
+              "label": "Votes",
+              "value": "55%"
+            },
+            {
+              "label": "Pot",
+              "value": "$180"
+            }
+          ],
+          "href": "/c/cube-sub18",
+          "data_backend": "view-challenge",
+          "tag": "Mind"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "SK"
+          },
+          "title": "Skateboard: 5-stair kickflip, land + roll-away, single take.",
+          "host": "@kickflip_mar \u00b7 42m left",
+          "stats": [
+            {
+              "label": "Votes",
+              "value": "48%"
+            },
+            {
+              "label": "Pot",
+              "value": "$95"
+            }
+          ],
+          "href": "/c/kickflip-5stair",
+          "data_backend": "view-challenge",
+          "tag": "Skate"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "DT"
+          },
+          "title": "Darts: 9-dart finish from a fresh 501, recorded continuous.",
+          "host": "@oche_riv \u00b7 1h 04m left",
+          "stats": [
+            {
+              "label": "Votes",
+              "value": "41%"
+            },
+            {
+              "label": "Pot",
+              "value": "$140"
+            }
+          ],
+          "href": "/c/9dart-501",
+          "data_backend": "view-challenge",
+          "tag": "Darts"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "LA"
+          },
+          "title": "Latte art: free-pour swan in one continuous shot, judged by silhouette.",
+          "host": "@brew_pia \u00b7 6h left",
+          "stats": [
+            {
+              "label": "Votes",
+              "value": "33%"
+            },
+            {
+              "label": "Pot",
+              "value": "$45"
+            }
+          ],
+          "href": "/c/latte-swan",
+          "data_backend": "view-challenge",
+          "tag": "Cafe"
+        }
+      ]
+    },
+    {
+      "kind": "sidebar",
+      "label": "Side panels",
+      "panels": [
+        {
+          "title": "Top earners \u00b7 this week",
+          "body": {
+            "kind": "list",
+            "items": [
+              {
+                "label": "@court_dax \u00b7 Basketball",
+                "value": "$1,840",
+                "href": "/u/court_dax",
+                "data_backend": "view-profile"
+              },
+              {
+                "label": "@vault_kit \u00b7 Parkour",
+                "value": "$1,420",
+                "href": "/u/vault_kit",
+                "data_backend": "view-profile"
+              },
+              {
+                "label": "@9ball_lori \u00b7 Billiards",
+                "value": "$995",
+                "href": "/u/9ball_lori",
+                "data_backend": "view-profile"
+              }
+            ]
+          }
+        },
+        {
+          "title": "Open votes \u00b7 need your eye",
+          "body": {
+            "kind": "list",
+            "items": [
+              {
+                "label": "Pool table clear \u2014 12m",
+                "value": "Vote",
+                "href": "/c/pool-clear-9lori",
+                "data_backend": "view-challenge"
+              },
+              {
+                "label": "5-stair kickflip \u2014 42m",
+                "value": "Vote",
+                "href": "/c/kickflip-5stair",
+                "data_backend": "view-challenge"
+              },
+              {
+                "label": "9-dart 501 \u2014 1h 04m",
+                "value": "Vote",
+                "href": "/c/9dart-501",
+                "data_backend": "view-challenge"
+              }
+            ]
+          }
+        },
+        {
+          "title": "House rules",
+          "body": {
+            "kind": "text",
+            "paragraphs": [
+              "One single take. No edits. Voted by the crew.",
+              "Pot splits at round close. Disputes go to a re-vote."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

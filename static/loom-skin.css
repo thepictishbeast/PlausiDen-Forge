@@ -207,8 +207,422 @@
    * keyboard-only-ring UX when :focus-visible is supported. */
   :focus:not(:focus-visible) { outline: none; }
 
+  /* T70c (closes #659): rich focus + hover indicators.
+   * CSS-only patterns showing what's focused/hovered/active.
+   * All prefers-reduced-motion safe (motion clamps to 0).
+   *
+   * Opt-in via data-loom-rich-focus="lift|glow|magnetic":
+   *
+   *   lift:     subtle Y-translate + shadow gain on hover/focus.
+   *   glow:     halo of accent color expands on focus-visible.
+   *   magnetic: pointer-pulled translate via JS-set --mouse-x/-y
+   *             custom props (works as plain hover w/o JS).
+   *
+   * Pure-CSS by default; magnetic variant gracefully degrades if
+   * no JS is provided to set the mouse-position custom props.
+   */
+  [data-loom-rich-focus] {
+    transition:
+      transform var(--loom-transition-fast, 120ms) var(--loom-ease-out, ease),
+      box-shadow var(--loom-transition-fast, 120ms) var(--loom-ease-out, ease),
+      filter var(--loom-transition-fast, 120ms) var(--loom-ease-out, ease);
+  }
+  [data-loom-rich-focus="lift"]:hover,
+  [data-loom-rich-focus="lift"]:focus-visible {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 24px color-mix(in oklab, var(--loom-color-ink) 10%, transparent),
+      0 2px 6px color-mix(in oklab, var(--loom-color-ink) 6%, transparent);
+  }
+  [data-loom-rich-focus="glow"]:focus-visible {
+    box-shadow:
+      0 0 0 4px color-mix(in oklab, var(--loom-color-primary) 18%, transparent),
+      0 0 0 1px var(--loom-color-primary);
+    outline: none; /* the glow replaces the ring */
+  }
+  [data-loom-rich-focus="glow"]:hover {
+    filter: brightness(1.05);
+  }
+  [data-loom-rich-focus="magnetic"] {
+    /* JS sets --mouse-x / --mouse-y in 0..1 range from element-
+     * relative pointer position. Without JS the var(...) falls
+     * back to 0 (no offset). */
+    transform: translate(
+      calc((var(--mouse-x, 0.5) - 0.5) * 4px),
+      calc((var(--mouse-y, 0.5) - 0.5) * 4px)
+    );
+  }
+  [data-loom-rich-focus="magnetic"]:hover {
+    filter: brightness(1.04);
+  }
+  /* Selected/active marker — for tab triggers, picker chips,
+   * active nav. Distinct from :focus so it can co-exist with
+   * the keyboard ring. */
+  [data-loom-selected="true"] {
+    background: color-mix(in oklab, var(--loom-color-primary) 12%, var(--loom-color-surface));
+    color: var(--loom-color-primary);
+    box-shadow: inset 0 -2px 0 var(--loom-color-primary);
+  }
+  /* Cursor-tracking spotlight (opt-in via data-loom-spotlight).
+   * JS sets --mouse-x / --mouse-y in CSS pixels; no-JS falls back
+   * to no spotlight. */
+  [data-loom-spotlight] {
+    position: relative;
+    isolation: isolate;
+  }
+  [data-loom-spotlight]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      280px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
+      color-mix(in oklab, var(--loom-color-primary) 16%, transparent) 0%,
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity var(--loom-transition-fast, 120ms) var(--loom-ease-out, ease);
+    z-index: -1;
+  }
+  [data-loom-spotlight]:hover::before { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    [data-loom-rich-focus]:hover,
+    [data-loom-rich-focus]:focus-visible,
+    [data-loom-rich-focus="magnetic"] {
+      transform: none;
+      transition: none;
+    }
+    [data-loom-spotlight]::before { transition: none; }
+  }
+
   /* Hide content from sighted users without removing from a11y tree. */
   [hidden] { display: none !important; }
+
+  /* T70b (closes #658): scroll-snap carousels.
+   * Composable, no JS required (touch + trackpad scroll natively).
+   * Opt-in via .loom-carousel wrapper + .loom-carousel__track
+   * inner scroller + .loom-carousel__slide children.
+   *
+   * Direction:
+   *   default       horizontal
+   *   data-axis="y" vertical (rare but works for sidebar mosaics)
+   *
+   * Snap behavior:
+   *   default          snap to start of each slide (mandatory)
+   *   data-snap="proximity"  loose snap (most-discoverable, doesn't
+   *                          fight power-users scrolling fast)
+   *
+   * Slide sizing:
+   *   default                 slide width = 90% of container
+   *   data-size="card"        320px slides (compact)
+   *   data-size="hero"        100% slides (one-at-a-time)
+   *   data-size="auto"        intrinsic content width
+   *
+   * Pagination dots: separate component .loom-carousel__dots
+   * with <button> per slide; CSS only highlights based on
+   * aria-current. JS hook is optional (sets aria-current on
+   * the focused/visible slide).
+   */
+  .loom-carousel {
+    position: relative;
+    isolation: isolate;
+  }
+  .loom-carousel__track {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-color: var(--loom-color-primary) transparent;
+    scrollbar-width: thin;
+    gap: var(--loom-space-3);
+    padding: var(--loom-space-2);
+    /* Edge fade — visual cue that there's more content offscreen. */
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0,
+      black var(--loom-space-3),
+      black calc(100% - var(--loom-space-3)),
+      transparent 100%
+    );
+  }
+  .loom-carousel[data-axis="y"] .loom-carousel__track {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+    mask-image: linear-gradient(
+      0deg,
+      transparent 0,
+      black var(--loom-space-3),
+      black calc(100% - var(--loom-space-3)),
+      transparent 100%
+    );
+  }
+  .loom-carousel[data-snap="proximity"] .loom-carousel__track {
+    scroll-snap-type: x proximity;
+  }
+  .loom-carousel[data-snap="proximity"][data-axis="y"] .loom-carousel__track {
+    scroll-snap-type: y proximity;
+  }
+  .loom-carousel__slide {
+    flex: 0 0 90%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .loom-carousel[data-size="card"] .loom-carousel__slide { flex-basis: 320px; }
+  .loom-carousel[data-size="hero"] .loom-carousel__slide { flex-basis: 100%; }
+  .loom-carousel[data-size="auto"] .loom-carousel__slide { flex-basis: auto; }
+  /* Pagination dots — one button per slide. JS sets aria-current
+   * on the visible slide's button; CSS-only state still works
+   * for keyboard nav via :focus-visible. */
+  .loom-carousel__dots {
+    display: flex;
+    justify-content: center;
+    gap: var(--loom-space-2);
+    padding: var(--loom-space-3);
+    list-style: none;
+    margin: 0;
+  }
+  .loom-carousel__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--loom-radius-pill);
+    background: color-mix(in oklab, var(--loom-color-ink) 20%, transparent);
+    cursor: pointer;
+    transition: background var(--loom-transition-fast, 120ms) var(--loom-ease-out, ease),
+      transform var(--loom-transition-fast, 120ms) var(--loom-ease-out, ease);
+  }
+  .loom-carousel__dot:hover {
+    background: color-mix(in oklab, var(--loom-color-primary) 40%, var(--loom-color-ink));
+  }
+  .loom-carousel__dot[aria-current="true"] {
+    background: var(--loom-color-primary);
+    transform: scale(1.4);
+  }
+  .loom-carousel__dot:focus-visible {
+    outline: 2px solid var(--loom-color-primary);
+    outline-offset: 3px;
+  }
+  /* Prev/next buttons — optional. Position absolutely on the carousel. */
+  .loom-carousel__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--loom-radius-pill);
+    background: color-mix(in oklab, var(--loom-color-surface) 92%, transparent);
+    border: 1px solid var(--loom-color-border);
+    color: var(--loom-color-ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px color-mix(in oklab, var(--loom-color-ink) 12%, transparent);
+    z-index: 2;
+    backdrop-filter: blur(8px);
+  }
+  .loom-carousel__nav[data-dir="prev"] { left: 8px; }
+  .loom-carousel__nav[data-dir="next"] { right: 8px; }
+  .loom-carousel__nav:hover {
+    background: var(--loom-color-surface);
+    border-color: var(--loom-color-primary);
+  }
+  .loom-carousel__nav:focus-visible {
+    outline: 2px solid var(--loom-color-primary);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loom-carousel__track {
+      scroll-behavior: auto;
+    }
+    .loom-carousel__dot {
+      transition: none;
+    }
+  }
+
+  /* T65 (closes #648): animation primitives.
+   * Opt-in via data-loom-anim="<name>". Every animation collapses
+   * to instant under prefers-reduced-motion (WCAG 2.3.3).
+   *
+   * Available animations:
+   *   fade-in, fade-up, fade-down, fade-left, fade-right
+   *   scale-in, scale-out
+   *   slide-up, slide-down, slide-left, slide-right
+   *   pulse, shake, spin
+   *
+   * Speed:
+   *   data-loom-anim-duration="fast|base|slow|slower"
+   *   default: base (var(--loom-motion-base, 220ms))
+   *
+   * Delay:
+   *   data-loom-anim-delay="N" (N in ms)
+   *
+   * Easing:
+   *   uses --loom-ease-out by default; data-loom-anim-easing="spring"
+   *   switches to var(--loom-ease-spring).
+   */
+  @keyframes loom-anim-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes loom-anim-fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes loom-anim-fade-down { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes loom-anim-fade-left { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes loom-anim-fade-right { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes loom-anim-scale-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+  @keyframes loom-anim-scale-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.92); } }
+  @keyframes loom-anim-slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes loom-anim-slide-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+  @keyframes loom-anim-slide-left { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes loom-anim-slide-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes loom-anim-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  @keyframes loom-anim-shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
+  @keyframes loom-anim-spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+  [data-loom-anim] {
+    --comp-anim-duration: var(--loom-motion-base, 220ms);
+    --comp-anim-easing: var(--loom-ease-out, ease);
+    --comp-anim-delay: 0ms;
+    animation-duration: var(--comp-anim-duration);
+    animation-timing-function: var(--comp-anim-easing);
+    animation-delay: var(--comp-anim-delay);
+    animation-fill-mode: both;
+  }
+  [data-loom-anim-duration="fast"] { --comp-anim-duration: var(--loom-motion-fast, 120ms); }
+  [data-loom-anim-duration="slow"] { --comp-anim-duration: var(--loom-motion-slow, 420ms); }
+  [data-loom-anim-duration="slower"] { --comp-anim-duration: 800ms; }
+  [data-loom-anim-easing="spring"] { --comp-anim-easing: var(--loom-ease-spring, ease-out); }
+  /* Per-name binding. Plain CSS-only — no JS triggers, runs on
+   * page load for each element with the attribute. */
+  [data-loom-anim="fade-in"]      { animation-name: loom-anim-fade-in; }
+  [data-loom-anim="fade-up"]      { animation-name: loom-anim-fade-up; }
+  [data-loom-anim="fade-down"]    { animation-name: loom-anim-fade-down; }
+  [data-loom-anim="fade-left"]    { animation-name: loom-anim-fade-left; }
+  [data-loom-anim="fade-right"]   { animation-name: loom-anim-fade-right; }
+  [data-loom-anim="scale-in"]     { animation-name: loom-anim-scale-in; }
+  [data-loom-anim="scale-out"]    { animation-name: loom-anim-scale-out; }
+  [data-loom-anim="slide-up"]     { animation-name: loom-anim-slide-up; }
+  [data-loom-anim="slide-down"]   { animation-name: loom-anim-slide-down; }
+  [data-loom-anim="slide-left"]   { animation-name: loom-anim-slide-left; }
+  [data-loom-anim="slide-right"]  { animation-name: loom-anim-slide-right; }
+  [data-loom-anim="pulse"]        { animation-name: loom-anim-pulse; animation-iteration-count: infinite; animation-duration: 2s; }
+  [data-loom-anim="shake"]        { animation-name: loom-anim-shake; animation-duration: 600ms; }
+  [data-loom-anim="spin"]         { animation-name: loom-anim-spin; animation-iteration-count: infinite; animation-timing-function: linear; animation-duration: 1.4s; }
+  /* WCAG 2.3.3: reduced-motion clamps every animation to no-op. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-loom-anim] {
+      animation: none !important;
+    }
+  }
+
+  /* T71 (closes #654): typography rhythm.
+   * Establishes a vertical rhythm + leading scale so every page
+   * has consistent breathing room without per-element tuning.
+   *
+   * Modular scale: Perfect Fourth (1.333) for headings, base-1
+   * for body. Line-heights tight on display (1.1-1.2) and loose
+   * on body (1.55-1.7) per WCAG 1.4.12 + readable-typography
+   * doctrine.
+   *
+   * Heading top-margin pattern: large top-margin (de-cramps
+   * content above), zero bottom-margin (paragraph spacing
+   * handled by p { margin-top }). Per CSS-Wizardry's classic
+   * "trimming the top" rhythm pattern.
+   *
+   * Cascade-scoped to main#content so site chrome (header /
+   * nav / footer) keeps its own rhythm.
+   */
+  main#content {
+    line-height: 1.55;
+  }
+  main#content h1, main#content h2, main#content h3,
+  main#content h4, main#content h5, main#content h6 {
+    font-family: var(--loom-font-display, inherit);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -.012em;
+    text-wrap: balance;
+    margin: var(--loom-space-8, 2rem) 0 0 0;
+  }
+  main#content h1 { font-size: var(--loom-font-4xl, 2.25rem); }
+  main#content h2 { font-size: var(--loom-font-3xl, 1.875rem); }
+  main#content h3 { font-size: var(--loom-font-2xl, 1.5rem); }
+  main#content h4 { font-size: var(--loom-font-xl, 1.25rem); }
+  main#content h5 { font-size: var(--loom-font-lg, 1.125rem); }
+  main#content h6 {
+    font-size: var(--loom-font-base, 1rem);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  /* First heading in a flow has no top-margin (the section's
+   * pad already provides breathing room). */
+  main#content > h1:first-child,
+  main#content > h2:first-child,
+  main#content > h3:first-child,
+  main#content > *:first-child > h1:first-child,
+  main#content > *:first-child > h2:first-child,
+  main#content > *:first-child > h3:first-child {
+    margin-top: 0;
+  }
+  main#content p {
+    margin: var(--loom-space-4, 1rem) 0 0 0;
+    line-height: 1.65;
+    text-wrap: pretty;
+    max-width: 70ch;
+  }
+  main#content p:first-child { margin-top: 0; }
+  /* Lists — generous leading + nested indent. */
+  main#content ul, main#content ol {
+    margin: var(--loom-space-4, 1rem) 0 0 0;
+    padding-left: var(--loom-space-6, 1.5rem);
+    line-height: 1.65;
+  }
+  main#content li + li { margin-top: var(--loom-space-2, 0.5rem); }
+  main#content li > ul, main#content li > ol { margin-top: var(--loom-space-2, 0.5rem); }
+  /* Blockquote — pull-quote treatment with accent border. */
+  main#content blockquote {
+    margin: var(--loom-space-6, 1.5rem) 0 0 0;
+    padding: var(--loom-space-3, 0.75rem) var(--loom-space-5, 1.25rem);
+    border-left: 3px solid var(--loom-color-primary, currentColor);
+    background: color-mix(in oklab, var(--loom-color-primary, currentColor) 5%, transparent);
+    color: var(--loom-color-ink-muted, inherit);
+    font-style: italic;
+  }
+  main#content blockquote p { max-width: none; }
+  /* Inline code — distinct mono font + soft bg. */
+  main#content code {
+    font-family: var(--loom-font-mono, ui-monospace, monospace);
+    font-size: .92em;
+    padding: 1px 6px;
+    border-radius: var(--loom-radius-sm, 6px);
+    background: color-mix(in oklab, var(--loom-color-ink, currentColor) 6%, transparent);
+  }
+  main#content pre {
+    margin: var(--loom-space-5, 1.25rem) 0 0 0;
+    padding: var(--loom-space-4, 1rem);
+    border-radius: var(--loom-radius-md, 10px);
+    background: var(--loom-color-surface-muted, var(--loom-bg, #f4f4f5));
+    overflow-x: auto;
+    font-family: var(--loom-font-mono, ui-monospace, monospace);
+    font-size: .92em;
+    line-height: 1.55;
+  }
+  main#content pre code {
+    background: none;
+    padding: 0;
+    font-size: 1em;
+  }
+  /* HR — subtle divider on accent. */
+  main#content hr {
+    margin: var(--loom-space-8, 2rem) 0;
+    border: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--loom-color-border, currentColor) 50%,
+      transparent 100%
+    );
+  }
 
 
 /* ============================================================ *
@@ -228,6 +642,19 @@
     --loom-radius-component:    var(--loom-radius-lg);
     --loom-border-component:    1px solid var(--loom-color-border);
     --loom-border-strong:       1px solid var(--loom-color-border-strong);
+
+    /* T660 P-pill (added 2026-05-17): canonical pill-shape radius
+     * for nav-link backgrounds, avatar wrappers, and any tag /
+     * chip / round-button. Was referenced as --loom-radius-full at
+     * 7 sites in this file but never DEFINED — browsers were
+     * silently falling back to the `initial` value (0) on those
+     * declarations. Pinning the token at 9999px (the de-facto pill
+     * idiom — any value > the element's half-side rounds to a pill)
+     * fixes those + gives downstream sites a stable token to
+     * reference instead of hardcoding 999px or 9999px (which the
+     * forge tokens-phase warns on). */
+    --loom-radius-full:         9999px;
+    --loom-radius-pill:         9999px;
 
     /* Layered shadow stack — premium depth.
      * Three rays at different distances + a soft ambient =
@@ -357,6 +784,35 @@
     max-width: var(--loom-break-xl);
     margin: 0 auto;
     padding: var(--loom-pad-band);
+    display: flex;
+    flex-direction: column;
+    gap: var(--loom-space-5);
+  }
+  /* T76 cycle 95b: 2-column layout when a sidebar exists.
+   * Mobile-first stacking is the default; widens to feed | sidebar
+   * at 960px+. Banner/hero/composer always span both columns.
+   * `:has()` is supported in every modern browser since 2023; falls
+   * back gracefully (single-column stack) elsewhere. */
+  @media (min-width: 960px) {
+    .loom-page:has(> .loom-sidebar):has(> .loom-card-feed) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: var(--loom-space-6);
+      align-items: start;
+    }
+    .loom-page:has(> .loom-sidebar):has(> .loom-card-feed) > .loom-banner,
+    .loom-page:has(> .loom-sidebar):has(> .loom-card-feed) > .loom-section-hero,
+    .loom-page:has(> .loom-sidebar):has(> .loom-card-feed) > .loom-composer {
+      grid-column: 1 / -1;
+    }
+    .loom-page:has(> .loom-sidebar):has(> .loom-card-feed) > .loom-card-feed {
+      grid-column: 1;
+    }
+    .loom-page:has(> .loom-sidebar):has(> .loom-card-feed) > .loom-sidebar {
+      grid-column: 2;
+      position: sticky;
+      top: var(--loom-space-5);
+    }
   }
 
   .loom-stack {
@@ -1000,7 +1456,7 @@
     align-items: center;
     gap: var(--loom-space-2);
     padding: var(--loom-space-2) var(--loom-space-3);
-    border-radius: 999px;
+    border-radius: var(--loom-radius-pill);
     background: var(--loom-color-surface-muted);
     color: var(--loom-color-ink-muted, var(--loom-color-ink));
     font-size: var(--loom-font-sm, 0.875rem);
@@ -1151,14 +1607,45 @@
     gap: var(--loom-space-4);
   }
   .loom-panel {
+    --comp-panel-accent: var(--loom-color-primary);
     background: var(--loom-color-surface);
-    border: var(--loom-border-component);
+    border: 1px solid var(--loom-color-border);
     border-radius: var(--loom-radius-component);
-    padding: var(--loom-space-4);
+    padding: var(--loom-space-4) var(--loom-space-5);
     display: flex;
     flex-direction: column;
     gap: var(--loom-space-3);
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--loom-color-ink) 5%, transparent),
+      0 1px 3px color-mix(in oklab, var(--loom-color-ink) 4%, transparent);
+    position: relative;
+    overflow: hidden;
   }
+  .loom-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: linear-gradient(180deg,
+      var(--comp-panel-accent) 0%,
+      color-mix(in oklab, var(--comp-panel-accent) 40%, transparent) 100%);
+  }
+  .loom-panel__title {
+    padding-left: var(--loom-space-1);
+  }
+  /* Per-panel accent rotation — sites can override via inline
+   * style="--comp-panel-accent: …" or via data-tone="X". */
+  .loom-sidebar > .loom-panel:nth-of-type(1) { --comp-panel-accent: hsl(244 65% 50%); }
+  .loom-sidebar > .loom-panel:nth-of-type(2) { --comp-panel-accent: hsl(15 75% 55%); }
+  .loom-sidebar > .loom-panel:nth-of-type(3) { --comp-panel-accent: hsl(155 65% 40%); }
+  .loom-sidebar > .loom-panel:nth-of-type(4) { --comp-panel-accent: hsl(280 70% 55%); }
+  .loom-sidebar > .loom-panel:nth-of-type(5) { --comp-panel-accent: hsl(38 90% 45%); }
+  .loom-panel[data-tone="violet"] { --comp-panel-accent: hsl(280 75% 50%); }
+  .loom-panel[data-tone="indigo"] { --comp-panel-accent: hsl(244 65% 50%); }
+  .loom-panel[data-tone="ocean"]  { --comp-panel-accent: hsl(210 80% 45%); }
+  .loom-panel[data-tone="forest"] { --comp-panel-accent: hsl(155 65% 40%); }
+  .loom-panel[data-tone="amber"]  { --comp-panel-accent: hsl(38 90% 45%); }
+  .loom-panel[data-tone="rose"]   { --comp-panel-accent: hsl(340 80% 50%); }
   .loom-panel__title {
     font-family: var(--loom-font-display);
     font-size: var(--loom-font-base);
@@ -1243,9 +1730,23 @@
    * tag). Used for battle feeds, vote queues, leaderboard rows.   *
    * ============================================================ */
   .loom-card-feed {
-    display: flex;
-    flex-direction: column;
-    gap: var(--loom-space-3);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--loom-space-4);
+  }
+  /* T70d cycle 96 iter 6: auto-fit card grid. Each card gets at
+   * least 18rem of width OR a full column if not enough room.
+   * Featured first card spans the full row regardless. Sites
+   * that want a vertical list set data-layout="list" on
+   * .loom-card-feed. REGRESSION-GUARD: prior fixed 2-col grid
+   * broke at 200% zoom (root font-size = 32px), squeezing card
+   * bodies to clientWidth=0. auto-fit + min(100%, 18rem) means
+   * the grid degrades gracefully under zoom + narrow viewports. */
+  .loom-card-feed:not([data-layout="list"]) {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  }
+  .loom-card-feed:not([data-layout="list"]):not([data-featured="off"]) > .loom-card-feed-item:first-of-type {
+    grid-column: 1 / -1;
   }
   .loom-card-feed__heading {
     font-family: var(--loom-font-display);
@@ -1257,22 +1758,98 @@
   }
   .loom-card-feed-item {
     background: var(--loom-color-surface);
-    border: var(--loom-border-component);
+    border: 1px solid color-mix(in oklab, var(--loom-color-border) 60%, transparent);
     border-radius: var(--loom-radius-component);
+    /* Layered depth — three shadow stacks for real elevation. */
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--loom-color-ink) 5%, transparent),
+      0 4px 12px color-mix(in oklab, var(--loom-color-ink) 6%, transparent),
+      0 16px 32px color-mix(in oklab, var(--loom-color-ink) 4%, transparent);
     overflow: hidden;
-    transition: border-color var(--loom-transition-fast),
+    transition: transform var(--loom-transition-fast),
+                border-color var(--loom-transition-fast),
                 box-shadow var(--loom-transition-fast);
+    position: relative;
+  }
+  /* Featured first card — stronger visual hierarchy. Operators
+   * who want EVERY card uniform set data-featured="off" on the
+   * .loom-card-feed wrapper to disable. */
+  .loom-card-feed:not([data-featured="off"]) > .loom-card-feed-item:first-of-type {
+    background:
+      radial-gradient(600px 200px at 100% 0%,
+        color-mix(in oklab, var(--loom-color-gradient-b) 14%, transparent) 0%,
+        transparent 60%),
+      var(--loom-color-surface);
+    border-color: color-mix(in oklab, var(--loom-color-primary) 35%, var(--loom-color-border));
+    box-shadow:
+      0 18px 40px color-mix(in oklab, var(--loom-color-primary) 18%, transparent),
+      0 6px 12px color-mix(in oklab, var(--loom-color-ink) 8%, transparent);
+  }
+  .loom-card-feed:not([data-featured="off"]) > .loom-card-feed-item:first-of-type::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: var(--loom-grad-hero, linear-gradient(90deg, var(--loom-color-primary), var(--loom-color-gradient-b)));
+    z-index: 1;
+  }
+  .loom-card-feed:not([data-featured="off"]) > .loom-card-feed-item:first-of-type .loom-card-feed-item__title {
+    font-size: var(--loom-font-2xl, 1.5rem);
+  }
+  .loom-card-feed:not([data-featured="off"]) > .loom-card-feed-item:first-of-type .loom-card-feed-item__link {
+    padding: var(--loom-space-6);
+  }
+  /* T70a: optional 16:9 media slot above the card body. Activates
+   * when the CMS markup includes <div class="loom-card-feed-item__media">
+   * with an <img>/<video>/<picture>. Lazy-load via loading="lazy".
+   * Falls back to a soft gradient placeholder when empty so we
+   * never ship a blank media slot. */
+  .loom-card-feed-item__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    overflow: hidden;
+    background: linear-gradient(135deg,
+      color-mix(in oklab, var(--loom-color-primary) 18%, var(--loom-color-surface-muted)) 0%,
+      color-mix(in oklab, var(--loom-color-gradient-b) 18%, var(--loom-color-surface-muted)) 100%);
+  }
+  .loom-card-feed-item__media img,
+  .loom-card-feed-item__media video,
+  .loom-card-feed-item__media picture > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .loom-card-feed-item__media[data-empty="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60% 60% at 30% 30%,
+        color-mix(in oklab, var(--loom-color-primary) 10%, transparent),
+        transparent 70%);
   }
   .loom-card-feed-item:hover,
   .loom-card-feed-item:focus-within {
-    border-color: var(--loom-color-primary, currentColor);
-    box-shadow: 0 4px 12px color-mix(in oklab, var(--loom-color-ink) 8%, transparent);
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--loom-color-primary) 60%, var(--loom-color-border));
+    box-shadow:
+      0 14px 28px color-mix(in oklab, var(--loom-color-ink) 12%, transparent),
+      0 4px 8px color-mix(in oklab, var(--loom-color-ink) 8%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loom-card-feed-item { transition: none; }
+    .loom-card-feed-item:hover,
+    .loom-card-feed-item:focus-within { transform: none; }
   }
   .loom-card-feed-item__link {
     display: flex;
     align-items: flex-start;
-    gap: var(--loom-space-3);
-    padding: var(--loom-space-4);
+    gap: var(--loom-space-4);
+    padding: var(--loom-space-5);
     color: var(--loom-color-ink);
     text-decoration: none;
     min-height: var(--loom-tap-min);
@@ -1291,51 +1868,84 @@
     width: var(--loom-size-avatar-md);
     height: var(--loom-size-avatar-md);
     border-radius: 50%;
-    background: var(--loom-color-surface-muted);
-    color: var(--loom-color-ink);
+    background: linear-gradient(135deg,
+      color-mix(in oklab, var(--loom-color-primary) 65%, var(--loom-color-gradient-b) 35%) 0%,
+      color-mix(in oklab, var(--loom-color-gradient-b) 70%, var(--loom-color-primary) 30%) 100%);
+    color: var(--loom-color-primary-fg);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
+    font-family: var(--loom-font-display);
+    font-weight: 700;
     font-size: var(--loom-font-base);
+    letter-spacing: -.02em;
     overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 30%, transparent),
+      0 2px 6px color-mix(in oklab, var(--loom-color-primary) 30%, transparent);
   }
   .loom-card-feed-item__body {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    gap: var(--loom-space-1);
+    gap: var(--loom-space-2);
+    min-width: 0;
   }
   .loom-card-feed-item__tag {
+    /* General-purpose tag chip. Any site sets either a curated
+     * tone via data-tone="X" OR a custom color via inline
+     * style="--tag-color: <hsl|hex|hsl()>". Falls back to the
+     * site's primary brand color when nothing is set. SkillShots
+     * categorisation lives in the CMS data, NOT in this CSS. */
+    --tag-color: var(--loom-color-primary);
     align-self: flex-start;
-    padding: 2px var(--loom-space-2);
-    border-radius: 999px;
-    background: color-mix(in oklab, var(--loom-color-primary, currentColor) 12%, transparent);
-    color: var(--loom-color-primary, currentColor);
+    padding: var(--loom-space-1) var(--loom-space-3);
+    border-radius: var(--loom-radius-pill);
+    background: color-mix(in oklab, var(--tag-color) 14%, var(--loom-color-surface));
+    color: color-mix(in oklab, var(--tag-color) 80%, var(--loom-color-ink));
+    font-family: var(--loom-font-display);
     font-size: var(--loom-font-sm, 0.875rem);
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
     line-height: 1.4;
+    border: 1px solid color-mix(in oklab, var(--tag-color) 25%, transparent);
   }
+  /* Curated tone palette — any site can opt in via data-tone="X".
+   * Custom colours via inline style="--tag-color: …" still work. */
+  .loom-card-feed-item__tag[data-tone="violet"] { --tag-color: hsl(280 75% 50%); }
+  .loom-card-feed-item__tag[data-tone="indigo"] { --tag-color: hsl(244 65% 50%); }
+  .loom-card-feed-item__tag[data-tone="ocean"]  { --tag-color: hsl(210 80% 45%); }
+  .loom-card-feed-item__tag[data-tone="forest"] { --tag-color: hsl(155 65% 40%); }
+  .loom-card-feed-item__tag[data-tone="amber"]  { --tag-color: hsl(38 90% 45%); }
+  .loom-card-feed-item__tag[data-tone="rose"]   { --tag-color: hsl(340 80% 50%); }
+  .loom-card-feed-item__tag[data-tone="ruby"]   { --tag-color: hsl(0 75% 48%); }
+  .loom-card-feed-item__tag[data-tone="walnut"] { --tag-color: hsl(28 60% 35%); }
+  .loom-card-feed-item__tag[data-tone="slate"]  { --tag-color: hsl(225 15% 38%); }
+  .loom-card-feed-item__tag[data-tone="teal"]   { --tag-color: hsl(180 70% 35%); }
   .loom-card-feed-item__title {
     font-family: var(--loom-font-display);
-    font-size: var(--loom-font-lg, 1.125rem);
-    font-weight: 600;
+    font-size: var(--loom-font-xl, 1.25rem);
+    font-weight: 700;
     color: var(--loom-color-ink);
-    line-height: 1.3;
+    line-height: 1.25;
+    letter-spacing: -.012em;
     margin: 0;
+    text-wrap: pretty;
   }
   .loom-card-feed-item__host {
     color: var(--loom-color-ink-muted, var(--loom-color-ink));
     font-size: var(--loom-font-sm, 0.875rem);
-    line-height: 1.4;
+    line-height: 1.45;
     margin: 0;
   }
   .loom-card-feed-item__stats {
     list-style: none;
-    padding: 0;
+    padding: var(--loom-space-3) 0 0 0;
     margin: var(--loom-space-2) 0 0 0;
+    border-top: 1px solid color-mix(in oklab, var(--loom-color-border) 80%, transparent);
     display: flex;
-    gap: var(--loom-space-4);
+    gap: var(--loom-space-6);
     flex-wrap: wrap;
   }
   .loom-card-feed-item__stat {
@@ -1344,16 +1954,26 @@
     gap: 2px;
   }
   .loom-card-feed-item__stat-label {
-    font-size: var(--loom-font-sm, 0.875rem);
+    font-size: var(--loom-font-xs, 0.75rem);
     color: var(--loom-color-ink-muted, var(--loom-color-ink));
     line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 600;
   }
   .loom-card-feed-item__stat-value {
     font-family: var(--loom-font-display);
-    font-size: var(--loom-font-base);
-    font-weight: 600;
+    font-size: var(--loom-font-2xl, 1.5rem);
+    font-weight: 800;
     color: var(--loom-color-ink);
-    line-height: 1.2;
+    line-height: 1;
+    letter-spacing: -.018em;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Highlight the primary stat (votes %, pot $) — first stat
+   * gets the primary color treatment for visual anchor. */
+  .loom-card-feed-item__stat:first-child .loom-card-feed-item__stat-value {
+    color: var(--loom-color-primary);
   }
 
   /* ============================================================ *
@@ -1365,23 +1985,76 @@
    * cms-render's CmsSection::Hero.                                *
    * ============================================================ */
   .loom-section-hero {
-    padding: var(--loom-space-8) var(--loom-space-5);
-    border-radius: var(--loom-radius-component);
+    padding: clamp(var(--loom-space-8), 6vw, var(--loom-space-16)) clamp(var(--loom-space-6), 5vw, var(--loom-space-10));
+    border-radius: var(--loom-radius-lg, 24px);
     background:
-      radial-gradient(800px 400px at 80% -10%,
-        color-mix(in oklab, var(--loom-color-primary, currentColor) 15%, transparent) 0%,
-        transparent 60%),
-      var(--loom-color-surface);
-    border: var(--loom-border-component);
+      radial-gradient(900px 500px at 85% -20%,
+        color-mix(in oklab, var(--loom-color-gradient-b) 38%, transparent) 0%,
+        transparent 55%),
+      radial-gradient(700px 400px at -10% 110%,
+        color-mix(in oklab, var(--loom-color-gradient-a) 30%, transparent) 0%,
+        transparent 55%),
+      linear-gradient(135deg,
+        color-mix(in oklab, var(--loom-color-gradient-a) 14%, var(--loom-color-surface)) 0%,
+        var(--loom-color-surface) 50%,
+        color-mix(in oklab, var(--loom-color-gradient-b) 12%, var(--loom-color-surface)) 100%);
+    border: 1px solid color-mix(in oklab, var(--loom-color-primary) 20%, var(--loom-color-border));
+    box-shadow:
+      0 2px 4px color-mix(in oklab, var(--loom-color-ink) 5%, transparent),
+      0 24px 48px color-mix(in oklab, var(--loom-color-primary) 18%, transparent),
+      0 48px 96px color-mix(in oklab, var(--loom-color-ink) 10%, transparent);
     display: flex;
     flex-direction: column;
-    gap: var(--loom-space-3);
+    gap: var(--loom-space-5);
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  /* Decorative blob behind the hero — adds depth/dimension.
+   * REGRESSION-GUARD (cycle 96 iter 2): tablet uiOverflow +7
+   * was caused by the previous transform:translate(15%,25%)
+   * pushing the ::after box past the hero edge. Even with
+   * overflow:hidden, scrollWidth includes transformed children.
+   * Fix: stay strictly inside the box (no transform), AND add
+   * contain:paint as belt-and-braces so any future ::after
+   * won't accidentally bleed out. */
+  .loom-section-hero::after {
+    content: "";
+    position: absolute;
+    /* Strictly inside the hero box. -2% bleed in iter 2 still
+     * triggered uiOverflow on themed-page baselines. */
+    inset: 30% 0 0 auto;
+    width: 38%;
+    height: 100%;
+    background: radial-gradient(closest-side,
+      color-mix(in oklab, var(--loom-color-gradient-b) 36%, transparent) 0%,
+      transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(28px);
+  }
+  .loom-section-hero { contain: paint; }
+  .loom-section-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(1px 1px at 20% 30%, color-mix(in oklab, var(--loom-color-primary) 40%, transparent), transparent 50%),
+      radial-gradient(1px 1px at 70% 60%, color-mix(in oklab, var(--loom-color-gradient-b) 40%, transparent), transparent 50%);
+    background-size: 60px 60px, 80px 80px;
+    opacity: .35;
+    mask-image: linear-gradient(180deg, transparent, black 30%, black 70%, transparent);
+  }
+  .loom-section-hero > * {
+    position: relative;
+    z-index: 1;
   }
   .loom-section-hero__eyebrow {
     display: inline-block;
     align-self: flex-start;
     padding: var(--loom-space-1) var(--loom-space-3);
-    border-radius: 999px;
+    border-radius: var(--loom-radius-pill);
     background: color-mix(in oklab, var(--loom-color-primary, currentColor) 12%, transparent);
     color: var(--loom-color-primary, currentColor);
     font-size: var(--loom-font-sm, 0.875rem);
@@ -1390,12 +2063,24 @@
   }
   .loom-section-hero__title {
     font-family: var(--loom-font-display);
-    font-size: var(--loom-font-3xl, 1.875rem);
-    font-weight: 700;
+    /* T70 cycle 96: clamp floor reduced from 1.5rem to 1.25rem.
+     * REGRESSION-GUARD: prior floor caused .loom-section-hero
+     * to overflow its container on 375px-viewport mobile (the
+     * uiOverflow detector flagged 7 pages). Bound also adds
+     * overflow-wrap:anywhere so a single long word never breaks
+     * the box, regardless of viewport. */
+    font-size: clamp(1.25rem, 5.5vw, var(--loom-font-5xl, 3rem));
+    font-weight: 800;
     color: var(--loom-color-ink);
-    line-height: 1.15;
-    letter-spacing: var(--loom-track-tight);
+    line-height: 1.1;
+    letter-spacing: -.022em;
     margin: 0;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  .loom-section-hero {
+    min-width: 0;
   }
   .loom-section-hero__lede {
     font-size: var(--loom-font-lg, 1.125rem);
@@ -1408,17 +2093,36 @@
     display: inline-flex;
     align-self: flex-start;
     align-items: center;
-    padding: var(--loom-space-3) var(--loom-space-5);
-    border-radius: var(--loom-radius-sm);
-    background: var(--loom-color-primary, var(--loom-color-ink));
+    padding: var(--loom-space-3) var(--loom-space-6);
+    border-radius: var(--loom-radius-pill);
+    background: linear-gradient(135deg,
+      var(--loom-color-primary) 0%,
+      color-mix(in oklab, var(--loom-color-primary) 70%, var(--loom-color-gradient-b)) 100%);
     color: var(--loom-color-primary-fg, var(--loom-color-surface));
     text-decoration: none;
     font-weight: 600;
+    font-size: 1.02rem;
+    letter-spacing: -.005em;
     min-height: var(--loom-tap-min);
-    transition: filter var(--loom-transition-fast);
+    box-shadow:
+      0 6px 16px color-mix(in oklab, var(--loom-color-primary) 30%, transparent),
+      0 2px 4px color-mix(in oklab, var(--loom-color-primary) 20%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 30%, transparent);
+    transition: transform var(--loom-transition-fast),
+                box-shadow var(--loom-transition-fast),
+                filter var(--loom-transition-fast);
   }
   .loom-section-hero__cta:hover {
-    filter: brightness(1.05);
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow:
+      0 10px 24px color-mix(in oklab, var(--loom-color-primary) 35%, transparent),
+      0 3px 6px color-mix(in oklab, var(--loom-color-primary) 25%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 40%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loom-section-hero__cta { transition: none; }
+    .loom-section-hero__cta:hover { transform: none; }
   }
   .loom-section-hero__cta:focus-visible {
     filter: brightness(1.05);
@@ -1476,16 +2180,19 @@
    *   [data-invalid="true"]          surfaces a build-time error  *
    * ============================================================ */
   .loom-composer {
-    --comp-composer-pad: var(--loom-space-4);
-    --comp-composer-gap: var(--loom-space-3);
-    --comp-composer-prompt-pad: var(--loom-space-3) var(--loom-space-4);
+    --comp-composer-pad: var(--loom-space-5);
+    --comp-composer-gap: var(--loom-space-4);
+    --comp-composer-prompt-pad: var(--loom-space-3) var(--loom-space-5);
     background: var(--loom-color-surface);
-    border: var(--loom-border-component);
+    border: 1px solid var(--loom-color-border);
     border-radius: var(--loom-radius-component);
     padding: var(--comp-composer-pad);
     display: flex;
     flex-direction: column;
     gap: var(--comp-composer-gap);
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--loom-color-ink) 5%, transparent),
+      0 1px 3px color-mix(in oklab, var(--loom-color-ink) 4%, transparent);
   }
   .loom-composer[data-size="compact"] {
     --comp-composer-pad: var(--loom-space-2);
@@ -1506,29 +2213,40 @@
   }
   .loom-composer__avatar {
     flex: 0 0 auto;
-    width: var(--loom-size-avatar-sm);
-    height: var(--loom-size-avatar-sm);
+    width: calc(var(--loom-size-avatar-md, 48px));
+    height: calc(var(--loom-size-avatar-md, 48px));
     border-radius: 50%;
-    background: var(--loom-color-surface-muted);
-    color: var(--loom-color-ink);
+    background: linear-gradient(135deg,
+      color-mix(in oklab, var(--loom-color-primary) 65%, var(--loom-color-gradient-b) 35%) 0%,
+      color-mix(in oklab, var(--loom-color-gradient-b) 70%, var(--loom-color-primary) 30%) 100%);
+    color: var(--loom-color-primary-fg);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: var(--loom-font-sm, 0.875rem);
+    font-family: var(--loom-font-display);
+    font-weight: 700;
+    font-size: var(--loom-font-base);
+    letter-spacing: -.02em;
     overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 30%, transparent),
+      0 2px 6px color-mix(in oklab, var(--loom-color-primary) 30%, transparent);
   }
   .loom-composer__prompt {
     flex: 1 1 auto;
     display: block;
-    padding: var(--comp-composer-prompt-pad);
+    padding: var(--loom-space-4) var(--loom-space-5);
     background: var(--loom-color-surface-muted);
     color: var(--loom-color-ink-muted, var(--loom-color-ink));
-    border-radius: 999px;
+    border-radius: var(--loom-radius-pill);
+    border: 1px solid var(--loom-color-border);
     text-decoration: none;
     min-height: var(--loom-tap-min);
     line-height: 1.4;
-    transition: background var(--loom-transition-fast);
+    font-size: 1.02rem;
+    transition: background var(--loom-transition-fast),
+                border-color var(--loom-transition-fast),
+                color var(--loom-transition-fast);
   }
   .loom-composer__prompt:hover {
     background: color-mix(in oklab, var(--loom-color-surface-muted) 92%, var(--loom-color-ink) 8%);
@@ -1553,15 +2271,23 @@
     align-items: center;
     justify-content: center;
     gap: var(--loom-space-2);
-    padding: var(--loom-space-2) var(--loom-space-3);
+    padding: var(--loom-space-3) var(--loom-space-4);
     border-radius: var(--loom-radius-sm);
-    color: var(--loom-color-ink);
+    color: var(--loom-color-ink-muted);
     text-decoration: none;
     min-height: var(--loom-tap-min);
-    transition: background var(--loom-transition-fast);
+    font-weight: 600;
+    font-size: 0.96rem;
+    transition: background var(--loom-transition-fast),
+                color var(--loom-transition-fast);
   }
   .loom-composer__action:hover {
-    background: var(--loom-color-surface-muted);
+    background: color-mix(in oklab, var(--loom-color-primary) 8%, var(--loom-color-surface-muted));
+    color: var(--loom-color-primary);
+  }
+  .loom-composer__action-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
   }
   .loom-composer__action:focus-visible {
     background: var(--loom-color-surface-muted);
@@ -2195,29 +2921,193 @@
    * --loom-color-primary was undefined → outline shorthand was
    * rejected as invalid CSS. */
   :root {
+    /* T76 cycle 95b: premium palette default — warm violet + coral
+     * accent on a soft warm-white canvas. Light by default; the
+     * `@media (prefers-color-scheme: dark)` block below auto-flips
+     * to premium dark. Existing `data-theme="hc-dark"`, `hc-light`,
+     * `sepia` variants are unchanged. WCAG AA contrast pinned: ink
+     * #1B1F2A on bg #FBFAF7 = 16.4:1; primary #4338CA on bg = 7.6:1
+     * (AAA normal-text). Validated via loom theme contrast.
+     *
+     * T99 (2026-05-18): added accent + on-accent + info + info-subtle
+     * + success-subtle + warning-subtle + danger-subtle + surface-subtle.
+     * Closes T99 — `loom theme validate` flagged these as consumed-
+     * but-undeclared. Subtle backgrounds at 92-97% L; info hsl(210)
+     * blue family; accent = coral (matches gradient-b hue). */
+    --loom-color-bg-canvas:     hsl(40 33% 98%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(40 25% 95%);
+    --loom-color-surface-subtle: hsl(40 30% 97%);
+    --loom-color-bg-overlay:    hsl(225 20% 14% / 6%);
+    --loom-color-ink:           hsl(225 25% 10%);
+    --loom-color-ink-muted:     hsl(225 15% 32%);
+    --loom-color-border:        hsl(36 16% 80%);
+    --loom-color-border-strong: hsl(36 12% 60%);
+    --loom-color-primary:       hsl(244 65% 38%);
+    --loom-color-primary-fg:    hsl(0 0% 100%);
+    --loom-color-accent:        hsl(15 85% 45%);
+    --loom-color-on-accent:     hsl(0 0% 100%);
+    --loom-color-accent-glow:   hsl(258 65% 45%);
+    --loom-color-info:          hsl(210 70% 35%);
+    --loom-color-info-subtle:   hsl(210 75% 95%);
+    --loom-color-success:       hsl(142 75% 22%);
+    --loom-color-success-subtle: hsl(142 55% 92%);
+    --loom-color-warn:          hsl(28 95% 30%);
+    --loom-color-warning:       hsl(28 95% 30%);
+    --loom-color-warning-subtle: hsl(28 80% 92%);
+    --loom-color-danger:        hsl(0 75% 35%);
+    --loom-color-danger-subtle: hsl(0 70% 94%);
+    --loom-color-tier-medium:   hsl(38 95% 30%);
+    --loom-color-gradient-a:    hsl(244 65% 38%);
+    --loom-color-gradient-b:    hsl(15 85% 45%);
+  }
+  /* Premium dark — owner directive (2026-05-15): default to
+   * LIGHT regardless of OS pref. Auto-flip only when the page
+   * explicitly opts in via data-theme="auto" (matches the
+   * BASE_THEME_CSS contract in loom-cms-render). The in-page
+   * theme switcher (T72) sets data-theme="light"|"dark"|"auto"
+   * and persists to localStorage. */
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] {
+      --loom-color-bg-canvas:     hsl(232 24% 8%);
+      --loom-color-surface:       hsl(232 22% 11%);
+      --loom-color-surface-muted: hsl(232 20% 15%);
+      --loom-color-surface-subtle: hsl(232 21% 13%);
+      --loom-color-bg-overlay:    hsl(0 0% 100% / 6%);
+      --loom-color-ink:           hsl(228 33% 95%);
+      --loom-color-ink-muted:     hsl(225 12% 65%);
+      --loom-color-border:        hsl(232 18% 22%);
+      --loom-color-border-strong: hsl(232 14% 38%);
+      --loom-color-primary:       hsl(238 100% 78%);
+      --loom-color-primary-fg:    hsl(232 24% 8%);
+      --loom-color-accent:        hsl(15 95% 70%);
+      --loom-color-on-accent:     hsl(232 24% 8%);
+      --loom-color-accent-glow:   hsl(258 100% 78%);
+      --loom-color-info:          hsl(210 90% 70%);
+      --loom-color-info-subtle:   hsl(210 50% 18%);
+      --loom-color-success:       hsl(142 60% 60%);
+      --loom-color-success-subtle: hsl(142 35% 18%);
+      --loom-color-warn:          hsl(28 95% 65%);
+      --loom-color-warning:       hsl(28 95% 65%);
+      --loom-color-warning-subtle: hsl(28 50% 18%);
+      --loom-color-danger:        hsl(0 80% 65%);
+      --loom-color-danger-subtle: hsl(0 40% 22%);
+      --loom-color-tier-medium:   hsl(45 95% 60%);
+      --loom-color-gradient-a:    hsl(238 100% 78%);
+      --loom-color-gradient-b:    hsl(15 95% 70%);
+    }
+  }
+  /* Explicit data-theme="dark" — same palette as auto-dark above. */
+  :root[data-theme="dark"] {
+    --loom-color-bg-canvas:     hsl(232 24% 8%);
+    --loom-color-surface:       hsl(232 22% 11%);
+    --loom-color-surface-muted: hsl(232 20% 15%);
+    --loom-color-surface-subtle: hsl(232 21% 13%);
+    --loom-color-bg-overlay:    hsl(0 0% 100% / 6%);
+    --loom-color-ink:           hsl(228 33% 95%);
+    --loom-color-ink-muted:     hsl(225 12% 65%);
+    --loom-color-border:        hsl(232 18% 22%);
+    --loom-color-border-strong: hsl(232 14% 38%);
+    --loom-color-primary:       hsl(238 100% 78%);
+    --loom-color-primary-fg:    hsl(232 24% 8%);
+    --loom-color-accent:        hsl(15 95% 70%);
+    --loom-color-on-accent:     hsl(232 24% 8%);
+    --loom-color-accent-glow:   hsl(258 100% 78%);
+    --loom-color-info:          hsl(210 90% 70%);
+    --loom-color-info-subtle:   hsl(210 50% 18%);
+    --loom-color-success:       hsl(142 60% 60%);
+    --loom-color-success-subtle: hsl(142 35% 18%);
+    --loom-color-warn:          hsl(28 95% 65%);
+    --loom-color-warning:       hsl(28 95% 65%);
+    --loom-color-warning-subtle: hsl(28 50% 18%);
+    --loom-color-danger:        hsl(0 80% 65%);
+    --loom-color-danger-subtle: hsl(0 40% 22%);
+    --loom-color-tier-medium:   hsl(45 95% 60%);
+    --loom-color-gradient-a:    hsl(238 100% 78%);
+    --loom-color-gradient-b:    hsl(15 95% 70%);
+  }
+
+  /* data-theme="dark-amoled" — true-black variant for OLED displays.
+   *
+   * bg-canvas at hsl(0 0% 0%) so OLED pixels are literally off:
+   * substantial battery savings on mobile, maximum contrast for
+   * low-vision readers without crossing into hc-dark's higher-
+   * contrast brand colors.
+   *
+   * Elevation grays (surface / surface-muted) stay near-black —
+   * just enough delta to convey depth in card stacks + modals
+   * without lighting up pixels that don't need to be on. Brand
+   * colors (primary, gradient-a/b, accent-glow, success/warn/
+   * danger) match the standard `dark` theme so the visual brand
+   * stays consistent across the two dark variants.
+   *
+   * Per `feedback_dark_theme_amoled_true_black`: OLED + max
+   * contrast + low-battery friendly. Selected via Crawler test
+   * matrix axis ?_theme=dark-amoled (see PlausiDen-Forge
+   * docs/TESTING.md for the 24-combo matrix).
+   */
+  :root[data-theme="dark-amoled"] {
     --loom-color-bg-canvas:     hsl(0 0% 0%);
-    --loom-color-surface:       hsl(0 0% 4%);
+    --loom-color-surface:       hsl(0 0% 5%);
     --loom-color-surface-muted: hsl(0 0% 8%);
-    --loom-color-bg-overlay:    hsl(0 0% 100% / 8%);
-    --loom-color-ink:           hsl(0 0% 100%);
-    --loom-color-ink-muted:     hsl(0 0% 86%);
-    --loom-color-border:        hsl(0 0% 50%);
-    --loom-color-border-strong: hsl(0 0% 70%);
-    --loom-color-primary:       hsl(220 100% 75%);
+    --loom-color-surface-subtle: hsl(0 0% 6%);
+    --loom-color-bg-overlay:    hsl(0 0% 100% / 6%);
+    --loom-color-ink:           hsl(228 33% 95%);
+    --loom-color-ink-muted:     hsl(225 12% 65%);
+    --loom-color-border:        hsl(0 0% 18%);
+    --loom-color-border-strong: hsl(0 0% 36%);
+    --loom-color-primary:       hsl(238 100% 78%);
     --loom-color-primary-fg:    hsl(0 0% 0%);
-    --loom-color-accent-glow:   hsl(220 100% 88%);
-    --loom-color-success:       hsl(140 100% 60%);
-    --loom-color-warn:          hsl(35 100% 70%);
-    --loom-color-warning:       hsl(35 100% 70%);
-    --loom-color-danger:        hsl(0 100% 70%);
-    --loom-color-tier-medium:   hsl(45 100% 65%);
-    --loom-color-gradient-a:    hsl(220 100% 75%);
-    --loom-color-gradient-b:    hsl(280 100% 75%);
+    --loom-color-accent:        hsl(15 95% 70%);
+    --loom-color-on-accent:     hsl(0 0% 0%);
+    --loom-color-accent-glow:   hsl(258 100% 78%);
+    --loom-color-info:          hsl(210 90% 70%);
+    --loom-color-info-subtle:   hsl(210 50% 12%);
+    --loom-color-success:       hsl(142 60% 60%);
+    --loom-color-success-subtle: hsl(142 35% 12%);
+    --loom-color-warn:          hsl(28 95% 65%);
+    --loom-color-warning:       hsl(28 95% 65%);
+    --loom-color-warning-subtle: hsl(28 50% 12%);
+    --loom-color-danger:        hsl(0 80% 65%);
+    --loom-color-danger-subtle: hsl(0 40% 15%);
+    --loom-color-tier-medium:   hsl(45 95% 60%);
+    --loom-color-gradient-a:    hsl(238 100% 78%);
+    --loom-color-gradient-b:    hsl(15 95% 70%);
+  }
+  /* Explicit data-theme="light" — same as default :root. */
+  :root[data-theme="light"] {
+    --loom-color-bg-canvas:     hsl(40 33% 98%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(40 25% 95%);
+    --loom-color-surface-subtle: hsl(40 30% 97%);
+    --loom-color-bg-overlay:    hsl(225 20% 14% / 6%);
+    --loom-color-ink:           hsl(225 25% 10%);
+    --loom-color-ink-muted:     hsl(225 15% 32%);
+    --loom-color-border:        hsl(36 16% 80%);
+    --loom-color-border-strong: hsl(36 12% 60%);
+    --loom-color-primary:       hsl(244 65% 38%);
+    --loom-color-primary-fg:    hsl(0 0% 100%);
+    --loom-color-accent:        hsl(15 85% 45%);
+    --loom-color-on-accent:     hsl(0 0% 100%);
+    --loom-color-accent-glow:   hsl(258 65% 45%);
+    --loom-color-info:          hsl(210 70% 35%);
+    --loom-color-info-subtle:   hsl(210 75% 95%);
+    --loom-color-success:       hsl(142 75% 22%);
+    --loom-color-success-subtle: hsl(142 55% 92%);
+    --loom-color-warn:          hsl(28 95% 30%);
+    --loom-color-warning:       hsl(28 95% 30%);
+    --loom-color-warning-subtle: hsl(28 80% 92%);
+    --loom-color-danger:        hsl(0 75% 35%);
+    --loom-color-danger-subtle: hsl(0 70% 94%);
+    --loom-color-tier-medium:   hsl(38 95% 30%);
+    --loom-color-gradient-a:    hsl(244 65% 38%);
+    --loom-color-gradient-b:    hsl(15 85% 45%);
   }
   :root[data-theme="hc-dark"] {
     --loom-color-bg-canvas:     hsl(0 0% 0%);
     --loom-color-surface:       hsl(0 0% 4%);
     --loom-color-surface-muted: hsl(0 0% 8%);
+    --loom-color-surface-subtle: hsl(0 0% 6%);
     --loom-color-bg-overlay:    hsl(0 0% 100% / 12%);
     --loom-color-ink:           hsl(0 0% 100%);
     --loom-color-ink-muted:     hsl(0 0% 86%);
@@ -2225,11 +3115,18 @@
     --loom-color-border-strong: hsl(0 0% 70%);
     --loom-color-primary:       hsl(220 100% 75%);
     --loom-color-primary-fg:    hsl(0 0% 0%);
+    --loom-color-accent:        hsl(45 100% 70%);
+    --loom-color-on-accent:     hsl(0 0% 0%);
     --loom-color-accent-glow:   hsl(220 100% 88%);
+    --loom-color-info:          hsl(210 100% 80%);
+    --loom-color-info-subtle:   hsl(210 80% 18%);
     --loom-color-success:       hsl(140 100% 60%);
+    --loom-color-success-subtle: hsl(140 80% 16%);
     --loom-color-warn:          hsl(35 100% 70%);
     --loom-color-warning:       hsl(35 100% 70%);
+    --loom-color-warning-subtle: hsl(45 100% 18%);
     --loom-color-danger:        hsl(0 100% 70%);
+    --loom-color-danger-subtle: hsl(0 100% 22%);
     --loom-color-tier-medium:   hsl(45 100% 65%);
     --loom-color-gradient-a:    hsl(220 100% 75%);
     --loom-color-gradient-b:    hsl(280 100% 75%);
@@ -2247,6 +3144,7 @@
     --loom-color-bg-canvas:     hsl(0 0% 100%);
     --loom-color-surface:       hsl(0 0% 100%);
     --loom-color-surface-muted: hsl(0 0% 96%);
+    --loom-color-surface-subtle: hsl(0 0% 98%);
     --loom-color-bg-overlay:    hsl(0 0% 0% / 8%);
     --loom-color-ink:           hsl(0 0% 0%);
     --loom-color-ink-muted:     hsl(0 0% 24%);
@@ -2254,11 +3152,18 @@
     --loom-color-border-strong: hsl(0 0% 10%);
     --loom-color-primary:       hsl(220 100% 30%);
     --loom-color-primary-fg:    hsl(0 0% 100%);
+    --loom-color-accent:        hsl(15 100% 32%);
+    --loom-color-on-accent:     hsl(0 0% 100%);
     --loom-color-accent-glow:   hsl(220 100% 45%);
+    --loom-color-info:          hsl(210 100% 28%);
+    --loom-color-info-subtle:   hsl(210 100% 92%);
     --loom-color-success:       hsl(140 100% 22%);
+    --loom-color-success-subtle: hsl(140 80% 88%);
     --loom-color-warn:          hsl(35 100% 32%);
     --loom-color-warning:       hsl(35 100% 32%);
+    --loom-color-warning-subtle: hsl(35 100% 88%);
     --loom-color-danger:        hsl(0 100% 35%);
+    --loom-color-danger-subtle: hsl(0 100% 92%);
     --loom-color-tier-medium:   hsl(45 100% 38%);
     --loom-color-gradient-a:    hsl(220 100% 30%);
     --loom-color-gradient-b:    hsl(280 100% 35%);
@@ -2270,11 +3175,159 @@
     color: var(--loom-color-ink);
   }
 
+  /* T66 (closes #649): named site palettes. Operators set
+   * `[render] theme = "warm" | "ocean" | "forest" | "violet" |
+   * "rose"` in forge.toml to ship their site with the named
+   * brand palette. Light by default; reuses the cycle 95f
+   * data-theme allow-list contract. Each palette is internally
+   * AA-contrast verified. */
+  :root[data-theme="warm"] {
+    --loom-color-bg-canvas:     hsl(35 35% 97%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(35 25% 93%);
+    --loom-color-surface-subtle: hsl(35 30% 95%);
+    --loom-color-bg-overlay:    hsl(25 35% 16% / 6%);
+    --loom-color-ink:           hsl(25 35% 12%);
+    --loom-color-ink-muted:     hsl(25 18% 36%);
+    --loom-color-border:        hsl(30 25% 80%);
+    --loom-color-border-strong: hsl(30 20% 60%);
+    --loom-color-primary:       hsl(20 80% 38%);
+    --loom-color-primary-fg:    hsl(35 35% 97%);
+    --loom-color-accent:        hsl(35 90% 45%);
+    --loom-color-on-accent:     hsl(35 35% 97%);
+    --loom-color-accent-glow:   hsl(20 90% 50%);
+    --loom-color-info:          hsl(210 75% 35%);
+    --loom-color-info-subtle:   hsl(210 75% 94%);
+    --loom-color-success:       hsl(140 60% 26%);
+    --loom-color-success-subtle: hsl(140 60% 90%);
+    --loom-color-warn:          hsl(35 90% 32%);
+    --loom-color-warning:       hsl(35 90% 32%);
+    --loom-color-warning-subtle: hsl(35 90% 90%);
+    --loom-color-danger:        hsl(0 75% 38%);
+    --loom-color-danger-subtle: hsl(0 75% 93%);
+    --loom-color-tier-medium:   hsl(38 90% 38%);
+    --loom-color-gradient-a:    hsl(20 80% 38%);
+    --loom-color-gradient-b:    hsl(35 80% 50%);
+  }
+  :root[data-theme="ocean"] {
+    --loom-color-bg-canvas:     hsl(210 40% 98%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(210 35% 94%);
+    --loom-color-surface-subtle: hsl(210 35% 96%);
+    --loom-color-bg-overlay:    hsl(210 50% 14% / 6%);
+    --loom-color-ink:           hsl(210 50% 12%);
+    --loom-color-ink-muted:     hsl(210 25% 36%);
+    --loom-color-border:        hsl(210 30% 80%);
+    --loom-color-border-strong: hsl(210 25% 60%);
+    --loom-color-primary:       hsl(210 80% 36%);
+    --loom-color-primary-fg:    hsl(0 0% 100%);
+    --loom-color-accent:        hsl(195 95% 38%);
+    --loom-color-on-accent:     hsl(0 0% 100%);
+    --loom-color-accent-glow:   hsl(195 95% 42%);
+    --loom-color-info:          hsl(210 80% 30%);
+    --loom-color-info-subtle:   hsl(210 80% 94%);
+    --loom-color-success:       hsl(155 65% 26%);
+    --loom-color-success-subtle: hsl(155 65% 90%);
+    --loom-color-warn:          hsl(28 90% 32%);
+    --loom-color-warning:       hsl(28 90% 32%);
+    --loom-color-warning-subtle: hsl(28 90% 92%);
+    --loom-color-danger:        hsl(0 75% 38%);
+    --loom-color-danger-subtle: hsl(0 75% 93%);
+    --loom-color-tier-medium:   hsl(38 90% 38%);
+    --loom-color-gradient-a:    hsl(210 80% 36%);
+    --loom-color-gradient-b:    hsl(195 95% 50%);
+  }
+  :root[data-theme="forest"] {
+    --loom-color-bg-canvas:     hsl(120 20% 97%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(120 18% 93%);
+    --loom-color-surface-subtle: hsl(120 20% 95%);
+    --loom-color-bg-overlay:    hsl(140 40% 14% / 6%);
+    --loom-color-ink:           hsl(140 40% 12%);
+    --loom-color-ink-muted:     hsl(140 18% 32%);
+    --loom-color-border:        hsl(130 20% 80%);
+    --loom-color-border-strong: hsl(130 18% 58%);
+    --loom-color-primary:       hsl(155 65% 28%);
+    --loom-color-primary-fg:    hsl(120 20% 97%);
+    --loom-color-accent:        hsl(85 70% 36%);
+    --loom-color-on-accent:     hsl(120 20% 97%);
+    --loom-color-accent-glow:   hsl(155 75% 36%);
+    --loom-color-info:          hsl(210 70% 32%);
+    --loom-color-info-subtle:   hsl(210 70% 94%);
+    --loom-color-success:       hsl(140 70% 22%);
+    --loom-color-success-subtle: hsl(140 70% 88%);
+    --loom-color-warn:          hsl(35 95% 30%);
+    --loom-color-warning:       hsl(35 95% 30%);
+    --loom-color-warning-subtle: hsl(35 95% 90%);
+    --loom-color-danger:        hsl(0 75% 36%);
+    --loom-color-danger-subtle: hsl(0 75% 93%);
+    --loom-color-tier-medium:   hsl(40 90% 36%);
+    --loom-color-gradient-a:    hsl(155 65% 28%);
+    --loom-color-gradient-b:    hsl(85 70% 40%);
+  }
+  :root[data-theme="violet"] {
+    --loom-color-bg-canvas:     hsl(270 25% 98%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(270 22% 94%);
+    --loom-color-surface-subtle: hsl(270 22% 96%);
+    --loom-color-bg-overlay:    hsl(265 35% 14% / 6%);
+    --loom-color-ink:           hsl(265 35% 12%);
+    --loom-color-ink-muted:     hsl(265 18% 36%);
+    --loom-color-border:        hsl(270 22% 80%);
+    --loom-color-border-strong: hsl(270 18% 60%);
+    --loom-color-primary:       hsl(265 70% 42%);
+    --loom-color-primary-fg:    hsl(0 0% 100%);
+    --loom-color-accent:        hsl(310 80% 45%);
+    --loom-color-on-accent:     hsl(0 0% 100%);
+    --loom-color-accent-glow:   hsl(285 85% 55%);
+    --loom-color-info:          hsl(210 70% 35%);
+    --loom-color-info-subtle:   hsl(210 75% 94%);
+    --loom-color-success:       hsl(155 65% 26%);
+    --loom-color-success-subtle: hsl(155 65% 90%);
+    --loom-color-warn:          hsl(35 90% 32%);
+    --loom-color-warning:       hsl(35 90% 32%);
+    --loom-color-warning-subtle: hsl(35 90% 92%);
+    --loom-color-danger:        hsl(0 75% 38%);
+    --loom-color-danger-subtle: hsl(0 75% 94%);
+    --loom-color-tier-medium:   hsl(38 90% 38%);
+    --loom-color-gradient-a:    hsl(265 70% 42%);
+    --loom-color-gradient-b:    hsl(310 80% 55%);
+  }
+  :root[data-theme="rose"] {
+    --loom-color-bg-canvas:     hsl(340 25% 98%);
+    --loom-color-surface:       hsl(0 0% 100%);
+    --loom-color-surface-muted: hsl(340 20% 95%);
+    --loom-color-surface-subtle: hsl(340 22% 96%);
+    --loom-color-bg-overlay:    hsl(340 40% 14% / 6%);
+    --loom-color-ink:           hsl(340 35% 12%);
+    --loom-color-ink-muted:     hsl(340 18% 36%);
+    --loom-color-border:        hsl(340 22% 82%);
+    --loom-color-border-strong: hsl(340 18% 62%);
+    --loom-color-primary:       hsl(340 75% 42%);
+    --loom-color-primary-fg:    hsl(0 0% 100%);
+    --loom-color-accent:        hsl(15 80% 48%);
+    --loom-color-on-accent:     hsl(0 0% 100%);
+    --loom-color-accent-glow:   hsl(355 85% 55%);
+    --loom-color-info:          hsl(210 70% 35%);
+    --loom-color-info-subtle:   hsl(210 75% 94%);
+    --loom-color-success:       hsl(155 65% 26%);
+    --loom-color-success-subtle: hsl(155 65% 90%);
+    --loom-color-warn:          hsl(28 90% 32%);
+    --loom-color-warning:       hsl(28 90% 32%);
+    --loom-color-warning-subtle: hsl(28 90% 92%);
+    --loom-color-danger:        hsl(0 80% 38%);
+    --loom-color-danger-subtle: hsl(0 80% 94%);
+    --loom-color-tier-medium:   hsl(38 90% 38%);
+    --loom-color-gradient-a:    hsl(340 75% 42%);
+    --loom-color-gradient-b:    hsl(15 80% 55%);
+  }
+
   /* Sepia — warm low-strain reading variant. */
   :root[data-theme="sepia"] {
     --loom-color-bg-canvas:     hsl(35 35% 91%);
     --loom-color-surface:       hsl(35 35% 95%);
     --loom-color-surface-muted: hsl(35 30% 87%);
+    --loom-color-surface-subtle: hsl(35 35% 89%);
     --loom-color-bg-overlay:    hsl(25 35% 18% / 8%);
     --loom-color-ink:           hsl(25 35% 18%);
     --loom-color-ink-muted:     hsl(25 25% 36%);
@@ -2282,11 +3335,18 @@
     --loom-color-border-strong: hsl(30 25% 60%);
     --loom-color-primary:       hsl(20 70% 38%);
     --loom-color-primary-fg:    hsl(35 35% 95%);
+    --loom-color-accent:        hsl(20 80% 42%);
+    --loom-color-on-accent:     hsl(35 35% 95%);
     --loom-color-accent-glow:   hsl(20 70% 55%);
+    --loom-color-info:          hsl(210 60% 32%);
+    --loom-color-info-subtle:   hsl(35 50% 86%);
     --loom-color-success:       hsl(140 50% 28%);
+    --loom-color-success-subtle: hsl(140 45% 84%);
     --loom-color-warn:          hsl(35 80% 32%);
     --loom-color-warning:       hsl(35 80% 32%);
+    --loom-color-warning-subtle: hsl(35 70% 84%);
     --loom-color-danger:        hsl(0 60% 38%);
+    --loom-color-danger-subtle: hsl(0 60% 88%);
     --loom-color-tier-medium:   hsl(40 90% 40%);
     --loom-color-gradient-a:    hsl(20 70% 50%);
     --loom-color-gradient-b:    hsl(35 80% 45%);
@@ -2543,3 +3603,2758 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   margin-bottom: var(--loom-space-3);
 }
 .loom-aesthetic-row:last-child { margin-bottom: 0; }
+
+/* ============================================================
+ * Asymmetric / broken-grid primitives (task #48)
+ *
+ * Layout primitives that intentionally violate the regular grid
+ * within their declared safe-overlap zones. Used by brutalist /
+ * post-digital / editorial style packs to read as "designed by
+ * a human with taste" rather than "generated by a template
+ * engine."
+ *
+ * Each primitive has a tight overflow contract: the BOUNDING
+ * BOX is the same as a regular .loom-section, only the INNER
+ * children violate the grid. Selectability + a11y + reflow
+ * behavior all preserved. Reduced-motion respected on every
+ * animated variant.
+ *
+ * Per ARCHITECTURE_PRINCIPLES.md §3 — "controlled chaos is
+ * itself a primitive."
+ * ============================================================ */
+
+/* loom-offset — single child offset within container bounds.
+ * data-offset-x="N" + data-offset-y="N" in token-units (1 = 4px).
+ * Child cannot overflow parent; clamp keeps it inside.
+ */
+.loom-offset {
+  position: relative;
+  overflow: hidden;
+}
+.loom-offset > * {
+  position: relative;
+  transform: translate(
+    clamp(-50%, calc(var(--loom-offset-x, 0) * var(--loom-space-1)), 50%),
+    clamp(-50%, calc(var(--loom-offset-y, 0) * var(--loom-space-1)), 50%)
+  );
+}
+.loom-offset[data-offset-x="2"] { --loom-offset-x: 2; }
+.loom-offset[data-offset-x="4"] { --loom-offset-x: 4; }
+.loom-offset[data-offset-x="-2"] { --loom-offset-x: -2; }
+.loom-offset[data-offset-x="-4"] { --loom-offset-x: -4; }
+.loom-offset[data-offset-y="2"] { --loom-offset-y: 2; }
+.loom-offset[data-offset-y="-2"] { --loom-offset-y: -2; }
+
+/* loom-overlap — declared overlap zone with managed z-axis.
+ * Children stack with explicit z-index per data-z (1-5).
+ * Container has contain:layout so the overlap doesn't escape.
+ */
+.loom-overlap {
+  position: relative;
+  contain: layout style;
+}
+.loom-overlap > * { position: absolute; }
+.loom-overlap > *[data-z="1"] { z-index: 1; }
+.loom-overlap > *[data-z="2"] { z-index: 2; }
+.loom-overlap > *[data-z="3"] { z-index: 3; }
+.loom-overlap > *[data-z="4"] { z-index: 4; }
+.loom-overlap > *[data-z="5"] { z-index: 5; }
+/* Convenience anchors: corners + center within the overlap box. */
+.loom-overlap > *[data-anchor="top-left"]     { top: 0; left: 0; }
+.loom-overlap > *[data-anchor="top-right"]    { top: 0; right: 0; }
+.loom-overlap > *[data-anchor="bottom-left"]  { bottom: 0; left: 0; }
+.loom-overlap > *[data-anchor="bottom-right"] { bottom: 0; right: 0; }
+.loom-overlap > *[data-anchor="center"] {
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* loom-broken — intentional grid violation. Each child gets a
+ * pseudo-random offset based on its DOM position. Bounded so
+ * it can't overflow + so reading order stays sane.
+ */
+.loom-broken {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--loom-space-4);
+  overflow: hidden;
+}
+.loom-broken > *:nth-child(3n+1) { transform: translateY(calc(-1 * var(--loom-space-2))); }
+.loom-broken > *:nth-child(3n+2) { transform: translateY(var(--loom-space-3)); }
+.loom-broken > *:nth-child(3n+3) { transform: translateY(calc(-1 * var(--loom-space-1))); }
+
+/* loom-diagonal — content rotated within a horizontal band.
+ * data-rotate="±N" in degrees (clamped 0-15).
+ * Bounding box stays axis-aligned; only the inner content
+ * tilts.
+ */
+.loom-diagonal {
+  position: relative;
+  overflow: hidden;
+  padding-block: var(--loom-space-6);
+}
+.loom-diagonal > * {
+  transform: rotate(calc(var(--loom-diagonal-rotate, 0) * 1deg));
+  transform-origin: center center;
+}
+.loom-diagonal[data-rotate="3"]   { --loom-diagonal-rotate: 3; }
+.loom-diagonal[data-rotate="-3"]  { --loom-diagonal-rotate: -3; }
+.loom-diagonal[data-rotate="6"]   { --loom-diagonal-rotate: 6; }
+.loom-diagonal[data-rotate="-6"]  { --loom-diagonal-rotate: -6; }
+.loom-diagonal[data-rotate="12"]  { --loom-diagonal-rotate: 12; }
+.loom-diagonal[data-rotate="-12"] { --loom-diagonal-rotate: -12; }
+
+/* loom-marquee — horizontally scrolling text band.
+ * Animation is REQUIRED to be guarded by prefers-reduced-motion:
+ * vestibular-disorder readers see motion they didn't opt in to
+ * otherwise. The animation is wrapped accordingly + falls back
+ * to a static layout when reduce is set.
+ */
+.loom-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+.loom-marquee > * {
+  display: inline-block;
+  padding-inline: var(--loom-space-8);
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .loom-marquee > * {
+    animation: loom-marquee-scroll 30s linear infinite;
+  }
+  .loom-marquee[data-speed="fast"] > * { animation-duration: 15s; }
+  .loom-marquee[data-speed="slow"] > * { animation-duration: 60s; }
+}
+/* Reduce: no animation, content shows once + clips on overflow. */
+@media (prefers-reduced-motion: reduce) {
+  .loom-marquee > * { animation: none; }
+}
+
+/* loom-scattered — children placed at pseudo-random offsets
+ * (driven by nth-child) within a contained box. Similar to
+ * loom-broken but with finer granularity + explicit
+ * non-overlapping zones.
+ */
+.loom-scattered {
+  position: relative;
+  min-height: 20rem;
+  contain: layout style;
+}
+.loom-scattered > * {
+  position: absolute;
+  max-width: 33%;
+}
+.loom-scattered > *:nth-child(1) { top: 8%;  left: 12%; }
+.loom-scattered > *:nth-child(2) { top: 22%; right: 8%; }
+.loom-scattered > *:nth-child(3) { bottom: 18%; left: 24%; }
+.loom-scattered > *:nth-child(4) { top: 45%; right: 25%; }
+.loom-scattered > *:nth-child(5) { bottom: 8%; right: 12%; }
+.loom-scattered > *:nth-child(6) { top: 60%; left: 6%; }
+
+/* loom-kinetic — short-duration sweep animation on the
+ * container itself. Used by brutalist + 90s-zine packs for
+ * deliberate motion energy. Reduced-motion respected.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-kinetic-sweep {
+    0%, 100% { transform: translateX(0); }
+    50%      { transform: translateX(var(--loom-space-2)); }
+  }
+  .loom-kinetic {
+    animation: loom-kinetic-sweep 8s ease-in-out infinite;
+  }
+}
+
+/* ============================================================
+ * Motion primitives (task #47)
+ *
+ * Scroll-linked / magnetic-hover / scrub-timeline / spring-feel
+ * primitives. Every one of them lives inside a
+ * @media (prefers-reduced-motion: no-preference) block so the
+ * vestibular-affected reader sees them as static.
+ *
+ * Uses the CSS scroll-driven-animations spec (animation-timeline:
+ * view()) — Chromium 115+, Safari 17.4+, Firefox progressive.
+ * Where unsupported, the @keyframes simply doesn't run and the
+ * element renders in its end state. No JS, no IntersectionObserver,
+ * no layout thrashing.
+ *
+ * Spring physics is faked via overshoot-cubic-bezier — a real
+ * spring solver would need JS. The cubic-bezier
+ * (0.34, 1.56, 0.64, 1) hits ~6% overshoot which reads as
+ * "spring" without RWD jitter.
+ *
+ * Per ARCHITECTURE_PRINCIPLES.md §3 — "motion is a primitive,
+ * not a decoration."
+ * ============================================================ */
+
+/* loom-reveal-on-view — scroll-linked fade + rise as the element
+ * enters the viewport. Uses view() timeline; no JS observer.
+ *
+ * data-distance="N" picks the rise distance in token-units
+ * (default 4 = 16px).
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    @keyframes loom-reveal-on-view-frames {
+      from { opacity: 0; transform: translateY(var(--loom-reveal-distance, var(--loom-space-4))); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .loom-reveal-on-view {
+      animation: loom-reveal-on-view-frames linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+    .loom-reveal-on-view[data-distance="2"]  { --loom-reveal-distance: var(--loom-space-2); }
+    .loom-reveal-on-view[data-distance="4"]  { --loom-reveal-distance: var(--loom-space-4); }
+    .loom-reveal-on-view[data-distance="8"]  { --loom-reveal-distance: var(--loom-space-8); }
+  }
+}
+
+/* loom-slide-on-view — same envelope as reveal but horizontal.
+ * data-from="left" | "right".
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    @keyframes loom-slide-on-view-from-left {
+      from { opacity: 0; transform: translateX(calc(-1 * var(--loom-space-8))); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes loom-slide-on-view-from-right {
+      from { opacity: 0; transform: translateX(var(--loom-space-8)); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .loom-slide-on-view {
+      animation: loom-slide-on-view-from-left linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+    .loom-slide-on-view[data-from="right"] {
+      animation-name: loom-slide-on-view-from-right;
+    }
+  }
+}
+
+/* loom-parallax-y — vertical parallax driven by the page's own
+ * scroll timeline. data-depth="N" picks the parallax factor (1-3).
+ * Bounded translation so it never escapes its column.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    @keyframes loom-parallax-y-frames {
+      from { transform: translateY(calc(-1 * var(--loom-parallax-depth, 1) * var(--loom-space-6))); }
+      to   { transform: translateY(calc(var(--loom-parallax-depth, 1) * var(--loom-space-6))); }
+    }
+    .loom-parallax-y {
+      animation: loom-parallax-y-frames linear both;
+      animation-timeline: scroll(nearest);
+      animation-range: cover 0% cover 100%;
+    }
+    .loom-parallax-y[data-depth="1"] { --loom-parallax-depth: 1; }
+    .loom-parallax-y[data-depth="2"] { --loom-parallax-depth: 2; }
+    .loom-parallax-y[data-depth="3"] { --loom-parallax-depth: 3; }
+  }
+}
+
+/* loom-scrub-rotate — scroll-progress-driven rotation. Used for
+ * decorative spinning marks (logos, glyphs).
+ * data-revolutions="N" sets the count (0.5 / 1 / 2 / 4).
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    @keyframes loom-scrub-rotate-frames {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(calc(var(--loom-scrub-revolutions, 1) * 360deg)); }
+    }
+    .loom-scrub-rotate {
+      animation: loom-scrub-rotate-frames linear both;
+      animation-timeline: scroll(nearest);
+      animation-range: cover 0% cover 100%;
+    }
+    .loom-scrub-rotate[data-revolutions="0.5"] { --loom-scrub-revolutions: 0.5; }
+    .loom-scrub-rotate[data-revolutions="1"]   { --loom-scrub-revolutions: 1; }
+    .loom-scrub-rotate[data-revolutions="2"]   { --loom-scrub-revolutions: 2; }
+    .loom-scrub-rotate[data-revolutions="4"]   { --loom-scrub-revolutions: 4; }
+  }
+}
+
+/* loom-magnetic-hover — pointer-driven lift + scale with
+ * spring-feel cubic-bezier on hover/focus. No JS — uses transform
+ * + transition only.
+ *
+ * data-intensity="subtle" | "medium" | "strong".
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .loom-magnetic-hover {
+    --loom-magnetic-lift: calc(-1 * var(--loom-space-1));
+    --loom-magnetic-scale: 1.02;
+    transition: transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+  }
+  .loom-magnetic-hover:hover,
+  .loom-magnetic-hover:focus-visible {
+    transform: translateY(var(--loom-magnetic-lift)) scale(var(--loom-magnetic-scale));
+  }
+  .loom-magnetic-hover[data-intensity="subtle"] {
+    --loom-magnetic-lift: calc(-0.5 * var(--loom-space-1));
+    --loom-magnetic-scale: 1.01;
+  }
+  .loom-magnetic-hover[data-intensity="strong"] {
+    --loom-magnetic-lift: calc(-1 * var(--loom-space-2));
+    --loom-magnetic-scale: 1.04;
+  }
+}
+
+/* loom-spring-pop — entrance animation with overshoot. Used by
+ * modal contents + toasts + CTA reveals. Self-running on mount
+ * (one-shot).
+ *
+ * data-delay="1".."5" reuses the existing --loom-stagger-step
+ * token so it composes with [data-stagger="N"] siblings.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-spring-pop-frames {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .loom-spring-pop {
+    animation: loom-spring-pop-frames 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .loom-spring-pop[data-delay="1"] { animation-delay: calc(var(--loom-stagger-step) * 1); }
+  .loom-spring-pop[data-delay="2"] { animation-delay: calc(var(--loom-stagger-step) * 2); }
+  .loom-spring-pop[data-delay="3"] { animation-delay: calc(var(--loom-stagger-step) * 3); }
+  .loom-spring-pop[data-delay="4"] { animation-delay: calc(var(--loom-stagger-step) * 4); }
+  .loom-spring-pop[data-delay="5"] { animation-delay: calc(var(--loom-stagger-step) * 5); }
+}
+
+/* loom-attention-pulse — small recurring scale to nudge the eye
+ * toward a single CTA. Distinct from .loom-pulse-dot (which is a
+ * status indicator glyph). data-speed="slow"|"normal"|"fast".
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-attention-pulse-frames {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.04); }
+  }
+  .loom-attention-pulse {
+    animation: loom-attention-pulse-frames 2.4s ease-in-out infinite;
+  }
+  .loom-attention-pulse[data-speed="slow"] { animation-duration: 4s; }
+  .loom-attention-pulse[data-speed="fast"] { animation-duration: 1.2s; }
+}
+
+/* ============================================================
+ * Foundational layout primitives — Every-Layout family
+ * (task #46, batch 1 of N).
+ *
+ * Pickering / Bell's "Every Layout" gave us a small set of
+ * compositional layout primitives that any modern site can
+ * be built from. We adopt the canonical names + add a few
+ * extensions of our own, all driven by --loom-space-* tokens
+ * + responsive at container-query granularity where supported.
+ *
+ * Each primitive:
+ *   * uses --loom-space-* tokens (no magic numbers)
+ *   * accepts a closed-enum size via data attributes
+ *   * has bounded reflow behavior (no horizontal scroll
+ *     surprises)
+ *   * composes with itself and the existing primitives
+ *
+ * Naming kept tight + 1:1 with the literature so future
+ * documentation can reference well-known names.
+ * ============================================================ */
+
+/* loom-box — semantic container with bounded padding +
+ * border-radius. The base every other primitive composes
+ * inside.
+ */
+.loom-box {
+  padding: var(--loom-space-4);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+}
+.loom-box[data-pad="0"] { padding: 0; }
+.loom-box[data-pad="2"] { padding: var(--loom-space-2); }
+.loom-box[data-pad="6"] { padding: var(--loom-space-6); }
+.loom-box[data-pad="8"] { padding: var(--loom-space-8); }
+
+/* loom-cluster — horizontal flow that wraps when out of space.
+ * Used for tag rows, navigation chips, action button rows.
+ * Gap driven by --loom-space-3 by default.
+ */
+.loom-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--loom-space-3);
+  align-items: center;
+  justify-content: flex-start;
+}
+.loom-cluster[data-align="center"]  { justify-content: center; }
+.loom-cluster[data-align="end"]     { justify-content: flex-end; }
+.loom-cluster[data-align="between"] { justify-content: space-between; }
+.loom-cluster[data-gap="2"] { gap: var(--loom-space-2); }
+.loom-cluster[data-gap="4"] { gap: var(--loom-space-4); }
+.loom-cluster[data-gap="6"] { gap: var(--loom-space-6); }
+
+/* loom-center — max-width content rail centered horizontally.
+ * For long-form reading + form column layouts.
+ */
+.loom-center {
+  box-sizing: content-box;
+  margin-inline: auto;
+  max-width: 60ch;
+  padding-inline: var(--loom-space-4);
+}
+.loom-center[data-max="40"] { max-width: 40ch; }
+.loom-center[data-max="80"] { max-width: 80ch; }
+.loom-center[data-max="prose"]   { max-width: 65ch; }
+.loom-center[data-max="page"]    { max-width: 72rem; }
+.loom-center[data-max="full"]    { max-width: 100%; padding-inline: 0; }
+
+/* loom-cover — viewport-cover with optional centered child.
+ * Used for hero sections + landing splashes.
+ */
+.loom-cover {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100svh;
+  padding: var(--loom-space-6);
+}
+.loom-cover > * {
+  margin-block: var(--loom-space-4);
+}
+.loom-cover > [data-center] {
+  margin-block: auto;
+}
+.loom-cover[data-min="50"] { min-block-size: 50svh; }
+.loom-cover[data-min="75"] { min-block-size: 75svh; }
+
+/* loom-sidebar — asymmetric "content + sidebar" pair.
+ * Wraps when below the side-by-side threshold.
+ */
+.loom-sidebar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--loom-space-6);
+}
+.loom-sidebar > :first-child {
+  flex-basis: 20rem;
+  flex-grow: 1;
+}
+.loom-sidebar > :last-child {
+  flex-basis: 0;
+  flex-grow: 999;
+  min-inline-size: 50%;
+}
+.loom-sidebar[data-side="right"] > :first-child {
+  flex-basis: 0;
+  flex-grow: 999;
+  min-inline-size: 50%;
+}
+.loom-sidebar[data-side="right"] > :last-child {
+  flex-basis: 20rem;
+  flex-grow: 1;
+}
+
+/* loom-switcher — content row that collapses to a stack when
+ * the container drops below a threshold. Threshold driven by
+ * --loom-switcher-threshold (default 40rem).
+ */
+.loom-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--loom-space-4);
+}
+.loom-switcher > * {
+  flex-grow: 1;
+  flex-basis: calc((var(--loom-switcher-threshold, 40rem) - 100%) * 999);
+}
+
+/* loom-grid — auto-fit responsive grid. Cell minimum driven
+ * by --loom-grid-min (default 16rem); shrinks gracefully on
+ * narrow screens.
+ */
+.loom-grid {
+  display: grid;
+  gap: var(--loom-space-4);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--loom-grid-min, 16rem), 100%), 1fr)
+  );
+}
+.loom-grid[data-min="12"] { --loom-grid-min: 12rem; }
+.loom-grid[data-min="20"] { --loom-grid-min: 20rem; }
+.loom-grid[data-min="24"] { --loom-grid-min: 24rem; }
+
+/* loom-frame — aspect-ratio media wrapper. Defaults 16:9.
+ * Use for cards / cover images / video embeds.
+ */
+.loom-frame {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loom-frame > img,
+.loom-frame > video,
+.loom-frame > picture {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.loom-frame[data-ratio="1-1"] { aspect-ratio: 1 / 1; }
+.loom-frame[data-ratio="3-2"] { aspect-ratio: 3 / 2; }
+.loom-frame[data-ratio="4-3"] { aspect-ratio: 4 / 3; }
+.loom-frame[data-ratio="21-9"] { aspect-ratio: 21 / 9; }
+
+/* loom-reel — horizontal-scroll strip. Used for carousels,
+ * filter pills, thumbnail strips. Snap on the items.
+ */
+.loom-reel {
+  display: flex;
+  block-size: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: var(--loom-space-3);
+  padding-block: var(--loom-space-2);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+.loom-reel > * {
+  flex-shrink: 0;
+  scroll-snap-align: start;
+}
+.loom-reel[data-snap="none"] { scroll-snap-type: none; }
+
+/* loom-imposter — absolute-positioned overlay that centers
+ * over a positioned ancestor. Use for modal anchors, hover
+ * tooltips, focus rings. Pair with .loom-overlap or any
+ * .loom-* container with position:relative.
+ */
+.loom-imposter {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+.loom-imposter[data-anchor="top"] {
+  inset-block-start: 0;
+  transform: translate(-50%, 0);
+}
+.loom-imposter[data-anchor="bottom"] {
+  inset-block-start: auto;
+  inset-block-end: 0;
+  transform: translate(-50%, 0);
+}
+
+/* loom-icon — square icon wrapper with consistent sizing.
+ * Closed-enum size keyword.
+ */
+.loom-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  flex-shrink: 0;
+}
+.loom-icon > svg { inline-size: 100%; block-size: 100%; }
+.loom-icon[data-size="sm"] { inline-size: 1em;    block-size: 1em; }
+.loom-icon[data-size="md"] { inline-size: 1.25em; block-size: 1.25em; }
+.loom-icon[data-size="lg"] { inline-size: 1.5em;  block-size: 1.5em; }
+.loom-icon[data-size="xl"] { inline-size: 2em;    block-size: 2em; }
+
+/* ============================================================
+ * Typography primitives — vocabulary batch 2 (task #46).
+ *
+ * Type scale follows a 1.25 (major-third) ratio over the
+ * --loom-type-base token. Line-heights tuned per scale step:
+ * tighter for display, looser for body, very loose for prose
+ * to match Bringhurst-style print rhythm.
+ *
+ * All sizes use clamp() so they fluidly scale with viewport
+ * width without breaking at any breakpoint. min < base < max.
+ *
+ * Every primitive composes inside the Every-Layout primitives
+ * from batch 1 (.loom-center / .loom-stack / .loom-box).
+ * ============================================================ */
+
+/* Display + heading scale.
+ * Display is hero-sized + only used once per page (per design
+ * doctrine). h1-h6 are the standard semantic scale.
+ */
+.loom-display {
+  font-family: var(--loom-font-display, var(--loom-font-sans));
+  font-size: clamp(2.5rem, 4vw + 1rem, 4.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--loom-color-ink);
+  margin: 0;
+}
+.loom-heading-1 {
+  font-size: clamp(2rem, 3vw + 0.8rem, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.loom-heading-2 {
+  font-size: clamp(1.5rem, 2vw + 0.6rem, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.loom-heading-3 {
+  font-size: clamp(1.25rem, 1.5vw + 0.4rem, 1.75rem);
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0;
+}
+.loom-heading-4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+}
+.loom-heading-5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+.loom-heading-6 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+/* Body text scale.
+ * Lead is the standout intro paragraph; body is the reading
+ * default; small + caption are for metadata.
+ */
+.loom-text-lead {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--loom-color-ink);
+  margin: 0;
+}
+.loom-text-body {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--loom-color-ink);
+  margin: 0;
+}
+.loom-text-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  margin: 0;
+}
+.loom-text-caption {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* Prose wrapper — applies vertical rhythm to nested elements
+ * so long-form articles render correctly without per-element
+ * margin tweaks. Bringhurst-style: every block element has
+ * predictable space-after.
+ */
+.loom-prose {
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--loom-color-ink);
+  max-inline-size: 65ch;
+}
+.loom-prose > * + * { margin-block-start: 1em; }
+.loom-prose > h1,
+.loom-prose > h2,
+.loom-prose > h3 { margin-block-start: 1.5em; }
+.loom-prose > h1 + *,
+.loom-prose > h2 + *,
+.loom-prose > h3 + * { margin-block-start: 0.5em; }
+.loom-prose ul,
+.loom-prose ol { padding-inline-start: 1.5em; }
+.loom-prose li + li { margin-block-start: 0.25em; }
+.loom-prose blockquote {
+  border-inline-start: 4px solid var(--loom-color-accent);
+  padding-inline-start: var(--loom-space-4);
+  font-style: italic;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+
+/* Code + inline-code + kbd. Monospace stack.
+ */
+.loom-code {
+  font-family: var(--loom-font-mono);
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  color: var(--loom-color-ink);
+}
+.loom-pre {
+  font-family: var(--loom-font-mono);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  padding: var(--loom-space-4);
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  overflow-x: auto;
+  color: var(--loom-color-ink);
+}
+.loom-pre > code { background: transparent; padding: 0; }
+.loom-kbd {
+  font-family: var(--loom-font-mono);
+  font-size: 0.8em;
+  padding: 0.15em 0.45em;
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-block-end-width: 2px;
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+}
+
+/* Quote + cite. Pull-quote feel.
+ */
+.loom-quote {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-style: italic;
+  color: var(--loom-color-ink);
+  border-inline-start: 4px solid var(--loom-color-accent);
+  padding-inline-start: var(--loom-space-4);
+  margin: 0;
+}
+.loom-cite {
+  font-size: 0.875rem;
+  font-style: normal;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  margin-block-start: var(--loom-space-2);
+  display: block;
+}
+.loom-cite::before { content: "— "; }
+
+/* Links — default + muted variants.
+ */
+.loom-link {
+  color: var(--loom-color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+.loom-link:hover,
+.loom-link:focus-visible {
+  text-decoration-thickness: 2px;
+}
+.loom-link-muted {
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  text-decoration: none;
+}
+.loom-link-muted:hover,
+.loom-link-muted:focus-visible {
+  text-decoration: underline;
+}
+
+/* Lists — semantic + decorative variants.
+ */
+.loom-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.loom-list > li { padding-block: var(--loom-space-1); }
+.loom-list[data-divider="true"] > li + li {
+  border-block-start: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+
+/* Truncation + ellipsis helpers.
+ */
+.loom-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.loom-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.loom-truncate-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ============================================================
+ * Surface primitives — vocabulary batch 3 (task #46).
+ *
+ * Cards / panels / dividers / badges / banners / chips / skeleton.
+ * All token-driven (--loom-color-* + --loom-space-* +
+ * --loom-radius-*). All shadow elevation through closed-enum
+ * data-attrs so depth is auditable.
+ *
+ * Composes inside the layout primitives from batch 1 + uses the
+ * typography classes from batch 2.
+ * ============================================================ */
+
+/* Card variants.
+ * data-elevation="0|1|2|3" — closed-enum depth.
+ * Interactive variant adds hover lift; reduced-motion guards
+ * the lift transition.
+ */
+.loom-card-base {
+  padding: var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid transparent;
+}
+.loom-card-raised {
+  padding: var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+.loom-card-outlined {
+  padding: var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-card-floating {
+  padding: var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+.loom-card-interactive {
+  padding: var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .loom-card-interactive {
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .loom-card-interactive:hover,
+  .loom-card-interactive:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* Panel — flat surface (no shadow, no border by default).
+ * Used for in-page section grouping.
+ */
+.loom-panel {
+  padding: var(--loom-space-6);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-lg, 0.75rem);
+}
+.loom-panel-subtle {
+  padding: var(--loom-space-6);
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-lg, 0.75rem);
+}
+
+/* Dividers — horizontal default, vertical variant.
+ */
+.loom-divider {
+  border: 0;
+  block-size: 1px;
+  background: var(--loom-color-border, var(--loom-color-ink));
+  opacity: 0.4;
+  margin-block: var(--loom-space-4);
+}
+.loom-divider-vertical {
+  border: 0;
+  inline-size: 1px;
+  align-self: stretch;
+  background: var(--loom-color-border, var(--loom-color-ink));
+  opacity: 0.4;
+  margin-inline: var(--loom-space-4);
+}
+
+/* Badges — closed-enum tone.
+ */
+.loom-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-1);
+  padding: 0.15em 0.5em;
+  border-radius: var(--loom-radius-pill, 999px);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-ink);
+}
+.loom-badge[data-tone="info"] {
+  background: var(--loom-color-info-subtle, var(--loom-color-surface));
+  color: var(--loom-color-info, var(--loom-color-ink));
+}
+.loom-badge[data-tone="success"] {
+  background: var(--loom-color-success-subtle, var(--loom-color-surface));
+  color: var(--loom-color-success, var(--loom-color-ink));
+}
+.loom-badge[data-tone="warning"] {
+  background: var(--loom-color-warning-subtle, var(--loom-color-surface));
+  color: var(--loom-color-warning, var(--loom-color-ink));
+}
+.loom-badge[data-tone="danger"] {
+  background: var(--loom-color-danger-subtle, var(--loom-color-surface));
+  color: var(--loom-color-danger, var(--loom-color-ink));
+}
+
+/* Tag — like a badge but for content classification (categories,
+ * keywords). Optional removable variant carries a trailing × button.
+ */
+.loom-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-1);
+  padding: 0.25em 0.75em;
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  font-size: 0.875rem;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-ink);
+}
+.loom-tag-removable { padding-inline-end: 0.25em; }
+.loom-tag-removable > button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0.15em 0.4em;
+  color: inherit;
+  opacity: 0.6;
+}
+.loom-tag-removable > button:hover { opacity: 1; }
+
+/* Chips + pills — interactive selection.
+ */
+.loom-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: 0.4em 0.85em;
+  border-radius: var(--loom-radius-pill, 999px);
+  font-size: 0.875rem;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-ink);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.loom-chip[aria-pressed="true"] {
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, white);
+}
+.loom-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25em 0.75em;
+  border-radius: var(--loom-radius-pill, 999px);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  background: transparent;
+  color: var(--loom-color-ink);
+}
+
+/* Banners — full-width attention surfaces. Closed-enum tone.
+ */
+.loom-banner {
+  padding: var(--loom-space-3) var(--loom-space-4);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-ink);
+  border-inline-start: 4px solid var(--loom-color-accent);
+}
+.loom-banner[data-tone="info"] {
+  background: var(--loom-color-info-subtle, var(--loom-color-surface));
+  border-inline-start-color: var(--loom-color-info, var(--loom-color-accent));
+}
+.loom-banner[data-tone="success"] {
+  background: var(--loom-color-success-subtle, var(--loom-color-surface));
+  border-inline-start-color: var(--loom-color-success, var(--loom-color-accent));
+}
+.loom-banner[data-tone="warning"] {
+  background: var(--loom-color-warning-subtle, var(--loom-color-surface));
+  border-inline-start-color: var(--loom-color-warning, var(--loom-color-accent));
+}
+.loom-banner[data-tone="danger"] {
+  background: var(--loom-color-danger-subtle, var(--loom-color-surface));
+  border-inline-start-color: var(--loom-color-danger, var(--loom-color-accent));
+}
+
+/* Empty-state — "nothing here yet" placeholder.
+ */
+.loom-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--loom-space-3);
+  padding: var(--loom-space-8) var(--loom-space-4);
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+
+/* Skeleton — loading placeholder. Pulse guarded by
+ * prefers-reduced-motion.
+ */
+.loom-skeleton {
+  display: block;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  block-size: 1em;
+  inline-size: 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
+  }
+  .loom-skeleton {
+    animation: loom-skeleton-pulse 1.6s ease-in-out infinite;
+  }
+}
+.loom-skeleton[data-shape="circle"] {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 50%;
+}
+.loom-skeleton[data-shape="title"] {
+  block-size: 1.5em;
+  inline-size: 60%;
+}
+.loom-skeleton[data-shape="paragraph"] {
+  block-size: 1em;
+  inline-size: 100%;
+  margin-block-end: var(--loom-space-2);
+}
+
+/* Spinner — indeterminate progress indicator. Reduced-motion
+ * variant is a static "..." (CSS content).
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-spinner-rotate {
+    to { transform: rotate(360deg); }
+  }
+  .loom-spinner {
+    display: inline-block;
+    inline-size: 1.25em;
+    block-size: 1.25em;
+    border: 2px solid var(--loom-color-border, currentColor);
+    border-block-start-color: transparent;
+    border-radius: 50%;
+    animation: loom-spinner-rotate 0.9s linear infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loom-spinner::after {
+    content: "…";
+  }
+}
+
+/* Avatar — square or round, sized via data-size.
+ */
+.loom-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 50%;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-ink);
+  font-weight: 600;
+  overflow: hidden;
+}
+.loom-avatar > img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.loom-avatar[data-size="sm"] { inline-size: 1.5rem; block-size: 1.5rem; font-size: 0.75rem; }
+.loom-avatar[data-size="md"] { inline-size: 2.5rem; block-size: 2.5rem; }
+.loom-avatar[data-size="lg"] { inline-size: 4rem; block-size: 4rem; font-size: 1.5rem; }
+.loom-avatar[data-shape="square"] { border-radius: var(--loom-radius-md, 0.5rem); }
+
+/* ============================================================
+ * Form primitives — vocabulary batch 4 (task #46).
+ *
+ * Inputs / textareas / selects / checkboxes / radios / switches /
+ * fieldsets / labels / helper text / buttons / button groups /
+ * file drops. All accessibility-first: labels are not optional,
+ * error states are typed via data-state="error", focus rings are
+ * visible at every focus-visible.
+ *
+ * No reliance on user-agent native styling beyond what's
+ * accessible — every native control gets explicit focus + hover
+ * + disabled + error visuals tied to --loom-color-* tokens.
+ *
+ * Composes inside .loom-stack / .loom-cluster / .loom-sidebar
+ * layout primitives from batch 1.
+ * ============================================================ */
+
+/* Form container + layout helpers.
+ */
+.loom-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-4);
+}
+.loom-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-1);
+}
+.loom-form-actions {
+  display: flex;
+  gap: var(--loom-space-3);
+  justify-content: flex-end;
+  margin-block-start: var(--loom-space-4);
+}
+.loom-fieldset {
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  padding: var(--loom-space-4);
+  margin: 0;
+}
+.loom-legend {
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding-inline: var(--loom-space-2);
+}
+
+/* Labels — required variant adds a visual indicator on the
+ * marker character so screen readers still get the input's
+ * aria-required attribute as the primary signal.
+ */
+.loom-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--loom-color-ink);
+  margin-block-end: var(--loom-space-1);
+}
+.loom-label-required::after {
+  content: " *";
+  color: var(--loom-color-danger, var(--loom-color-ink));
+}
+
+/* Helper + error text.
+ */
+.loom-helper-text {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  margin-block-start: var(--loom-space-1);
+}
+.loom-error-text {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--loom-color-danger, var(--loom-color-ink));
+  margin-block-start: var(--loom-space-1);
+}
+
+/* Text inputs — base + states.
+ * data-state="error" enforces the error visuals so consumers
+ * don't have to maintain two separate classnames.
+ */
+.loom-input {
+  display: block;
+  inline-size: 100%;
+  padding: 0.55em 0.85em;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--loom-color-ink);
+  background: var(--loom-color-surface);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  box-sizing: border-box;
+}
+.loom-input:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+  border-color: var(--loom-color-accent);
+}
+.loom-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.loom-input[data-state="error"],
+.loom-input[aria-invalid="true"] {
+  border-color: var(--loom-color-danger, var(--loom-color-ink));
+}
+.loom-input[data-state="error"]:focus-visible,
+.loom-input[aria-invalid="true"]:focus-visible {
+  outline-color: var(--loom-color-danger, var(--loom-color-accent));
+}
+
+/* Textarea — inherits .loom-input look but allows resize.
+ */
+.loom-textarea {
+  display: block;
+  inline-size: 100%;
+  min-block-size: 6em;
+  padding: 0.55em 0.85em;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--loom-color-ink);
+  background: var(--loom-color-surface);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  resize: vertical;
+  box-sizing: border-box;
+}
+.loom-textarea:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+  border-color: var(--loom-color-accent);
+}
+
+/* Select — kept simple; native control kept for accessibility,
+ * caret painted via background-image SVG (data-URI inline).
+ */
+.loom-select {
+  display: block;
+  inline-size: 100%;
+  padding: 0.55em 2em 0.55em 0.85em;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--loom-color-ink);
+  background-color: var(--loom-color-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='currentColor' stroke-width='1.5' d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85em center;
+  background-size: 0.75em;
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  appearance: none;
+  box-sizing: border-box;
+}
+.loom-select:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+
+/* Input-group — prefix/suffix slot wrapper.
+ */
+.loom-input-group {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  background: var(--loom-color-surface);
+  overflow: hidden;
+}
+.loom-input-group:focus-within {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+.loom-input-group > .loom-input {
+  border: 0;
+  border-radius: 0;
+  flex: 1 1 auto;
+}
+.loom-input-group > .loom-input:focus-visible {
+  outline: none;
+}
+.loom-input-group > [data-slot="prefix"],
+.loom-input-group > [data-slot="suffix"] {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--loom-space-3);
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+}
+
+/* Checkboxes + radios — accessible-by-default custom look.
+ * Native control hidden visually but kept in the layout for
+ * screen-reader access; ::before draws the box.
+ */
+.loom-checkbox,
+.loom-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  cursor: pointer;
+  user-select: none;
+}
+.loom-checkbox > input,
+.loom-radio > input {
+  position: absolute;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  opacity: 0;
+  pointer-events: none;
+}
+.loom-checkbox::before,
+.loom-radio::before {
+  content: "";
+  display: inline-block;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border: 1.5px solid var(--loom-color-border, var(--loom-color-ink));
+  background: var(--loom-color-surface);
+  flex-shrink: 0;
+}
+.loom-checkbox::before { border-radius: 0.25rem; }
+.loom-radio::before    { border-radius: 50%; }
+.loom-checkbox:has(input:checked)::before {
+  background: var(--loom-color-accent);
+  border-color: var(--loom-color-accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M3 7l3 3 5-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 75%;
+}
+.loom-radio:has(input:checked)::before {
+  background: radial-gradient(
+    var(--loom-color-accent) 35%,
+    var(--loom-color-surface) 40%
+  );
+  border-color: var(--loom-color-accent);
+}
+.loom-checkbox:has(input:focus-visible)::before,
+.loom-radio:has(input:focus-visible)::before {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+
+/* Switch — toggle (boolean control). Visually distinct from
+ * checkbox because the semantics differ (immediate effect vs
+ * staged).
+ */
+.loom-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  cursor: pointer;
+  user-select: none;
+}
+.loom-switch > input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.loom-switch::before {
+  content: "";
+  display: inline-block;
+  inline-size: 2.25rem;
+  block-size: 1.25rem;
+  border-radius: 999px;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  position: relative;
+  flex-shrink: 0;
+}
+.loom-switch::after {
+  content: "";
+  position: absolute;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  border-radius: 50%;
+  background: var(--loom-color-surface);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  inset-block-start: 50%;
+  inset-inline-start: 0.2rem;
+  transform: translateY(-50%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .loom-switch::after {
+    transition: inset-inline-start 180ms ease;
+  }
+}
+.loom-switch:has(input:checked)::before {
+  background: var(--loom-color-accent);
+  border-color: var(--loom-color-accent);
+}
+.loom-switch:has(input:checked)::after {
+  inset-inline-start: 1.125rem;
+  background: var(--loom-color-on-accent, white);
+  border-color: transparent;
+}
+
+/* Buttons — closed-enum variant + size.
+ */
+.loom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--loom-space-2);
+  padding: 0.55em 1.1em;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.2;
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid transparent;
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, white);
+  cursor: pointer;
+  text-decoration: none;
+}
+.loom-button:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+.loom-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .loom-button {
+    transition: filter 160ms ease, transform 160ms ease;
+  }
+  .loom-button:hover:not(:disabled) { filter: brightness(1.08); }
+  .loom-button:active:not(:disabled) { transform: translateY(1px); }
+}
+.loom-button[data-variant="secondary"] {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-ink);
+  border-color: var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-button[data-variant="tertiary"] {
+  background: transparent;
+  color: var(--loom-color-accent);
+  border-color: transparent;
+}
+.loom-button[data-variant="ghost"] {
+  background: transparent;
+  color: var(--loom-color-ink);
+  border-color: transparent;
+}
+.loom-button[data-variant="destructive"] {
+  background: var(--loom-color-danger, var(--loom-color-ink));
+  color: var(--loom-color-on-accent, white);
+}
+.loom-button[data-size="sm"] { padding: 0.35em 0.85em; font-size: 0.875rem; }
+.loom-button[data-size="lg"] { padding: 0.7em 1.5em; font-size: 1.125rem; }
+.loom-button[data-block="true"] { inline-size: 100%; }
+
+/* Button-group — segmented control.
+ */
+.loom-button-group {
+  display: inline-flex;
+}
+.loom-button-group > .loom-button {
+  border-radius: 0;
+  border-color: var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-button-group > .loom-button:first-child {
+  border-start-start-radius: var(--loom-radius-md, 0.5rem);
+  border-end-start-radius: var(--loom-radius-md, 0.5rem);
+}
+.loom-button-group > .loom-button:last-child {
+  border-start-end-radius: var(--loom-radius-md, 0.5rem);
+  border-end-end-radius: var(--loom-radius-md, 0.5rem);
+}
+.loom-button-group > .loom-button + .loom-button {
+  margin-inline-start: -1px;
+}
+
+/* File drop zone.
+ */
+.loom-file-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-6);
+  border: 2px dashed var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  text-align: center;
+  cursor: pointer;
+}
+.loom-file-drop[data-state="hover"],
+.loom-file-drop:hover {
+  border-color: var(--loom-color-accent);
+  color: var(--loom-color-ink);
+}
+
+/* ============================================================
+ * Navigation primitives — vocabulary batch 5 (task #46).
+ *
+ * Tabs / breadcrumbs / pagination / stepper / sidebar nav /
+ * toolbar / app bar / bottom nav / menu / link-list. Built on
+ * top of the surface primitives from batch 3 — chips, pills,
+ * dividers — and the form primitives from batch 4 (buttons).
+ *
+ * Every nav primitive uses semantic markup signals (aria-current,
+ * aria-selected, aria-expanded) for state. Visual state mirrors
+ * the semantic state so consumers don't have to maintain two
+ * separate signals.
+ * ============================================================ */
+
+/* Tabs — horizontal list + active indicator.
+ * Use with <ul role="tablist"> + <li role="tab" aria-selected="…">
+ * + <div role="tabpanel">.
+ */
+.loom-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-3);
+}
+.loom-tab-list {
+  display: flex;
+  gap: var(--loom-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-block-end: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  overflow-x: auto;
+}
+.loom-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-2) var(--loom-space-4);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  background: transparent;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  cursor: pointer;
+  margin-block-end: -1px;
+}
+.loom-tab:hover { color: var(--loom-color-ink); }
+.loom-tab[aria-selected="true"],
+.loom-tab[aria-current="page"] {
+  color: var(--loom-color-ink);
+  border-block-end-color: var(--loom-color-accent);
+}
+.loom-tab:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+.loom-tab-panel {
+  padding-block-start: var(--loom-space-3);
+}
+
+/* Breadcrumb — trail of links with separator.
+ */
+.loom-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--loom-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+}
+.loom-breadcrumb-item > a {
+  color: inherit;
+  text-decoration: none;
+}
+.loom-breadcrumb-item > a:hover { text-decoration: underline; }
+.loom-breadcrumb-item[aria-current="page"] {
+  color: var(--loom-color-ink);
+  font-weight: 500;
+}
+.loom-breadcrumb-sep {
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  user-select: none;
+}
+.loom-breadcrumb-sep::before { content: "/"; }
+
+/* Pagination — page-number list with prev/next.
+ */
+.loom-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.loom-pagination-item {
+  display: inline-flex;
+}
+.loom-pagination-item > a,
+.loom-pagination-item > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 2.25rem;
+  block-size: 2.25rem;
+  padding-inline: var(--loom-space-2);
+  font-size: 0.875rem;
+  color: var(--loom-color-ink);
+  background: transparent;
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  text-decoration: none;
+  cursor: pointer;
+}
+.loom-pagination-item[aria-current="page"] > a,
+.loom-pagination-item[aria-current="page"] > button {
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, white);
+  border-color: var(--loom-color-accent);
+}
+.loom-pagination-item > a:focus-visible,
+.loom-pagination-item > button:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+.loom-pagination-item[aria-hidden="true"] {
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  pointer-events: none;
+}
+
+/* Stepper — multi-step process indicator.
+ * Step states via data-state="complete|active|pending".
+ */
+.loom-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.loom-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+}
+.loom-step + .loom-step::before {
+  content: "";
+  display: inline-block;
+  inline-size: 2rem;
+  block-size: 1px;
+  background: var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-step > .loom-step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--loom-color-border, var(--loom-color-ink));
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  background: var(--loom-color-surface);
+}
+.loom-step[data-state="complete"] > .loom-step-marker {
+  background: var(--loom-color-success, var(--loom-color-accent));
+  border-color: var(--loom-color-success, var(--loom-color-accent));
+  color: var(--loom-color-on-accent, white);
+}
+.loom-step[data-state="active"] > .loom-step-marker {
+  background: var(--loom-color-accent);
+  border-color: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, white);
+}
+.loom-step > .loom-step-label {
+  font-size: 0.875rem;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-step[data-state="active"] > .loom-step-label {
+  color: var(--loom-color-ink);
+  font-weight: 500;
+}
+
+/* Sidebar navigation — vertical link list, common in app shells.
+ */
+.loom-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.loom-sidebar-nav-item {
+  display: flex;
+}
+.loom-sidebar-nav-item > a {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-3);
+  inline-size: 100%;
+  padding: var(--loom-space-2) var(--loom-space-3);
+  font-size: 0.9375rem;
+  color: var(--loom-color-ink);
+  text-decoration: none;
+  border-radius: var(--loom-radius-md, 0.5rem);
+}
+.loom-sidebar-nav-item > a:hover {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+}
+.loom-sidebar-nav-item[aria-current="page"] > a,
+.loom-sidebar-nav-item > a[aria-current="page"] {
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, white);
+}
+.loom-sidebar-nav-item > a:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+
+/* Toolbar — horizontal action strip.
+ */
+.loom-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-2);
+  background: var(--loom-color-surface);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+
+/* App bar — page-top navigation chrome.
+ */
+.loom-app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--loom-space-4);
+  padding: var(--loom-space-3) var(--loom-space-4);
+  background: var(--loom-color-surface);
+  border-block-end: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+
+/* Bottom nav — mobile-shell navigation.
+ */
+.loom-bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-2);
+  background: var(--loom-color-surface);
+  border-block-start: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-bottom-nav-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--loom-space-1);
+  font-size: 0.75rem;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  text-decoration: none;
+  padding: var(--loom-space-2);
+}
+.loom-bottom-nav-item[aria-current="page"] {
+  color: var(--loom-color-accent);
+}
+
+/* Menu — dropdown / popover list.
+ */
+.loom-menu {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: var(--loom-space-1);
+  min-inline-size: 12rem;
+  background: var(--loom-color-surface);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.loom-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-2) var(--loom-space-3);
+  font-size: 0.875rem;
+  color: var(--loom-color-ink);
+  text-decoration: none;
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  cursor: pointer;
+}
+.loom-menu-item:hover {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+}
+.loom-menu-item:focus-visible {
+  outline: 2px solid var(--loom-color-accent);
+  outline-offset: 2px;
+}
+.loom-menu-item[data-destructive="true"] {
+  color: var(--loom-color-danger, var(--loom-color-ink));
+}
+.loom-menu-divider {
+  block-size: 1px;
+  background: var(--loom-color-border, var(--loom-color-ink));
+  opacity: 0.4;
+  margin-block: var(--loom-space-1);
+}
+
+/* Link list — generic vertical list of links (sitemap, related
+ * articles, footer column).
+ */
+.loom-link-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.loom-link-list > li > a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  color: var(--loom-color-ink);
+  text-decoration: none;
+}
+.loom-link-list > li > a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+ * Data primitives — vocabulary batch 6 (task #46).
+ *
+ * Tables / definition lists / metrics / KPI cards / progress
+ * bars + rings / meters. Data-density-aware: data-density="compact"
+ * / "comfortable" / "spacious" on tables for the three reading
+ * registers operators need.
+ *
+ * Composes inside .loom-card-* + .loom-panel surfaces from
+ * batch 3.
+ * ============================================================ */
+
+/* Tables — semantic HTML <table> with explicit class on
+ * the table element. Variants via data-attrs.
+ */
+.loom-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  color: var(--loom-color-ink);
+  background: var(--loom-color-surface);
+}
+.loom-table th,
+.loom-table td {
+  padding: var(--loom-space-3) var(--loom-space-4);
+  text-align: start;
+  vertical-align: middle;
+}
+.loom-table thead th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  border-block-end: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-table tbody tr + tr td {
+  border-block-start: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-table[data-density="compact"] th,
+.loom-table[data-density="compact"] td {
+  padding: var(--loom-space-2) var(--loom-space-3);
+  font-size: 0.875rem;
+}
+.loom-table[data-density="spacious"] th,
+.loom-table[data-density="spacious"] td {
+  padding: var(--loom-space-4) var(--loom-space-5, var(--loom-space-4));
+}
+.loom-table[data-striped="true"] tbody tr:nth-child(odd) td {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+}
+.loom-table[data-bordered="true"] {
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  overflow: hidden;
+}
+.loom-table[data-bordered="true"] th,
+.loom-table[data-bordered="true"] td {
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-table[data-hover="true"] tbody tr:hover td {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+}
+
+/* Table action row + utility states.
+ */
+.loom-table-empty,
+.loom-table-loading {
+  padding: var(--loom-space-6) var(--loom-space-4);
+  text-align: center;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+
+/* Key/value pair — single labelled datum.
+ */
+.loom-key-value {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-1);
+}
+.loom-key-value > [data-slot="key"] {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-key-value > [data-slot="value"] {
+  font-size: 1rem;
+  color: var(--loom-color-ink);
+}
+
+/* Definition list — semantic <dl> wrapper.
+ */
+.loom-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--loom-space-2) var(--loom-space-4);
+  margin: 0;
+}
+.loom-dt {
+  font-weight: 500;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-dd {
+  margin: 0;
+  color: var(--loom-color-ink);
+}
+
+/* Metric — single KPI display. Value + label + optional trend.
+ */
+.loom-metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-1);
+}
+.loom-metric-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--loom-color-ink);
+  font-feature-settings: "tnum" 1; /* tabular nums for stable digit widths */
+}
+.loom-metric-label {
+  font-size: 0.875rem;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-metric-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-1);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+.loom-metric-trend[data-direction="up"]   { color: var(--loom-color-success, var(--loom-color-ink)); }
+.loom-metric-trend[data-direction="down"] { color: var(--loom-color-danger, var(--loom-color-ink)); }
+.loom-metric-trend[data-direction="flat"] { color: var(--loom-color-ink-muted, var(--loom-color-ink)); }
+
+/* Stat card — metric wrapped in a card surface.
+ */
+.loom-stat-card {
+  padding: var(--loom-space-4) var(--loom-space-5, var(--loom-space-4));
+  background: var(--loom-color-surface);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-2);
+}
+
+/* Progress bar — linear indeterminate or determinate.
+ */
+.loom-progress-bar {
+  display: block;
+  inline-size: 100%;
+  block-size: 0.5rem;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  border-radius: var(--loom-radius-pill, 999px);
+  overflow: hidden;
+}
+.loom-progress-bar-fill {
+  display: block;
+  block-size: 100%;
+  background: var(--loom-color-accent);
+  border-radius: inherit;
+  /* Width is set inline via style="--fill: X%" */
+  inline-size: var(--loom-progress-fill, 0%);
+}
+.loom-progress-bar[data-tone="success"] .loom-progress-bar-fill {
+  background: var(--loom-color-success, var(--loom-color-accent));
+}
+.loom-progress-bar[data-tone="warning"] .loom-progress-bar-fill {
+  background: var(--loom-color-warning, var(--loom-color-accent));
+}
+.loom-progress-bar[data-tone="danger"] .loom-progress-bar-fill {
+  background: var(--loom-color-danger, var(--loom-color-accent));
+}
+.loom-progress-bar[data-size="lg"] { block-size: 0.75rem; }
+.loom-progress-bar[data-size="sm"] { block-size: 0.25rem; }
+
+/* Progress ring — circular SVG progress. Stroke-dashoffset
+ * controlled by --loom-progress-fill (0..1).
+ *
+ * Consumer markup:
+ *   <svg class="loom-progress-ring" viewBox="0 0 36 36" style="--loom-progress-fill: 0.75">
+ *     <circle class="loom-progress-ring-track" cx="18" cy="18" r="15.9"/>
+ *     <circle class="loom-progress-ring-bar"   cx="18" cy="18" r="15.9"/>
+ *   </svg>
+ */
+.loom-progress-ring {
+  display: inline-block;
+  inline-size: 3rem;
+  block-size: 3rem;
+}
+.loom-progress-ring-track {
+  fill: none;
+  stroke: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  stroke-width: 3.5;
+}
+.loom-progress-ring-bar {
+  fill: none;
+  stroke: var(--loom-color-accent);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  /* circumference ≈ 99.9 (r=15.9, 2πr); dasharray = circumference,
+   * dashoffset = circumference * (1 - fill). */
+  stroke-dasharray: 99.9;
+  stroke-dashoffset: calc(99.9 * (1 - var(--loom-progress-fill, 0)));
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .loom-progress-ring-bar {
+    transition: stroke-dashoffset 300ms ease;
+  }
+}
+
+/* Meter — semantic <meter> styling. Closed-enum data-tone.
+ */
+.loom-meter {
+  inline-size: 100%;
+  block-size: 0.625rem;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  border-radius: var(--loom-radius-pill, 999px);
+  border: 0;
+}
+.loom-meter::-webkit-meter-bar {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  border-radius: var(--loom-radius-pill, 999px);
+  border: 0;
+}
+.loom-meter::-webkit-meter-optimum-value {
+  background: var(--loom-color-success, var(--loom-color-accent));
+  border-radius: var(--loom-radius-pill, 999px);
+}
+.loom-meter::-webkit-meter-suboptimum-value {
+  background: var(--loom-color-warning, var(--loom-color-accent));
+  border-radius: var(--loom-radius-pill, 999px);
+}
+.loom-meter::-webkit-meter-even-less-good-value {
+  background: var(--loom-color-danger, var(--loom-color-accent));
+  border-radius: var(--loom-radius-pill, 999px);
+}
+.loom-meter::-moz-meter-bar {
+  background: var(--loom-color-success, var(--loom-color-accent));
+  border-radius: var(--loom-radius-pill, 999px);
+}
+
+/* Sparkline placeholder — host element for inline <svg> sparkline.
+ */
+.loom-sparkline {
+  display: inline-block;
+  block-size: 2rem;
+  inline-size: 6rem;
+  color: var(--loom-color-accent);
+}
+.loom-sparkline > svg {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+}
+
+/* ============================================================
+ * Overlay primitives — vocabulary batch 7 (task #46).
+ *
+ * Modal / drawer / toast / popover / tooltip / bottom-sheet /
+ * command-palette. All assume the native HTML <dialog> element
+ * for modal + drawer where possible — its built-in focus-trap +
+ * inert behavior is the correct accessibility baseline. CSS
+ * here paints the visual; consumers manage open/close via
+ * native `<dialog>.showModal()`.
+ *
+ * Motion: every appear / dismiss transition guarded by
+ * @media (prefers-reduced-motion: no-preference). Reduced-motion
+ * readers see instant render, instant dismiss.
+ * ============================================================ */
+
+/* Modal — built on native <dialog>.
+ * Pair markup: <dialog class="loom-modal">…</dialog>
+ * Backdrop styled via ::backdrop (universally supported now).
+ */
+.loom-modal {
+  padding: 0;
+  border: 0;
+  border-radius: var(--loom-radius-lg, 0.75rem);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  max-inline-size: min(32rem, 92vw);
+  inline-size: 100%;
+  margin: auto;
+}
+.loom-modal::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+.loom-modal[data-size="sm"] { max-inline-size: 24rem; }
+.loom-modal[data-size="lg"] { max-inline-size: 48rem; }
+.loom-modal[data-size="full"] {
+  max-inline-size: 96vw;
+  max-block-size: 92vh;
+}
+.loom-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--loom-space-3);
+  padding: var(--loom-space-4) var(--loom-space-5, var(--loom-space-4));
+  border-block-end: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+.loom-modal-body {
+  padding: var(--loom-space-5, var(--loom-space-4));
+  overflow-y: auto;
+  max-block-size: 60vh;
+}
+.loom-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--loom-space-3);
+  padding: var(--loom-space-4) var(--loom-space-5, var(--loom-space-4));
+  border-block-start: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-modal-appear {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+  }
+  .loom-modal[open] {
+    animation: loom-modal-appear 180ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+  }
+}
+
+/* Drawer — slide-in from an edge.
+ * Pair with <dialog class="loom-drawer" data-side="right">; the
+ * native dialog still provides the focus trap.
+ */
+.loom-drawer {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+  block-size: 100vh;
+  inline-size: min(28rem, 92vw);
+  margin: 0;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+}
+.loom-drawer::backdrop { background: rgba(0, 0, 0, 0.4); }
+.loom-drawer[data-side="left"] {
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.12);
+}
+.loom-drawer[data-side="bottom"] {
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  inset-block-start: auto;
+  inline-size: 100vw;
+  block-size: auto;
+  max-block-size: 80vh;
+  border-start-start-radius: var(--loom-radius-lg, 0.75rem);
+  border-start-end-radius: var(--loom-radius-lg, 0.75rem);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-drawer-slide-right {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes loom-drawer-slide-left {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes loom-drawer-slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .loom-drawer[open]:not([data-side]) ,
+  .loom-drawer[open][data-side="right"] {
+    animation: loom-drawer-slide-right 240ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+  }
+  .loom-drawer[open][data-side="left"] {
+    animation: loom-drawer-slide-left 240ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+  }
+  .loom-drawer[open][data-side="bottom"] {
+    animation: loom-drawer-slide-up 240ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+  }
+}
+
+/* Toast stack + individual toast. Toasts live in a fixed corner
+ * region; consumers append + dismiss via JS but the CSS is
+ * positionally self-contained.
+ */
+.loom-toast-stack {
+  position: fixed;
+  inset-block-end: var(--loom-space-4);
+  inset-inline-end: var(--loom-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-2);
+  z-index: 100;
+  max-inline-size: 24rem;
+  pointer-events: none; /* let children opt in */
+}
+.loom-toast-stack[data-anchor="top-right"] {
+  inset-block-end: auto;
+  inset-block-start: var(--loom-space-4);
+}
+.loom-toast-stack[data-anchor="top-left"] {
+  inset-block-end: auto;
+  inset-block-start: var(--loom-space-4);
+  inset-inline-end: auto;
+  inset-inline-start: var(--loom-space-4);
+}
+.loom-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-3) var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  font-size: 0.875rem;
+}
+.loom-toast[data-tone="success"] {
+  border-inline-start: 4px solid var(--loom-color-success, var(--loom-color-accent));
+}
+.loom-toast[data-tone="warning"] {
+  border-inline-start: 4px solid var(--loom-color-warning, var(--loom-color-accent));
+}
+.loom-toast[data-tone="danger"] {
+  border-inline-start: 4px solid var(--loom-color-danger, var(--loom-color-accent));
+}
+.loom-toast[data-tone="info"] {
+  border-inline-start: 4px solid var(--loom-color-info, var(--loom-color-accent));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes loom-toast-slide-in {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .loom-toast { animation: loom-toast-slide-in 200ms ease-out both; }
+}
+
+/* Snackbar — single-line toast variant; bottom-center.
+ */
+.loom-snackbar {
+  position: fixed;
+  inset-block-end: var(--loom-space-4);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  padding: var(--loom-space-3) var(--loom-space-5, var(--loom-space-4));
+  background: var(--loom-color-ink);
+  color: var(--loom-color-surface);
+  border-radius: var(--loom-radius-pill, 999px);
+  font-size: 0.875rem;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--loom-space-3);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+}
+.loom-snackbar > button {
+  background: transparent;
+  border: 0;
+  color: var(--loom-color-accent);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Popover — anchored floating card.
+ * Consumers position with Popover API (popover="" + popovertarget)
+ * OR via JS. CSS just paints.
+ */
+.loom-popover {
+  padding: var(--loom-space-3) var(--loom-space-4);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-radius: var(--loom-radius-md, 0.5rem);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  max-inline-size: 20rem;
+  font-size: 0.875rem;
+}
+.loom-popover[popover] {
+  margin: auto;
+  inset: unset;
+  position: fixed;
+}
+
+/* Tooltip — minimal popover. Use with title="..." or aria-describedby.
+ */
+.loom-tooltip {
+  padding: 0.35em 0.7em;
+  background: var(--loom-color-ink);
+  color: var(--loom-color-surface);
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  max-inline-size: 16rem;
+  pointer-events: none;
+}
+
+/* Bottom-sheet — mobile-shell drawer that pulls up from the
+ * bottom. Alias for .loom-drawer[data-side="bottom"] but with
+ * its own classname so consumers can target the pattern
+ * explicitly.
+ */
+.loom-bottom-sheet {
+  position: fixed;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  border-start-start-radius: var(--loom-radius-lg, 0.75rem);
+  border-start-end-radius: var(--loom-radius-lg, 0.75rem);
+  padding: var(--loom-space-5, var(--loom-space-4));
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+  max-block-size: 80vh;
+  overflow-y: auto;
+  z-index: 90;
+}
+
+/* Command palette — ⌘K style modal with search + result list.
+ * The structural shell; consumers fill in input + list.
+ */
+.loom-command-palette {
+  padding: 0;
+  border: 0;
+  border-radius: var(--loom-radius-lg, 0.75rem);
+  background: var(--loom-color-surface);
+  color: var(--loom-color-ink);
+  inline-size: min(36rem, 92vw);
+  max-block-size: 70vh;
+  margin: 10vh auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
+}
+.loom-command-palette::backdrop { background: rgba(0, 0, 0, 0.4); }
+.loom-command-palette-input {
+  inline-size: 100%;
+  padding: var(--loom-space-3) var(--loom-space-4);
+  font-size: 1rem;
+  border: 0;
+  border-block-end: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  background: transparent;
+  color: var(--loom-color-ink);
+  outline: none;
+}
+.loom-command-palette-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--loom-space-2);
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+.loom-command-palette-item {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-2) var(--loom-space-3);
+  border-radius: var(--loom-radius-sm, 0.25rem);
+  cursor: pointer;
+}
+.loom-command-palette-item[aria-selected="true"],
+.loom-command-palette-item:hover {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+}
+
+/* ============================================================
+ * Marketing primitives — vocabulary batch 8 (task #46, final).
+ *
+ * Hero / feature grid / pricing / testimonial / logo cloud /
+ * CTA / FAQ / stats / team / comparison. The landing-page
+ * layer — what most public-facing marketing sites need.
+ *
+ * Composes inside .loom-cover / .loom-center / .loom-grid /
+ * .loom-card-* from earlier batches.
+ *
+ * After this batch the vocabulary reaches the ~200 target.
+ * ============================================================ */
+
+/* Hero — page-leading marketing block.
+ */
+.loom-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-4);
+  padding: var(--loom-space-8) var(--loom-space-5, var(--loom-space-4));
+  text-align: start;
+}
+.loom-hero[data-align="center"] {
+  text-align: center;
+  align-items: center;
+}
+.loom-hero-eyebrow {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--loom-color-accent);
+}
+.loom-hero-title {
+  font-size: clamp(2.25rem, 4vw + 0.8rem, 4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--loom-color-ink);
+  max-inline-size: 22ch;
+  margin: 0;
+}
+.loom-hero-subtitle {
+  font-size: clamp(1.125rem, 1vw + 0.9rem, 1.375rem);
+  line-height: 1.5;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  max-inline-size: 60ch;
+  margin: 0;
+}
+.loom-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--loom-space-3);
+  margin-block-start: var(--loom-space-3);
+}
+.loom-hero-media {
+  margin-block-start: var(--loom-space-6);
+  border-radius: var(--loom-radius-lg, 0.75rem);
+  overflow: hidden;
+}
+
+/* Feature — single feature card (icon + title + desc).
+ */
+.loom-feature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-2);
+  padding: var(--loom-space-4);
+}
+.loom-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: var(--loom-radius-md, 0.5rem);
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  color: var(--loom-color-accent);
+  margin-block-end: var(--loom-space-2);
+}
+.loom-feature-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+.loom-feature-desc {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  margin: 0;
+}
+.loom-feature-grid {
+  display: grid;
+  gap: var(--loom-space-5, var(--loom-space-4));
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+}
+
+/* Pricing table.
+ */
+.loom-pricing-table {
+  display: grid;
+  gap: var(--loom-space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  align-items: stretch;
+}
+.loom-pricing-tier {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-3);
+  padding: var(--loom-space-5, var(--loom-space-4));
+  background: var(--loom-color-surface);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-lg, 0.75rem);
+}
+.loom-pricing-tier-featured {
+  border-color: var(--loom-color-accent);
+  box-shadow: 0 0 0 2px var(--loom-color-accent);
+  position: relative;
+}
+.loom-pricing-tier-featured::before {
+  content: "Popular";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: var(--loom-space-4);
+  transform: translateY(-50%);
+  padding: 0.15em 0.6em;
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, white);
+  border-radius: var(--loom-radius-pill, 999px);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.loom-pricing-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--loom-space-1);
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--loom-color-ink);
+  font-feature-settings: "tnum" 1;
+}
+.loom-pricing-period {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-pricing-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-2);
+  font-size: 0.9375rem;
+}
+.loom-pricing-features > li {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-2);
+}
+
+/* Testimonial.
+ */
+.loom-testimonial {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-4);
+  padding: var(--loom-space-5, var(--loom-space-4));
+  background: var(--loom-color-surface);
+  border-radius: var(--loom-radius-lg, 0.75rem);
+}
+.loom-testimonial-quote {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--loom-color-ink);
+  font-style: italic;
+  margin: 0;
+}
+.loom-testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: var(--loom-space-3);
+}
+.loom-testimonial-avatar {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.loom-testimonial-avatar > img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* Logo cloud — customer trust strip.
+ */
+.loom-logo-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--loom-space-6);
+  padding: var(--loom-space-6) 0;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-logo-cloud > img,
+.loom-logo-cloud > svg {
+  block-size: 1.75rem;
+  opacity: 0.7;
+  filter: grayscale(100%);
+}
+
+/* CTA — call-to-action banner + card variants.
+ */
+.loom-cta-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--loom-space-4);
+  padding: var(--loom-space-6) var(--loom-space-5, var(--loom-space-4));
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, white);
+  border-radius: var(--loom-radius-lg, 0.75rem);
+}
+.loom-cta-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--loom-space-3);
+  padding: var(--loom-space-6);
+  background: var(--loom-color-surface);
+  border-radius: var(--loom-radius-lg, 0.75rem);
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+}
+
+/* FAQ — built on native <details>/<summary> for free accessibility.
+ */
+.loom-faq {
+  display: flex;
+  flex-direction: column;
+  gap: var(--loom-space-2);
+}
+.loom-faq-item {
+  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  border-radius: var(--loom-radius-md, 0.5rem);
+  background: var(--loom-color-surface);
+  overflow: hidden;
+}
+.loom-faq-question {
+  padding: var(--loom-space-4);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--loom-space-3);
+}
+.loom-faq-question::-webkit-details-marker { display: none; }
+.loom-faq-question::after {
+  content: "+";
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+}
+.loom-faq-item[open] .loom-faq-question::after { content: "−"; }
+.loom-faq-answer {
+  padding: 0 var(--loom-space-4) var(--loom-space-4);
+  color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  line-height: 1.55;
+}
+
+/* Stats row — KPI strip (horizontal flex of .loom-metric).
+ */
+.loom-stats-row {
+  display: grid;
+  gap: var(--loom-space-5, var(--loom-space-4));
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+}
+
+/* Team member card + grid.
+ */
+.loom-team-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--loom-space-3);
+  padding: var(--loom-space-4);
+  text-align: center;
+}
+.loom-team-member > .loom-avatar {
+  inline-size: 5rem;
+  block-size: 5rem;
+}
+.loom-team-grid {
+  display: grid;
+  gap: var(--loom-space-5, var(--loom-space-4));
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+}
+
+/* Comparison table — feature-vs-feature comparison.
+ */
+.loom-comparison-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.loom-comparison-table th,
+.loom-comparison-table td {
+  padding: var(--loom-space-3) var(--loom-space-4);
+  border-block-end: 1px solid var(--loom-color-border, var(--loom-color-ink));
+  text-align: center;
+}
+.loom-comparison-table th:first-child,
+.loom-comparison-table td:first-child {
+  text-align: start;
+  font-weight: 500;
+}
+.loom-comparison-table thead th {
+  background: var(--loom-color-surface-subtle, var(--loom-color-surface));
+  font-weight: 600;
+}
+.loom-comparison-table [data-yes]::before { content: "✓"; color: var(--loom-color-success, var(--loom-color-accent)); }
+.loom-comparison-table [data-no]::before  { content: "—"; color: var(--loom-color-ink-muted, var(--loom-color-ink)); }

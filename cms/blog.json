@@ -1,0 +1,195 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "PlausiDen — blog",
+  "description": "Notes on building a typed-substrate platform.",
+  "path": "/blog.html",
+  "nav_links": [
+    {
+      "label": "Platform",
+      "href": "/platform.html",
+      "current": false,
+      "data_backend": "view-platform"
+    },
+    {
+      "label": "Why",
+      "href": "/why.html",
+      "current": false,
+      "data_backend": "view-why"
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing.html",
+      "current": false,
+      "data_backend": "view-pricing"
+    },
+    {
+      "label": "Docs",
+      "href": "/docs.html",
+      "current": false,
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog.html",
+      "current": true,
+      "data_backend": "view-blog"
+    },
+    {
+      "label": "About",
+      "href": "/about.html",
+      "current": false,
+      "data_backend": "view-about"
+    }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Blog",
+      "title": "Notes from the build.",
+      "lede": "Architectural decisions, post-mortems, and the occasional rant about static typing."
+    },
+    {
+      "kind": "card_feed",
+      "heading": "Recent",
+      "items": [
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "T9"
+          },
+          "title": "T98 closed — runtime wiring for the typed CMS contract",
+          "host": "2026-05-18 · 4 min read",
+          "stats": [
+            {
+              "label": "Tests added",
+              "value": "21"
+            },
+            {
+              "label": "New CLI",
+              "value": "3"
+            }
+          ],
+          "tag": "Engineering",
+          "href": "/blog/t98-runtime-wiring.html",
+          "data_backend": "view-post"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "LF"
+          },
+          "title": "Why LFI gates AI, not generates it",
+          "host": "2026-05-17 · 8 min read",
+          "stats": [
+            {
+              "label": "Reading",
+              "value": "Long"
+            },
+            {
+              "label": "Topic",
+              "value": "Architecture"
+            }
+          ],
+          "tag": "Architecture",
+          "href": "/blog/lfi-as-gate.html",
+          "data_backend": "view-post"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "C8"
+          },
+          "title": "Catching CVSS 4.0 in the supply chain",
+          "host": "2026-05-15 · 3 min read",
+          "stats": [
+            {
+              "label": "CVEs flagged",
+              "value": "2"
+            },
+            {
+              "label": "Build broken",
+              "value": "0"
+            }
+          ],
+          "tag": "Security",
+          "href": "/blog/cvss-4-0.html",
+          "data_backend": "view-post"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "AM"
+          },
+          "title": "OLED-true black on every theme",
+          "host": "2026-05-13 · 5 min read",
+          "stats": [
+            {
+              "label": "Themes",
+              "value": "13"
+            },
+            {
+              "label": "Tokens",
+              "value": "26"
+            }
+          ],
+          "tag": "Design",
+          "href": "/blog/amoled-true-black.html",
+          "data_backend": "view-post"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "DG"
+          },
+          "title": "The discipline gate — what it catches",
+          "host": "2026-05-10 · 6 min read",
+          "stats": [
+            {
+              "label": "Axes",
+              "value": "4"
+            },
+            {
+              "label": "Violations",
+              "value": "0"
+            }
+          ],
+          "tag": "Process",
+          "href": "/blog/discipline-gate.html",
+          "data_backend": "view-post"
+        },
+        {
+          "avatar": {
+            "kind": "initials",
+            "letters": "Sb"
+          },
+          "title": "SLSA-attested SBOMs, the silent way they fail",
+          "host": "2026-05-08 · 4 min read",
+          "stats": [
+            {
+              "label": "Workflow",
+              "value": "Fixed"
+            },
+            {
+              "label": "Lesson",
+              "value": "Fail-loud"
+            }
+          ],
+          "tag": "Supply chain",
+          "href": "/blog/silent-sbom.html",
+          "data_backend": "view-post"
+        }
+      ]
+    },
+    {
+      "kind": "hero",
+      "eyebrow": "Subscribe",
+      "title": "Get the build notes.",
+      "lede": "One email a fortnight. No tracking pixels. No third-party newsletter platform — we send from our own SMTP.",
+      "cta": {
+        "label": "Contact",
+        "href": "/contact.html",
+        "data_backend": "cta-contact"
+      }
+    }
+  ]
+}

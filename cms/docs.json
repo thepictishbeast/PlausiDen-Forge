@@ -1,0 +1,140 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "PlausiDen — docs",
+  "description": "Read the manifesto, install Forge, ship typed in 60 seconds.",
+  "path": "/docs.html",
+  "nav_links": [
+    {
+      "label": "Platform",
+      "href": "/platform.html",
+      "current": false,
+      "data_backend": "view-platform"
+    },
+    {
+      "label": "Why",
+      "href": "/why.html",
+      "current": false,
+      "data_backend": "view-why"
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing.html",
+      "current": false,
+      "data_backend": "view-pricing"
+    },
+    {
+      "label": "Docs",
+      "href": "/docs.html",
+      "current": true,
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog.html",
+      "current": false,
+      "data_backend": "view-blog"
+    },
+    {
+      "label": "About",
+      "href": "/about.html",
+      "current": false,
+      "data_backend": "view-about"
+    }
+  ],
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Docs",
+      "title": "Ship a typed site in 60 seconds.",
+      "lede": "Forge is one cargo install away. From zero to deployed in three commands."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Install"
+    },
+    {
+      "kind": "code",
+      "lang": "bash",
+      "caption": "Pinned cargo install. No CDN, no curl-pipe-bash.",
+      "body": "$ cargo install --git https://github.com/thepictishbeast/PlausiDen-Forge \\\n    --locked --tag v0.18 forge-cli\n\n$ forge --version\nforge 0.18 (commit c091b54, built 2026-05-18)"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Author a page"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Every page is one JSON file. Drop it in cms/ and Forge builds it. Editor autocomplete via the JSON Schema reference."
+    },
+    {
+      "kind": "code",
+      "lang": "json",
+      "caption": "cms/landing.json — a complete page in 20 lines.",
+      "body": "{\n  \"$schema\": \"../cms-schema.json\",\n  \"title\": \"Landing\",\n  \"description\": \"Marketing page.\",\n  \"path\": \"/\",\n  \"nav_links\": [],\n  \"sections\": [\n    {\n      \"kind\": \"hero\",\n      \"eyebrow\": \"New\",\n      \"title\": \"Welcome.\",\n      \"lede\": \"This page is one JSON file.\",\n      \"cta\": {\n        \"label\": \"Read more\",\n        \"href\": \"/about\"\n      }\n    }\n  ]\n}"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Build"
+    },
+    {
+      "kind": "code",
+      "lang": "terminal",
+      "caption": "27 audit phases, one report, deterministic output.",
+      "body": "$ forge build\n== phase: tokens ==\n  ok      no findings (1ms)\n== phase: html_semantic ==\n  ok      no findings (2ms)\n== phase: csp ==\n  ok      no findings (0ms)\n== phase: a11y_landmarks ==\n  ok      no findings (1ms)\n== phase: theme_contrast ==\n  ok      no findings (28ms)\n== summary ==\n  mode:                production\n  strict findings:     0\n  duration:            66ms\n  signature:           ed25519 (verified)\nforge build OK"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Deploy"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The output lives in static/. Copy it anywhere — Caddy, nginx, IPFS, Tor hidden service, S3, your laptop. The audit report in reports/ is verifiable independently."
+    },
+    {
+      "kind": "code",
+      "lang": "bash",
+      "body": "$ rsync -av static/ user@your-host:/var/www/your-site/\n$ forge verify reports/build-20260518T074342Z.json --chain --signatures"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Reference",
+      "items": [
+        {
+          "key": "Section kinds",
+          "value": "14",
+          "hint": "hero, banner, group, card_feed, sidebar, composer, form, picture, paragraph, heading, kv_pair, logo_wall, quote, code."
+        },
+        {
+          "key": "Themes",
+          "value": "13",
+          "hint": "Loaded automatically; pick via data-theme attribute or via the in-page toggle."
+        },
+        {
+          "key": "Build phases",
+          "value": "27",
+          "hint": "Configured in forge.toml; each phase's strictness is operator-controllable."
+        },
+        {
+          "key": "JSON Schema",
+          "value": "2020-12",
+          "hint": "cms-schema.json at project root. Editor LSPs (VS Code, Helix, Zed) provide inline autocomplete."
+        }
+      ]
+    },
+    {
+      "kind": "hero",
+      "eyebrow": "Ready",
+      "title": "Read the source.",
+      "lede": "Forge, Loom, Crawler, Annotator, CMS are all open source. Every commit is signed. Every PR is reviewed against the discipline gate.",
+      "cta": {
+        "label": "github.com/thepictishbeast",
+        "href": "https://github.com/thepictishbeast",
+        "data_backend": "cta-https:--github.com-thepictishbeast"
+      }
+    }
+  ]
+}

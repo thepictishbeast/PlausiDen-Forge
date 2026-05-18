@@ -1,67 +1,121 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "About SkillShots",
-  "description": "How SkillShots works: voted skill battles, single-take video proof, crew-decided pots.",
+  "title": "PlausiDen — about",
+  "description": "An independent platform shop building software that lasts.",
   "path": "/about.html",
   "nav_links": [
     {
-      "label": "Battle Feed",
-      "href": "/",
-      "data_backend": "list-challenges",
-      "current": false
+      "label": "Platform",
+      "href": "/platform.html",
+      "current": false,
+      "data_backend": "view-platform"
     },
     {
-      "label": "Leaderboard",
-      "href": "/leaderboard.html",
-      "data_backend": "list-leaderboard",
-      "current": false
+      "label": "Why",
+      "href": "/why.html",
+      "current": false,
+      "data_backend": "view-why"
     },
     {
-      "label": "My Wins",
-      "href": "/my-wins.html",
-      "data_backend": "list-touches",
-      "current": false
+      "label": "Pricing",
+      "href": "/pricing.html",
+      "current": false,
+      "data_backend": "view-pricing"
     },
     {
-      "label": "Profile",
-      "href": "/profile.html",
-      "data_backend": "view-profile",
-      "current": false
+      "label": "Docs",
+      "href": "/docs.html",
+      "current": false,
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog.html",
+      "current": false,
+      "data_backend": "view-blog"
+    },
+    {
+      "label": "About",
+      "href": "/about.html",
+      "current": true,
+      "data_backend": "view-about"
     }
   ],
   "sections": [
     {
       "kind": "hero",
-      "eyebrow": null,
-      "title": "About SkillShots",
-      "lede": "Voted skill battles. Single-take video. Pots split by your crew.",
-      "cta": null
+      "eyebrow": "About",
+      "title": "An independent platform shop.",
+      "lede": "PlausiDen is built by a small team that thinks software should be auditable, accessible, and reproducible — by default, not as a checkbox."
     },
     {
-      "kind": "group",
-      "title": "How it works",
-      "body": [
-        "A challenge declares a measurable skill (half-court shot, 5-stair kickflip, sub-18 cube solve).",
-        "Players upload one continuous take. No edits, no second chances.",
-        "Voters compare entries and pick a winner. The pot splits at round close."
+      "kind": "heading",
+      "level": 2,
+      "text": "How we work"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Every commit produces a deterministic artifact plus a signed audit report. The reports are stored alongside the source — anyone can verify any historical build. The discipline gate refuses to merge code that doesn't carry inline tests, inline docs, and a passing audit. We don't have a separate QA pass because the build is the QA pass."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "How we ship"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Slow on purpose. We don't release on a calendar; we release when the discipline gate is green and the audit chain is intact. A bad release isn't a missed deadline — it's an apology to every team running the previous version. We've never shipped a CVE because we ship slowly and audit obsessively."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "How we fund"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Revenue-funded. No venture capital. Grants where they align with the privacy-first internet (Tor Project, NLnet, NGI). Our pricing is honest: free for solo, scale by use, no per-seat tax. The platform stays independent because the funding stays independent."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Principles",
+      "items": [
+        {
+          "key": "Discipline first",
+          "value": "Tests + docs + audit on every commit",
+          "hint": "Codified in scripts/discipline-check.sh --strict."
+        },
+        {
+          "key": "Typed contracts",
+          "value": "At every boundary",
+          "hint": "If the types compile, the system doesn't break."
+        },
+        {
+          "key": "Reproducible builds",
+          "value": "Same input → same hash",
+          "hint": "Independently verifiable; not a trust-the-vendor claim."
+        },
+        {
+          "key": "Privacy by default",
+          "value": "Self-host everything",
+          "hint": "No third-party fonts, no analytics, no telemetry, no CDNs."
+        },
+        {
+          "key": "No lock-in",
+          "value": "Your content is JSON in git",
+          "hint": "Walk away with a tar.gz; the platform produces no proprietary artifact."
+        }
       ]
     },
     {
-      "kind": "group",
-      "title": "Rules of the game",
-      "body": [
-        "Every entry is one continuous take. Cuts disqualify.",
-        "720p minimum video. Sub-720p rejected at upload.",
-        "Spec disputes go to a re-vote. Repeat offenders get rate-limited."
-      ]
-    },
-    {
-      "kind": "group",
-      "title": "Why we built this",
-      "body": [
-        "Skill is performable. Performance should be voted, not algorithmically rewarded.",
-        "No engagement loops. No infinite scroll. Just: post a take, get judged, split a pot."
-      ]
+      "kind": "hero",
+      "eyebrow": "Get in touch",
+      "title": "Say hello.",
+      "lede": "Working on something where this would help? Curious how a typed substrate would change your stack? We read every email.",
+      "cta": {
+        "label": "Contact",
+        "href": "/contact.html",
+        "data_backend": "cta-contact"
+      }
     }
   ]
 }

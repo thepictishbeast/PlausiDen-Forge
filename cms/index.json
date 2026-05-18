@@ -1,267 +1,339 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "SkillShots \u2014 voted skill battles",
-  "description": "Skill battles, voted by your crew. Pots split at round close.",
+  "title": "PlausiDen — typed substrate for software that lasts",
+  "description": "A typed-substrate platform for teams that want their tools to outlive their dependencies. Explicit contracts. Audited builds. Privacy-first by default.",
   "path": "/",
   "nav_links": [
     {
-      "label": "Battle Feed",
-      "href": "/",
-      "data_backend": "list-challenges",
-      "current": true
+      "label": "Platform",
+      "href": "/platform.html",
+      "current": false,
+      "data_backend": "view-platform"
     },
     {
-      "label": "Leaderboard",
-      "href": "/leaderboard.html",
-      "data_backend": "list-leaderboard",
-      "current": false
+      "label": "Why",
+      "href": "/why.html",
+      "current": false,
+      "data_backend": "view-why"
     },
     {
-      "label": "My Wins",
-      "href": "/my-wins.html",
-      "data_backend": "list-touches",
-      "current": false
+      "label": "Pricing",
+      "href": "/pricing.html",
+      "current": false,
+      "data_backend": "view-pricing"
     },
     {
-      "label": "Profile",
-      "href": "/profile.html",
-      "data_backend": "view-profile",
-      "current": false
+      "label": "Docs",
+      "href": "/docs.html",
+      "current": false,
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog.html",
+      "current": false,
+      "data_backend": "view-blog"
+    },
+    {
+      "label": "About",
+      "href": "/about.html",
+      "current": false,
+      "data_backend": "view-about"
     }
   ],
   "sections": [
     {
       "kind": "banner",
       "tone": "info",
-      "text": "PoC build \u2014 voted-skill battles UX preview. Data is fake.",
+      "text": "PlausiDen Forge 0.18 — typed CMS pipeline now ships with --json gates and SLSA-attested SBOMs. See changelog.",
       "dismissible": true,
-      "id": "poc-banner-2026-05"
+      "id": "launch-banner-2026-05-18"
     },
     {
       "kind": "hero",
-      "eyebrow": "Featured",
-      "title": "Half-court shot \u2014 single arc",
-      "lede": "Hosted by @marcus_h \u00b7 3 entries \u00b7 pot $240 \u00b7 vote closes 4d.",
+      "eyebrow": "Build platform · Beta",
+      "title": "Software that lasts a thousand years.",
+      "lede": "PlausiDen is a typed-substrate platform for teams that want their tools to outlive their dependencies. Explicit contracts at every boundary, audited at every commit, designed for the privacy-first internet.",
       "cta": {
-        "label": "Watch + vote",
-        "href": "/c/half-court-arc",
-        "data_backend": "view-challenge"
+        "label": "Platform",
+        "href": "/platform.html",
+        "data_backend": "cta-platform"
       }
     },
     {
-      "kind": "composer",
-      "prompt": "What did you nail today?",
-      "submit_endpoint": "/post-skill",
-      "actions": [
-        "upload_clip",
-        "challenge_opponent",
-        "go_live"
-      ],
-      "avatar": {
-        "kind": "initials",
-        "letters": "DA"
-      },
-      "size": "comfortable"
+      "kind": "logo_wall",
+      "heading": "Built on PlausiDen",
+      "items": [
+        {
+          "name": "Skillshots"
+        },
+        {
+          "name": "Sacred.Vote"
+        },
+        {
+          "name": "Crawler.HQ"
+        },
+        {
+          "name": "Annotator"
+        },
+        {
+          "name": "Forge.dev"
+        },
+        {
+          "name": "Loom.studio"
+        },
+        {
+          "name": "Roundtable"
+        },
+        {
+          "name": "Parchment"
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Six tools. One typed substrate."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Every PlausiDen tool shares the same contracts, the same audit pipeline, the same reproducible-build guarantees. Pick what you need — the rest stays out of your way until you do."
     },
     {
       "kind": "card_feed",
-      "heading": "Battle feed",
+      "heading": "What's in the platform",
       "items": [
         {
           "avatar": {
             "kind": "initials",
-            "letters": "PK"
+            "letters": "Fo"
           },
-          "title": "One-take parkour line \u2014 top of stairwell to ground in under 9s.",
-          "host": "@vault_kit \u00b7 4d left",
+          "title": "Forge",
+          "host": "Typed build pipeline",
           "stats": [
             {
-              "label": "Votes",
-              "value": "78%"
+              "label": "Phases",
+              "value": "27"
             },
             {
-              "label": "Pot",
-              "value": "$240"
+              "label": "Crates",
+              "value": "41"
             }
           ],
-          "href": "/c/parkour-stairwell",
-          "data_backend": "view-challenge",
-          "tag": "Parkour"
+          "tag": "Build",
+          "href": "/platform.html",
+          "data_backend": "view-forge"
         },
         {
           "avatar": {
             "kind": "initials",
-            "letters": "9B"
+            "letters": "Lo"
           },
-          "title": "Pool: clear the table in two innings, no scratches.",
-          "host": "@9ball_lori \u00b7 12m left",
+          "title": "Loom",
+          "host": "Design tokens that mean something",
           "stats": [
             {
-              "label": "Votes",
-              "value": "62%"
+              "label": "Themes",
+              "value": "13"
             },
             {
-              "label": "Pot",
-              "value": "$120"
+              "label": "WCAG",
+              "value": "2.1 AA"
             }
           ],
-          "href": "/c/pool-clear-9lori",
-          "data_backend": "view-challenge",
-          "tag": "Billiards"
+          "tag": "Design",
+          "href": "/platform.html",
+          "data_backend": "view-loom"
         },
         {
           "avatar": {
             "kind": "initials",
-            "letters": "SC"
+            "letters": "Cr"
           },
-          "title": "Speed-cube: solve a scrambled 3\u00d73 in under 18 seconds, single take.",
-          "host": "@dax \u00b7 2d left",
+          "title": "Crawler",
+          "host": "Runtime auditor",
           "stats": [
             {
-              "label": "Votes",
-              "value": "55%"
+              "label": "Detectors",
+              "value": "120+"
             },
             {
-              "label": "Pot",
-              "value": "$180"
+              "label": "Journey",
+              "value": "Typed"
             }
           ],
-          "href": "/c/cube-sub18",
-          "data_backend": "view-challenge",
-          "tag": "Mind"
+          "tag": "Audit",
+          "href": "/platform.html",
+          "data_backend": "view-crawler"
         },
         {
           "avatar": {
             "kind": "initials",
-            "letters": "SK"
+            "letters": "An"
           },
-          "title": "Skateboard: 5-stair kickflip, land + roll-away, single take.",
-          "host": "@kickflip_mar \u00b7 42m left",
+          "title": "Annotator",
+          "host": "Operator capture, replayable",
           "stats": [
             {
-              "label": "Votes",
-              "value": "48%"
+              "label": "Replay",
+              "value": "Lossless"
             },
             {
-              "label": "Pot",
-              "value": "$95"
+              "label": "Storage",
+              "value": "Local"
             }
           ],
-          "href": "/c/kickflip-5stair",
-          "data_backend": "view-challenge",
-          "tag": "Skate"
+          "tag": "Capture",
+          "href": "/platform.html",
+          "data_backend": "view-annotator"
         },
         {
           "avatar": {
             "kind": "initials",
-            "letters": "DT"
+            "letters": "CM"
           },
-          "title": "Darts: 9-dart finish from a fresh 501, recorded continuous.",
-          "host": "@oche_riv \u00b7 1h 04m left",
+          "title": "CMS",
+          "host": "Content as typed data",
           "stats": [
             {
-              "label": "Votes",
-              "value": "41%"
+              "label": "Backend",
+              "value": "None"
             },
             {
-              "label": "Pot",
-              "value": "$140"
+              "label": "Storage",
+              "value": "Git"
             }
           ],
-          "href": "/c/9dart-501",
-          "data_backend": "view-challenge",
-          "tag": "Darts"
+          "tag": "Content",
+          "href": "/platform.html",
+          "data_backend": "view-cms"
         },
         {
           "avatar": {
             "kind": "initials",
-            "letters": "LA"
+            "letters": "LF"
           },
-          "title": "Latte art: free-pour swan in one continuous shot, judged by silhouette.",
-          "host": "@brew_pia \u00b7 6h left",
+          "title": "LFI",
+          "host": "AI evaluation, not generation",
           "stats": [
             {
-              "label": "Votes",
-              "value": "33%"
+              "label": "Provider",
+              "value": "Pluggable"
             },
             {
-              "label": "Pot",
-              "value": "$45"
+              "label": "Gate",
+              "value": "Critic"
             }
           ],
-          "href": "/c/latte-swan",
-          "data_backend": "view-challenge",
-          "tag": "Cafe"
+          "tag": "AI",
+          "href": "/platform.html",
+          "data_backend": "view-lfi"
         }
       ]
     },
     {
-      "kind": "sidebar",
-      "label": "Side panels",
-      "panels": [
+      "kind": "heading",
+      "level": 2,
+      "text": "Type-safe from authoring to publish."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Your content is JSON. JSON deserialises to typed Rust. Typed Rust renders the HTML you actually want to ship. No template-string SQL. No half-typed YAML. No hidden coupling. Every block, every page, every export — checked at the boundary."
+    },
+    {
+      "kind": "code",
+      "lang": "json",
+      "caption": "A CmsSection that fails the WCAG-1.1.1 validator at parse time, not at publish time.",
+      "body": "{\n  \"kind\": \"hero\",\n  \"eyebrow\": \"Build platform\",\n  \"title\": \"Software that lasts.\",\n  \"lede\": \"Typed contracts. Audited builds.\",\n  \"cta\": {\n    \"label\": \"Get started\",\n    \"href\": \"/start\"\n  }\n}"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Numbers that compose",
+      "items": [
         {
-          "title": "Top earners \u00b7 this week",
-          "body": {
-            "kind": "list",
-            "items": [
-              {
-                "label": "@court_dax \u00b7 Basketball",
-                "value": "$1,840",
-                "href": "/u/court_dax",
-                "data_backend": "view-profile"
-              },
-              {
-                "label": "@vault_kit \u00b7 Parkour",
-                "value": "$1,420",
-                "href": "/u/vault_kit",
-                "data_backend": "view-profile"
-              },
-              {
-                "label": "@9ball_lori \u00b7 Billiards",
-                "value": "$995",
-                "href": "/u/9ball_lori",
-                "data_backend": "view-profile"
-              }
-            ]
-          }
+          "key": "Workspace crates",
+          "value": "41",
+          "hint": "Every one #[forbid(unsafe_code)] + #[deny(missing_docs)]."
         },
         {
-          "title": "Open votes \u00b7 need your eye",
-          "body": {
-            "kind": "list",
-            "items": [
-              {
-                "label": "Pool table clear \u2014 12m",
-                "value": "Vote",
-                "href": "/c/pool-clear-9lori",
-                "data_backend": "view-challenge"
-              },
-              {
-                "label": "5-stair kickflip \u2014 42m",
-                "value": "Vote",
-                "href": "/c/kickflip-5stair",
-                "data_backend": "view-challenge"
-              },
-              {
-                "label": "9-dart 501 \u2014 1h 04m",
-                "value": "Vote",
-                "href": "/c/9dart-501",
-                "data_backend": "view-challenge"
-              }
-            ]
-          }
+          "key": "Test count",
+          "value": "1,085+",
+          "hint": "Workspace-wide. All green at last main."
         },
         {
-          "title": "House rules",
-          "body": {
-            "kind": "text",
-            "paragraphs": [
-              "One single take. No edits. Voted by the crew.",
-              "Pot splits at round close. Disputes go to a re-vote."
-            ]
-          }
+          "key": "Third-party trackers",
+          "value": "0",
+          "hint": "No analytics. No external font CDNs. Self-hosted everything."
+        },
+        {
+          "key": "Build phases",
+          "value": "27",
+          "hint": "From tokens to CSP to a11y landmarks to per-theme contrast."
+        },
+        {
+          "key": "Themes shipped",
+          "value": "13",
+          "hint": "Including AMOLED-true dark, high-contrast pair, sepia, warm, ocean, forest."
+        },
+        {
+          "key": "Supply-chain SBOM",
+          "value": "SLSA",
+          "hint": "Every workspace member gets a sigstore-attested CycloneDX 1.5 SBOM."
         }
       ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "What teams say"
+    },
+    {
+      "kind": "quote",
+      "body": "We replaced three SaaS subscriptions with a single Forge build. Reports go straight to compliance and our auditor stopped asking questions.",
+      "attribution": "Eli K.",
+      "role": "Platform Lead, fictional pilot team"
+    },
+    {
+      "kind": "quote",
+      "body": "PlausiDen made our typed CMS shippable in a week. We deleted the WordPress instance and never looked back. The reproducible-build guarantee alone is worth the migration.",
+      "attribution": "Vee Park",
+      "role": "Senior Engineer, fictional pilot team"
+    },
+    {
+      "kind": "quote",
+      "body": "Crawler caught two accessibility regressions before the next deploy. That alone paid for the year. The typed runtime audit is unlike anything else we've used.",
+      "attribution": "Jules M.",
+      "role": "QA Director, fictional pilot team"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "How a build feels"
+    },
+    {
+      "kind": "code",
+      "lang": "terminal",
+      "caption": "Run forge build. Get a typed report. Ship.",
+      "body": "$ forge build\n== phase: tokens ==\n  ok      no findings (1ms)\n== phase: html_semantic ==\n  ok      no findings (2ms)\n== phase: csp ==\n  ok      no findings (0ms)\n== phase: a11y_landmarks ==\n  ok      no findings (1ms)\n== phase: theme_contrast ==\n  ok      no findings (28ms)\n== summary ==\n  mode:                production\n  strict findings:     0\n  duration:            66ms\n  chain length:        27\n  signature:           ed25519 (verified)\n  report:              reports/build-20260518T074342Z.json\n\nforge build OK"
+    },
+    {
+      "kind": "group",
+      "title": "Try the platform",
+      "body": [
+        "PlausiDen is free for solo developers and personal projects. Team plans start at zero for the first three seats and scale by build-minute, not by user.",
+        "Pre-order with no card — we'll email you when your tenant is provisioned. Everything you ship is yours; we keep no copy."
+      ]
+    },
+    {
+      "kind": "hero",
+      "eyebrow": "Get started",
+      "title": "Ship typed in 60 seconds.",
+      "lede": "Install Forge, point it at a directory of JSON, get a reproducible audit-signed static site. No accounts. No clouds. Just types.",
+      "cta": {
+        "label": "Why",
+        "href": "/why.html",
+        "data_backend": "cta-why"
+      }
     }
   ]
 }
