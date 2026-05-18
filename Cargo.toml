@@ -196,6 +196,14 @@ members = [
     # Jurisdiction (EU/UK/US/CA/AU) + ShippingZone +
     # customer-facing SubscriptionCadence.
     "crates/commerce-storefront-core",
+    # T85: memberships-core — typed memberships + paywall.
+    # Closed PaywallStrategy (Open / Hard / Metered /
+    # TimeBased / Preview) + Tier + ContentPaywall +
+    # MeterState (rolling-window) + MemberSnapshot +
+    # AccessDecision (Allowed / RequiresMembership /
+    # RequiresUpgrade / MeterExhausted / Preview) with a
+    # pure-fn decide() at the core.
+    "crates/memberships-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
