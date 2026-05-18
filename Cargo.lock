@@ -405,6 +405,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "domains-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+ "time",
+]
+
+[[package]]
 name = "dr-core"
 version = "0.1.0"
 dependencies = [
