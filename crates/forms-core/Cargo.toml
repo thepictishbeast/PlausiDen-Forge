@@ -1,0 +1,18 @@
+[package]
+name = "forms-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed forms contract — accessible-by-default FieldKind taxonomy + closed SpamSignal set + GdprConsent declaration + virus-scan-required attachment flag + webhook DeliveryAttempt lifecycle."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = ["serde", "serde-well-known", "macros"] }

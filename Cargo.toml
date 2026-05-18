@@ -167,6 +167,14 @@ members = [
     # ladder-coverage + WCAG alt-text validation +
     # VisionAlt seam.
     "crates/assets-core",
+    # T81: forms-core — typed forms contract.
+    # Closed FieldKind taxonomy (Text/Email/.../File/
+    # Honeypot/GdprConsent) + closed SpamSignal set +
+    # AttachmentField (virus_scan_required=true default) +
+    # GdprConsent + Form::validate (https-only webhook,
+    # labelled fields, single-honeypot) + SubmissionState
+    # + DeliveryAttempt.
+    "crates/forms-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
