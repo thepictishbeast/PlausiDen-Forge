@@ -20,3 +20,11 @@ __pycache__/
 # committed (trust anchor); attest-key.b64 is the private half.
 reports/attest-key.b64
 .cargo/
+
+# T56b: `forge audit init-hook` writes a per-clone pre-commit hook
+# under .githooks/. Operators activate it locally via
+# `git config core.hooksPath .githooks`. It's per-clone bootstrap,
+# not committed config — checking it in would force every clone to
+# share the same hook + bypass paul's intentional per-machine
+# override pattern.
+.githooks/
