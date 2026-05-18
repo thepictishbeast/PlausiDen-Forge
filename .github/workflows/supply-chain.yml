@@ -67,12 +67,12 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0 (T74 SHA pin)
         with:
           path: ~/.cargo/bin/cargo-deny
-          key: cargo-deny-${{ runner.os }}-0.16
+          key: cargo-deny-${{ runner.os }}-0.18
 
       - name: Install cargo-deny
         run: |
           if [ ! -x ~/.cargo/bin/cargo-deny ]; then
-            cargo install --locked --version "^0.16" cargo-deny
+            cargo install --locked --version "^0.18" cargo-deny
           fi
 
       - name: Run cargo deny check
@@ -93,12 +93,12 @@ jobs:
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0 (T74 SHA pin)
         with:
           path: ~/.cargo/bin/cargo-audit
-          key: cargo-audit-${{ runner.os }}-0.20
+          key: cargo-audit-${{ runner.os }}-0.21
 
       - name: Install cargo-audit
         run: |
           if [ ! -x ~/.cargo/bin/cargo-audit ]; then
-            cargo install --locked --version "^0.20" cargo-audit
+            cargo install --locked --version "^0.21" cargo-audit
           fi
 
       - name: Run cargo audit
