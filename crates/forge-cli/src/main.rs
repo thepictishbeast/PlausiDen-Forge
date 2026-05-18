@@ -297,6 +297,16 @@ enum Cmd {
         #[command(subcommand)]
         action: EmailAction,
     },
+    /// T91 (ninth wiring): commerce-storefront gate. Loads
+    /// `commerce.toml` and projects each [[product]] through
+    /// commerce-storefront-core's Product::validate (T84):
+    ///   * title non-empty + ≥1 variant
+    ///   * each variant: ISO 4217 currency, non-negative price,
+    ///     non-empty SKU
+    Commerce {
+        #[command(subcommand)]
+        action: CommerceAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -423,6 +433,17 @@ enum DomainsAction {
 enum EmailAction {
     /// Validate `email.toml` against the typed email-core surface
     /// (T83).
+    Validate {
+        /// Emit a JSON-form summary to stdout.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum CommerceAction {
+    /// Validate `commerce.toml` against the typed
+    /// commerce-storefront-core surface (T84).
     Validate {
         /// Emit a JSON-form summary to stdout.
         #[arg(long, default_value_t = false)]
@@ -564,6 +585,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Forms { action }) => return run_forms(&root, action),
         Some(Cmd::Federation { action }) => return run_federation(&root, action),
         Some(Cmd::Email { action }) => return run_email(&root, action),
+        Some(Cmd::Commerce { action }) => return run_commerce(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -3742,6 +3764,210 @@ mod email_gate_tests {
             "[[message]]\nid = \"x\"\nkind = \"transactional\"\nfrom = \"\"\nto = [\"a\"]\nsubject = \"s\"\n",
         );
         let code = run_email_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+}
+
+// ============================================================
+// T91 (ninth wiring): commerce gate — `forge commerce validate`
+//
+// TOML schema:
+//   [[product]]
+//   id = "tshirt"
+//   title = "T-Shirt"
+//   description = "Cotton"
+//   published = true
+//
+//   [[product.variants]]
+//   id = "tshirt-m-blue"
+//   sku = "TSHIRT-M-BLUE"
+//   title = "M / Blue"
+//   price = 1999             # smallest currency unit (cents)
+//   currency = "USD"         # ISO 4217 3-upper-letter
+//
+// Invariants enforced by Product::validate():
+//   * title non-empty + ≥1 variant
+//   * each variant: SKU non-empty + price ≥ 0
+//   * Currency parse refuses non-3-uppercase via CurrencyCode::new
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct CommerceToml {
+    #[serde(default)]
+    product: Vec<commerce_storefront_core::Product>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct CommerceGateSummary {
+    commerce_path: String,
+    product_count: usize,
+    published_count: usize,
+    total_variants: usize,
+    violations: Vec<String>,
+}
+
+fn run_commerce(root: &std::path::Path, action: &CommerceAction) -> Result<ExitCode> {
+    match action {
+        CommerceAction::Validate { json } => run_commerce_validate(root, *json),
+    }
+}
+
+fn run_commerce_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path = root.join("commerce.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let mut summary = CommerceGateSummary {
+        commerce_path: path.display().to_string(),
+        product_count: 0,
+        published_count: 0,
+        total_variants: 0,
+        violations: Vec::new(),
+    };
+
+    if !path.exists() {
+        violations.push(format!("missing commerce.toml at {}", path.display()));
+        summary.violations = violations.clone();
+        emit_commerce_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let parsed: CommerceToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("commerce.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_commerce_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.product_count = parsed.product.len();
+    for p in &parsed.product {
+        if p.published {
+            summary.published_count += 1;
+        }
+        summary.total_variants += p.variants.len();
+        if let Err(e) = p.validate() {
+            violations.push(format!("product {:?}: {e}", p.id));
+        }
+    }
+
+    summary.violations = violations.clone();
+    emit_commerce_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_commerce_summary(summary: &CommerceGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "commerce-gate: {} products ({} published, {} variants total)",
+            summary.product_count, summary.published_count, summary.total_variants,
+        );
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod commerce_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_commerce(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("commerce.toml"), body).unwrap();
+    }
+
+    fn ok_product() -> &'static str {
+        "[[product]]\n\
+         id = \"tshirt\"\n\
+         title = \"T-Shirt\"\n\
+         description = \"Cotton\"\n\
+         published = true\n\
+         \n\
+         [[product.variants]]\n\
+         id = \"tshirt-m-blue\"\n\
+         sku = \"TSHIRT-M-BLUE\"\n\
+         title = \"M / Blue\"\n\
+         price = 1999\n\
+         currency = \"USD\"\n"
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_commerce_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_commerce(td.path(), "not toml [[[");
+        let code = run_commerce_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn empty_product_list_passes() {
+        let td = TempDir::new().unwrap();
+        write_commerce(td.path(), "");
+        let code = run_commerce_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn valid_product_with_variant_passes() {
+        let td = TempDir::new().unwrap();
+        write_commerce(td.path(), ok_product());
+        let code = run_commerce_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn lowercase_currency_violates() {
+        // CurrencyCode uses `#[serde(transparent)]`, so the inner
+        // String deserialises directly without running new().
+        // Variant::validate() re-runs the ISO 4217 shape check —
+        // bad currency surfaces as exit 1 (violation), not
+        // exit 2 (parse error).
+        let td = TempDir::new().unwrap();
+        let body = ok_product().replace("\"USD\"", "\"usd\"");
+        write_commerce(td.path(), &body);
+        let code = run_commerce_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn negative_price_violates() {
+        let td = TempDir::new().unwrap();
+        let body = ok_product().replace("price = 1999", "price = -1");
+        write_commerce(td.path(), &body);
+        let code = run_commerce_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn empty_sku_violates() {
+        let td = TempDir::new().unwrap();
+        let body = ok_product().replace("\"TSHIRT-M-BLUE\"", "\"\"");
+        write_commerce(td.path(), &body);
+        let code = run_commerce_validate(td.path(), false).unwrap();
         assert_eq!(code, ExitCode::from(1));
     }
 }

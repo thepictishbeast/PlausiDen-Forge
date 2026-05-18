@@ -1,0 +1,62 @@
+# PlausiDen-Forge tenant storefront catalog.
+#
+# Projected through commerce-storefront-core (T84) by
+# `forge commerce validate` (T91 ninth wiring). Each [[product]]
+# is checked via Product::validate:
+#
+#   * title non-empty
+#   * ≥1 variant
+#   * each variant: ISO 4217 currency (3 uppercase letters),
+#     non-negative price (smallest unit, e.g. cents),
+#     non-empty SKU
+#
+# This is the tenant storefront (what the tenant charges their
+# customers). Distinct from commerce-core (T72), which is the
+# operator's PlausiDen subscription billing.
+#
+# Real payment-provider integration lives downstream
+# (commerce-stripe, commerce-paypal, commerce-tax-stripe, etc.).
+# This file declares the catalog; the runtime drives checkout.
+
+[[product]]
+id = "plausiden-tshirt"
+title = "PlausiDen T-Shirt"
+description = "100% cotton; ringspun; sustainable supply chain."
+published = true
+
+[[product.variants]]
+id = "tshirt-s-black"
+sku = "PD-TSHIRT-S-BLACK"
+title = "S / Black"
+price = 2499 # $24.99
+currency = "USD"
+weight-grams =200
+
+[[product.variants]]
+id = "tshirt-m-black"
+sku = "PD-TSHIRT-M-BLACK"
+title = "M / Black"
+price = 2499
+currency = "USD"
+weight-grams =220
+
+[[product.variants]]
+id = "tshirt-l-black"
+sku = "PD-TSHIRT-L-BLACK"
+title = "L / Black"
+price = 2499
+currency = "USD"
+weight-grams =240
+
+[[product]]
+id = "plausiden-handbook"
+title = "PlausiDen Operator Handbook"
+description = "PDF + EPUB bundle. Digital download (no shipping)."
+published = true
+
+[[product.variants]]
+id = "handbook-digital"
+sku = "PD-HANDBOOK-DIGITAL"
+title = "Digital download"
+price = 1999
+currency = "USD"

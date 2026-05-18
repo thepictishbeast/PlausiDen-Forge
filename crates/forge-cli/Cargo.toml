@@ -63,6 +63,12 @@ federation-core = { path = "../federation-core" }
 # / DmarcResult / BimiReference + enforces RFC 8058 list-
 # unsubscribe rules for marketing messages.
 email-core = { path = "../email-core" }
+# T91 (ninth wiring): commerce-storefront-core (T84) drives
+# the new `forge commerce validate` subcommand — projects
+# commerce.toml through Product + Variant + CurrencyCode and
+# asserts ISO 4217 currency + non-negative price + non-empty
+# SKU + non-empty variants per product.
+commerce-storefront-core = { path = "../commerce-storefront-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

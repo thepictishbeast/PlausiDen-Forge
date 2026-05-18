@@ -570,6 +570,7 @@ dependencies = [
  "anyhow",
  "base64",
  "clap",
+ "commerce-storefront-core",
  "domains-core",
  "email-core",
  "federation-core",

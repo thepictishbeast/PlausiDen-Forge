@@ -121,7 +121,14 @@ pub struct Variant {
 }
 
 impl Variant {
-    /// Validate the variant. Price ≥ 0, sku non-empty.
+    /// Validate the variant. Price ≥ 0, sku non-empty, currency
+    /// is ISO 4217 3-upper-letter.
+    ///
+    /// Note: CurrencyCode's `#[serde(transparent)]` means the
+    /// inner String is deserialised directly without running
+    /// `CurrencyCode::new()`. So validate() re-runs the shape
+    /// check here — operator-supplied TOML can supply
+    /// "usd"/"US"/"USDA" and the constructor never sees it.
     pub fn validate(&self) -> Result<(), CommerceError> {
         if self.sku.trim().is_empty() {
             return Err(CommerceError::Invalid(format!(
@@ -133,6 +140,13 @@ impl Variant {
             return Err(CommerceError::Invalid(format!(
                 "variant {} price negative: {}",
                 self.id, self.price.0
+            )));
+        }
+        let c = self.currency.as_str();
+        if c.len() != 3 || !c.chars().all(|x| x.is_ascii_uppercase()) {
+            return Err(CommerceError::Invalid(format!(
+                "variant {} currency not ISO 4217 3-upper-letter: {:?}",
+                self.id, c
             )));
         }
         Ok(())
