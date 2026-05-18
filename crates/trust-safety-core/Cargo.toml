@@ -1,0 +1,18 @@
+[package]
+name = "trust-safety-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed Trust & Safety contract — content classification + moderation action + scanner trait. Real CSAM/phishing/sanctions impls plug in via the trait; this crate is the cross-impl shape."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = ["serde", "serde-well-known", "macros"] }
