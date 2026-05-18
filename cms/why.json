@@ -2,6 +2,7 @@
   "$schema": "../cms-schema.json",
   "title": "Why PlausiDen exists",
   "description": "Software written today should outlive its dependencies. The platform behind that claim.",
+  "brand": "PlausiDen",
   "path": "/why.html",
   "nav_links": [
     {

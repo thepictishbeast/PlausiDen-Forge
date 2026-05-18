@@ -2,6 +2,7 @@
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — the platform",
   "description": "Six tools, one typed substrate. Forge, Loom, Crawler, Annotator, CMS, LFI.",
+  "brand": "PlausiDen",
   "path": "/platform.html",
   "nav_links": [
     {

@@ -10,110 +10,86 @@
     {
       "phase": "tokens",
       "path": "about.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
     },
     {
       "phase": "tokens",
       "path": "about.html",
       "message": "raw hex color in HTML",
-      "severity": "strict"
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "challenge.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "challenge.html",
+      "path": "blog.html",
       "message": "raw hex color in HTML",
-      "severity": "strict"
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "compose.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
+      "path": "docs.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "compose.html",
+      "path": "docs.html",
       "message": "raw hex color in HTML",
-      "severity": "strict"
+      "severity": "warn"
     },
     {
       "phase": "tokens",
       "path": "index.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
     },
     {
       "phase": "tokens",
       "path": "index.html",
       "message": "raw hex color in HTML",
-      "severity": "strict"
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "leaderboard.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
+      "path": "platform.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "leaderboard.html",
+      "path": "platform.html",
       "message": "raw hex color in HTML",
-      "severity": "strict"
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "my-wins.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
+      "path": "pricing.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "my-wins.html",
+      "path": "pricing.html",
       "message": "raw hex color in HTML",
-      "severity": "strict"
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "post-skill.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
+      "path": "why.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "post-skill.html",
+      "path": "why.html",
       "message": "raw hex color in HTML",
-      "severity": "strict"
-    },
-    {
-      "phase": "tokens",
-      "path": "profile.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
-    },
-    {
-      "phase": "tokens",
-      "path": "profile.html",
-      "message": "raw hex color in HTML",
-      "severity": "strict"
-    },
-    {
-      "phase": "tokens",
-      "path": "votes.html",
-      "message": "raw px values: 10px 12px 14px 18px 20px 24px 40px 44px 48px 4px 6px 9999px 999px",
-      "severity": "strict"
-    },
-    {
-      "phase": "tokens",
-      "path": "votes.html",
-      "message": "raw hex color in HTML",
-      "severity": "strict"
+      "severity": "warn"
     },
     {
       "phase": "seo",
@@ -136,43 +112,55 @@
     {
       "phase": "seo",
       "path": "about.html",
+      "message": "title too short (17 chars; aim 30-60 for SERP)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "blog.html",
+      "message": "missing Open Graph tags (og:title/description/type/url/image)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "blog.html",
+      "message": "missing Twitter Card tags",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "blog.html",
+      "message": "no JSON-LD structured data",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "blog.html",
       "message": "title too short (16 chars; aim 30-60 for SERP)",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "challenge.html",
+      "path": "docs.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "challenge.html",
+      "path": "docs.html",
       "message": "missing Twitter Card tags",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "challenge.html",
+      "path": "docs.html",
       "message": "no JSON-LD structured data",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "compose.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "compose.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "compose.html",
-      "message": "no JSON-LD structured data",
+      "path": "docs.html",
+      "message": "title too short (16 chars; aim 30-60 for SERP)",
       "severity": "warn"
     },
     {
@@ -195,92 +183,68 @@
     },
     {
       "phase": "seo",
-      "path": "leaderboard.html",
+      "path": "platform.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "leaderboard.html",
+      "path": "platform.html",
       "message": "missing Twitter Card tags",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "leaderboard.html",
+      "path": "platform.html",
       "message": "no JSON-LD structured data",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "my-wins.html",
+      "path": "pricing.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "my-wins.html",
+      "path": "pricing.html",
       "message": "missing Twitter Card tags",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "my-wins.html",
+      "path": "pricing.html",
       "message": "no JSON-LD structured data",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "post-skill.html",
+      "path": "pricing.html",
+      "message": "title too short (19 chars; aim 30-60 for SERP)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "why.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "post-skill.html",
+      "path": "why.html",
       "message": "missing Twitter Card tags",
       "severity": "warn"
     },
     {
       "phase": "seo",
-      "path": "post-skill.html",
+      "path": "why.html",
       "message": "no JSON-LD structured data",
       "severity": "warn"
     },
     {
-      "phase": "seo",
-      "path": "profile.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "profile.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "profile.html",
-      "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "votes.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "votes.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "votes.html",
-      "message": "no JSON-LD structured data",
+      "phase": "perf_budget",
+      "path": "index.html",
+      "message": "24.1K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -292,19 +256,19 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "94.3K CSS > 64.0K budget — split into per-route bundles",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "forge-findings.js",
-      "message": "14.0K JS > 8.00K budget — code-split or tree-shake",
+      "message": "222K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "forge-overlay.js",
       "message": "8.39K JS > 8.00K budget — code-split or tree-shake",
+      "severity": "warn"
+    },
+    {
+      "phase": "perf_budget",
+      "path": "forge-findings.js",
+      "message": "14.0K JS > 8.00K budget — code-split or tree-shake",
       "severity": "warn"
     },
     {
@@ -315,13 +279,13 @@
     },
     {
       "phase": "sri",
-      "path": "challenge.html",
+      "path": "blog.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
     {
       "phase": "sri",
-      "path": "compose.html",
+      "path": "docs.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
@@ -333,31 +297,19 @@
     },
     {
       "phase": "sri",
-      "path": "leaderboard.html",
+      "path": "platform.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
     {
       "phase": "sri",
-      "path": "my-wins.html",
+      "path": "pricing.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
     {
       "phase": "sri",
-      "path": "post-skill.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "profile.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "votes.html",
+      "path": "why.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
@@ -370,386 +322,284 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[cash-out] declared but no UI references it (dead spec)",
+      "message": "[cta-contact] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[cast-vote] declared but no UI references it (dead spec)",
+      "message": "[cta-docs] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[follow] declared but no UI references it (dead spec)",
+      "message": "[cta-github] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[list-open-votes] declared but no UI references it (dead spec)",
+      "message": "[cta-github] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[post-photo] declared but no UI references it (dead spec)",
+      "message": "[cta-platform] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[report-challenge] declared but no UI references it (dead spec)",
+      "message": "[cta-pricing] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[report-profile] declared but no UI references it (dead spec)",
+      "message": "[cta-pricing] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[sign-in] declared but no UI references it (dead spec)",
+      "message": "[cta-start] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[sign-out] declared but no UI references it (dead spec)",
+      "message": "[cta-subscribe] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[sign-up] declared but no UI references it (dead spec)",
+      "message": "[cta-subscribe] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[upload-entry] declared but no UI references it (dead spec)",
+      "message": "[cta-why] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-about] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-annotator] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-blog] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-cms] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-contact] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-crawler] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-docs] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-forge] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-home] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-home] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-lfi] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-loom] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-platform] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-post] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-pricing] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-tier-enterprise] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-tier-enterprise] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-tier-solo] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-tier-solo] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-tier-team] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-tier-team] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-why] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
       "path": "about.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
+      "message": "href=\"/contact.html\" → static/contact.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "challenge.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "href=\"/blog/t98-runtime-wiring.html\" → static/blog/t98-runtime-wiring.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "challenge.html",
-      "message": "href=\"/c/half-court-arc/enter\" → static/c/half-court-arc/enter does not exist",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "href=\"/blog/lfi-as-gate.html\" → static/blog/lfi-as-gate.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "challenge.html",
-      "message": "href=\"/c/half-court-arc/e/court_dax\" → static/c/half-court-arc/e/court_dax does not exist",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "href=\"/blog/cvss-4-0.html\" → static/blog/cvss-4-0.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "challenge.html",
-      "message": "href=\"/c/half-court-arc/e/hooper_jen\" → static/c/half-court-arc/e/hooper_jen does not exist",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "href=\"/blog/amoled-true-black.html\" → static/blog/amoled-true-black.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "challenge.html",
-      "message": "href=\"/c/half-court-arc/e/arc_kade\" → static/c/half-court-arc/e/arc_kade does not exist",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "href=\"/blog/discipline-gate.html\" → static/blog/discipline-gate.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "compose.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "href=\"/blog/silent-sbom.html\" → static/blog/silent-sbom.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "compose.html",
-      "message": "href=\"/post-skill\" → static/post-skill does not exist",
-      "severity": "strict"
+      "path": "blog.html",
+      "message": "href=\"/contact.html\" → static/contact.html does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "compose.html",
-      "message": "href=\"/c/parkour-stairwell\" → static/c/parkour-stairwell does not exist",
-      "severity": "strict"
+      "path": "pricing.html",
+      "message": "href=\"/start\" → static/start does not exist",
+      "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "compose.html",
-      "message": "href=\"/c/cube-sub18\" → static/c/cube-sub18 does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/c/half-court-arc\" → static/c/half-court-arc does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/post-skill\" → static/post-skill does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/c/parkour-stairwell\" → static/c/parkour-stairwell does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/c/pool-clear-9lori\" → static/c/pool-clear-9lori does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/c/cube-sub18\" → static/c/cube-sub18 does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/c/kickflip-5stair\" → static/c/kickflip-5stair does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/c/9dart-501\" → static/c/9dart-501 does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/c/latte-swan\" → static/c/latte-swan does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/u/court_dax\" → static/u/court_dax does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/u/vault_kit\" → static/u/vault_kit does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/u/9ball_lori\" → static/u/9ball_lori does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "leaderboard.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "leaderboard.html",
-      "message": "href=\"/u/court_dax\" → static/u/court_dax does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "leaderboard.html",
-      "message": "href=\"/u/vault_kit\" → static/u/vault_kit does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "leaderboard.html",
-      "message": "href=\"/u/9ball_lori\" → static/u/9ball_lori does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "leaderboard.html",
-      "message": "href=\"/u/oche_riv\" → static/u/oche_riv does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "leaderboard.html",
-      "message": "href=\"/u/brew_pia\" → static/u/brew_pia does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "my-wins.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "my-wins.html",
-      "message": "href=\"/c/half-court-arc\" → static/c/half-court-arc does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "my-wins.html",
-      "message": "href=\"/c/pool-2-innings\" → static/c/pool-2-innings does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "post-skill.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "profile.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "profile.html",
-      "message": "href=\"/c/half-court-arc\" → static/c/half-court-arc does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "profile.html",
-      "message": "href=\"/c/3pt-streak-5\" → static/c/3pt-streak-5 does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "profile.html",
-      "message": "href=\"/c/nolook-ft-10\" → static/c/nolook-ft-10 does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "votes.html",
-      "message": "href=\"data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E\" → static/data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2016%2016%27%3E%3Crect%20width%3D%2716%27%20height%3D%2716%27%20rx%3D%273%27%20fill%3D%27%23111827%27%2F%3E%3Cpath%20d%3D%27M4%204h2v8H4zM10%204h2v8h-2zM6.5%208h3v1.5h-3z%27%20fill%3D%27%23f8fafc%27%2F%3E%3C%2Fsvg%3E does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "votes.html",
-      "message": "href=\"/c/pool-clear-9lori\" → static/c/pool-clear-9lori does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "votes.html",
-      "message": "href=\"/c/kickflip-5stair\" → static/c/kickflip-5stair does not exist",
-      "severity": "strict"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "votes.html",
-      "message": "href=\"/c/9dart-501\" → static/c/9dart-501 does not exist",
-      "severity": "strict"
+      "path": "pricing.html",
+      "message": "href=\"/contact\" → static/contact does not exist",
+      "severity": "warn"
     },
     {
       "phase": "label_consistency",
       "path": "static/",
-      "message": "a[/] — 2 distinct labels: \"Battle Feed\" (9x), \"SkillShots\" (9x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
+      "message": "a[/platform.html] — 7 distinct labels with PARTIAL data-loom-poly-action (6/15 elements opted out): \"AnCaptureAnnotatorOperator capture, replayableReplayLosslessStorageLocal\" (1x), \"CMContentCMSContent as typed dataBackendNoneStorageGit\" (1x), \"CrAuditCrawlerRuntime auditorDetectors120+JourneyTyped\" (1x), \"FoBuildForgeTyped build pipelinePhases27Crates41\" (1x), \"LFAILFIAI evaluation, not generationProviderPluggableGateCritic\" (1x), \"LoDesignLoomDesign tokens that mean somethingThemes13WCAG2.1 AA\" (1x), \"Platform\" (9x) — annotate the remaining elements OR remove the attribute on all",
+      "severity": "warn"
     },
     {
       "phase": "label_consistency",
       "path": "static/",
-      "message": "a[/c/9dart-501] — 3 distinct labels: \"9-dart 501 — 1h 04mVote\" (1x), \"DTDartsDarts: 9-dart finish from a fresh 501, recorded continuous.@oche_riv · 1h 04m leftVotes41%Pot$140\" (1x), \"ORDarts9-dart 501 — @oche_riv4 entries · continuous takeCloses in1h 04m\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
+      "message": "a[/start] — 3 distinct labels with PARTIAL data-loom-poly-action (2/3 elements opted out): \"Pre-order\" (1x), \"SoFreeSoloFor one developerMonthly$0Build minUnlimitedSites5Storage10 GB\" (1x), \"TeBetaTeamFor shipping teamsMonthlyFrom $0Seats3 free + $9/extraSitesUnlimitedStorage100 GB\" (1x) — annotate the remaining elements OR remove the attribute on all",
+      "severity": "warn"
     },
     {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/c/cube-sub18] — 2 distinct labels: \"BAMindSpeed-cube: scrambled 3x3 in under 18 seconds@dax · 2d leftVotes62%Pot$120\" (1x), \"SCMindSpeed-cube: solve a scrambled 3×3 in under 18 seconds, single take.@dax · 2d leftVotes55%Pot$180\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/c/half-court-arc] — 3 distinct labels: \"HCBasketballHalf-court shot — clean swish1 take · single arcResultWonPot$240\" (1x), \"MHVoting · 2h 14mHalf-court shot — single arcHosted by @marcus_hYour entry$60StatusTop vote\" (1x), \"Watch + vote\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/c/kickflip-5stair] — 3 distinct labels: \"5-stair kickflip — 42mVote\" (1x), \"KMSkate5-stair kickflip — @kickflip_mar2 entries · kickflip + roll-awayCloses in42m\" (1x), \"SKSkateSkateboard: 5-stair kickflip, land + roll-away, single take.@kickflip_mar · 42m leftVotes48%Pot$95\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/c/parkour-stairwell] — 2 distinct labels: \"PKParkourOne-take parkour line — top of stairwell to ground in under 9s.@vault_kit · 4d leftVotes78%Pot$240\" (1x), \"PKParkourOne-take parkour line — top of stairwell to ground@court_dax · 4d leftVotes78%Pot$240\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/c/pool-clear-9lori] — 3 distinct labels: \"9BBilliardsPool: clear the table in two innings, no scratches.@9ball_lori · 12m leftVotes62%Pot$120\" (1x), \"9LBilliardsPool table clear — @9ball_lori3 entries · 2 innings, no scratchCloses in12m\" (1x), \"Pool table clear — 12mVote\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/post-skill] — 5 distinct labels: \"Challenge\" (2x), \"Live\" (2x), \"Upload a clip\" (1x), \"Upload clip\" (2x), \"What did you nail today?\" (2x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/u/9ball_lori] — 2 distinct labels: \"9BBilliards@9ball_loriBilliardsEarnings$995Rank3\" (1x), \"@9ball_lori · Billiards$995\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/u/court_dax] — 2 distinct labels: \"@court_dax · Basketball$1,840\" (1x), \"CDBasketball@court_daxBasketballEarnings$1,840Rank1\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/u/vault_kit] — 2 distinct labels: \"@vault_kit · Parkour$1,420\" (1x), \"VKParkour@vault_kitParkourEarnings$1,420Rank2\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "button[post-skill] — 2 distinct labels: \"Continue → upload\" (1x), \"Save draft\" (1x) — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-      "severity": "strict"
+      "phase": "crawl",
+      "path": "127.0.0.1:8123",
+      "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
+      "severity": "warn"
     }
   ],
-  "strict_count": 70,
-  "warn_count": 54,
-  "duration_ms": 19673,
-  "prev_hash": "ad65487ce85c558322622f351b99aafd1335cc640d2bda455df6fa5211f59e7f",
-  "chain_length": 6,
-  "started": "2026-05-15T12:45:25.925141136Z"
+  "strict_count": 0,
+  "warn_count": 99,
+  "duration_ms": 62,
+  "prev_hash": "2509d772cfb8b11b2b4daaed780d3a37db40f21c65e2d15b7e4a1c693aba7752",
+  "chain_length": 35,
+  "started": "2026-05-18T08:46:04.247362856Z"
 }

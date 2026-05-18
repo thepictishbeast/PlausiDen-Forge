@@ -2,6 +2,7 @@
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — pricing",
   "description": "Free for solo. $0 for the first three seats. Then by build-minute, not by user.",
+  "brand": "PlausiDen",
   "path": "/pricing.html",
   "nav_links": [
     {

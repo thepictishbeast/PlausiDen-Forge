@@ -2,6 +2,7 @@
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — blog",
   "description": "Notes on building a typed-substrate platform.",
+  "brand": "PlausiDen",
   "path": "/blog.html",
   "nav_links": [
     {

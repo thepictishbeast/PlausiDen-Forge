@@ -2,6 +2,7 @@
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — docs",
   "description": "Read the manifesto, install Forge, ship typed in 60 seconds.",
+  "brand": "PlausiDen",
   "path": "/docs.html",
   "nav_links": [
     {

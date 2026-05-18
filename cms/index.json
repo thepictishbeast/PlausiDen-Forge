@@ -2,6 +2,7 @@
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — typed substrate for software that lasts",
   "description": "A typed-substrate platform for teams that want their tools to outlive their dependencies. Explicit contracts. Audited builds. Privacy-first by default.",
+  "brand": "PlausiDen",
   "path": "/",
   "nav_links": [
     {

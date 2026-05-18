@@ -2,6 +2,7 @@
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — about",
   "description": "An independent platform shop building software that lasts.",
+  "brand": "PlausiDen",
   "path": "/about.html",
   "nav_links": [
     {
