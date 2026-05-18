@@ -19,7 +19,12 @@
 //! math for build-report continuity (pure, no I/O).
 
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
+// T96 cleanup: discipline gate (T92) requires deny-not-warn so a
+// missing doc on a new public item fails CI at PR time, not at
+// the next release-prep audit. Pre-existing warn-level violations
+// in attest.rs::AttestError struct-variant fields cleaned up
+// alongside this flip.
+#![deny(missing_docs)]
 
 pub mod attest;
 pub mod pipeline;

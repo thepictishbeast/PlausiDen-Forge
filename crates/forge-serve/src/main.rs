@@ -31,6 +31,10 @@
 //!   `--lan` is not set), per AVP-2 default-deny.
 
 #![forbid(unsafe_code)]
+// T96 cleanup: discipline gate (T92) flagged forge-serve for
+// missing `#![deny(missing_docs)]`. Adding so new struct fields
+// require explicit documentation.
+#![deny(missing_docs)]
 
 use std::convert::Infallible;
 use std::net::SocketAddr;

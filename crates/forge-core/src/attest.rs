@@ -74,7 +74,12 @@ pub enum ChainError {
     /// Non-genesis report carried `prev_hash = None`. Either it
     /// is a missing-chaining bug or evidence of history rewrite.
     #[error("report at index {at_index} (chain_length {length}) has no prev_hash")]
-    MissingPrev { at_index: usize, length: u64 },
+    MissingPrev {
+        /// Position in the input sequence (0-indexed).
+        at_index: usize,
+        /// The report's declared chain_length at that position.
+        length: u64,
+    },
     /// Hash mismatch — chain is broken at this position.
     #[error("chain broken at index {at_index}: expected {expected}, got {actual}")]
     Broken {
@@ -411,7 +416,10 @@ pub enum SignError {
     SignatureDecode(String),
     /// Signature length wasn't ed25519's 64 bytes.
     #[error("signature length wrong: got {got}, expected {SIGNATURE_LENGTH}")]
-    SignatureLength { got: usize },
+    SignatureLength {
+        /// Actual signature length supplied.
+        got: usize,
+    },
     /// Verifying key bytes were the wrong length / shape.
     #[error("public key invalid")]
     PublicKeyInvalid,

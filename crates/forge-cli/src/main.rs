@@ -12,6 +12,13 @@
 //! * The exit code is the gate: 0 if `BuildReport::passed(mode)`,
 //!   non-zero otherwise. CI wires straight in.
 
+// T96 cleanup: discipline gate (T92) flagged forge-cli for
+// missing both `#![forbid(unsafe_code)]` + `#![deny(missing_docs)]`.
+// forge-cli is a CLI front that never needs unsafe + has no
+// public surface (it's a binary), so both lints are free.
+#![forbid(unsafe_code)]
+#![deny(missing_docs)]
+
 use std::path::PathBuf;
 use std::process::ExitCode;
 

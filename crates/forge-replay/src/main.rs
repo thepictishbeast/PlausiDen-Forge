@@ -13,6 +13,14 @@
 //! The replay tool is a triage helper, not a build gate.
 
 #![forbid(unsafe_code)]
+// T96 cleanup: discipline gate (T92) flagged forge-replay for
+// missing `#![deny(missing_docs)]`. This binary's public surface
+// is its main() + the BuildReport / Finding types it imports
+// from forge-core (already documented); the local types are
+// CLI argument structs + helper structs. Adding the deny so
+// future struct fields surface in PR review as documentation
+// gaps.
+#![deny(missing_docs)]
 
 use std::collections::BTreeMap;
 use std::fs;
