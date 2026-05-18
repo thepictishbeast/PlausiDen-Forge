@@ -1,0 +1,14 @@
+# Per RFC 9116 — security.txt for the PlausiDen platform.
+# This file is the canonical machine-readable disclosure
+# contact for security researchers. Tracked + verified by
+# forge-phases::required_pages (T22) on every build.
+#
+# DO NOT add fields not defined in RFC 9116. Parsers reject
+# unknown fields per spec.
+
+Contact: mailto:security@plausiden.com
+Expires: 2027-05-18T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://plausiden.com/.well-known/security.txt
+Policy: https://github.com/thepictishbeast/PlausiDen-Forge/blob/main/SECURITY.md
+Acknowledgments: https://github.com/thepictishbeast/PlausiDen-Forge/blob/main/SECURITY.md#hall-of-thanks
