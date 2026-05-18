@@ -72,7 +72,7 @@ jobs:
       - name: Install cargo-deny
         run: |
           if [ ! -x ~/.cargo/bin/cargo-deny ]; then
-            cargo install --locked --version 0.16 cargo-deny
+            cargo install --locked --version "^0.16" cargo-deny
           fi
 
       - name: Run cargo deny check
@@ -98,7 +98,7 @@ jobs:
       - name: Install cargo-audit
         run: |
           if [ ! -x ~/.cargo/bin/cargo-audit ]; then
-            cargo install --locked --version 0.20 cargo-audit
+            cargo install --locked --version "^0.20" cargo-audit
           fi
 
       - name: Run cargo audit
@@ -124,7 +124,7 @@ jobs:
       - name: Install cargo-cyclonedx
         run: |
           if [ ! -x ~/.cargo/bin/cargo-cyclonedx ]; then
-            cargo install --locked --version 0.5 cargo-cyclonedx
+            cargo install --locked --version "^0.5" cargo-cyclonedx
           fi
 
       - name: Emit CycloneDX 1.5 SBOM
