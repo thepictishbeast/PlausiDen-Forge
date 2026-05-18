@@ -127,6 +127,9 @@ members = [
     # T72: commerce-core — typed Stripe billing + self-serve
     # onboarding + customer-admin permissions.
     "crates/commerce-core",
+    # T73: compliance-evidence — typed SOC 2 + ISO 27001 evidence
+    # collection as a continuous byproduct of normal operation.
+    "crates/compliance-evidence",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
