@@ -351,6 +351,14 @@ enum AttestAction {
     /// for an external auditor pinning trust to this forge
     /// instance.
     Pubkey,
+    /// T91 (third wiring): print the operator-facing key
+    /// fingerprint — `base64url(SHA256(public-key-bytes))[..16]`,
+    /// computed via manifest-attest's `KeyFingerprint`.
+    ///
+    /// Use the fingerprint as the short stable identifier in
+    /// log lines + attestation metadata when the full
+    /// public-key base64 is too long to display.
+    Fingerprint,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -1071,6 +1079,30 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
                 .with_context(|| format!("read {}", pub_path.display()))?;
             print!("{}", s.trim());
             println!();
+            Ok(ExitCode::SUCCESS)
+        }
+        AttestAction::Fingerprint => {
+            if !pub_path.is_file() {
+                eprintln!(
+                    "forge attest fingerprint: no {} — run `forge attest init` first",
+                    pub_path.display()
+                );
+                return Ok(ExitCode::from(1));
+            }
+            let s = std::fs::read_to_string(&pub_path)
+                .with_context(|| format!("read {}", pub_path.display()))?;
+            let trimmed = s.trim();
+            // forge-core::attest stores the pubkey as base64; the
+            // exact alphabet (URL-safe-no-pad vs standard) is the
+            // engine forge-core uses. Try standard first; fall
+            // back to url-safe to handle both deployments.
+            use base64::Engine;
+            let bytes = base64::engine::general_purpose::STANDARD
+                .decode(trimmed)
+                .or_else(|_| base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(trimmed))
+                .with_context(|| format!("decode base64 pubkey from {}", pub_path.display()))?;
+            let fp = manifest_attest::KeyFingerprint::of_verifying_key_bytes(&bytes);
+            println!("{}", fp.as_str());
             Ok(ExitCode::SUCCESS)
         }
     }
@@ -2387,6 +2419,28 @@ fn emit_trust_safety_summary(summary: &TrustSafetyGateSummary, json: bool) {
                 println!("  - {v}");
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod attest_fingerprint_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    #[test]
+    fn fingerprint_succeeds_against_a_freshly_generated_key() {
+        let td = TempDir::new().unwrap();
+        let init_code = run_attest(td.path(), &AttestAction::Init { force: false }).unwrap();
+        assert_eq!(init_code, ExitCode::SUCCESS);
+        let fp_code = run_attest(td.path(), &AttestAction::Fingerprint).unwrap();
+        assert_eq!(fp_code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn fingerprint_errors_when_no_key_exists() {
+        let td = TempDir::new().unwrap();
+        let code = run_attest(td.path(), &AttestAction::Fingerprint).unwrap();
+        assert_eq!(code, ExitCode::from(1));
     }
 }
 
