@@ -46,6 +46,11 @@ domains-core = { path = "../domains-core" }
 # integrity check). Used for compliance audits + tamper-evident
 # admin-action logs.
 observability-core = { path = "../observability-core" }
+# T91 (sixth wiring): forms-core (T81) drives the new
+# `forge forms validate` subcommand — projects forms.toml
+# through Form::validate (https-only webhook, WCAG-required
+# labels, single-honeypot, kebab-case field ids).
+forms-core = { path = "../forms-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

@@ -267,8 +267,12 @@ impl Form {
     }
 
     /// Add a honeypot field if none exists. Returns true when one
-    /// was added. Field id is `_hp` by convention — chosen so
-    /// auto-fill / password-manager heuristics skip it.
+    /// was added. Field id is `hp-marker` — kebab-case so it
+    /// passes the form-level id validator, but uncommon enough
+    /// that auto-fill / password-manager heuristics skip it.
+    /// (Earlier versions used `_hp`, which the kebab validator
+    /// rejected — bug found via `forge forms validate` in T91
+    /// sixth wiring.)
     pub fn with_honeypot(&mut self) -> bool {
         if self
             .fields
@@ -278,7 +282,7 @@ impl Form {
             return false;
         }
         self.fields.push(FormField {
-            id: "_hp".into(),
+            id: "hp-marker".into(),
             label: "Leave this field empty".into(),
             description: None,
             kind: FieldKind::Honeypot,
@@ -526,6 +530,21 @@ mod tests {
                 .filter(|x| matches!(x.kind, FieldKind::Honeypot))
                 .count(),
             1
+        );
+    }
+
+    // Regression-guard for the bug surfaced by `forge forms
+    // validate` integration testing (T91 sixth wiring): the
+    // honeypot field with_honeypot() generates MUST pass
+    // Form::validate(), otherwise auto-honeypotting a form
+    // immediately makes it invalid.
+    #[test]
+    fn with_honeypot_produces_validating_form() {
+        let mut f = ok_form();
+        f.with_honeypot();
+        assert!(
+            f.validate().is_ok(),
+            "with_honeypot() produced a form that fails its own validate()"
         );
     }
 

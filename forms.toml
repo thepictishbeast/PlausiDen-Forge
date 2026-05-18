@@ -1,0 +1,71 @@
+# PlausiDen-Forge forms configuration.
+#
+# Projected through forms-core (T81) by `forge forms validate`
+# (T91 sixth wiring). Enforces:
+#   * webhook-url is HTTPS (RFC 2818 / RFC 8446)
+#   * every field has a label (WCAG 2.1 §3.3.2)
+#   * field ids are kebab-case + unique within a form
+#   * at most one Honeypot field per form
+#
+# FieldKind values (closed enum from forms-core):
+#   text | text-area | email | url | tel | number | date |
+#   select | checkboxes | file | honeypot | gdpr-consent
+#
+# Real form-rendering + spam-protection + virus-scan delivery
+# lives downstream in forms-renderer / forms-spam-akismet /
+# forms-virus-scan-clamav / forms-webhook-delivery crates.
+
+[[form]]
+id = "contact"
+title = "Contact us"
+webhook-url = "https://hooks.plausiden.com/contact"
+
+[[form.fields]]
+id = "name"
+label = "Name"
+kind = "text"
+required = true
+
+[[form.fields]]
+id = "email"
+label = "Email"
+kind = "email"
+required = true
+
+[[form.fields]]
+id = "message"
+label = "Message"
+kind = "text-area"
+required = true
+
+[[form.fields]]
+id = "consent-contact"
+label = "I agree that PlausiDen may use this information to respond to my inquiry."
+kind = "gdpr-consent"
+required = true
+
+# Honeypot field — invisible to humans, trips spam-bot detection
+# (forms-core::SpamSignal::HoneypotFilled). At most one allowed
+# per form.
+[[form.fields]]
+id = "hp-marker"
+label = "Leave this field empty"
+kind = "honeypot"
+required = false
+
+[[form]]
+id = "newsletter-signup"
+title = "Subscribe to the newsletter"
+webhook-url = "https://hooks.plausiden.com/newsletter"
+
+[[form.fields]]
+id = "email"
+label = "Email"
+kind = "email"
+required = true
+
+[[form.fields]]
+id = "consent-marketing"
+label = "I want to receive PlausiDen newsletters. I can unsubscribe at any time."
+kind = "gdpr-consent"
+required = true

@@ -253,6 +253,17 @@ enum Cmd {
         #[command(subcommand)]
         action: AuditLogAction,
     },
+    /// T91 (sixth wiring): forms-core gate. Loads `forms.toml`
+    /// at the project root, projects through forms-core's
+    /// Form::validate (T81), and asserts:
+    ///   * webhook_url is https://
+    ///   * every field labelled (WCAG 2.1 §3.3.2)
+    ///   * field ids are kebab-case + unique
+    ///   * at most one Honeypot field per form
+    Forms {
+        #[command(subcommand)]
+        action: FormsAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -376,6 +387,20 @@ enum DomainsAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum FormsAction {
+    /// Validate `forms.toml` at the project root against the
+    /// typed forms-core surface (T81). One Form per top-level
+    /// `[[form]]` entry. The validator runs `Form::validate`
+    /// on each.
+    Validate {
+        /// Emit a JSON-form summary to stdout. Default is
+        /// human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum AuditLogAction {
     /// Verify the hash-chained integrity of an audit-log JSON
     /// file. Reads the file at the given path (or
@@ -481,6 +506,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::TrustSafety { action }) => return run_trust_safety(&root, action),
         Some(Cmd::Domains { action }) => return run_domains(&root, action),
         Some(Cmd::AuditLog { action }) => return run_audit_log(&root, action),
+        Some(Cmd::Forms { action }) => return run_forms(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -3046,6 +3072,197 @@ mod audit_log_gate_tests {
         let code =
             run_audit_log_verify(&td.path().join("reports").join("audit-log.json"), false).unwrap();
         assert_eq!(code, ExitCode::from(1));
+    }
+}
+
+// ============================================================
+// T91 (sixth wiring): forms gate — `forge forms validate`
+//
+// TOML schema:
+//   [[form]]
+//   id = "contact"
+//   title = "Contact us"
+//   webhook-url = "https://..."  # kebab-case per forms-core serde
+//
+//   [[form.fields]]
+//   id = "email"
+//   label = "Email"
+//   kind = "email"
+//   required = true
+//
+// Invariants enforced (delegated to forms-core::Form::validate):
+//   * title non-empty
+//   * webhook_url starts with https://
+//   * every field has a non-empty label (WCAG 2.1 §3.3.2)
+//   * every field id is kebab-case + unique
+//   * at most one Honeypot field per form
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct FormsToml {
+    #[serde(default)]
+    form: Vec<forms_core::Form>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct FormsGateSummary {
+    forms_path: String,
+    form_count: usize,
+    forms_valid: usize,
+    forms_with_honeypot: usize,
+    violations: Vec<String>,
+}
+
+fn run_forms(root: &std::path::Path, action: &FormsAction) -> Result<ExitCode> {
+    match action {
+        FormsAction::Validate { json } => run_forms_validate(root, *json),
+    }
+}
+
+fn run_forms_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path = root.join("forms.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let mut summary = FormsGateSummary {
+        forms_path: path.display().to_string(),
+        form_count: 0,
+        forms_valid: 0,
+        forms_with_honeypot: 0,
+        violations: Vec::new(),
+    };
+
+    if !path.exists() {
+        violations.push(format!("missing forms.toml at {}", path.display()));
+        summary.violations = violations.clone();
+        emit_forms_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let parsed: FormsToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("forms.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_forms_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.form_count = parsed.form.len();
+
+    for form in &parsed.form {
+        match form.validate() {
+            Ok(()) => summary.forms_valid += 1,
+            Err(e) => violations.push(format!("form {:?}: {e}", form.id)),
+        }
+        if form
+            .fields
+            .iter()
+            .any(|f| matches!(f.kind, forms_core::FieldKind::Honeypot))
+        {
+            summary.forms_with_honeypot += 1;
+        }
+    }
+
+    summary.violations = violations.clone();
+    emit_forms_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_forms_summary(summary: &FormsGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "forms-gate: {} forms, {} valid, {} with honeypot",
+            summary.form_count, summary.forms_valid, summary.forms_with_honeypot,
+        );
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod forms_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_forms(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("forms.toml"), body).unwrap();
+    }
+
+    fn ok_form_body() -> &'static str {
+        "[[form]]\n\
+         id = \"contact\"\n\
+         title = \"Contact us\"\n\
+         webhook-url = \"https://hooks.example.com/contact\"\n\
+         \n\
+         [[form.fields]]\n\
+         id = \"name\"\n\
+         label = \"Name\"\n\
+         kind = \"text\"\n\
+         required = true\n\
+         \n\
+         [[form.fields]]\n\
+         id = \"email\"\n\
+         label = \"Email\"\n\
+         kind = \"email\"\n\
+         required = true\n"
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_forms_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_forms(td.path(), "not toml [[[");
+        let code = run_forms_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn valid_form_passes() {
+        let td = TempDir::new().unwrap();
+        write_forms(td.path(), ok_form_body());
+        let code = run_forms_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn http_webhook_violates() {
+        let td = TempDir::new().unwrap();
+        let body = ok_form_body().replace("https://", "http://");
+        write_forms(td.path(), &body);
+        let code = run_forms_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn empty_form_list_passes() {
+        // No forms at all = nothing to validate.
+        let td = TempDir::new().unwrap();
+        write_forms(td.path(), "");
+        let code = run_forms_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
     }
 }
 
