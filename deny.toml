@@ -81,6 +81,14 @@ license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Intra-workspace path deps (`path = "../foo"` without an explicit
+# `version = "..."`) are technically wildcard requirements. They
+# resolve unambiguously through the path, so flagging them as
+# real wildcards is a false positive — the dep MUST come from
+# the same workspace, not from any registry version. This setting
+# (cargo-deny 0.16+) keeps the `wildcards = "deny"` policy strict
+# for crates.io deps but exempts workspace-internal path deps.
+allow-wildcard-paths = true
 highlight = "all"
 allow = []
 # Crates we refuse outright. Add entries when a deprecation /

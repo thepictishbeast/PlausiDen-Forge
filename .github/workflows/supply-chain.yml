@@ -81,6 +81,16 @@ jobs:
   cargo-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Upstream blocker: cargo-audit 0.21.x (current latest) uses
+    # cvss-rs which does not yet support CVSS 4.0. RustSec started
+    # publishing CVSS 4.0 advisories in 2026 (e.g. RUSTSEC-2026-0076
+    # libcrux-ml-dsa), and cargo-audit refuses to load the database
+    # when any advisory uses CVSS 4.0. cargo-deny's [advisories]
+    # check provides equivalent coverage via the same RustSec
+    # advisory-db, so we surface cargo-audit's findings without
+    # gating the workflow on its parser limitation. Re-enable when
+    # cargo-audit / cvss-rs ship CVSS 4.0 support upstream.
+    continue-on-error: true
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2 (T74 SHA pin)
         with:
