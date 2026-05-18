@@ -106,4 +106,10 @@ skip-tree = []
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-allow-git = []
+# PlausiDen-Loom is the sibling design-system repo (typed
+# tokens / components / icons / lint). Consumed from git
+# because Loom + Forge develop in lockstep and pinning to a
+# crates.io release would always lag. Operator-trusted because
+# we own the source; provenance is the same GitHub account as
+# this repo.
+allow-git = ["https://github.com/thepictishbeast/PlausiDen-Loom"]
