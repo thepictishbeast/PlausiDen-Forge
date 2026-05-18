@@ -116,18 +116,30 @@ fn resolve_loom_bin() -> Result<PathBuf, Vec<PathBuf>> {
         }
         return Err(vec![p]);
     }
-    let candidates = [
-        PathBuf::from("/home/user/cargo-target/release/loom"),
-        PathBuf::from("/home/user/cargo-target/debug/loom"),
-        PathBuf::from("./target/release/loom"),
-        PathBuf::from("./target/debug/loom"),
-    ];
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    // Sibling Loom checkout (canonical `~/projects/PlausiDen-Loom/`
+    // layout per memory: plausiden_canonical_dir).
+    if let Ok(cwd) = std::env::current_dir() {
+        if let Some(parent) = cwd.parent() {
+            candidates.push(parent.join("PlausiDen-Loom/target/release/loom"));
+            candidates.push(parent.join("PlausiDen-Loom/target/debug/loom"));
+        }
+    }
+    // Local target/ (current dir).
+    candidates.push(PathBuf::from("./target/release/loom"));
+    candidates.push(PathBuf::from("./target/debug/loom"));
+    // PATH fallback.
+    if let Ok(path_env) = std::env::var("PATH") {
+        for dir in path_env.split(':') {
+            candidates.push(PathBuf::from(dir).join("loom"));
+        }
+    }
     for c in &candidates {
         if c.is_file() {
             return Ok(c.clone());
         }
     }
-    Err(candidates.to_vec())
+    Err(candidates)
 }
 
 fn resolve_skin(static_dir: &Path) -> Result<PathBuf, Vec<PathBuf>> {

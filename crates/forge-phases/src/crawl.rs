@@ -336,17 +336,21 @@ fn resolve_crawler_dir() -> Result<PathBuf, Vec<PathBuf>> {
         }
         return Err(vec![p]);
     }
-    let candidates = [
-        PathBuf::from("/home/user/Development/PlausiDen/PlausiDen-Crawler"),
+    let mut candidates: Vec<PathBuf> = vec![
         PathBuf::from("../PlausiDen-Crawler"),
         PathBuf::from("../../PlausiDen-Crawler"),
     ];
+    if let Ok(home) = std::env::var("HOME") {
+        let h = PathBuf::from(home);
+        candidates.push(h.join("projects/PlausiDen-Crawler"));
+        candidates.push(h.join("Development/PlausiDen/PlausiDen-Crawler"));
+    }
     for c in &candidates {
         if c.is_dir() {
             return Ok(c.clone());
         }
     }
-    Err(candidates.to_vec())
+    Err(candidates)
 }
 
 fn resolve_journey_path(crawler_dir: &Path) -> PathBuf {

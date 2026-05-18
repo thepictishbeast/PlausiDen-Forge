@@ -39,18 +39,43 @@ use sha2::{Digest, Sha384};
 pub struct LoomSyncPhase;
 
 impl LoomSyncPhase {
-    /// Default Loom skin.css path resolution. Reads `LOOM_PATH`
-    /// env var if set, falls back to the canonical sibling-repo
-    /// layout.
-    fn loom_skin_path() -> PathBuf {
+    /// Resolve the canonical Loom skin.css. Resolution order:
+    ///   1. `LOOM_PATH` env var (operator / CI override)
+    ///   2. Sibling-of-Forge-root: `<ctx.root>/../PlausiDen-Loom/loom-tokens/src/skin.css`
+    ///      — matches the canonical `~/projects/PlausiDen-<Name>/`
+    ///      layout (memory: plausiden_canonical_dir).
+    ///   3. `$HOME/projects/PlausiDen-Loom/loom-tokens/src/skin.css`
+    ///   4. `$HOME/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css`
+    ///      (legacy layout from early dev environments).
+    /// First existing path wins; if none exist, returns the
+    /// sibling-of-root candidate so the operator-facing warn
+    /// quotes the most-likely-intended location.
+    fn loom_skin_path(ctx_root: &std::path::Path) -> PathBuf {
+        const TAIL: &str = "PlausiDen-Loom/loom-tokens/src/skin.css";
         if let Ok(p) = std::env::var("LOOM_PATH") {
             return PathBuf::from(p);
         }
-        // BUG ASSUMPTION: this default is correct for the dev
-        // environment used by the project owner. CI environments
-        // MUST set LOOM_PATH explicitly — checking out a sibling
-        // Loom repo into the build runner's HOME is fragile.
-        PathBuf::from("/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css")
+        let sibling = ctx_root
+            .parent()
+            .map(|p| p.join("PlausiDen-Loom/loom-tokens/src/skin.css"));
+        let home = std::env::var("HOME").ok().map(PathBuf::from);
+        let candidates: Vec<PathBuf> = [
+            sibling.clone(),
+            home.as_ref().map(|h| h.join("projects").join(TAIL)),
+            home.as_ref()
+                .map(|h| h.join("Development/PlausiDen").join(TAIL)),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+        for c in &candidates {
+            if c.exists() {
+                return c.clone();
+            }
+        }
+        // Nothing exists — return the sibling candidate so the
+        // failure message points at the right place.
+        sibling.unwrap_or_else(|| PathBuf::from(TAIL))
     }
 }
 
@@ -60,7 +85,7 @@ impl Phase for LoomSyncPhase {
     }
 
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
-        let loom_path = Self::loom_skin_path();
+        let loom_path = Self::loom_skin_path(&ctx.root);
         if !loom_path.exists() {
             // SUPERSOCIETY: we don't fail the build — sibling
             // checkout being absent is operator config, not a
@@ -70,7 +95,7 @@ impl Phase for LoomSyncPhase {
                 self.name(),
                 loom_path.display().to_string(),
                 format!(
-                    "Loom skin.css not found at {}. Set LOOM_PATH or check out PlausiDen-Loom into ~/Development/PlausiDen.",
+                    "Loom skin.css not found at {}. Set LOOM_PATH or check out PlausiDen-Loom as a sibling of PlausiDen-Forge.",
                     loom_path.display()
                 ),
             )]);
