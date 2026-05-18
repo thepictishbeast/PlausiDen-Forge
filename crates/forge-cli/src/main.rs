@@ -4889,11 +4889,14 @@ fn run_search_validate_index(path: &std::path::Path, json: bool) -> Result<ExitC
     Ok(exit)
 }
 
-/// Liberal BCP-47 stem check: `[a-z]{2,3}` optionally followed by
-/// `-` segments of 2..=8 alphanumerics. Covers `en`, `en-US`,
-/// `zh-Hant-TW`, `i-klingon` (limited subset — full RFC 5646
-/// validation is out of scope; this catches the common error of
-/// passing `English` / `en_US` / empty).
+/// Liberal BCP-47 stem check: `[a-z]{2,3}` optionally followed
+/// by `-` segments of 2..=8 alphanumerics. Covers `en`, `en-US`,
+/// `zh-Hant-TW` (limited subset — full RFC 5646 validation is
+/// out of scope; this catches the common error of passing
+/// `English` / `en_US` / empty / single-letter). 1-char
+/// grandfathered tags like `i-klingon` are intentionally
+/// rejected — they are vanishingly rare in real index payloads
+/// and admitting them weakens the rule against typos.
 fn is_bcp47_stem(s: &str) -> bool {
     if s.is_empty() {
         return false;
