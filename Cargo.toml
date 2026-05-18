@@ -182,6 +182,13 @@ members = [
     # AnalyticsEvent (typed query / click / zero-result) +
     # ContentGap aggregation record + SearchClient trait.
     "crates/search-core",
+    # T83: email-core — typed email contract.
+    # MessageKind (Transactional / Marketing) + RFC 8058
+    # one-click list-unsubscribe enforcement + AuthState
+    # (SPF/DKIM/DMARC per RFC 7208/6376/7489) + BIMI VMC
+    # reference + BounceReason taxonomy with should_suppress
+    # set.
+    "crates/email-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
