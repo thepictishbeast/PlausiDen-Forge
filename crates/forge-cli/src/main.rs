@@ -533,6 +533,9 @@ enum ContentAction {
     Validate {
         /// Path to the CmsSection JSON file.
         path: std::path::PathBuf,
+        /// Emit a JSON-form summary to stdout (CI / pipeline use).
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
     /// Project a CmsSection JSON file through the typed
     /// exporters-core renderer (T78). Builtin formats:
@@ -575,6 +578,9 @@ enum SearchAction {
     ValidateIndex {
         /// Path to a JSON file containing an `IndexDoc[]`.
         path: std::path::PathBuf,
+        /// Emit a JSON-form summary to stdout (CI / pipeline use).
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 }
 
@@ -598,6 +604,9 @@ enum AssetsAction {
     Validate {
         /// Path to the AssetBundle JSON file.
         path: std::path::PathBuf,
+        /// Emit a JSON-form summary to stdout (CI / pipeline use).
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 }
 
@@ -4416,37 +4425,107 @@ struct ConfigValidateAllSummary {
 
 fn run_content(action: &ContentAction) -> Result<ExitCode> {
     match action {
-        ContentAction::Validate { path } => run_content_validate(path),
+        ContentAction::Validate { path, json } => run_content_validate(path, *json),
         ContentAction::Export { path, format } => run_content_export(path, format),
         ContentAction::Formats => run_content_formats(),
     }
 }
 
-fn run_content_validate(path: &std::path::Path) -> Result<ExitCode> {
+#[derive(Debug, serde::Serialize)]
+struct ContentGateSummary<'a> {
+    path: &'a str,
+    status: &'static str,
+    blocks: usize,
+    slug: &'a str,
+    source: &'a str,
+    violations: Vec<String>,
+}
+
+fn emit_content_summary(s: &ContentGateSummary<'_>, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(s)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else if s.violations.is_empty() {
+        println!(
+            "content-gate: {} ({} block(s), slug={}, source={})",
+            s.status, s.blocks, s.slug, s.source,
+        );
+    } else {
+        println!(
+            "content-gate: {} ({} violation(s)):",
+            s.status,
+            s.violations.len()
+        );
+        for v in &s.violations {
+            println!("  - {v}");
+        }
+    }
+}
+
+fn run_content_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path_str = path.display().to_string();
     if !path.exists() {
-        eprintln!("content: missing file {}", path.display());
+        emit_content_summary(
+            &ContentGateSummary {
+                path: &path_str,
+                status: "fatal",
+                blocks: 0,
+                slug: "",
+                source: "",
+                violations: vec![format!("missing file {path_str}")],
+            },
+            json,
+        );
         return Ok(ExitCode::from(2));
     }
-    let s = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let s = std::fs::read_to_string(path).with_context(|| format!("reading {path_str}"))?;
     let section: importers_core::CmsSection = match serde_json::from_str(&s) {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("content: parse error in {}: {e}", path.display());
+            emit_content_summary(
+                &ContentGateSummary {
+                    path: &path_str,
+                    status: "fatal",
+                    blocks: 0,
+                    slug: "",
+                    source: "",
+                    violations: vec![format!("parse error: {e}")],
+                },
+                json,
+            );
             return Ok(ExitCode::from(2));
         }
     };
     match section.validate() {
         Ok(()) => {
-            println!(
-                "content-gate: ok ({} block(s), slug={}, source={})",
-                section.blocks.len(),
-                section.slug,
-                section.source.slug(),
+            emit_content_summary(
+                &ContentGateSummary {
+                    path: &path_str,
+                    status: "ok",
+                    blocks: section.blocks.len(),
+                    slug: &section.slug,
+                    source: section.source.slug(),
+                    violations: vec![],
+                },
+                json,
             );
             Ok(ExitCode::SUCCESS)
         }
         Err(e) => {
-            println!("content-gate: violation: {e}");
+            emit_content_summary(
+                &ContentGateSummary {
+                    path: &path_str,
+                    status: "violation",
+                    blocks: section.blocks.len(),
+                    slug: &section.slug,
+                    source: section.source.slug(),
+                    violations: vec![e.to_string()],
+                },
+                json,
+            );
             Ok(ExitCode::from(1))
         }
     }
@@ -4595,7 +4674,7 @@ mod content_gate_tests {
     fn validate_ok() {
         let td = TempDir::new().unwrap();
         let p = write(&td, "ok.json", minimal_section_json());
-        let code = run_content_validate(&p).unwrap();
+        let code = run_content_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
     }
 
@@ -4603,7 +4682,7 @@ mod content_gate_tests {
     fn validate_missing_returns_2() {
         let td = TempDir::new().unwrap();
         let p = td.path().join("nope.json");
-        let code = run_content_validate(&p).unwrap();
+        let code = run_content_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
     }
 
@@ -4611,7 +4690,7 @@ mod content_gate_tests {
     fn validate_parse_error_returns_2() {
         let td = TempDir::new().unwrap();
         let p = write(&td, "garbage.json", "{this is not json");
-        let code = run_content_validate(&p).unwrap();
+        let code = run_content_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
     }
 
@@ -4624,7 +4703,7 @@ mod content_gate_tests {
             "blocks":[{"kind":"image","asset_ref":"/a.png","alt":""}]
         }"#;
         let p = write(&td, "bad.json", body);
-        let code = run_content_validate(&p).unwrap();
+        let code = run_content_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
     }
 
@@ -4686,20 +4765,66 @@ mod content_gate_tests {
 
 fn run_search(action: &SearchAction) -> Result<ExitCode> {
     match action {
-        SearchAction::ValidateIndex { path } => run_search_validate_index(path),
+        SearchAction::ValidateIndex { path, json } => run_search_validate_index(path, *json),
     }
 }
 
-fn run_search_validate_index(path: &std::path::Path) -> Result<ExitCode> {
+#[derive(Debug, serde::Serialize)]
+struct SearchGateSummary<'a> {
+    path: &'a str,
+    status: &'static str,
+    docs: usize,
+    violations: Vec<String>,
+}
+
+fn emit_search_summary(s: &SearchGateSummary<'_>, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(s)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else if s.violations.is_empty() {
+        println!("search-gate: {} ({} doc(s))", s.status, s.docs);
+    } else {
+        println!(
+            "search-gate: {} ({} violation(s)):",
+            s.status,
+            s.violations.len()
+        );
+        for v in &s.violations {
+            println!("  - {v}");
+        }
+    }
+}
+
+fn run_search_validate_index(path: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path_str = path.display().to_string();
     if !path.exists() {
-        eprintln!("search: missing file {}", path.display());
+        emit_search_summary(
+            &SearchGateSummary {
+                path: &path_str,
+                status: "fatal",
+                docs: 0,
+                violations: vec![format!("missing file {path_str}")],
+            },
+            json,
+        );
         return Ok(ExitCode::from(2));
     }
-    let s = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let s = std::fs::read_to_string(path).with_context(|| format!("reading {path_str}"))?;
     let docs: Vec<search_core::IndexDoc> = match serde_json::from_str(&s) {
         Ok(d) => d,
         Err(e) => {
-            eprintln!("search: parse error in {}: {e}", path.display());
+            emit_search_summary(
+                &SearchGateSummary {
+                    path: &path_str,
+                    status: "fatal",
+                    docs: 0,
+                    violations: vec![format!("parse error: {e}")],
+                },
+                json,
+            );
             return Ok(ExitCode::from(2));
         }
     };
@@ -4742,16 +4867,26 @@ fn run_search_validate_index(path: &std::path::Path) -> Result<ExitCode> {
             }
         }
     }
-    if violations.is_empty() {
-        println!("search-gate: ok ({} doc(s))", docs.len());
-        Ok(ExitCode::SUCCESS)
+    let status = if violations.is_empty() {
+        "ok"
     } else {
-        println!("search-gate: {} violation(s):", violations.len());
-        for v in &violations {
-            println!("  - {v}");
-        }
-        Ok(ExitCode::from(1))
-    }
+        "violation"
+    };
+    let exit = if violations.is_empty() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    };
+    emit_search_summary(
+        &SearchGateSummary {
+            path: &path_str,
+            status,
+            docs: docs.len(),
+            violations,
+        },
+        json,
+    );
+    Ok(exit)
 }
 
 /// Liberal BCP-47 stem check: `[a-z]{2,3}` optionally followed by
@@ -4814,7 +4949,7 @@ mod search_gate_tests {
     fn validate_ok() {
         let td = TempDir::new().unwrap();
         let p = write_docs(&td, "ok.json", &[doc("a", "en")]);
-        let code = run_search_validate_index(&p).unwrap();
+        let code = run_search_validate_index(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
     }
 
@@ -4822,7 +4957,7 @@ mod search_gate_tests {
     fn missing_file_returns_2() {
         let td = TempDir::new().unwrap();
         let p = td.path().join("nope.json");
-        let code = run_search_validate_index(&p).unwrap();
+        let code = run_search_validate_index(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
     }
 
@@ -4830,7 +4965,7 @@ mod search_gate_tests {
     fn parse_error_returns_2() {
         let td = TempDir::new().unwrap();
         let p = write_bytes(&td, "garbage.json", b"{not array");
-        let code = run_search_validate_index(&p).unwrap();
+        let code = run_search_validate_index(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
     }
 
@@ -4838,7 +4973,7 @@ mod search_gate_tests {
     fn duplicate_id_returns_1() {
         let td = TempDir::new().unwrap();
         let p = write_docs(&td, "dup.json", &[doc("dup", "en"), doc("dup", "en")]);
-        let code = run_search_validate_index(&p).unwrap();
+        let code = run_search_validate_index(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
     }
 
@@ -4846,7 +4981,7 @@ mod search_gate_tests {
     fn bad_lang_returns_1() {
         let td = TempDir::new().unwrap();
         let p = write_docs(&td, "lang.json", &[doc("a", "English")]);
-        let code = run_search_validate_index(&p).unwrap();
+        let code = run_search_validate_index(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
     }
 
@@ -4856,7 +4991,7 @@ mod search_gate_tests {
         let mut d = doc("a", "en");
         d.title = "".into();
         let p = write_docs(&td, "title.json", &[d]);
-        let code = run_search_validate_index(&p).unwrap();
+        let code = run_search_validate_index(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
     }
 
@@ -4883,35 +5018,105 @@ mod search_gate_tests {
 
 fn run_assets(action: &AssetsAction) -> Result<ExitCode> {
     match action {
-        AssetsAction::Validate { path } => run_assets_validate(path),
+        AssetsAction::Validate { path, json } => run_assets_validate(path, *json),
     }
 }
 
-fn run_assets_validate(path: &std::path::Path) -> Result<ExitCode> {
+#[derive(Debug, serde::Serialize)]
+struct AssetsGateSummary<'a> {
+    path: &'a str,
+    status: &'static str,
+    variants: usize,
+    asset_id: &'a str,
+    alt_source: &'a str,
+    violations: Vec<String>,
+}
+
+fn emit_assets_summary(s: &AssetsGateSummary<'_>, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(s)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else if s.violations.is_empty() {
+        println!(
+            "assets-gate: {} ({} variant(s), asset_id={}, alt-source={})",
+            s.status, s.variants, s.asset_id, s.alt_source,
+        );
+    } else {
+        println!(
+            "assets-gate: {} ({} violation(s)):",
+            s.status,
+            s.violations.len()
+        );
+        for v in &s.violations {
+            println!("  - {v}");
+        }
+    }
+}
+
+fn run_assets_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path_str = path.display().to_string();
     if !path.exists() {
-        eprintln!("assets: missing file {}", path.display());
+        emit_assets_summary(
+            &AssetsGateSummary {
+                path: &path_str,
+                status: "fatal",
+                variants: 0,
+                asset_id: "",
+                alt_source: "",
+                violations: vec![format!("missing file {path_str}")],
+            },
+            json,
+        );
         return Ok(ExitCode::from(2));
     }
-    let s = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let s = std::fs::read_to_string(path).with_context(|| format!("reading {path_str}"))?;
     let bundle: assets_core::AssetBundle = match serde_json::from_str(&s) {
         Ok(b) => b,
         Err(e) => {
-            eprintln!("assets: parse error in {}: {e}", path.display());
+            emit_assets_summary(
+                &AssetsGateSummary {
+                    path: &path_str,
+                    status: "fatal",
+                    variants: 0,
+                    asset_id: "",
+                    alt_source: "",
+                    violations: vec![format!("parse error: {e}")],
+                },
+                json,
+            );
             return Ok(ExitCode::from(2));
         }
     };
     match bundle.validate_image_ladder() {
         Ok(()) => {
-            println!(
-                "assets-gate: ok ({} variant(s), asset_id={}, alt-source={})",
-                bundle.variants.len(),
-                bundle.asset_id,
-                bundle.alt_source.slug(),
+            emit_assets_summary(
+                &AssetsGateSummary {
+                    path: &path_str,
+                    status: "ok",
+                    variants: bundle.variants.len(),
+                    asset_id: &bundle.asset_id,
+                    alt_source: bundle.alt_source.slug(),
+                    violations: vec![],
+                },
+                json,
             );
             Ok(ExitCode::SUCCESS)
         }
         Err(e) => {
-            println!("assets-gate: violation: {e}");
+            emit_assets_summary(
+                &AssetsGateSummary {
+                    path: &path_str,
+                    status: "violation",
+                    variants: bundle.variants.len(),
+                    asset_id: &bundle.asset_id,
+                    alt_source: bundle.alt_source.slug(),
+                    violations: vec![e.to_string()],
+                },
+                json,
+            );
             Ok(ExitCode::from(1))
         }
     }
@@ -4961,7 +5166,7 @@ mod assets_gate_tests {
     fn validate_ok() {
         let td = TempDir::new().unwrap();
         let p = write_json(&td, "ok.json", full_ladder_json());
-        let code = run_assets_validate(&p).unwrap();
+        let code = run_assets_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
     }
 
@@ -4969,7 +5174,7 @@ mod assets_gate_tests {
     fn missing_file_returns_2() {
         let td = TempDir::new().unwrap();
         let p = td.path().join("nope.json");
-        let code = run_assets_validate(&p).unwrap();
+        let code = run_assets_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
     }
 
@@ -4977,7 +5182,7 @@ mod assets_gate_tests {
     fn parse_error_returns_2() {
         let td = TempDir::new().unwrap();
         let p = write_json(&td, "garbage.json", "{this is not a bundle");
-        let code = run_assets_validate(&p).unwrap();
+        let code = run_assets_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
     }
 
@@ -4986,7 +5191,7 @@ mod assets_gate_tests {
         let td = TempDir::new().unwrap();
         let body = full_ladder_json().replace("A demo image.", "");
         let p = write_json(&td, "noalt.json", &body);
-        let code = run_assets_validate(&p).unwrap();
+        let code = run_assets_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
     }
 
@@ -5012,7 +5217,7 @@ mod assets_gate_tests {
             ]
         }"#;
         let p = write_json(&td, "nojpeg.json", body);
-        let code = run_assets_validate(&p).unwrap();
+        let code = run_assets_validate(&p, false).unwrap();
         assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
     }
 }
