@@ -135,6 +135,11 @@ members = [
     # SafetyScanner). Real CSAM perceptual-hash / phishing-classifier /
     # OFAC-sanctions-list backends plug in via SafetyScanner.
     "crates/trust-safety-core",
+    # T76: privacy-core — typed privacy-by-design contract: DSAR
+    # request lifecycle (GDPR Art. 15-22 / CCPA §1798.100-130),
+    # RetentionPolicy per DataCategory with lawful-basis, and
+    # legal-by-default cookie consent (ePrivacy §5(3)).
+    "crates/privacy-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
