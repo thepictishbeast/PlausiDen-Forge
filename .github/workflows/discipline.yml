@@ -1,0 +1,53 @@
+name: discipline
+
+# T92: super-society discipline gate.
+#
+# Per `super-society-tech-stack`, every PlausiDen-Forge crate scores
+# on six axes simultaneously: fast + reliable + robust + secure +
+# anonymous + private. This workflow runs `scripts/discipline-
+# check.sh` against the workspace on every push + PR, printing a
+# per-crate compliance matrix as a continuously-visible scoreboard.
+#
+# Currently runs in *advisory* mode (no --strict flag): the script
+# exits 0 even with violations so the gate doesn't block PRs while
+# pre-existing crates (forge-cli, forge-core, forge-phases, forge-
+# replay, forge-serve) get their #[forbid(unsafe_code)] +
+# #[deny(missing_docs)] + tests added.
+#
+# Once those crates clean up, flip this workflow to --strict and
+# the gate becomes mandatory.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "scripts/discipline-check.sh"
+      - ".github/workflows/discipline.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "scripts/discipline-check.sh"
+      - ".github/workflows/discipline.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  discipline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2 (T74 SHA pin)
+        with:
+          persist-credentials: false
+
+      - name: Run discipline check (advisory)
+        run: |
+          ./scripts/discipline-check.sh . | tee discipline-summary.json
+          # Print the verdict prominently for the action summary.
+          echo "## Discipline gate" >>"$GITHUB_STEP_SUMMARY"
+          echo '```json' >>"$GITHUB_STEP_SUMMARY"
+          cat discipline-summary.json >>"$GITHUB_STEP_SUMMARY"
+          echo '```' >>"$GITHUB_STEP_SUMMARY"
