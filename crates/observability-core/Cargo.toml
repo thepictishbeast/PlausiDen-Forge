@@ -1,0 +1,22 @@
+[package]
+name = "observability-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed OpenTelemetry-compatible span shape + immutable hash-chained audit log. No exporter / no disk IO — the contract every downstream observer plugs into."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = ["serde", "serde-well-known", "macros"] }
+
+[dev-dependencies]
+proptest = { workspace = true }

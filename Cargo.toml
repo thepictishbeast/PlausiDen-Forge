@@ -117,6 +117,10 @@ members = [
     # status-page state. Operators feed metrics; this crate derives
     # the state deterministically.
     "crates/ops-status",
+    # T69: observability-core — typed Otel-compatible span shape +
+    # immutable hash-chained audit log. No exporter / no IO; the
+    # contract every observer plugs into.
+    "crates/observability-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
