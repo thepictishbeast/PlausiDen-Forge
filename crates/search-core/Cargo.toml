@@ -1,0 +1,18 @@
+[package]
+name = "search-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed search contract — closed SearchBackend (Typesense / Meilisearch / SQLite-FTS5 / Tantivy / Quickwit) + IndexDoc shape + Query (typo + facets) + SearchAnalytics events + content-gap detection."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = ["serde", "serde-well-known", "macros"] }
