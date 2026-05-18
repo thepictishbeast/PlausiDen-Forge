@@ -568,6 +568,7 @@ name = "forge-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "assets-core",
  "base64",
  "clap",
  "commerce-storefront-core",
@@ -585,6 +586,7 @@ dependencies = [
  "notify",
  "observability-core",
  "privacy-core",
+ "search-core",
  "serde",
  "serde_json",
  "tempfile",

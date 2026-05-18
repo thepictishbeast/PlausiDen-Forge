@@ -341,6 +341,25 @@ enum Cmd {
         #[command(subcommand)]
         action: ContentAction,
     },
+    /// T98 (third runtime wiring): search index validator.
+    /// Wires search-core (T82) into the forge-cli runtime so
+    /// operators can sanity-check a JSON-serialized `IndexDoc[]`
+    /// payload before pushing it into a backend (Tantivy /
+    /// Meilisearch / etc.).
+    Search {
+        #[command(subcommand)]
+        action: SearchAction,
+    },
+    /// T98 (fourth runtime wiring): asset-bundle validator.
+    /// Wires assets-core (T80) into the forge-cli runtime so
+    /// operators can verify image bundles ship the
+    /// AVIF/WebP/JPEG fallback ladder + non-empty alt text
+    /// before publishing (WCAG 2.1 §1.1.1 + #80 ladder
+    /// contract).
+    Assets {
+        #[command(subcommand)]
+        action: AssetsAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -538,6 +557,51 @@ enum ContentAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum SearchAction {
+    /// Validate a JSON-serialized `IndexDoc[]` against the typed
+    /// search-core::IndexDoc contract (T82).
+    ///
+    /// Enforces:
+    ///   * each doc has non-empty id / title / body
+    ///   * lang is a non-empty BCP-47 stem ([a-z]{2,3} + optional
+    ///     "-REGION" or "-Script-REGION")
+    ///   * no duplicate ids across the array
+    ///   * facets/tags have no empty keys / values
+    ///
+    /// Exit codes:
+    ///   0 — array parses + every doc validates clean
+    ///   1 — array parses but at least one doc fails invariants
+    ///   2 — fatal (file missing / parse error)
+    ValidateIndex {
+        /// Path to a JSON file containing an `IndexDoc[]`.
+        path: std::path::PathBuf,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum AssetsAction {
+    /// Validate an AssetBundle JSON file against the typed
+    /// assets-core::AssetBundle contract (T80).
+    ///
+    /// Enforces:
+    ///   * non-empty asset-id + source-media-type
+    ///   * image bundles cover every format in the canonical
+    ///     fallback ladder (AVIF + WebP + JPEG)
+    ///   * alt_text non-empty (WCAG 2.1 §1.1.1)
+    ///   * each variant sha256 is 64-lowercase-hex
+    ///   * image variants have non-zero width × height
+    ///
+    /// Exit codes:
+    ///   0 — bundle parses + validates clean
+    ///   1 — bundle parses but fails canonical invariants
+    ///   2 — fatal (file missing / parse error)
+    Validate {
+        /// Path to the AssetBundle JSON file.
+        path: std::path::PathBuf,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum ConfigAction {
     /// Run every config gate at once. Each gate's output is
     /// captured; the umbrella aggregates pass/fail.
@@ -687,6 +751,8 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Memberships { action }) => return run_memberships(&root, action),
         Some(Cmd::Config { action }) => return run_config(&root, action),
         Some(Cmd::Content { action }) => return run_content(action),
+        Some(Cmd::Search { action }) => return run_search(action),
+        Some(Cmd::Assets { action }) => return run_assets(action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -4608,6 +4674,346 @@ mod content_gate_tests {
         assert_eq!(resolve_export_format("json-ld"), Some(F::JsonLdSchemaOrg));
         assert_eq!(resolve_export_format("as2"), Some(F::ActivityStreams2));
         assert_eq!(resolve_export_format("xml"), None);
+    }
+}
+
+// ============================================================
+// T98 third runtime wiring — `forge search validate-index`
+//
+// Projects a JSON `IndexDoc[]` through search-core (T82). Used
+// to refuse pushing malformed search payloads to a backend.
+// ============================================================
+
+fn run_search(action: &SearchAction) -> Result<ExitCode> {
+    match action {
+        SearchAction::ValidateIndex { path } => run_search_validate_index(path),
+    }
+}
+
+fn run_search_validate_index(path: &std::path::Path) -> Result<ExitCode> {
+    if !path.exists() {
+        eprintln!("search: missing file {}", path.display());
+        return Ok(ExitCode::from(2));
+    }
+    let s = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let docs: Vec<search_core::IndexDoc> = match serde_json::from_str(&s) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("search: parse error in {}: {e}", path.display());
+            return Ok(ExitCode::from(2));
+        }
+    };
+    let mut violations: Vec<String> = Vec::new();
+    let mut seen_ids: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    for (i, d) in docs.iter().enumerate() {
+        if d.id.trim().is_empty() {
+            violations.push(format!("doc[{i}]: id empty"));
+        } else if !seen_ids.insert(d.id.as_str()) {
+            violations.push(format!("doc[{i}]: duplicate id {:?}", d.id));
+        }
+        if d.title.trim().is_empty() {
+            violations.push(format!("doc[{i}]: title empty (id={:?})", d.id));
+        }
+        if d.body.trim().is_empty() {
+            violations.push(format!("doc[{i}]: body empty (id={:?})", d.id));
+        }
+        if !is_bcp47_stem(&d.lang) {
+            violations.push(format!(
+                "doc[{i}]: lang {:?} not a BCP-47 stem (id={:?})",
+                d.lang, d.id,
+            ));
+        }
+        for t in &d.tags {
+            if t.trim().is_empty() {
+                violations.push(format!("doc[{i}]: empty tag (id={:?})", d.id));
+            }
+        }
+        for (k, vs) in &d.facets {
+            if k.trim().is_empty() {
+                violations.push(format!("doc[{i}]: empty facet key (id={:?})", d.id));
+            }
+            for v in vs {
+                if v.trim().is_empty() {
+                    violations.push(format!(
+                        "doc[{i}]: empty facet value under {:?} (id={:?})",
+                        k, d.id,
+                    ));
+                }
+            }
+        }
+    }
+    if violations.is_empty() {
+        println!("search-gate: ok ({} doc(s))", docs.len());
+        Ok(ExitCode::SUCCESS)
+    } else {
+        println!("search-gate: {} violation(s):", violations.len());
+        for v in &violations {
+            println!("  - {v}");
+        }
+        Ok(ExitCode::from(1))
+    }
+}
+
+/// Liberal BCP-47 stem check: `[a-z]{2,3}` optionally followed by
+/// `-` segments of 2..=8 alphanumerics. Covers `en`, `en-US`,
+/// `zh-Hant-TW`, `i-klingon` (limited subset — full RFC 5646
+/// validation is out of scope; this catches the common error of
+/// passing `English` / `en_US` / empty).
+fn is_bcp47_stem(s: &str) -> bool {
+    if s.is_empty() {
+        return false;
+    }
+    let mut parts = s.split('-');
+    let primary = match parts.next() {
+        Some(p) => p,
+        None => return false,
+    };
+    if primary.len() < 2 || primary.len() > 3 || !primary.chars().all(|c| c.is_ascii_lowercase()) {
+        return false;
+    }
+    for seg in parts {
+        if seg.is_empty() || seg.len() > 8 || !seg.chars().all(|c| c.is_ascii_alphanumeric()) {
+            return false;
+        }
+    }
+    true
+}
+
+#[cfg(test)]
+mod search_gate_tests {
+    use super::*;
+    use std::io::Write as _;
+    use tempfile::TempDir;
+    use time::macros::datetime;
+
+    fn write_bytes(td: &TempDir, name: &str, body: &[u8]) -> std::path::PathBuf {
+        let p = td.path().join(name);
+        let mut f = std::fs::File::create(&p).unwrap();
+        f.write_all(body).unwrap();
+        p
+    }
+
+    fn doc(id: &str, lang: &str) -> search_core::IndexDoc {
+        search_core::IndexDoc {
+            id: id.into(),
+            title: "T".into(),
+            body: "B".into(),
+            tags: vec![],
+            facets: vec![],
+            lang: lang.into(),
+            published_at: datetime!(2026-01-01 00:00:00 UTC),
+        }
+    }
+
+    fn write_docs(td: &TempDir, name: &str, docs: &[search_core::IndexDoc]) -> std::path::PathBuf {
+        let body = serde_json::to_vec(docs).unwrap();
+        write_bytes(td, name, &body)
+    }
+
+    #[test]
+    fn validate_ok() {
+        let td = TempDir::new().unwrap();
+        let p = write_docs(&td, "ok.json", &[doc("a", "en")]);
+        let code = run_search_validate_index(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
+    }
+
+    #[test]
+    fn missing_file_returns_2() {
+        let td = TempDir::new().unwrap();
+        let p = td.path().join("nope.json");
+        let code = run_search_validate_index(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
+    }
+
+    #[test]
+    fn parse_error_returns_2() {
+        let td = TempDir::new().unwrap();
+        let p = write_bytes(&td, "garbage.json", b"{not array");
+        let code = run_search_validate_index(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
+    }
+
+    #[test]
+    fn duplicate_id_returns_1() {
+        let td = TempDir::new().unwrap();
+        let p = write_docs(&td, "dup.json", &[doc("dup", "en"), doc("dup", "en")]);
+        let code = run_search_validate_index(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
+    }
+
+    #[test]
+    fn bad_lang_returns_1() {
+        let td = TempDir::new().unwrap();
+        let p = write_docs(&td, "lang.json", &[doc("a", "English")]);
+        let code = run_search_validate_index(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
+    }
+
+    #[test]
+    fn empty_title_returns_1() {
+        let td = TempDir::new().unwrap();
+        let mut d = doc("a", "en");
+        d.title = "".into();
+        let p = write_docs(&td, "title.json", &[d]);
+        let code = run_search_validate_index(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
+    }
+
+    #[test]
+    fn bcp47_stem_recognises_common_tags() {
+        assert!(is_bcp47_stem("en"));
+        assert!(is_bcp47_stem("en-US"));
+        assert!(is_bcp47_stem("zh-Hant-TW"));
+        assert!(!is_bcp47_stem(""));
+        assert!(!is_bcp47_stem("English"));
+        assert!(!is_bcp47_stem("en_US"));
+        assert!(!is_bcp47_stem("e"));
+    }
+}
+
+// ============================================================
+// T98 fourth runtime wiring — `forge assets validate`
+//
+// Projects an AssetBundle JSON file through assets-core (T80).
+// Refuses to greenlight publish-time bundles missing the AVIF /
+// WebP / JPEG fallback ladder or empty alt text. WCAG 2.1
+// §1.1.1.
+// ============================================================
+
+fn run_assets(action: &AssetsAction) -> Result<ExitCode> {
+    match action {
+        AssetsAction::Validate { path } => run_assets_validate(path),
+    }
+}
+
+fn run_assets_validate(path: &std::path::Path) -> Result<ExitCode> {
+    if !path.exists() {
+        eprintln!("assets: missing file {}", path.display());
+        return Ok(ExitCode::from(2));
+    }
+    let s = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let bundle: assets_core::AssetBundle = match serde_json::from_str(&s) {
+        Ok(b) => b,
+        Err(e) => {
+            eprintln!("assets: parse error in {}: {e}", path.display());
+            return Ok(ExitCode::from(2));
+        }
+    };
+    match bundle.validate_image_ladder() {
+        Ok(()) => {
+            println!(
+                "assets-gate: ok ({} variant(s), asset_id={}, alt-source={})",
+                bundle.variants.len(),
+                bundle.asset_id,
+                bundle.alt_source.slug(),
+            );
+            Ok(ExitCode::SUCCESS)
+        }
+        Err(e) => {
+            println!("assets-gate: violation: {e}");
+            Ok(ExitCode::from(1))
+        }
+    }
+}
+
+#[cfg(test)]
+mod assets_gate_tests {
+    use super::*;
+    use std::io::Write as _;
+    use tempfile::TempDir;
+
+    fn write_json(td: &TempDir, name: &str, body: &str) -> std::path::PathBuf {
+        let p = td.path().join(name);
+        let mut f = std::fs::File::create(&p).unwrap();
+        f.write_all(body.as_bytes()).unwrap();
+        p
+    }
+
+    /// AssetBundle with full AVIF + WebP + JPEG ladder and a
+    /// non-empty alt text. Uses 64-lowercase-hex sha256 stubs.
+    fn full_ladder_json() -> &'static str {
+        r#"{
+            "asset-id": "demo-1",
+            "source-media-type": "image/png",
+            "source-width": 1024,
+            "source-height": 768,
+            "alt-text": "A demo image.",
+            "alt-source": "operator",
+            "variants": [
+                {"source-id":"src","format":"avif","width":1024,"height":768,
+                 "byte-len":2048,
+                 "sha256-hex":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                 "exif-policy":"strip"},
+                {"source-id":"src","format":"webp","width":1024,"height":768,
+                 "byte-len":2048,
+                 "sha256-hex":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                 "exif-policy":"strip"},
+                {"source-id":"src","format":"jpeg","width":1024,"height":768,
+                 "byte-len":2048,
+                 "sha256-hex":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                 "exif-policy":"strip"}
+            ]
+        }"#
+    }
+
+    #[test]
+    fn validate_ok() {
+        let td = TempDir::new().unwrap();
+        let p = write_json(&td, "ok.json", full_ladder_json());
+        let code = run_assets_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
+    }
+
+    #[test]
+    fn missing_file_returns_2() {
+        let td = TempDir::new().unwrap();
+        let p = td.path().join("nope.json");
+        let code = run_assets_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
+    }
+
+    #[test]
+    fn parse_error_returns_2() {
+        let td = TempDir::new().unwrap();
+        let p = write_json(&td, "garbage.json", "{this is not a bundle");
+        let code = run_assets_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
+    }
+
+    #[test]
+    fn empty_alt_text_returns_1() {
+        let td = TempDir::new().unwrap();
+        let body = full_ladder_json().replace("A demo image.", "");
+        let p = write_json(&td, "noalt.json", &body);
+        let code = run_assets_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
+    }
+
+    #[test]
+    fn missing_jpeg_returns_1() {
+        // Strip the JPEG variant — bundle no longer satisfies the
+        // fallback ladder.
+        let td = TempDir::new().unwrap();
+        let body = r#"{
+            "asset-id": "no-jpeg",
+            "source-media-type": "image/png",
+            "alt-text": "Alt.",
+            "alt-source": "operator",
+            "variants": [
+                {"source-id":"s","format":"avif","width":1,"height":1,
+                 "byte-len":1,
+                 "sha256-hex":"0000000000000000000000000000000000000000000000000000000000000000",
+                 "exif-policy":"strip"},
+                {"source-id":"s","format":"webp","width":1,"height":1,
+                 "byte-len":1,
+                 "sha256-hex":"1111111111111111111111111111111111111111111111111111111111111111",
+                 "exif-policy":"strip"}
+            ]
+        }"#;
+        let p = write_json(&td, "nojpeg.json", body);
+        let code = run_assets_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
     }
 }
 

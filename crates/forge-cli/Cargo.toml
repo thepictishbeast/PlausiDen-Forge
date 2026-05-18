@@ -83,6 +83,17 @@ importers-core = { path = "../importers-core" }
 # `forge content export --format X` — projects a CmsSection
 # through the built-in Markdown / JSON / JSON-LD renderers.
 exporters-core = { path = "../exporters-core" }
+# T98 (third runtime wiring): search-core (T82) drives
+# `forge search validate-index` — parses a JSON array of
+# IndexDoc and asserts shape invariants (non-empty id /
+# title / body, BCP-47 lang stem, no duplicate ids).
+search-core = { path = "../search-core" }
+# T98 (fourth runtime wiring): assets-core (T80) drives
+# `forge assets validate` — parses an AssetBundle JSON file
+# and calls validate_image_ladder() to refuse publication of
+# bundles missing the AVIF/WebP/JPEG fallback ladder or
+# empty alt text (WCAG 2.1 §1.1.1).
+assets-core = { path = "../assets-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }
