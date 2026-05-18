@@ -51,6 +51,12 @@ observability-core = { path = "../observability-core" }
 # through Form::validate (https-only webhook, WCAG-required
 # labels, single-honeypot, kebab-case field ids).
 forms-core = { path = "../forms-core" }
+# T91 (seventh wiring): federation-core (T79) drives the new
+# `forge federation validate` subcommand — projects
+# federation.toml through FederationProtocol + protocol-
+# discriminated FederationAddress and asserts protocol/address
+# match + no duplicate destinations.
+federation-core = { path = "../federation-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

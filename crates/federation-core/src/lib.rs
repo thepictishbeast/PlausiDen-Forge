@@ -41,12 +41,14 @@ use serde::{Deserialize, Serialize};
 pub enum FederationProtocol {
     /// ActivityPub — W3C Recommendation 2018-01-23.
     /// Inbox + outbox + ActivityStreams 2.0 JSON-LD.
+    #[serde(rename = "activitypub")]
     ActivityPub,
     /// Webmention — W3C Recommendation 2017-01-12.
     /// HTTP POST notifying a target URL of a source URL link.
     Webmention,
     /// WebSub — W3C Recommendation 2018-01-23.
     /// Hub-based publish/subscribe; supersedes PubSubHubbub.
+    #[serde(rename = "websub")]
     WebSub,
     /// Nostr — NIP-01.
     /// Signed event broadcast over WebSocket relays.
@@ -130,6 +132,7 @@ impl FederationState {
 #[serde(tag = "protocol", rename_all = "kebab-case")]
 pub enum FederationAddress {
     /// ActivityPub inbox URL (HTTPS POST endpoint).
+    #[serde(rename = "activitypub")]
     ActivityPub {
         /// Inbox URL.
         inbox: String,
@@ -143,6 +146,7 @@ pub enum FederationAddress {
         target: String,
     },
     /// WebSub hub.
+    #[serde(rename = "websub")]
     WebSub {
         /// Hub URL.
         hub: String,
@@ -417,5 +421,28 @@ mod tests {
         let j = serde_json::to_string(&o).unwrap();
         let back: FederationOutcome = serde_json::from_str(&j).unwrap();
         assert_eq!(o, back);
+    }
+
+    // Regression-guard: serde `rename_all = "kebab-case"` would
+    // emit `activity-pub` / `web-sub` for `ActivityPub` /
+    // `WebSub` (CamelCase boundary), but operator-facing slugs
+    // are the single-word forms `activitypub` + `websub`
+    // (matching the spec names exactly). Per-variant
+    // `#[serde(rename)]` makes them match; this test pins it
+    // so future contributors don't accidentally let them
+    // diverge.
+    #[test]
+    fn protocol_serde_wire_matches_slug() {
+        for p in [
+            FederationProtocol::ActivityPub,
+            FederationProtocol::Webmention,
+            FederationProtocol::WebSub,
+            FederationProtocol::Nostr,
+            FederationProtocol::AtProtocol,
+        ] {
+            let wire = serde_json::to_string(&p).unwrap();
+            let stripped = wire.trim_matches('"');
+            assert_eq!(stripped, p.slug(), "wire vs slug for {:?}", p);
+        }
     }
 }

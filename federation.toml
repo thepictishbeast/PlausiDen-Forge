@@ -1,0 +1,35 @@
+# PlausiDen-Forge federation + IndieWeb destinations.
+#
+# Projected through federation-core (T79) by
+# `forge federation validate` (T91 seventh wiring). Each
+# [[destination]] is a protocol-discriminated address per
+# federation-core::FederationAddress:
+#
+#   protocol = "activitypub"  + inbox            = "https://..."
+#   protocol = "webmention"   + endpoint, target = "https://..."
+#   protocol = "websub"       + hub, topic       = "https://..."
+#   protocol = "nostr"        + relay            = "wss://..."
+#   protocol = "at-protocol"  + pds, did         = "https://...", "did:plc:..."
+#
+# The closed FederationProtocol enum (W3C Recs + NIP-01 + AT
+# Protocol) makes unknown protocols rejected at parse time.
+#
+# Real per-protocol clients live downstream
+# (federation-activitypub / federation-nostr / etc.) and plug
+# in via the FederationPublisher trait.
+
+# Mastodon / Pleroma / fedi handoff via ActivityPub
+[[destination]]
+protocol = "activitypub"
+inbox = "https://mastodon.plausiden.com/inbox"
+
+# Nostr broadcast relay
+[[destination]]
+protocol = "nostr"
+relay = "wss://relay.damus.io"
+
+# Bluesky / AT Protocol PDS handoff
+[[destination]]
+protocol = "at-protocol"
+pds = "https://bsky.social"
+did = "did:plc:plausiden-placeholder"

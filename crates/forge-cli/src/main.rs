@@ -264,6 +264,19 @@ enum Cmd {
         #[command(subcommand)]
         action: FormsAction,
     },
+    /// T91 (seventh wiring): federation-core gate. Loads
+    /// `federation.toml` and projects through
+    /// federation-core's FederationProtocol +
+    /// FederationAddress (T79). Enforces:
+    ///   * every protocol declared maps to a valid address
+    ///     shape (compile-time via tagged-enum discriminant)
+    ///   * address-protocol consistency: a Nostr destination
+    ///     can't be paired with an ActivityPub publisher
+    ///   * no duplicate destinations within a protocol
+    Federation {
+        #[command(subcommand)]
+        action: FederationAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -381,6 +394,17 @@ enum DomainsAction {
     Validate {
         /// Emit a JSON-form summary of domain validation to
         /// stdout. Default is human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum FederationAction {
+    /// Validate `federation.toml` at the project root against
+    /// the typed federation-core surface (T79).
+    Validate {
+        /// Emit a JSON-form summary to stdout.
         #[arg(long, default_value_t = false)]
         json: bool,
     },
@@ -507,6 +531,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Domains { action }) => return run_domains(&root, action),
         Some(Cmd::AuditLog { action }) => return run_audit_log(&root, action),
         Some(Cmd::Forms { action }) => return run_forms(&root, action),
+        Some(Cmd::Federation { action }) => return run_federation(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -3263,6 +3288,196 @@ mod forms_gate_tests {
         write_forms(td.path(), "");
         let code = run_forms_validate(td.path(), false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
+    }
+}
+
+// ============================================================
+// T91 (seventh wiring): federation gate — `forge federation
+// validate`
+//
+// TOML schema:
+//   [[destination]]
+//   protocol = "nostr"
+//   relay = "wss://relay.example.com"
+//
+//   [[destination]]
+//   protocol = "activitypub"
+//   inbox = "https://mastodon.example.com/inbox"
+//
+// Invariants:
+//   * every destination uses a known FederationProtocol
+//     (closed enum from federation-core — TOML deserialiser
+//     catches unknowns automatically)
+//   * the address fields supplied match the protocol — e.g.
+//     `inbox` for activitypub, `relay` for nostr.
+//   * no duplicate destinations (per (protocol, key-fields))
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct FederationToml {
+    #[serde(default)]
+    destination: Vec<federation_core::FederationAddress>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct FederationGateSummary {
+    federation_path: String,
+    destination_count: usize,
+    by_protocol: std::collections::BTreeMap<String, usize>,
+    violations: Vec<String>,
+}
+
+fn run_federation(root: &std::path::Path, action: &FederationAction) -> Result<ExitCode> {
+    match action {
+        FederationAction::Validate { json } => run_federation_validate(root, *json),
+    }
+}
+
+fn run_federation_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path = root.join("federation.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let mut summary = FederationGateSummary {
+        federation_path: path.display().to_string(),
+        destination_count: 0,
+        by_protocol: std::collections::BTreeMap::new(),
+        violations: Vec::new(),
+    };
+
+    if !path.exists() {
+        violations.push(format!("missing federation.toml at {}", path.display()));
+        summary.violations = violations.clone();
+        emit_federation_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let parsed: FederationToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("federation.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_federation_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.destination_count = parsed.destination.len();
+
+    // Count by protocol + detect duplicates.
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for d in &parsed.destination {
+        let proto = d.protocol().slug().to_string();
+        *summary.by_protocol.entry(proto.clone()).or_insert(0) += 1;
+        // Dedup key is the JSON serialisation of the address —
+        // identical address shapes are duplicates.
+        let key = serde_json::to_string(d).unwrap_or_default();
+        if !seen.insert(key.clone()) {
+            violations.push(format!("duplicate destination: {key}"));
+        }
+    }
+
+    summary.violations = violations.clone();
+    emit_federation_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_federation_summary(summary: &FederationGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "federation-gate: {} destinations",
+            summary.destination_count
+        );
+        for (p, c) in &summary.by_protocol {
+            println!("  {p}: {c}");
+        }
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod federation_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_fed(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("federation.toml"), body).unwrap();
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_federation_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_fed(td.path(), "this is not toml [[[");
+        let code = run_federation_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn empty_destination_list_passes() {
+        let td = TempDir::new().unwrap();
+        write_fed(td.path(), "");
+        let code = run_federation_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn valid_destinations_pass() {
+        let td = TempDir::new().unwrap();
+        write_fed(
+            td.path(),
+            "[[destination]]\nprotocol = \"nostr\"\nrelay = \"wss://relay.example.com\"\n\n\
+             [[destination]]\nprotocol = \"activitypub\"\ninbox = \"https://m.example/inbox\"\n",
+        );
+        let code = run_federation_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn duplicate_destination_violates() {
+        let td = TempDir::new().unwrap();
+        write_fed(
+            td.path(),
+            "[[destination]]\nprotocol = \"nostr\"\nrelay = \"wss://r\"\n\n\
+             [[destination]]\nprotocol = \"nostr\"\nrelay = \"wss://r\"\n",
+        );
+        let code = run_federation_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn unknown_protocol_fails_parse() {
+        // FederationProtocol is a closed enum — TOML
+        // deserialiser refuses unknown variants, exits 2.
+        let td = TempDir::new().unwrap();
+        write_fed(
+            td.path(),
+            "[[destination]]\nprotocol = \"telepathy\"\nendpoint = \"x\"\n",
+        );
+        let code = run_federation_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
     }
 }
 
