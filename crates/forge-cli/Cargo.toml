@@ -40,6 +40,12 @@ manifest-attest = { path = "../manifest-attest" }
 # RFC 1035 FQDN shape + RFC 8555 wildcard/challenge compatibility
 # + HSTS preload-eligibility.
 domains-core = { path = "../domains-core" }
+# T91 (fifth wiring): observability-core (T69) drives the new
+# `forge audit-log verify` subcommand — loads an audit-log JSON
+# file + projects through AuditChain::verify (hash-chained
+# integrity check). Used for compliance audits + tamper-evident
+# admin-action logs.
+observability-core = { path = "../observability-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

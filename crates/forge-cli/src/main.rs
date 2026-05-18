@@ -243,6 +243,16 @@ enum Cmd {
         #[command(subcommand)]
         action: DomainsAction,
     },
+    /// T91 (fifth wiring): observability-core hash-chained
+    /// audit-log verifier. Loads a JSON file containing an
+    /// `AuditChain` (typed observability-core shape) and runs:
+    ///   * sequence monotonicity
+    ///   * prev_hash linkage
+    ///   * entry_hash freshness (tamper detection)
+    AuditLog {
+        #[command(subcommand)]
+        action: AuditLogAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -366,6 +376,24 @@ enum DomainsAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum AuditLogAction {
+    /// Verify the hash-chained integrity of an audit-log JSON
+    /// file. Reads the file at the given path (or
+    /// `reports/audit-log.json` by default), deserialises into
+    /// observability-core's AuditChain, and runs verify().
+    Verify {
+        /// Path to the audit-log JSON file. Defaults to
+        /// `reports/audit-log.json` under the project root.
+        #[arg(long)]
+        path: Option<std::path::PathBuf>,
+        /// Emit a JSON-form summary of the verification to
+        /// stdout. Default is human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum AttestAction {
     /// Generate a fresh Ed25519 keypair and persist it under
     /// `reports/`. Refuses to overwrite an existing key without
@@ -452,6 +480,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Privacy { action }) => return run_privacy(&root, action),
         Some(Cmd::TrustSafety { action }) => return run_trust_safety(&root, action),
         Some(Cmd::Domains { action }) => return run_domains(&root, action),
+        Some(Cmd::AuditLog { action }) => return run_audit_log(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -2827,6 +2856,195 @@ mod domains_gate_tests {
              [hsts]\nmax_age_secs = 60\ninclude_subdomains = false\npreload = false\n",
         );
         let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+}
+
+// ============================================================
+// T91 (fifth wiring): audit-log verify — `forge audit-log verify`
+//
+// Loads an observability-core::AuditChain (serialised as JSON)
+// and runs its built-in verify() integrity check:
+//   * sequence monotonicity (entry N has sequence == N)
+//   * prev_hash linkage (entry N's prev_hash == entry N-1's
+//     entry_hash; entry 0's prev_hash == zero)
+//   * entry_hash freshness (recomputed sha256 matches declared
+//     hash — tamper detection)
+//
+// Use case: operator-side compliance audit + tamper-evidence on
+// admin-action logs / DSAR-fulfillment audit / trust+safety
+// moderation history / federation publish-event log.
+// ============================================================
+
+#[derive(Debug, serde::Serialize)]
+struct AuditLogVerifySummary {
+    audit_log_path: String,
+    entry_count: usize,
+    verdict: String,
+    error: Option<String>,
+}
+
+fn run_audit_log(root: &std::path::Path, action: &AuditLogAction) -> Result<ExitCode> {
+    match action {
+        AuditLogAction::Verify { path, json } => {
+            let resolved = path
+                .clone()
+                .unwrap_or_else(|| root.join("reports").join("audit-log.json"));
+            run_audit_log_verify(&resolved, *json)
+        }
+    }
+}
+
+fn run_audit_log_verify(path: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let mut summary = AuditLogVerifySummary {
+        audit_log_path: path.display().to_string(),
+        entry_count: 0,
+        verdict: "unknown".to_string(),
+        error: None,
+    };
+
+    if !path.exists() {
+        summary.error = Some(format!("missing audit-log at {}", path.display()));
+        summary.verdict = "fatal".to_string();
+        emit_audit_log_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let raw = std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
+    let chain: observability_core::AuditChain = match serde_json::from_str(&raw) {
+        Ok(c) => c,
+        Err(e) => {
+            summary.error = Some(format!("parse: {e}"));
+            summary.verdict = "fatal".to_string();
+            emit_audit_log_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.entry_count = chain.entries.len();
+
+    match chain.verify() {
+        Ok(()) => {
+            summary.verdict = "pass".to_string();
+            emit_audit_log_summary(&summary, json);
+            Ok(ExitCode::SUCCESS)
+        }
+        Err(e) => {
+            summary.verdict = "fail".to_string();
+            summary.error = Some(e.to_string());
+            emit_audit_log_summary(&summary, json);
+            Ok(ExitCode::from(1))
+        }
+    }
+}
+
+fn emit_audit_log_summary(summary: &AuditLogVerifySummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "audit-log: {} entries, verdict: {}",
+            summary.entry_count, summary.verdict,
+        );
+        if let Some(e) = &summary.error {
+            println!("  detail: {e}");
+        }
+    }
+}
+
+#[cfg(test)]
+mod audit_log_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+    use time::macros::datetime;
+
+    fn write_chain(dir: &std::path::Path, chain: &observability_core::AuditChain) {
+        let json = serde_json::to_string(chain).unwrap();
+        std::fs::write(dir.join("reports").join("audit-log.json"), json).unwrap();
+        std::fs::create_dir_all(dir.join("reports")).ok();
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        std::fs::create_dir_all(td.path().join("reports")).unwrap();
+        let code =
+            run_audit_log_verify(&td.path().join("reports").join("audit-log.json"), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_json_exits_2() {
+        let td = TempDir::new().unwrap();
+        std::fs::create_dir_all(td.path().join("reports")).unwrap();
+        let p = td.path().join("reports").join("audit-log.json");
+        std::fs::write(&p, "this is not json {{{").unwrap();
+        let code = run_audit_log_verify(&p, false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn empty_chain_passes() {
+        let td = TempDir::new().unwrap();
+        std::fs::create_dir_all(td.path().join("reports")).unwrap();
+        let chain = observability_core::AuditChain::new();
+        write_chain(td.path(), &chain);
+        let code =
+            run_audit_log_verify(&td.path().join("reports").join("audit-log.json"), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn well_formed_chain_passes() {
+        let td = TempDir::new().unwrap();
+        std::fs::create_dir_all(td.path().join("reports")).unwrap();
+        let mut chain = observability_core::AuditChain::new();
+        chain.append(
+            "alice",
+            datetime!(2026-05-18 12:00 UTC),
+            "login",
+            serde_json::json!({"ip": "10.0.0.1"}),
+        );
+        chain.append(
+            "bob",
+            datetime!(2026-05-18 12:01 UTC),
+            "admin-action",
+            serde_json::json!({"action": "grant-permission"}),
+        );
+        write_chain(td.path(), &chain);
+        let code =
+            run_audit_log_verify(&td.path().join("reports").join("audit-log.json"), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn tampered_chain_fails_1() {
+        let td = TempDir::new().unwrap();
+        std::fs::create_dir_all(td.path().join("reports")).unwrap();
+        let mut chain = observability_core::AuditChain::new();
+        chain.append(
+            "alice",
+            datetime!(2026-05-18 12:00 UTC),
+            "login",
+            serde_json::json!({"ip": "10.0.0.1"}),
+        );
+        chain.append(
+            "bob",
+            datetime!(2026-05-18 12:01 UTC),
+            "admin-action",
+            serde_json::json!({"action": "grant-permission"}),
+        );
+        // Tamper: replace entry 0's payload AFTER hashes were
+        // computed. verify() should catch the entry_hash
+        // mismatch.
+        chain.entries[0].payload = serde_json::json!({"ip": "evil"});
+        write_chain(td.path(), &chain);
+        let code =
+            run_audit_log_verify(&td.path().join("reports").join("audit-log.json"), false).unwrap();
         assert_eq!(code, ExitCode::from(1));
     }
 }
