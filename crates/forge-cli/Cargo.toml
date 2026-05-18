@@ -21,6 +21,13 @@ manifest-core = { path = "../manifest-core" }
 # RetentionPolicy + ConsentScope to enforce GDPR-shape integrity
 # at the type level. Takes privacy-core off the orphan list.
 privacy-core = { path = "../privacy-core" }
+# T91 (second wiring): trust-safety-core (T75) drives the new
+# `forge trust-safety validate` subcommand — projects
+# trust-safety.toml through the closed ConcernKind enum to enforce
+# scanner coverage. Every mandatory-report concern (CSAM / NCIII /
+# Extremism) MUST have a declared scanner; non-mandatory concerns
+# warn when missing.
+trust-safety-core = { path = "../trust-safety-core" }
 clap = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }

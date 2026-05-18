@@ -581,6 +581,7 @@ dependencies = [
  "toml",
  "tracing",
  "tracing-subscriber",
+ "trust-safety-core",
 ]
 
 [[package]]

@@ -208,6 +208,23 @@ enum Cmd {
         #[command(subcommand)]
         action: PrivacyAction,
     },
+    /// T91 (second wiring): trust-safety-core gate. Loads
+    /// `trust-safety.toml` at the project root, projects through
+    /// `trust-safety-core`'s typed ConcernKind enum, and asserts:
+    ///   * every mandatory-report ConcernKind variant (CSAM,
+    ///     NCIII, Extremism) has at least one scanner declared
+    ///   * non-mandatory variants without a scanner warn but
+    ///     don't gate (operator's choice per audience)
+    ///   * no duplicate scanner_id within a concern
+    ///
+    /// Exit codes:
+    ///   0 — every mandatory-report concern has a scanner
+    ///   1 — at least one mandatory-report concern uncovered
+    ///   2 — fatal (missing trust-safety.toml, parse error)
+    TrustSafety {
+        #[command(subcommand)]
+        action: TrustSafetyAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -307,6 +324,18 @@ enum PrivacyAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum TrustSafetyAction {
+    /// Validate `trust-safety.toml` at the project root against
+    /// the typed trust-safety-core surface (T75).
+    Validate {
+        /// Emit a JSON-form summary of scanner coverage to
+        /// stdout. Default is human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum AttestAction {
     /// Generate a fresh Ed25519 keypair and persist it under
     /// `reports/`. Refuses to overwrite an existing key without
@@ -383,6 +412,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Fix { apply }) => return run_fix(&root, *apply),
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
         Some(Cmd::Privacy { action }) => return run_privacy(&root, action),
+        Some(Cmd::TrustSafety { action }) => return run_trust_safety(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -2176,6 +2206,281 @@ mod privacy_gate_tests {
         let code = run_privacy_validate(td.path(), false).unwrap();
         // Legal obligation alone is NOT a violation — coverage
         // is complete + no zeroes + no dupes.
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+}
+
+// ============================================================
+// T91 (second wiring): trust-safety gate — `forge trust-safety
+// validate`
+//
+// TOML schema:
+//   [[scanner]]
+//   concern = "csam"
+//   scanner_id = "photodna-2.1"
+//
+// Invariants:
+//   * every MANDATORY-REPORT concern (CSAM, NCIII, Extremism)
+//     has ≥1 scanner declared (US 18 U.S.C. § 2258A obligation)
+//   * no duplicate scanner_id per concern
+//   * non-mandatory concerns without a scanner are warnings,
+//     not violations (operator's choice per audience)
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct TrustSafetyToml {
+    #[serde(default)]
+    scanner: Vec<ScannerEntry>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct ScannerEntry {
+    concern: trust_safety_core::ConcernKind,
+    scanner_id: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct TrustSafetyGateSummary {
+    trust_safety_path: String,
+    scanner_entries: usize,
+    mandatory_concerns_covered: usize,
+    mandatory_concerns_total: usize,
+    mandatory_concerns_missing: Vec<&'static str>,
+    non_mandatory_concerns_uncovered: Vec<&'static str>,
+    violations: Vec<String>,
+}
+
+fn all_concern_kinds() -> [trust_safety_core::ConcernKind; 10] {
+    use trust_safety_core::ConcernKind::*;
+    [
+        Csam,
+        Phishing,
+        Spam,
+        Sanctions,
+        SelfHarm,
+        Extremism,
+        Nciii,
+        Malware,
+        IpViolation,
+        HateSpeech,
+    ]
+}
+
+fn run_trust_safety(root: &std::path::Path, action: &TrustSafetyAction) -> Result<ExitCode> {
+    match action {
+        TrustSafetyAction::Validate { json } => run_trust_safety_validate(root, *json),
+    }
+}
+
+fn run_trust_safety_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path = root.join("trust-safety.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let all_concerns = all_concern_kinds();
+    let mandatory_total = all_concerns
+        .iter()
+        .filter(|c| c.is_mandatory_report())
+        .count();
+    let mut summary = TrustSafetyGateSummary {
+        trust_safety_path: path.display().to_string(),
+        scanner_entries: 0,
+        mandatory_concerns_covered: 0,
+        mandatory_concerns_total: mandatory_total,
+        mandatory_concerns_missing: Vec::new(),
+        non_mandatory_concerns_uncovered: Vec::new(),
+        violations: Vec::new(),
+    };
+
+    if !path.exists() {
+        violations.push(format!("missing trust-safety.toml at {}", path.display()));
+        summary.violations = violations.clone();
+        emit_trust_safety_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let parsed: TrustSafetyToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("trust-safety.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_trust_safety_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.scanner_entries = parsed.scanner.len();
+
+    // Index scanners by concern; detect duplicate scanner_id per
+    // concern.
+    use std::collections::HashMap;
+    let mut by_concern: HashMap<trust_safety_core::ConcernKind, Vec<&str>> = HashMap::new();
+    for entry in &parsed.scanner {
+        let ids = by_concern.entry(entry.concern).or_default();
+        if ids.contains(&entry.scanner_id.as_str()) {
+            violations.push(format!(
+                "duplicate scanner_id {:?} on concern {:?}",
+                entry.scanner_id,
+                entry.concern.slug()
+            ));
+        }
+        ids.push(&entry.scanner_id);
+    }
+
+    // Coverage check per concern kind.
+    for c in all_concerns.iter() {
+        let has_scanner = by_concern.contains_key(c);
+        if c.is_mandatory_report() {
+            if has_scanner {
+                summary.mandatory_concerns_covered += 1;
+            } else {
+                summary.mandatory_concerns_missing.push(c.slug());
+                violations.push(format!(
+                    "MANDATORY-REPORT concern {:?} has no scanner (US 18 U.S.C. § 2258A)",
+                    c.slug()
+                ));
+            }
+        } else if !has_scanner {
+            summary.non_mandatory_concerns_uncovered.push(c.slug());
+        }
+    }
+
+    summary.violations = violations.clone();
+    emit_trust_safety_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_trust_safety_summary(summary: &TrustSafetyGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "trust-safety-gate: {} scanners, {}/{} mandatory-report concerns covered",
+            summary.scanner_entries,
+            summary.mandatory_concerns_covered,
+            summary.mandatory_concerns_total,
+        );
+        if !summary.mandatory_concerns_missing.is_empty() {
+            println!("MANDATORY-REPORT concerns without a scanner (legal exposure):");
+            for c in &summary.mandatory_concerns_missing {
+                println!("  - {c}");
+            }
+        }
+        if !summary.non_mandatory_concerns_uncovered.is_empty() {
+            println!("non-mandatory concerns without a scanner (operator choice):");
+            for c in &summary.non_mandatory_concerns_uncovered {
+                println!("  - {c}");
+            }
+        }
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod trust_safety_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_trust_safety(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("trust-safety.toml"), body).unwrap();
+    }
+
+    fn mandatory_scanners_toml() -> String {
+        // Cover every MANDATORY-REPORT concern (CSAM / NCIII /
+        // Extremism). Non-mandatory left out — those warn only.
+        [
+            ("csam", "photodna-2.1"),
+            ("nciii", "nciii-hash-2026"),
+            ("extremism", "gifct-2026"),
+        ]
+        .iter()
+        .map(|(c, id)| {
+            format!(
+                "[[scanner]]\nconcern = \"{}\"\nscanner_id = \"{}\"\n",
+                c, id
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_trust_safety_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_trust_safety(td.path(), "this is not toml [[[");
+        let code = run_trust_safety_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn all_mandatory_covered_exits_0() {
+        let td = TempDir::new().unwrap();
+        write_trust_safety(td.path(), &mandatory_scanners_toml());
+        let code = run_trust_safety_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn missing_csam_scanner_exits_1() {
+        let td = TempDir::new().unwrap();
+        // Cover NCIII + Extremism but NOT CSAM.
+        let body = "[[scanner]]\nconcern = \"nciii\"\nscanner_id = \"x\"\n\n[[scanner]]\nconcern = \"extremism\"\nscanner_id = \"y\"\n";
+        write_trust_safety(td.path(), body);
+        let code = run_trust_safety_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn missing_non_mandatory_scanner_is_warning_not_violation() {
+        let td = TempDir::new().unwrap();
+        // Cover only the mandatory ones; spam / phishing / etc.
+        // are uncovered. Should still exit 0.
+        write_trust_safety(td.path(), &mandatory_scanners_toml());
+        let code = run_trust_safety_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn duplicate_scanner_id_per_concern_exits_1() {
+        let td = TempDir::new().unwrap();
+        let mut body = mandatory_scanners_toml();
+        // Add a duplicate scanner_id for CSAM.
+        body.push_str("\n[[scanner]]\nconcern = \"csam\"\nscanner_id = \"photodna-2.1\"\n");
+        write_trust_safety(td.path(), &body);
+        let code = run_trust_safety_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn different_scanner_ids_per_concern_are_ok() {
+        let td = TempDir::new().unwrap();
+        let mut body = mandatory_scanners_toml();
+        // Add a SECOND scanner for CSAM with a different id —
+        // operator using multiple scanners is intentional defense.
+        body.push_str("\n[[scanner]]\nconcern = \"csam\"\nscanner_id = \"neuralhash-1.0\"\n");
+        write_trust_safety(td.path(), &body);
+        let code = run_trust_safety_validate(td.path(), false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
     }
 }

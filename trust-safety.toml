@@ -1,0 +1,68 @@
+# PlausiDen-Forge trust + safety scanner coverage.
+#
+# Projected through trust-safety-core (T75) by
+# `forge trust-safety validate` (T91 second wiring). Every
+# mandatory-report ConcernKind (CSAM / NCIII / Extremism) MUST
+# have ≥1 scanner declared — the gate exits non-zero on a missing
+# mandatory-report concern.
+#
+# Non-mandatory concerns (phishing / spam / sanctions / self-harm /
+# malware / ip-violation / hate-speech) are operator-choice;
+# missing entries surface as warnings without gating the build.
+#
+# Scanner backends listed here are typed contract placeholders.
+# Real impls land in downstream trust-safety-* crates per the
+# SafetyScanner trait (T75).
+
+# ============================================================
+# MANDATORY-REPORT concerns
+#
+# CSAM:      US 18 U.S.C. § 2258A + EU CSAM Regulation
+# NCIII:     state laws (revenge porn / non-consensual intimate
+#            imagery)
+# EXTREMISM: terrorism-content removal under various national
+#            laws (e.g. UK Online Safety Act, EU TCO regulation)
+# ============================================================
+
+[[scanner]]
+concern = "csam"
+scanner_id = "photodna-2.1"
+# Microsoft PhotoDNA perceptual hashing against the NCMEC hash
+# corpus. Real impl lands in trust-safety-csam-photodna crate.
+
+[[scanner]]
+concern = "nciii"
+scanner_id = "stopncii-2026"
+# StopNCII.org hash matching for non-consensual intimate imagery.
+
+[[scanner]]
+concern = "extremism"
+scanner_id = "gifct-hash-2026"
+# Global Internet Forum to Counter Terrorism (GIFCT) hash
+# database matching.
+
+# ============================================================
+# Non-mandatory concerns
+#
+# Listed because the platform-default audience benefits from
+# defense-in-depth, but the gate doesn't require them. Operators
+# running invite-only / closed audiences may omit any of these
+# without violating the gate.
+# ============================================================
+
+[[scanner]]
+concern = "phishing"
+scanner_id = "phishtank-2026-05"
+# PhishTank-feed URL classifier (refreshed monthly).
+
+[[scanner]]
+concern = "malware"
+scanner_id = "clamav-bundled"
+# Bundled ClamAV signature database for upload scanning
+# (paired with forms-core's virus_scan_required default).
+
+[[scanner]]
+concern = "sanctions"
+scanner_id = "ofac-sdn-2026-05"
+# OFAC Specially Designated Nationals + EU sanctions + UK
+# financial-sanctions list lookups.
