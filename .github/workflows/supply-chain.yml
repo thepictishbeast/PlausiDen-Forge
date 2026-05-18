@@ -138,25 +138,40 @@ jobs:
           fi
 
       - name: Emit CycloneDX 1.5 SBOM
+        # With `--all`, cargo-cyclonedx writes one SBOM per
+        # workspace member into each crate's own directory (e.g.
+        # `crates/forge-cli/sbom-forge.cdx.json`). The earlier
+        # `path: "*.cdx.json"` glob only checked the repo root,
+        # so upload-artifact found nothing + the SLSA attest
+        # step was skipped silently. Discover files anywhere in
+        # the tree + log them so the workflow can't fail-quiet
+        # again.
         run: |
           cargo cyclonedx --format json --spec-version 1.5 \
             --all --override-filename sbom-forge.cdx
-          ls -la *.cdx.json || true
+          echo "--- SBOMs emitted ---"
+          find . -name "sbom-forge.cdx.json" -not -path "./target/*" -ls
+          count=$(find . -name "sbom-forge.cdx.json" -not -path "./target/*" | wc -l)
+          echo "--- total: ${count} ---"
+          # Fail loudly rather than silently if cargo-cyclonedx
+          # produced nothing.
+          test "${count}" -gt 0
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0 (T74 SHA pin)
         with:
           name: sbom-forge-cyclonedx
-          path: "*.cdx.json"
-          if-no-files-found: warn
+          path: "**/sbom-forge.cdx.json"
+          if-no-files-found: error
           retention-days: 90
 
       - name: Attest SBOM provenance (SLSA-style)
-        # Generates a sigstore-signed attestation tying the SBOM
-        # artifact to this workflow run. Verifiable via:
-        #   gh attestation verify sbom-forge.cdx.json \
+        # Generates a sigstore-signed attestation tying every
+        # per-crate SBOM artifact to this workflow run. Verifiable
+        # via:
+        #   gh attestation verify <sbom>.json \
         #       --repo thepictishbeast/PlausiDen-Forge
         uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb # v2.1.0 (T74 SHA pin)
-        if: ${{ hashFiles('*.cdx.json') != '' }}
+        if: ${{ hashFiles('**/sbom-forge.cdx.json') != '' }}
         with:
-          subject-path: "*.cdx.json"
+          subject-path: "**/sbom-forge.cdx.json"
