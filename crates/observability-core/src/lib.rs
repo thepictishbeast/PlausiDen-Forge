@@ -682,4 +682,23 @@ mod tests {
         let s = serde_json::to_string(&v).unwrap();
         assert!(s.contains("\"kind\":\"string\""));
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [SpanStatus::Unset, SpanStatus::Ok, SpanStatus::Error] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            SpanKind::Internal,
+            SpanKind::Server,
+            SpanKind::Client,
+            SpanKind::Producer,
+            SpanKind::Consumer,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

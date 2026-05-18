@@ -664,4 +664,19 @@ mod tests {
         let back: Tier = serde_json::from_str(&j).unwrap();
         assert_eq!(t, back);
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            PaywallStrategy::Open,
+            PaywallStrategy::Hard,
+            PaywallStrategy::Metered,
+            PaywallStrategy::TimeBased,
+            PaywallStrategy::Preview,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

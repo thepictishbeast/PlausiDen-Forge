@@ -536,4 +536,28 @@ mod tests {
         assert_eq!(b.observed_fail_ratio, 0.0);
         assert!((b.remaining - 0.10).abs() < 1e-9);
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            StatusLevel::Ok,
+            StatusLevel::Degraded,
+            StatusLevel::PartialOutage,
+            StatusLevel::MajorOutage,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            IncidentSeverity::Sev1,
+            IncidentSeverity::Sev2,
+            IncidentSeverity::Sev3,
+            IncidentSeverity::Sev4,
+            IncidentSeverity::Sev5,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

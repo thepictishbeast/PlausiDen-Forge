@@ -465,4 +465,37 @@ mod tests {
         let j = serde_json::to_string(&usd).unwrap();
         assert_eq!(j, "\"USD\"");
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            ReservationState::Held,
+            ReservationState::Committed,
+            ReservationState::Released,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            TaxJurisdiction::EuVat,
+            TaxJurisdiction::UkVat,
+            TaxJurisdiction::UsSalesTax,
+            TaxJurisdiction::CaGst,
+            TaxJurisdiction::AuGst,
+            TaxJurisdiction::None,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            SubscriptionCadence::Weekly,
+            SubscriptionCadence::Monthly,
+            SubscriptionCadence::Quarterly,
+            SubscriptionCadence::Annual,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

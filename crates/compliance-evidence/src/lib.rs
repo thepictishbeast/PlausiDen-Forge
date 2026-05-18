@@ -44,6 +44,7 @@ pub enum ControlFramework {
     /// AICPA SOC 2 Type II.
     Soc2,
     /// ISO/IEC 27001:2022.
+    #[serde(rename = "iso-27001")]
     Iso27001,
 }
 
@@ -607,6 +608,39 @@ mod tests {
         let mut seen = std::collections::HashSet::new();
         for k in kinds {
             assert!(seen.insert(k.slug()));
+        }
+    }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [ControlFramework::Soc2, ControlFramework::Iso27001] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            EvidenceKind::Attestation,
+            EvidenceKind::AuditLogEntry,
+            EvidenceKind::PolicyDocument,
+            EvidenceKind::ConfigSnapshot,
+            EvidenceKind::DrDrillResult,
+            EvidenceKind::IncidentEntry,
+            EvidenceKind::Sbom,
+            EvidenceKind::PentestReport,
+            EvidenceKind::VendorAssessment,
+            EvidenceKind::TrainingRecord,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            ReadinessStatus::Ready,
+            ReadinessStatus::Partial,
+            ReadinessStatus::Missing,
+            ReadinessStatus::Stale,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
         }
     }
 }
