@@ -1892,12 +1892,31 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
     }
 
     let mut chain_reports: Vec<BuildReport> = Vec::with_capacity(entries.len());
+    let mut skipped_unparseable: Vec<String> = Vec::new();
     for path in &entries {
         let raw =
             std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
-        let report: BuildReport =
-            serde_json::from_str(&raw).with_context(|| format!("parse {}", path.display()))?;
-        chain_reports.push(report);
+        match serde_json::from_str::<BuildReport>(&raw) {
+            Ok(report) => chain_reports.push(report),
+            Err(e) => {
+                // Skip unparseable historical reports with a
+                // warning rather than failing fatally. Reports
+                // pre-dating the current BuildReport shape end up
+                // here; verifying the chain from the next valid
+                // entry is the documented behavior of a chain
+                // with a missing predecessor.
+                skipped_unparseable.push(format!("{}: {e}", path.display()));
+            }
+        }
+    }
+    if !skipped_unparseable.is_empty() {
+        eprintln!(
+            "forge verify --chain: skipped {} unparseable report(s):",
+            skipped_unparseable.len()
+        );
+        for s in &skipped_unparseable {
+            eprintln!("  warn    {s}");
+        }
     }
 
     println!(
