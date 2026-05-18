@@ -390,4 +390,34 @@ mod tests {
     fn palette_mode_default_is_commands() {
         assert_eq!(PaletteMode::default(), PaletteMode::Commands);
     }
+
+    // T97: slug-vs-serde-wire regression guard. ZoomLevel /
+    // InspectorMode / PaletteMode are scalar enums; AiBarState
+    // is internally-tagged with struct variants so its serde
+    // form is an object rather than a tag-string.
+    #[test]
+    fn slug_matches_serde_wire_across_scalar_enums() {
+        for v in [ZoomLevel::Overview, ZoomLevel::Page, ZoomLevel::Detail] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            InspectorMode::Hidden,
+            InspectorMode::Minimal,
+            InspectorMode::Full,
+            InspectorMode::Floating,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            PaletteMode::Commands,
+            PaletteMode::Search,
+            PaletteMode::Navigation,
+            PaletteMode::Ai,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

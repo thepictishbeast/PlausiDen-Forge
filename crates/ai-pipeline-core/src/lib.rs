@@ -516,4 +516,20 @@ mod tests {
         let r: Result<Pipeline, _> = serde_json::from_str(bad);
         assert!(r.is_err());
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            Stage::Brief,
+            Stage::Ia,
+            Stage::Wireframe,
+            Stage::Content,
+            Stage::Tokens,
+            Stage::Audit,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

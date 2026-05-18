@@ -84,6 +84,7 @@ pub enum ComplianceRegime {
     /// Turkish KVKK.
     Kvkk,
     /// Russian Federal Law on Personal Data (152-FZ).
+    #[serde(rename = "ru-152fz")]
     Ru152fz,
     /// Korean PIPA.
     KrPipa,
@@ -177,6 +178,7 @@ pub enum PaymentProvider {
     /// Google Pay.
     GooglePay,
     /// Yandex.Money / YooMoney (Russia).
+    #[serde(rename = "yoomoney")]
     YooMoney,
     /// PIX (Brazil instant payment).
     Pix,
@@ -690,5 +692,70 @@ mod tests {
         assert_eq!(url_encode("a b"), "a%20b");
         assert_eq!(url_encode("a/b"), "a%2Fb");
         assert_eq!(url_encode("a-_.~"), "a-_.~");
+    }
+
+    // T97: slug-vs-serde-wire regression guard.
+    // ComplianceRegime + PaymentProvider have many variants;
+    // Ru152fz (digit boundary) is a known-bug candidate; some
+    // payment providers (YooMoney etc.) likely have CamelCase
+    // boundaries the kebab transform splits differently from
+    // the slug.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            ComplianceRegime::Gdpr,
+            ComplianceRegime::Ccpa,
+            ComplianceRegime::Lgpd,
+            ComplianceRegime::Pipl,
+            ComplianceRegime::Popia,
+            ComplianceRegime::App,
+            ComplianceRegime::Pipeda,
+            ComplianceRegime::Kvkk,
+            ComplianceRegime::Ru152fz,
+            ComplianceRegime::KrPipa,
+            ComplianceRegime::JpAppi,
+            ComplianceRegime::InDpdp,
+            ComplianceRegime::UkDpa,
+            ComplianceRegime::None,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            PaymentProvider::Stripe,
+            PaymentProvider::Paypal,
+            PaymentProvider::Alipay,
+            PaymentProvider::WechatPay,
+            PaymentProvider::Unionpay,
+            PaymentProvider::Mercadopago,
+            PaymentProvider::Razorpay,
+            PaymentProvider::Paytm,
+            PaymentProvider::Klarna,
+            PaymentProvider::Ideal,
+            PaymentProvider::Sepa,
+            PaymentProvider::BankTransfer,
+            PaymentProvider::ApplePay,
+            PaymentProvider::GooglePay,
+            PaymentProvider::YooMoney,
+            PaymentProvider::Pix,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            SearchEngine::Google,
+            SearchEngine::Bing,
+            SearchEngine::Duckduckgo,
+            SearchEngine::Baidu,
+            SearchEngine::Yandex,
+            SearchEngine::Naver,
+            SearchEngine::Daum,
+            SearchEngine::Seznam,
+            SearchEngine::YahooJp,
+            SearchEngine::Sogou,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
     }
 }

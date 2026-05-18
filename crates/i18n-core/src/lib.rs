@@ -526,4 +526,15 @@ mod tests {
         assert_eq!(format_select("masculine", &forms), Some("Il"));
         assert_eq!(format_select("neuter", &forms), Some("They"));
     }
+
+    // T97: slug-vs-serde-wire regression guard. TextDirection
+    // is the only kebab-renamed enum with a slug() helper in
+    // this crate.
+    #[test]
+    fn slug_matches_serde_wire_for_text_direction() {
+        for v in [TextDirection::Ltr, TextDirection::Rtl] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

@@ -742,4 +742,72 @@ mod tests {
             assert!(seen.insert(p.slug()));
         }
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            PlanTier::Free,
+            PlanTier::Starter,
+            PlanTier::Pro,
+            PlanTier::Enterprise,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            PlanFeature::CustomDomain,
+            PlanFeature::MultiRegion,
+            PlanFeature::AltNetworkTargets,
+            PlanFeature::Sso,
+            PlanFeature::AuditExport,
+            PlanFeature::Sla,
+            PlanFeature::DataIsolatedTenancy,
+            PlanFeature::FullyIsolatedTenancy,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            SubscriptionStatus::Trialing,
+            SubscriptionStatus::Active,
+            SubscriptionStatus::PastDue,
+            SubscriptionStatus::Canceled,
+            SubscriptionStatus::Unpaid,
+            SubscriptionStatus::Incomplete,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            OnboardingStep::Signup,
+            OnboardingStep::PlanPick,
+            OnboardingStep::Payment,
+            OnboardingStep::Verify,
+            OnboardingStep::Ready,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            AdminRole::Owner,
+            AdminRole::Admin,
+            AdminRole::Editor,
+            AdminRole::Viewer,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            AdminPermission::ManageBilling,
+            AdminPermission::ManageMembers,
+            AdminPermission::ManageDeployTargets,
+            AdminPermission::PublishContent,
+            AdminPermission::EditContent,
+            AdminPermission::ViewAudit,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }
