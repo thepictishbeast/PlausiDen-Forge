@@ -74,7 +74,7 @@ impl ImporterKind {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum Block {
-    /// Plain paragraph (semantic <p>).
+    /// Plain paragraph (semantic `<p>`).
     Paragraph {
         /// Paragraph text. HTML inline markup (em/strong/code/a)
         /// is preserved verbatim; block-level markup is rejected

@@ -1,6 +1,5 @@
 //! Bridge from the app-level `backends.toml` schema into the
-//! manifest-core [`BackendDescriptor`](crate::BackendDescriptor)
-//! surface.
+//! manifest-core [`BackendDescriptor`] surface.
 //!
 //! The existing `backends.toml` (used by `forge-phases::phantom_button`
 //! and `forge-phases::backend_coverage`) carries app-specific data:

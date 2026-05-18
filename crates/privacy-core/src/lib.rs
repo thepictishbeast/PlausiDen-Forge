@@ -303,7 +303,7 @@ impl RetentionPolicy {
 /// Legal-by-default policy: [`ConsentScope::StrictlyNecessary`]
 /// is the only scope active without explicit opt-in. Every
 /// other scope requires unambiguous, specific, informed,
-/// freely-given consent — see [`Consent::default_state`].
+/// freely-given consent — see [`ConsentScope::default_state`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ConsentScope {

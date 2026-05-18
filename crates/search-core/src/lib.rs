@@ -14,7 +14,7 @@
 //! Cross-cutting concerns covered:
 //!   * [`IndexDoc`] — the typed search document shape
 //!   * [`Query`] — typo tolerance + facets + filter
-//!   * [`SearchAnalytics`] — typed click + zero-result tracking
+//!   * [`AnalyticsEvent`] — typed click + zero-result tracking
 //!   * [`ContentGap`] — derived from zero-result queries for the
 //!     operator's content-strategy dashboard
 //!

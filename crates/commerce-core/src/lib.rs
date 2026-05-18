@@ -20,7 +20,7 @@
 //! - [`OnboardingState`]   — operator's current position
 //! - [`AdminRole`]         — Owner / Admin / Editor / Viewer
 //! - [`AdminPermission`]   — closed enum of permission slugs
-//! - [`AdminAcl`]          — role → permission set
+//! - [`AdminRole`] × [`AdminPermission`] — role → permission set
 //!
 //! Per `super_society_tech_stack`: every customer-visible billing
 //! decision is computed from typed inputs. No "we think the

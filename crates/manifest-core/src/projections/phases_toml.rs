@@ -1,5 +1,5 @@
 //! Bridge from the workspace-level `phases.toml` schema into the
-//! manifest-core [`PhaseDescriptor`](crate::PhaseDescriptor) surface.
+//! manifest-core [`PhaseDescriptor`] surface.
 //!
 //! Parallel to [`super::backends_toml`] but for Forge build phases.
 //! The phases.toml file declares which phases ship in the Forge
