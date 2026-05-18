@@ -110,15 +110,28 @@ pub enum ThemeFinding {
     /// A `var(--loom-color-X)` reference exists somewhere in
     /// skin.css but the base `:root` block has no definition for
     /// X. STRICT — first-paint failure on the default theme.
-    UndefinedRef { token: TokenName },
+    UndefinedRef {
+        /// The undefined token referenced.
+        token: TokenName,
+    },
     /// A named theme block does not declare a token that base
     /// declares. Falls back to base — usually fine, sometimes a
     /// readability bug. WARN.
-    MissingFromTheme { theme: String, token: TokenName },
+    MissingFromTheme {
+        /// Theme that's missing the token.
+        theme: String,
+        /// Token absent from the theme.
+        token: TokenName,
+    },
     /// A named theme declares a token that base lacks. Orphaned
     /// at the cascade level. WARN — base needs a default so the
     /// fallback works on other themes.
-    OrphanInTheme { theme: String, token: TokenName },
+    OrphanInTheme {
+        /// Theme that introduced the orphan.
+        theme: String,
+        /// Token declared in the theme but absent from base.
+        token: TokenName,
+    },
 }
 
 impl ThemeFinding {

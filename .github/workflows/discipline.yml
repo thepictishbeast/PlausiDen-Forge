@@ -1,21 +1,20 @@
 name: discipline
 
-# T92: super-society discipline gate.
+# T92 + T96: super-society discipline gate (STRICT mode).
 #
 # Per `super-society-tech-stack`, every PlausiDen-Forge crate scores
 # on six axes simultaneously: fast + reliable + robust + secure +
 # anonymous + private. This workflow runs `scripts/discipline-
-# check.sh` against the workspace on every push + PR, printing a
-# per-crate compliance matrix as a continuously-visible scoreboard.
+# check.sh --strict` against the workspace on every push + PR.
 #
-# Currently runs in *advisory* mode (no --strict flag): the script
-# exits 0 even with violations so the gate doesn't block PRs while
-# pre-existing crates (forge-cli, forge-core, forge-phases, forge-
-# replay, forge-serve) get their #[forbid(unsafe_code)] +
-# #[deny(missing_docs)] + tests added.
+# Currently in *strict* mode: any violation gates the workflow.
+# (Advisory mode used through T96; flipped to strict in 9c7053d
+# after forge-cli / forge-core / forge-phases / forge-replay /
+# forge-serve all landed their forbid(unsafe_code) +
+# deny(missing_docs) + tests.)
 #
-# Once those crates clean up, flip this workflow to --strict and
-# the gate becomes mandatory.
+# Adding a new crate that doesn't meet the four axes (secure /
+# docs / tests / publish) will fail this gate at PR time.
 
 on:
   push:
@@ -43,9 +42,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Run discipline check (advisory)
+      - name: Run discipline check (strict)
         run: |
-          ./scripts/discipline-check.sh . | tee discipline-summary.json
+          ./scripts/discipline-check.sh --strict . | tee discipline-summary.json
           # Print the verdict prominently for the action summary.
           echo "## Discipline gate" >>"$GITHUB_STEP_SUMMARY"
           echo '```json' >>"$GITHUB_STEP_SUMMARY"

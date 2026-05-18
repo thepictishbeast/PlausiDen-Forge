@@ -11,7 +11,11 @@
 //! phase_crawl. After both land, T54 deletes forge.sh.
 
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
+// T96 cleanup: discipline gate (T92) requires deny-not-warn so a
+// missing doc on a new public item fails CI at PR time. Existing
+// warn-level violations (26 fields across 4 files) cleaned up in
+// the same commit.
+#![deny(missing_docs)]
 
 pub mod a11y_landmarks;
 pub mod annotation_review;

@@ -28,23 +28,36 @@ const PHASE: &str = "theme_contrast";
 pub enum ThemeContrastFinding {
     /// loom binary not found at any known location. WARN —
     /// devs without it shouldn't be blocked from building.
-    LoomMissing { searched: Vec<PathBuf> },
+    LoomMissing {
+        /// Paths the resolver looked in before giving up.
+        searched: Vec<PathBuf>,
+    },
     /// No skin file. WARN.
-    SkinMissing { searched: Vec<PathBuf> },
+    SkinMissing {
+        /// Paths the resolver looked in before giving up.
+        searched: Vec<PathBuf>,
+    },
     /// loom theme contrast errored unexpectedly (exit ≥ 2). WARN.
     LoomErrored {
+        /// Process exit code returned by loom.
         exit_code: i32,
+        /// First ~256 chars of stderr.
         stderr_excerpt: String,
     },
     /// One specific (theme, pair) is below threshold. STRICT.
     PairBelowThreshold {
+        /// Theme that failed contrast.
         theme: String,
+        /// Token pair that failed (e.g. `fg/bg`).
         pair: String,
+        /// Computed contrast ratio, as the string loom emits.
         ratio: String,
     },
 }
 
 impl ThemeContrastFinding {
+    /// Render to a typed forge finding. Severity is fixed per
+    /// variant; consumers can't accidentally upgrade/downgrade.
     pub fn as_finding(&self) -> Finding {
         match self {
             Self::LoomMissing { searched } => {
@@ -167,6 +180,8 @@ pub fn parse_contrast_output(text: &str) -> Vec<ThemeContrastFinding> {
     hits
 }
 
+/// Forge phase that runs the loom theme-contrast audit and
+/// projects its output into typed [`ThemeContrastFinding`]s.
 #[derive(Debug, Default)]
 pub struct ThemeContrastPhase;
 

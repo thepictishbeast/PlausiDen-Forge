@@ -110,24 +110,40 @@ impl AxisName {
 pub enum CrawlFinding {
     /// Crawler dir not found at any known location. WARN —
     /// devs without the sibling repo shouldn't be blocked.
-    CrawlerMissing { searched: Vec<PathBuf> },
+    CrawlerMissing {
+        /// Paths the resolver looked in before giving up.
+        searched: Vec<PathBuf>,
+    },
     /// Journey JSON file missing. WARN.
-    JourneyMissing { path: PathBuf },
+    JourneyMissing {
+        /// Path the runner expected.
+        path: PathBuf,
+    },
     /// Dev server at 127.0.0.1:8123 didn't respond. WARN —
     /// missing server isn't a site regression, it's an operator
     /// concern.
     DevServerDown,
     /// Crawler exited non-zero with no parseable axis breakdown.
     /// STRICT — build cannot trust the runtime state.
-    OpaqueFailure { exit_code: i32 },
+    OpaqueFailure {
+        /// Process exit code returned by the crawler.
+        exit_code: i32,
+    },
     /// Crawler errored (exit ≥ 2). WARN — runtime audit could
     /// not complete.
     CrawlerErrored {
+        /// Process exit code.
         exit_code: i32,
+        /// First ~256 chars of stderr; rendered into the finding.
         stderr_excerpt: String,
     },
     /// One specific axis regressed. STRICT.
-    AxisRegression { axis: AxisName, new_strict: u32 },
+    AxisRegression {
+        /// Which audit axis is over budget.
+        axis: AxisName,
+        /// New strict-violation count on that axis.
+        new_strict: u32,
+    },
 }
 
 impl CrawlFinding {

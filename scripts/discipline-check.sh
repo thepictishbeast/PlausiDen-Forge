@@ -114,10 +114,14 @@ for crate_dir in "${ROOT}"/crates/*/; do
         docs="no-src"
     fi
 
-    # reliable (tests): at least one test
+    # reliable (tests): at least one test anywhere in src/ or
+    # tests/. Previously only checked lib.rs/main.rs which
+    # missed crates that put their tests in submodule files
+    # (e.g. forge-phases has #[cfg(test)] blocks in
+    # carbon_budget.rs / csp.rs / link_check.rs / etc.).
     tests="ok"
-    if [ -f "${src}" ]; then
-        if ! grep -qE '#\[cfg\(test\)\]|#\[test\]' "${src}" \
+    if [ -d "${crate_dir}src" ]; then
+        if ! grep -rqE '#\[cfg\(test\)\]|#\[test\]' "${crate_dir}src" \
             && [ ! -d "${crate_dir}tests" ]; then
             tests="MISS"
             mandatory_violations=$((mandatory_violations + 1))

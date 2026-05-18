@@ -36,12 +36,22 @@ pub enum ValidateCmsFinding {
     NoCmsDir,
     /// `loom` binary couldn't be found at any known location.
     /// STRICT — without it, the gate is open.
-    LoomMissing { searched: Vec<PathBuf> },
+    LoomMissing {
+        /// Paths the resolver looked in.
+        searched: Vec<PathBuf>,
+    },
     /// One CMS file failed validation. STRICT.
-    FileInvalid { path: String, message: String },
+    FileInvalid {
+        /// Relative path of the offending file.
+        path: String,
+        /// Diagnostic message from loom.
+        message: String,
+    },
     /// `loom validate` errored unexpectedly (exit ≥ 2). STRICT.
     LoomErrored {
+        /// Process exit code returned by loom.
         exit_code: i32,
+        /// First ~256 chars of stderr.
         stderr_excerpt: String,
     },
 }
