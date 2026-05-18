@@ -88,7 +88,27 @@ impl Phase for RenderPhase {
         // dev server actually serves) stayed stale. With
         // write_canonical=true, `forge build` rebuilds the served
         // pages in one step.
-        let write_canonical = forge_toml_render_write_canonical(&ctx.root);
+        // T37 v3.b + T70c: read forge.toml once to extract all render settings.
+        let forge_toml_path = ctx.root.join("forge.toml");
+        let forge_toml_content = std::fs::read_to_string(&forge_toml_path).ok();
+        let forge_toml_parsed: Option<toml::Value> =
+            forge_toml_content.and_then(|c| c.parse().ok());
+
+        let write_canonical = forge_toml_parsed
+            .as_ref()
+            .and_then(|p| p.get("render"))
+            .and_then(|r| r.get("write_canonical"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let toml_theme = forge_toml_parsed
+            .as_ref()
+            .and_then(|p| p.get("render"))
+            .and_then(|r| r.get("theme"))
+            .and_then(|t| t.as_str())
+            .filter(|t| matches!(*t, "light" | "dark"))
+            .map(|t| t.to_owned());
+
         let out_dir = if write_canonical {
             ctx.static_dir.clone()
         } else {
@@ -155,8 +175,7 @@ impl Phase for RenderPhase {
             //
             // Closed allow-list ("light"|"dark") at every layer.
             let env_theme = std::env::var("FORGE_THEME").ok();
-            let toml_theme = forge_toml_theme(&ctx.root);
-            let theme_owned = env_theme.or(toml_theme);
+            let theme_owned = env_theme.or(toml_theme.clone());
             let theme_ref = theme_owned
                 .as_deref()
                 .filter(|t| matches!(*t, "light" | "dark"));
@@ -190,11 +209,19 @@ impl Phase for RenderPhase {
         // the HTML pages use. Failures surface as BuildError::Io
         // (no silent skip).
         let skin_path = ctx.static_dir.join("loom-skin.css");
-        if let Err(e) = atomic_write(&skin_path, loom_tokens::SKIN_CSS.as_bytes()) {
-            return Err(BuildError::Io {
-                context: format!("render write {}", skin_path.display()),
-                source: e,
-            });
+        let skin_bytes = loom_tokens::SKIN_CSS.as_bytes();
+        let should_write_skin = match std::fs::read(&skin_path) {
+            Ok(existing) => existing != skin_bytes,
+            Err(_) => true, // Missing or unreadable
+        };
+
+        if should_write_skin {
+            if let Err(e) = atomic_write(&skin_path, skin_bytes) {
+                return Err(BuildError::Io {
+                    context: format!("render write {}", skin_path.display()),
+                    source: e,
+                });
+            }
         }
 
         tracing::info!(

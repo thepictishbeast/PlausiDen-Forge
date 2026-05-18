@@ -141,26 +141,12 @@ pub struct Reported(());
 pub struct DiscoveredArtifacts {
     /// CMS page TOML files.
     pub cms_pages: Vec<PathBuf>,
-    /// Static assets (images, fonts, downloads).
-    pub static_assets: Vec<PathBuf>,
-    /// Theme tokens / skin sources.
-    pub theme_sources: Vec<PathBuf>,
-    /// Template / Maud view sources.
-    pub templates: Vec<PathBuf>,
 }
 
 /// What parsing emits: typed in-memory representations of the
 /// discovered sources, ready for the renderer.
-///
-/// Kept opaque-ish: phase implementors can stash whatever they
-/// want here via `parse_payload` (a serializable JSON blob). The
-/// pipeline core stays decoupled from per-phase data shapes.
 #[derive(Debug, Default, Clone)]
 pub struct ParsedArtifacts {
-    /// Number of CMS pages successfully parsed.
-    pub page_count: usize,
-    /// Number of theme tokens registered.
-    pub token_count: usize,
     /// Phase-specific opaque payload (JSON). Defaults to `null`.
     pub parse_payload: serde_json::Value,
 }
@@ -170,14 +156,6 @@ pub struct ParsedArtifacts {
 pub struct RenderedArtifacts {
     /// Output directory (typically `dist/`).
     pub out_dir: PathBuf,
-    /// Emitted HTML files.
-    pub html_files: Vec<PathBuf>,
-    /// Emitted CSS files.
-    pub css_files: Vec<PathBuf>,
-    /// Emitted JS files.
-    pub js_files: Vec<PathBuf>,
-    /// Hashed-asset filename map: `{logical → physical}`.
-    pub asset_map: Vec<(String, String)>,
 }
 
 /// What audit collects (in addition to the pipeline-wide
@@ -300,7 +278,7 @@ impl Pipeline<Discovered> {
         // SAFETY: invariant of the Discovered marker.
         self.discovered
             .as_ref()
-            .expect("Discovered marker invariant: discovered.is_some()")
+            .unwrap_or_else(|| panic!("Discovered marker invariant: discovered.is_some()"))
     }
 
     /// Run the parse stage.
