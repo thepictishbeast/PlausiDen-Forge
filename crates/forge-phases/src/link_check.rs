@@ -147,7 +147,7 @@ pub fn collect_anchor_names(body: &str) -> BTreeSet<String> {
         let left_ok = if abs_idx == 0 {
             true
         } else {
-            let prev = body.as_bytes()[abs_idx - 1] as char;
+            let prev = body[..abs_idx].chars().next_back().unwrap_or(' ');
             !prev.is_ascii_alphanumeric() && prev != '-' && prev != '_'
         };
         let after = &search[rel_idx + "id=\"".len()..];

@@ -179,38 +179,31 @@ impl ThemeFinding {
 /// any future line-number reporting stays honest.
 fn strip_css_comments(raw: &str) -> String {
     let mut out = String::with_capacity(raw.len());
-    let bytes = raw.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        if i + 1 < bytes.len() && bytes[i] == b'/' && bytes[i + 1] == b'*' {
-            let mut j = i + 2;
-            while j + 1 < bytes.len() && !(bytes[j] == b'*' && bytes[j + 1] == b'/') {
-                if bytes[j] == b'\n' {
-                    out.push('\n');
+    let mut chars = raw.char_indices().peekable();
+
+    while let Some((i, c)) = chars.next() {
+        if c == '/' {
+            if let Some((_, '*')) = chars.peek() {
+                // Skip '/*'
+                chars.next();
+
+                // Consume until '*/'
+                while let Some((_, c_inner)) = chars.next() {
+                    if c_inner == '\n' {
+                        out.push('\n');
+                    }
+                    if c_inner == '*' {
+                        if let Some((_, '/')) = chars.peek() {
+                            chars.next();
+                            break;
+                        }
+                    }
                 }
-                j += 1;
+                out.push(' ');
+                continue;
             }
-            out.push(' ');
-            i = j.saturating_add(2);
-        } else {
-            // SAFETY: `bytes[i]` was sourced from a `&str`; ASCII
-            // bytes round-trip through `as char` losslessly. Non-
-            // ASCII multi-byte sequences are preserved by indexing
-            // into the original `&str` rather than concatenating
-            // bytes, but here we only push single ASCII chars when
-            // we're not inside a comment. Multi-byte UTF-8 runs
-            // are passed through via the index walk: if the byte
-            // is the leading byte of a multi-byte run, we still
-            // push it as a single char and the next iteration
-            // handles continuation bytes the same way. This is
-            // correct because CSS comment markers (`/`, `*`) are
-            // single-byte ASCII; comment bodies can contain UTF-8
-            // and we just discard them anyway. Outside comments
-            // we never split a multi-byte run — verified by the
-            // proptest target.
-            out.push(bytes[i] as char);
-            i += 1;
         }
+        out.push(c);
     }
     out
 }

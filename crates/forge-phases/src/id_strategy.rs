@@ -101,7 +101,7 @@ fn collect_attr_values(body: &str, prefix: &str) -> Vec<String> {
             let left_ok = if idx == 0 {
                 true
             } else {
-                let prev = search.as_bytes()[idx - 1] as char;
+                let prev = search[..idx].chars().next_back().unwrap_or(' ');
                 !prev.is_ascii_alphanumeric() && prev != '-' && prev != '_'
             };
             if left_ok {
