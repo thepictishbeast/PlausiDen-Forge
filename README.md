@@ -219,6 +219,43 @@ npm run audit:rust:tablet                # tablet viewport
                                          # = 8 combos per page (see test matrix below)
 ```
 
+## Config gates
+
+Pre-deploy validation of every operator-supplied `*.toml` against
+the typed contract crates. Each gate exits non-zero on violation
+so CI catches misconfiguration before the artifact ships.
+
+```sh
+# Run every gate at once + aggregate the verdict.
+forge config validate-all                # human-readable
+forge config validate-all --json         # CI / dashboard shape
+
+# Individual gates:
+forge privacy validate                   # privacy.toml — GDPR retention + DSAR (T76)
+forge trust-safety validate              # trust-safety.toml — CSAM / NCIII / Extremism scanner coverage (T75)
+forge domains validate                   # domains.toml — RFC 1035 FQDN + RFC 8555 ACME + HSTS preload (T86)
+forge forms validate                     # forms.toml — WCAG-required labels + RFC 8058 unsubscribe + honeypot (T81)
+forge federation validate                # federation.toml — ActivityPub + Webmention + WebSub + Nostr + AT Protocol (T79)
+forge email validate                     # email.toml — RFC 8058 marketing list-unsubscribe + DMARC (T83)
+forge commerce validate                  # commerce.toml — ISO 4217 currency + non-negative price (T84)
+forge memberships validate               # memberships.toml — kebab-case tier id + ISO 4217 currency (T85)
+
+# Manifest gate (existing — phases.toml + backends.toml):
+forge manifest validate --json           # T33 manifest-core projection check
+
+# Audit-log integrity (observability-core T69 hash-chain):
+forge audit-log verify --path reports/audit-log.json
+
+# Attestation key fingerprint (manifest-attest T64):
+forge attest fingerprint                 # operator-facing short stable id
+```
+
+Each gate emits human-readable output by default, or JSON with
+`--json` for CI ingestion. Missing `*.toml` files report
+"missing" but don't gate the umbrella — operators who want strict
+parse-shape enforcement should run individual gates with the
+relevant config required.
+
 `forge.toml` (minimal):
 ```toml
 [build]
