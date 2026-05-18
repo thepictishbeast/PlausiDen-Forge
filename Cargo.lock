@@ -573,10 +573,12 @@ dependencies = [
  "forge-phases",
  "manifest-core",
  "notify",
+ "privacy-core",
  "serde",
  "serde_json",
  "tempfile",
  "time",
+ "toml",
  "tracing",
  "tracing-subscriber",
 ]

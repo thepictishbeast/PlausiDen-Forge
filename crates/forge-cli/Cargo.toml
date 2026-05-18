@@ -1,6 +1,7 @@
 [package]
 name = "forge-cli"
 version = "0.1.0"
+publish = false  # workspace-internal; never published to crates.io
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -14,10 +15,17 @@ forge-core = { path = "../forge-core" }
 forge-phases = { path = "../forge-phases" }
 # T33: manifest-gate CLI uses the keystone types directly.
 manifest-core = { path = "../manifest-core" }
+# T91 (first wiring): privacy-core (T76) drives the new
+# `forge privacy validate` subcommand — projects privacy.toml at
+# the project root through DataCategory + LawfulBasis enums +
+# RetentionPolicy + ConsentScope to enforce GDPR-shape integrity
+# at the type level. Takes privacy-core off the orphan list.
+privacy-core = { path = "../privacy-core" }
 clap = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+toml = { workspace = true }
 time = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }

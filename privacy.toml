@@ -1,0 +1,70 @@
+# PlausiDen-Forge privacy retention policy.
+#
+# Projected through privacy-core (T76) by `forge privacy validate`
+# (T91 wiring). Every DataCategory variant MUST have at least one
+# entry — the gate exits non-zero on missing coverage.
+#
+# Lawful basis (GDPR Art. 6 mapping):
+#   consent              — Art. 6(1)(a)
+#   contract             — Art. 6(1)(b)
+#   legal-obligation     — Art. 6(1)(c)  (refuses-erasure)
+#   vital-interests      — Art. 6(1)(d)
+#   public-task          — Art. 6(1)(e)
+#   legitimate-interests — Art. 6(1)(f)
+#
+# Source-of-truth for the platform's privacy posture. Updates here
+# flow through forge-cli + the runtime retention enforcer.
+
+[[retention]]
+category = "account"
+retention_days = 2555 # 7 years post-closure; identity + auth metadata
+basis = "legal-obligation"
+note = "tax + KYC retention obligation"
+
+[[retention]]
+category = "content"
+retention_days = 3650 # 10 years; user-authored material survives session
+basis = "contract"
+note = "tenant ownership + DSAR-portability commitment"
+
+[[retention]]
+category = "audit-log"
+retention_days = 2555 # 7 years; SOC 2 + ISO 27001 control evidence
+basis = "legal-obligation"
+note = "compliance + breach-investigation window"
+
+[[retention]]
+category = "telemetry"
+retention_days = 90 # 90 days; minimal-data principle
+basis = "legitimate-interests"
+note = "perf debugging + incident review only"
+
+[[retention]]
+category = "payment"
+retention_days = 2555 # 7 years; tax authority requirements
+basis = "legal-obligation"
+note = "tax + dispute-window retention"
+
+[[retention]]
+category = "support-ticket"
+retention_days = 730 # 2 years post-resolution
+basis = "legitimate-interests"
+note = "pattern detection + repeat-issue context"
+
+[[retention]]
+category = "marketing"
+retention_days = 1095 # 3 years engagement history
+basis = "consent"
+note = "opt-in only; revocation triggers immediate purge"
+
+[[retention]]
+category = "auth"
+retention_days = 30 # short-lived session + 2FA recovery tokens
+basis = "contract"
+note = "auth-flow operation only; rotated frequently"
+
+[[retention]]
+category = "backup"
+retention_days = 90 # 90-day rolling backup window
+basis = "legitimate-interests"
+note = "disaster recovery; encrypted at rest"

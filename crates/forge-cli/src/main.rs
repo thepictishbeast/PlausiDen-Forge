@@ -189,6 +189,25 @@ enum Cmd {
         #[command(subcommand)]
         action: ManifestAction,
     },
+    /// T91 (first wiring): privacy-core gate. Loads `privacy.toml`
+    /// at the project root, projects through `privacy-core`'s
+    /// typed RetentionPolicy + DataCategory + LawfulBasis surface,
+    /// and asserts:
+    ///   * every DataCategory variant has a RetentionPolicy entry
+    ///     (no silently-uncovered data class)
+    ///   * no duplicate retention entries per category
+    ///   * every retention_days > 0
+    ///   * LegalObligation-basis entries are flagged as
+    ///     refuses-erasure (informational)
+    ///
+    /// Exit codes:
+    ///   0 — privacy.toml is internally consistent + complete
+    ///   1 — at least one gate violation
+    ///   2 — fatal (missing privacy.toml, parse error)
+    Privacy {
+        #[command(subcommand)]
+        action: PrivacyAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -276,6 +295,18 @@ enum ManifestAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum PrivacyAction {
+    /// Validate `privacy.toml` at the project root against the
+    /// typed privacy-core surface (T76).
+    Validate {
+        /// Emit a JSON-form summary of retention coverage to
+        /// stdout. Default is human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum AttestAction {
     /// Generate a fresh Ed25519 keypair and persist it under
     /// `reports/`. Refuses to overwrite an existing key without
@@ -351,6 +382,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Fix { apply }) => return run_fix(&root, *apply),
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
+        Some(Cmd::Privacy { action }) => return run_privacy(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -1848,6 +1880,303 @@ fn run_manifest_validate(root: &std::path::Path, json: bool) -> Result<ExitCode>
         Ok(ExitCode::SUCCESS)
     } else {
         Ok(ExitCode::from(1))
+    }
+}
+
+// ============================================================
+// T91 (first wiring): privacy gate — `forge privacy validate`
+//
+// Loads `privacy.toml` at the project root + projects through
+// privacy-core (T76). The TOML schema mirrors privacy-core's
+// RetentionPolicy + LawfulBasis enums:
+//
+//   [[retention]]
+//   category = "account"            # DataCategory variant
+//   retention_days = 2555           # u32, must be > 0
+//   basis = "legal-obligation"      # LawfulBasis variant
+//   note = "tax-retention 7 years"  # optional operator note
+//
+// Validation rules:
+//   * every DataCategory enum variant has ≥1 retention entry
+//   * no duplicate entries per category
+//   * retention_days > 0
+//   * LegalObligation-basis entries flagged as
+//     refuses-erasure (informational, not a violation)
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct PrivacyToml {
+    #[serde(default)]
+    retention: Vec<RetentionEntry>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct RetentionEntry {
+    category: privacy_core::DataCategory,
+    retention_days: u32,
+    basis: privacy_core::LawfulBasis,
+    // Operator-supplied audit-trail context. Preserved through
+    // TOML so operator tooling round-trips it; the validator
+    // itself doesn't consume the field.
+    #[serde(default)]
+    #[allow(dead_code)]
+    note: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct PrivacyGateSummary {
+    privacy_path: String,
+    retention_entries: usize,
+    categories_covered: usize,
+    categories_total: usize,
+    categories_missing: Vec<&'static str>,
+    legal_obligation_categories: Vec<&'static str>,
+    violations: Vec<String>,
+}
+
+fn all_data_categories() -> [privacy_core::DataCategory; 9] {
+    use privacy_core::DataCategory::*;
+    [
+        Account,
+        Content,
+        AuditLog,
+        Telemetry,
+        Payment,
+        SupportTicket,
+        Marketing,
+        Auth,
+        Backup,
+    ]
+}
+
+fn run_privacy(root: &std::path::Path, action: &PrivacyAction) -> Result<ExitCode> {
+    match action {
+        PrivacyAction::Validate { json } => run_privacy_validate(root, *json),
+    }
+}
+
+fn run_privacy_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let privacy_path = root.join("privacy.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let all_categories = all_data_categories();
+    let mut summary = PrivacyGateSummary {
+        privacy_path: privacy_path.display().to_string(),
+        retention_entries: 0,
+        categories_covered: 0,
+        categories_total: all_categories.len(),
+        categories_missing: Vec::new(),
+        legal_obligation_categories: Vec::new(),
+        violations: Vec::new(),
+    };
+
+    if !privacy_path.exists() {
+        violations.push(format!(
+            "missing privacy.toml at {}",
+            privacy_path.display()
+        ));
+        summary.violations = violations.clone();
+        emit_privacy_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s = std::fs::read_to_string(&privacy_path)
+        .with_context(|| format!("reading {}", privacy_path.display()))?;
+    let parsed: PrivacyToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("privacy.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_privacy_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.retention_entries = parsed.retention.len();
+
+    // Detect duplicates per category + zero/negative retention.
+    let mut seen: std::collections::HashSet<privacy_core::DataCategory> =
+        std::collections::HashSet::new();
+    for r in &parsed.retention {
+        if !seen.insert(r.category) {
+            violations.push(format!(
+                "duplicate retention entry for category {:?}",
+                r.category.slug()
+            ));
+        }
+        if r.retention_days == 0 {
+            violations.push(format!(
+                "retention_days = 0 for category {:?}",
+                r.category.slug()
+            ));
+        }
+        if matches!(r.basis, privacy_core::LawfulBasis::LegalObligation) {
+            summary.legal_obligation_categories.push(r.category.slug());
+        }
+    }
+
+    // Detect uncovered categories.
+    for c in all_categories.iter() {
+        if !seen.contains(c) {
+            summary.categories_missing.push(c.slug());
+            violations.push(format!("no retention policy for category {:?}", c.slug()));
+        }
+    }
+    summary.categories_covered = all_categories.len() - summary.categories_missing.len();
+
+    summary.violations = violations.clone();
+    emit_privacy_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_privacy_summary(summary: &PrivacyGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "privacy-gate: {} entries, {}/{} DataCategory variants covered",
+            summary.retention_entries, summary.categories_covered, summary.categories_total,
+        );
+        if !summary.categories_missing.is_empty() {
+            println!("missing retention policies:");
+            for c in &summary.categories_missing {
+                println!("  - {c}");
+            }
+        }
+        if !summary.legal_obligation_categories.is_empty() {
+            println!("legal-obligation categories (refuse-erasure):");
+            for c in &summary.legal_obligation_categories {
+                println!("  - {c}");
+            }
+        }
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod privacy_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_privacy(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("privacy.toml"), body).unwrap();
+    }
+
+    fn all_categories_toml() -> String {
+        // Cover every DataCategory variant — used to assert
+        // the happy path validates clean.
+        all_data_categories()
+            .iter()
+            .map(|c| {
+                format!(
+                    "[[retention]]\ncategory = \"{}\"\nretention_days = 30\nbasis = \"contract\"\n",
+                    c.slug()
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    #[test]
+    fn missing_privacy_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_privacy_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_privacy_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_privacy(td.path(), "this is not valid toml [[[");
+        let code = run_privacy_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn complete_coverage_exits_0() {
+        let td = TempDir::new().unwrap();
+        write_privacy(td.path(), &all_categories_toml());
+        let code = run_privacy_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn missing_category_exits_1() {
+        let td = TempDir::new().unwrap();
+        // Cover only Account; the other 8 categories are missing.
+        write_privacy(
+            td.path(),
+            "[[retention]]\ncategory = \"account\"\nretention_days = 30\nbasis = \"contract\"\n",
+        );
+        let code = run_privacy_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn duplicate_category_exits_1() {
+        let td = TempDir::new().unwrap();
+        let mut body = all_categories_toml();
+        body.push_str(
+            "\n[[retention]]\ncategory = \"account\"\nretention_days = 60\nbasis = \"consent\"\n",
+        );
+        write_privacy(td.path(), &body);
+        let code = run_privacy_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn zero_retention_days_exits_1() {
+        let td = TempDir::new().unwrap();
+        // Cover every category, but with retention_days = 0 on one.
+        let mut body = String::new();
+        for (i, c) in all_data_categories().iter().enumerate() {
+            let days = if i == 0 { 0 } else { 30 };
+            body.push_str(&format!(
+                "[[retention]]\ncategory = \"{}\"\nretention_days = {}\nbasis = \"contract\"\n\n",
+                c.slug(),
+                days
+            ));
+        }
+        write_privacy(td.path(), &body);
+        let code = run_privacy_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn legal_obligation_basis_is_informational_not_violation() {
+        let td = TempDir::new().unwrap();
+        // Cover every category; one of them uses legal-obligation.
+        let mut body = String::new();
+        for (i, c) in all_data_categories().iter().enumerate() {
+            let basis = if i == 0 {
+                "legal-obligation"
+            } else {
+                "contract"
+            };
+            body.push_str(&format!(
+                "[[retention]]\ncategory = \"{}\"\nretention_days = 30\nbasis = \"{}\"\n\n",
+                c.slug(),
+                basis
+            ));
+        }
+        write_privacy(td.path(), &body);
+        let code = run_privacy_validate(td.path(), false).unwrap();
+        // Legal obligation alone is NOT a violation — coverage
+        // is complete + no zeroes + no dupes.
+        assert_eq!(code, ExitCode::SUCCESS);
     }
 }
 
