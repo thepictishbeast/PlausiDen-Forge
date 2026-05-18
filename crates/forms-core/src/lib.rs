@@ -623,4 +623,49 @@ mod tests {
         let r: Result<Form, _> = serde_json::from_str(bad);
         assert!(r.is_err());
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            FieldKind::Text,
+            FieldKind::TextArea,
+            FieldKind::Email,
+            FieldKind::Url,
+            FieldKind::Tel,
+            FieldKind::Number,
+            FieldKind::Date,
+            FieldKind::Select,
+            FieldKind::Checkboxes,
+            FieldKind::File,
+            FieldKind::Honeypot,
+            FieldKind::GdprConsent,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            SpamSignal::HoneypotFilled,
+            SpamSignal::RateLimited,
+            SpamSignal::Classifier,
+            SpamSignal::TooFast,
+            SpamSignal::Stale,
+            SpamSignal::NetworkBlocklist,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            SubmissionState::Received,
+            SubmissionState::Quarantined,
+            SubmissionState::AwaitingScan,
+            SubmissionState::Delivering,
+            SubmissionState::Delivered,
+            SubmissionState::DeliveryFailed,
+            SubmissionState::Rejected,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

@@ -625,4 +625,76 @@ mod tests {
             assert!(s3.insert(sc.slug()));
         }
     }
+
+    // Regression-guard for the slug-vs-serde-wire divergence
+    // bug class (T97 audit). See trust-safety-core for the
+    // full explanation. Adding a variant requires extending
+    // the slices below.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            DsarRequestKind::Access,
+            DsarRequestKind::Rectify,
+            DsarRequestKind::Erase,
+            DsarRequestKind::Restrict,
+            DsarRequestKind::Portability,
+            DsarRequestKind::Object,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            DsarRequestState::Received,
+            DsarRequestState::VerifyingIdentity,
+            DsarRequestState::Processing,
+            DsarRequestState::Fulfilled,
+            DsarRequestState::Rejected,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            DataCategory::Account,
+            DataCategory::Content,
+            DataCategory::AuditLog,
+            DataCategory::Telemetry,
+            DataCategory::Payment,
+            DataCategory::SupportTicket,
+            DataCategory::Marketing,
+            DataCategory::Auth,
+            DataCategory::Backup,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            LawfulBasis::Consent,
+            LawfulBasis::Contract,
+            LawfulBasis::LegalObligation,
+            LawfulBasis::VitalInterests,
+            LawfulBasis::PublicTask,
+            LawfulBasis::LegitimateInterests,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            ConsentScope::StrictlyNecessary,
+            ConsentScope::Preferences,
+            ConsentScope::Statistics,
+            ConsentScope::Marketing,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            ConsentState::Pending,
+            ConsentState::Granted,
+            ConsentState::Denied,
+            ConsentState::Revoked,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

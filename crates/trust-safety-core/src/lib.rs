@@ -510,4 +510,55 @@ mod tests {
             assert!(seen2.insert(a.slug()));
         }
     }
+
+    // Regression-guard for the kebab-case-rename / manual-slug
+    // divergence bug class (T97 audit). Found 3x across the
+    // workspace so far: domains-core (Http01), dr-core (Tier1),
+    // exporters-core (ActivityStreams2), search-core (SqliteFts5),
+    // federation-core (ActivityPub/WebSub). serde's
+    // `rename_all = "kebab-case"` inserts hyphens at BOTH
+    // CamelCase + digit boundaries, but the manually-written
+    // slug() may not match the kebab-case output exactly.
+    //
+    // This test exhaustively asserts wire-format == slug() for
+    // every variant of every kebab-case-renamed enum in this
+    // crate. Adding a variant requires extending the slice
+    // below — keeping the discipline explicit.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            ConcernKind::Csam,
+            ConcernKind::Phishing,
+            ConcernKind::Spam,
+            ConcernKind::Sanctions,
+            ConcernKind::SelfHarm,
+            ConcernKind::Extremism,
+            ConcernKind::Nciii,
+            ConcernKind::Malware,
+            ConcernKind::IpViolation,
+            ConcernKind::HateSpeech,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            ModerationAction::Allow,
+            ModerationAction::Warn,
+            ModerationAction::Quarantine,
+            ModerationAction::Block,
+            ModerationAction::BlockAndReport,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            ScanConfidence::Confirmed,
+            ScanConfidence::Likely,
+            ScanConfidence::Suspected,
+            ScanConfidence::Cleared,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

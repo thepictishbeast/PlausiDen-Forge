@@ -458,4 +458,42 @@ mod tests {
         let r: Result<OutgoingMessage, _> = serde_json::from_str(bad);
         assert!(r.is_err());
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [MessageKind::Transactional, MessageKind::Marketing] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            DmarcResult::Pass,
+            DmarcResult::Fail,
+            DmarcResult::None,
+            DmarcResult::Quarantine,
+            DmarcResult::Reject,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            AuthChannelResult::Pass,
+            AuthChannelResult::Fail,
+            AuthChannelResult::None,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            BounceReason::HardInvalidAddress,
+            BounceReason::HardMailboxFull,
+            BounceReason::SoftTransient,
+            BounceReason::Complaint,
+            BounceReason::Reject,
+            BounceReason::Suppressed,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }

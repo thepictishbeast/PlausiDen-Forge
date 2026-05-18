@@ -40,6 +40,7 @@ pub enum AssetFormat {
     Avif,
     /// WebP — broader compatibility than AVIF, still smaller than
     /// JPEG/PNG.
+    #[serde(rename = "webp")]
     WebP,
     /// JPEG — universal fallback. Always emitted so old User-Agents
     /// (incl. screen-readers, RSS, IndieWeb crawlers) can read.
@@ -472,5 +473,35 @@ mod tests {
         let bad = r#"{"asset-id":"x","source-media-type":"image/jpeg","variants":[],"alt-text":"a","alt-source":"operator","ahem":1}"#;
         let r: Result<AssetBundle, _> = serde_json::from_str(bad);
         assert!(r.is_err());
+    }
+
+    // T97: slug-vs-serde-wire regression guard. AssetFormat has
+    // WebP (camel boundary) — likely-affected candidate.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            AssetFormat::Avif,
+            AssetFormat::WebP,
+            AssetFormat::Jpeg,
+            AssetFormat::Png,
+            AssetFormat::Hls,
+            AssetFormat::Dash,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [ExifPolicy::Strip, ExifPolicy::Preserve] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+        for v in [
+            AltSource::Operator,
+            AltSource::Import,
+            AltSource::Vision,
+            AltSource::Decorative,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
     }
 }

@@ -37,6 +37,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "kebab-case")]
 pub enum ImporterKind {
     /// WordPress WXR export (`wordpress.xml`).
+    #[serde(rename = "wordpress")]
     WordPress,
     /// Webflow CMS Collection Items API.
     Webflow,
@@ -574,5 +575,24 @@ mod tests {
         assert_eq!(s.count_blocks_of_kind("paragraph"), 2);
         assert_eq!(s.count_blocks_of_kind("divider"), 1);
         assert_eq!(s.count_blocks_of_kind("hero"), 0);
+    }
+
+    // T97: slug-vs-serde-wire regression guard.
+    // ImporterKind has WordPress (camel boundary) + Squarespace
+    // (single word with internal capital but no separable
+    // boundary) — likely candidates for divergence.
+    #[test]
+    fn slug_matches_serde_wire_across_all_enums() {
+        for v in [
+            ImporterKind::WordPress,
+            ImporterKind::Webflow,
+            ImporterKind::Squarespace,
+            ImporterKind::Wix,
+            ImporterKind::Ghost,
+            ImporterKind::Contentful,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
     }
 }

@@ -941,4 +941,21 @@ mod proptests {
             prop_assert_eq!(att, back);
         }
     }
+
+    // T97: slug-vs-serde-wire regression guard.
+    #[test]
+    fn attestable_kind_slug_matches_serde_wire() {
+        for v in [
+            AttestableKind::BuildReport,
+            AttestableKind::Manifest,
+            AttestableKind::DeployBundle,
+            AttestableKind::ContentSnapshot,
+            AttestableKind::JourneyResult,
+            AttestableKind::AuditReport,
+            AttestableKind::Other,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            assert_eq!(wire.trim_matches('"'), v.slug(), "{:?}", v);
+        }
+    }
 }
