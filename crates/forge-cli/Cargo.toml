@@ -74,6 +74,15 @@ commerce-storefront-core = { path = "../commerce-storefront-core" }
 # memberships.toml through Tier::validate (kebab-case id +
 # non-empty name + non-negative price + ISO 4217 currency).
 memberships-core = { path = "../memberships-core" }
+# T98 (first runtime wiring): importers-core (T77) drives
+# `forge content validate` — parses a CmsSection JSON file +
+# runs the typed validate() invariants (slug kebab, single
+# Hero, image alt non-empty, heading levels in 1..=6).
+importers-core = { path = "../importers-core" }
+# T98 (second runtime wiring): exporters-core (T78) drives
+# `forge content export --format X` — projects a CmsSection
+# through the built-in Markdown / JSON / JSON-LD renderers.
+exporters-core = { path = "../exporters-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

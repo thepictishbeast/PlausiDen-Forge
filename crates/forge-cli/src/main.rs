@@ -298,7 +298,7 @@ enum Cmd {
         action: EmailAction,
     },
     /// T91 (ninth wiring): commerce-storefront gate. Loads
-    /// `commerce.toml` and projects each [[product]] through
+    /// `commerce.toml` and projects each `[[product]]` through
     /// commerce-storefront-core's Product::validate (T84):
     ///   * title non-empty + ≥1 variant
     ///   * each variant: ISO 4217 currency, non-negative price,
@@ -308,7 +308,7 @@ enum Cmd {
         action: CommerceAction,
     },
     /// T91 (tenth wiring): memberships gate. Loads
-    /// `memberships.toml` and projects each [[tier]] through
+    /// `memberships.toml` and projects each `[[tier]]` through
     /// memberships-core's Tier::validate (T85):
     ///   * id non-empty + kebab-case
     ///   * name non-empty
@@ -331,6 +331,15 @@ enum Cmd {
     Config {
         #[command(subcommand)]
         action: ConfigAction,
+    },
+    /// T98: content authoring lifecycle subcommand family.
+    /// Wires importers-core + exporters-core (T77 + T78) into
+    /// the forge-cli runtime so operator content workflows
+    /// (validate, format-list, project-to-export) hit the typed
+    /// CmsSection contract.
+    Content {
+        #[command(subcommand)]
+        action: ContentAction,
     },
 }
 
@@ -488,6 +497,47 @@ enum MembershipsAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum ContentAction {
+    /// Validate a CmsSection JSON file against the typed
+    /// importers-core::CmsSection contract (T77).
+    ///
+    /// Enforces:
+    ///   * slug non-empty + kebab-case
+    ///   * at most one Hero block per section
+    ///   * heading level ∈ 1..=6
+    ///   * every Image has non-empty alt text (WCAG 2.1 §1.1.1)
+    ///
+    /// Exit codes:
+    ///   0 — file parses + validates clean
+    ///   1 — file parses but fails canonical invariants
+    ///   2 — fatal (file missing / parse error)
+    Validate {
+        /// Path to the CmsSection JSON file.
+        path: std::path::PathBuf,
+    },
+    /// Project a CmsSection JSON file through the typed
+    /// exporters-core renderer (T78). Builtin formats:
+    /// markdown-yaml-frontmatter / json / json-ld-schema-org.
+    ///
+    /// Exit codes:
+    ///   0 — render emitted to stdout
+    ///   1 — section failed canonical validation upstream
+    ///   2 — fatal (file missing / parse error / unsupported
+    ///       format)
+    Export {
+        /// Path to the CmsSection JSON file.
+        path: std::path::PathBuf,
+        /// Output format. Defaults to markdown.
+        #[arg(long, default_value = "markdown")]
+        format: String,
+    },
+    /// List supported export formats (T78::ExportFormat closed
+    /// enum). Emits one line per format with slug + IANA media
+    /// type + filename extension.
+    Formats,
+}
+
+#[derive(Subcommand, Debug)]
 enum ConfigAction {
     /// Run every config gate at once. Each gate's output is
     /// captured; the umbrella aggregates pass/fail.
@@ -636,6 +686,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Commerce { action }) => return run_commerce(&root, action),
         Some(Cmd::Memberships { action }) => return run_memberships(&root, action),
         Some(Cmd::Config { action }) => return run_config(&root, action),
+        Some(Cmd::Content { action }) => return run_content(action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -4273,6 +4324,291 @@ struct ConfigValidateAllSummary {
     failed: usize,
     missing: usize,
     verdicts: Vec<ConfigGateVerdict>,
+}
+
+// ============================================================
+// T98 — `forge content` runtime wiring
+//
+// Three runtime entrypoints projected through the typed
+// importers-core::CmsSection + exporters-core::ExportFormat
+// contract crates:
+//   * `forge content validate <path>` — parse + validate
+//     invariants (slug kebab, single Hero, headings 1..=6,
+//     Image alt non-empty per WCAG 2.1 §1.1.1).
+//   * `forge content export <path> [--format X]` — render
+//     section to Markdown / JSON / JSON-LD-Schema-Org on
+//     stdout. Format strings accept both the short form
+//     ("markdown") and the canonical ExportFormat slug
+//     ("markdown-yaml-frontmatter").
+//   * `forge content formats` — list every supported
+//     ExportFormat with slug + IANA media type + extension.
+//
+// Exit codes match the T91 family: 0 ok / 1 invariant
+// violation / 2 fatal (file missing, parse error,
+// unsupported format).
+// ============================================================
+
+fn run_content(action: &ContentAction) -> Result<ExitCode> {
+    match action {
+        ContentAction::Validate { path } => run_content_validate(path),
+        ContentAction::Export { path, format } => run_content_export(path, format),
+        ContentAction::Formats => run_content_formats(),
+    }
+}
+
+fn run_content_validate(path: &std::path::Path) -> Result<ExitCode> {
+    if !path.exists() {
+        eprintln!("content: missing file {}", path.display());
+        return Ok(ExitCode::from(2));
+    }
+    let s = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let section: importers_core::CmsSection = match serde_json::from_str(&s) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("content: parse error in {}: {e}", path.display());
+            return Ok(ExitCode::from(2));
+        }
+    };
+    match section.validate() {
+        Ok(()) => {
+            println!(
+                "content-gate: ok ({} block(s), slug={}, source={})",
+                section.blocks.len(),
+                section.slug,
+                section.source.slug(),
+            );
+            Ok(ExitCode::SUCCESS)
+        }
+        Err(e) => {
+            println!("content-gate: violation: {e}");
+            Ok(ExitCode::from(1))
+        }
+    }
+}
+
+fn run_content_export(path: &std::path::Path, format: &str) -> Result<ExitCode> {
+    if !path.exists() {
+        eprintln!("content: missing file {}", path.display());
+        return Ok(ExitCode::from(2));
+    }
+    let s = std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let section: importers_core::CmsSection = match serde_json::from_str(&s) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("content: parse error in {}: {e}", path.display());
+            return Ok(ExitCode::from(2));
+        }
+    };
+    if let Err(e) = section.validate() {
+        eprintln!("content: invariant violation upstream: {e}");
+        return Ok(ExitCode::from(1));
+    }
+    let fmt = match resolve_export_format(format) {
+        Some(f) => f,
+        None => {
+            eprintln!(
+                "content: unsupported format {format:?}; supported: {}",
+                supported_format_slugs().join(", "),
+            );
+            return Ok(ExitCode::from(2));
+        }
+    };
+    match fmt {
+        exporters_core::ExportFormat::MarkdownYamlFrontmatter => {
+            match exporters_core::render_markdown(&section) {
+                Ok(md) => {
+                    print!("{md}");
+                    Ok(ExitCode::SUCCESS)
+                }
+                Err(e) => {
+                    eprintln!("content: render-markdown: {e}");
+                    Ok(ExitCode::from(1))
+                }
+            }
+        }
+        exporters_core::ExportFormat::Json => match exporters_core::render_json(&section) {
+            Ok(bytes) => {
+                use std::io::Write as _;
+                std::io::stdout().write_all(&bytes).ok();
+                Ok(ExitCode::SUCCESS)
+            }
+            Err(e) => {
+                eprintln!("content: render-json: {e}");
+                Ok(ExitCode::from(1))
+            }
+        },
+        exporters_core::ExportFormat::JsonLdSchemaOrg => {
+            match exporters_core::render_json_ld(&section) {
+                Ok(bytes) => {
+                    use std::io::Write as _;
+                    std::io::stdout().write_all(&bytes).ok();
+                    Ok(ExitCode::SUCCESS)
+                }
+                Err(e) => {
+                    eprintln!("content: render-json-ld: {e}");
+                    Ok(ExitCode::from(1))
+                }
+            }
+        }
+        // PortableTarball + ActivityStreams2 are declared in the
+        // closed enum but the renderers are still pending — gate
+        // with a clear exit-2 so the surface stays honest.
+        other => {
+            eprintln!(
+                "content: format {} declared but renderer not yet wired",
+                other.slug()
+            );
+            Ok(ExitCode::from(2))
+        }
+    }
+}
+
+fn run_content_formats() -> Result<ExitCode> {
+    for fmt in all_export_formats() {
+        println!("{}\t{}\t.{}", fmt.slug(), fmt.media_type(), fmt.extension());
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+/// Resolve a CLI-side format string to an `ExportFormat`. Accepts
+/// both the short alias (`markdown`, `json-ld`) and the canonical
+/// slug (`markdown-yaml-frontmatter`, `json-ld-schema-org`).
+fn resolve_export_format(s: &str) -> Option<exporters_core::ExportFormat> {
+    use exporters_core::ExportFormat as F;
+    match s {
+        "markdown" | "md" | "markdown-yaml-frontmatter" => Some(F::MarkdownYamlFrontmatter),
+        "json" => Some(F::Json),
+        "json-ld" | "jsonld" | "json-ld-schema-org" => Some(F::JsonLdSchemaOrg),
+        "portable" | "portable-tarball" | "tar" => Some(F::PortableTarball),
+        "activitystreams" | "activitystreams-2" | "as2" => Some(F::ActivityStreams2),
+        _ => None,
+    }
+}
+
+fn all_export_formats() -> [exporters_core::ExportFormat; 5] {
+    use exporters_core::ExportFormat as F;
+    [
+        F::MarkdownYamlFrontmatter,
+        F::Json,
+        F::JsonLdSchemaOrg,
+        F::PortableTarball,
+        F::ActivityStreams2,
+    ]
+}
+
+fn supported_format_slugs() -> Vec<&'static str> {
+    all_export_formats().iter().map(|f| f.slug()).collect()
+}
+
+#[cfg(test)]
+mod content_gate_tests {
+    use super::*;
+    use std::io::Write as _;
+    use tempfile::TempDir;
+
+    fn minimal_section_json() -> &'static str {
+        r#"{
+            "id": "demo-1",
+            "source": "wordpress",
+            "slug": "hello",
+            "title": "Hello",
+            "blocks": [
+                {"kind": "heading", "level": 2, "text": "Hi"}
+            ]
+        }"#
+    }
+
+    fn write(td: &TempDir, name: &str, body: &str) -> std::path::PathBuf {
+        let p = td.path().join(name);
+        let mut f = std::fs::File::create(&p).unwrap();
+        f.write_all(body.as_bytes()).unwrap();
+        p
+    }
+
+    #[test]
+    fn validate_ok() {
+        let td = TempDir::new().unwrap();
+        let p = write(&td, "ok.json", minimal_section_json());
+        let code = run_content_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
+    }
+
+    #[test]
+    fn validate_missing_returns_2() {
+        let td = TempDir::new().unwrap();
+        let p = td.path().join("nope.json");
+        let code = run_content_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
+    }
+
+    #[test]
+    fn validate_parse_error_returns_2() {
+        let td = TempDir::new().unwrap();
+        let p = write(&td, "garbage.json", "{this is not json");
+        let code = run_content_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
+    }
+
+    #[test]
+    fn validate_invariant_violation_returns_1() {
+        let td = TempDir::new().unwrap();
+        // image with empty alt → WCAG 2.1 §1.1.1
+        let body = r#"{
+            "id":"x","source":"wordpress","slug":"x","title":"T",
+            "blocks":[{"kind":"image","asset_ref":"/a.png","alt":""}]
+        }"#;
+        let p = write(&td, "bad.json", body);
+        let code = run_content_validate(&p).unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(1)));
+    }
+
+    #[test]
+    fn export_markdown_ok() {
+        let td = TempDir::new().unwrap();
+        let p = write(&td, "ok.json", minimal_section_json());
+        let code = run_content_export(&p, "markdown").unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
+    }
+
+    #[test]
+    fn export_json_canonical_slug_ok() {
+        let td = TempDir::new().unwrap();
+        let p = write(&td, "ok.json", minimal_section_json());
+        let code = run_content_export(&p, "json-ld-schema-org").unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::SUCCESS));
+    }
+
+    #[test]
+    fn export_unknown_format_returns_2() {
+        let td = TempDir::new().unwrap();
+        let p = write(&td, "ok.json", minimal_section_json());
+        let code = run_content_export(&p, "yaml").unwrap();
+        assert_eq!(format!("{code:?}"), format!("{:?}", ExitCode::from(2)));
+    }
+
+    #[test]
+    fn formats_lists_all_five() {
+        // Smoke: just assert the helper returns the right count;
+        // run_content_formats() just streams stdout.
+        assert_eq!(all_export_formats().len(), 5);
+        assert_eq!(supported_format_slugs().len(), 5);
+    }
+
+    #[test]
+    fn resolve_aliases_match_canonical() {
+        use exporters_core::ExportFormat as F;
+        assert_eq!(
+            resolve_export_format("md"),
+            Some(F::MarkdownYamlFrontmatter)
+        );
+        assert_eq!(
+            resolve_export_format("markdown-yaml-frontmatter"),
+            Some(F::MarkdownYamlFrontmatter),
+        );
+        assert_eq!(resolve_export_format("json-ld"), Some(F::JsonLdSchemaOrg));
+        assert_eq!(resolve_export_format("as2"), Some(F::ActivityStreams2));
+        assert_eq!(resolve_export_format("xml"), None);
+    }
 }
 
 fn run_config(root: &std::path::Path, action: &ConfigAction) -> Result<ExitCode> {
