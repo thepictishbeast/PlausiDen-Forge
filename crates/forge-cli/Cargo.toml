@@ -69,6 +69,11 @@ email-core = { path = "../email-core" }
 # asserts ISO 4217 currency + non-negative price + non-empty
 # SKU + non-empty variants per product.
 commerce-storefront-core = { path = "../commerce-storefront-core" }
+# T91 (tenth wiring): memberships-core (T85) drives the new
+# `forge memberships validate` subcommand — projects
+# memberships.toml through Tier::validate (kebab-case id +
+# non-empty name + non-negative price + ISO 4217 currency).
+memberships-core = { path = "../memberships-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

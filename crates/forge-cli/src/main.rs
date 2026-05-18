@@ -307,6 +307,17 @@ enum Cmd {
         #[command(subcommand)]
         action: CommerceAction,
     },
+    /// T91 (tenth wiring): memberships gate. Loads
+    /// `memberships.toml` and projects each [[tier]] through
+    /// memberships-core's Tier::validate (T85):
+    ///   * id non-empty + kebab-case
+    ///   * name non-empty
+    ///   * monthly_price ≥ 0
+    ///   * currency is ISO 4217 3-upper-letter
+    Memberships {
+        #[command(subcommand)]
+        action: MembershipsAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -452,6 +463,17 @@ enum CommerceAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum MembershipsAction {
+    /// Validate `memberships.toml` against the typed
+    /// memberships-core surface (T85).
+    Validate {
+        /// Emit a JSON-form summary to stdout.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum FederationAction {
     /// Validate `federation.toml` at the project root against
     /// the typed federation-core surface (T79).
@@ -586,6 +608,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Federation { action }) => return run_federation(&root, action),
         Some(Cmd::Email { action }) => return run_email(&root, action),
         Some(Cmd::Commerce { action }) => return run_commerce(&root, action),
+        Some(Cmd::Memberships { action }) => return run_memberships(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -3969,6 +3992,203 @@ mod commerce_gate_tests {
         write_commerce(td.path(), &body);
         let code = run_commerce_validate(td.path(), false).unwrap();
         assert_eq!(code, ExitCode::from(1));
+    }
+}
+
+// ============================================================
+// T91 (tenth wiring): memberships gate — `forge memberships
+// validate`
+//
+// TOML schema:
+//   [[tier]]
+//   id = "supporter"
+//   name = "Supporter"
+//   rank = 1
+//   monthly-price = 500
+//   currency = "USD"
+//   annual-only = false
+//
+// Invariants enforced by Tier::validate():
+//   * id is kebab-case
+//   * name non-empty
+//   * monthly_price ≥ 0
+//   * currency is ISO 4217 3-upper-letter
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct MembershipsToml {
+    #[serde(default)]
+    tier: Vec<memberships_core::Tier>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct MembershipsGateSummary {
+    memberships_path: String,
+    tier_count: usize,
+    free_tier_count: usize,
+    violations: Vec<String>,
+}
+
+fn run_memberships(root: &std::path::Path, action: &MembershipsAction) -> Result<ExitCode> {
+    match action {
+        MembershipsAction::Validate { json } => run_memberships_validate(root, *json),
+    }
+}
+
+fn run_memberships_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path = root.join("memberships.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let mut summary = MembershipsGateSummary {
+        memberships_path: path.display().to_string(),
+        tier_count: 0,
+        free_tier_count: 0,
+        violations: Vec::new(),
+    };
+
+    if !path.exists() {
+        violations.push(format!("missing memberships.toml at {}", path.display()));
+        summary.violations = violations.clone();
+        emit_memberships_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let parsed: MembershipsToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("memberships.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_memberships_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.tier_count = parsed.tier.len();
+    for t in &parsed.tier {
+        if t.monthly_price == 0 {
+            summary.free_tier_count += 1;
+        }
+        if let Err(e) = t.validate() {
+            violations.push(format!("tier {:?}: {e}", t.id));
+        }
+    }
+
+    summary.violations = violations.clone();
+    emit_memberships_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_memberships_summary(summary: &MembershipsGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "memberships-gate: {} tiers ({} free)",
+            summary.tier_count, summary.free_tier_count,
+        );
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod memberships_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_memberships(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("memberships.toml"), body).unwrap();
+    }
+
+    fn ok_tier() -> &'static str {
+        "[[tier]]\n\
+         id = \"supporter\"\n\
+         name = \"Supporter\"\n\
+         rank = 1\n\
+         monthly-price = 500\n\
+         currency = \"USD\"\n\
+         annual-only = false\n"
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_memberships(td.path(), "not toml [[[");
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn empty_tier_list_passes() {
+        let td = TempDir::new().unwrap();
+        write_memberships(td.path(), "");
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn valid_tier_passes() {
+        let td = TempDir::new().unwrap();
+        write_memberships(td.path(), ok_tier());
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn non_kebab_id_violates() {
+        let td = TempDir::new().unwrap();
+        let body = ok_tier().replace("\"supporter\"", "\"Supporter\"");
+        write_memberships(td.path(), &body);
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn negative_price_violates() {
+        let td = TempDir::new().unwrap();
+        let body = ok_tier().replace("monthly-price = 500", "monthly-price = -1");
+        write_memberships(td.path(), &body);
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn lowercase_currency_violates() {
+        let td = TempDir::new().unwrap();
+        let body = ok_tier().replace("\"USD\"", "\"usd\"");
+        write_memberships(td.path(), &body);
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn free_tier_counts_as_free() {
+        let td = TempDir::new().unwrap();
+        let body = ok_tier().replace("monthly-price = 500", "monthly-price = 0");
+        write_memberships(td.path(), &body);
+        let code = run_memberships_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
     }
 }
 

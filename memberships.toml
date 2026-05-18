@@ -1,0 +1,48 @@
+# PlausiDen-Forge tenant membership tiers.
+#
+# Projected through memberships-core (T85) by
+# `forge memberships validate` (T91 tenth wiring). Each
+# [[tier]] is checked via Tier::validate:
+#
+#   * id is kebab-case
+#   * name non-empty
+#   * monthly_price ≥ 0 (smallest currency unit; 0 = free tier)
+#   * currency is ISO 4217 3-upper-letter
+#
+# Real Stripe sync + paywall enforcement lives downstream
+# (memberships-stripe / memberships-meter-redis /
+# memberships-renderer). This file declares the catalog;
+# the runtime drives access decisions per
+# memberships-core::decide().
+
+[[tier]]
+id = "free"
+name = "Free reader"
+rank = 0
+monthly-price = 0
+currency = "USD"
+annual-only = false
+
+[[tier]]
+id = "supporter"
+name = "Supporter"
+rank = 1
+monthly-price = 500 # $5/mo
+currency = "USD"
+annual-only = false
+
+[[tier]]
+id = "patron"
+name = "Patron"
+rank = 2
+monthly-price = 2500 # $25/mo
+currency = "USD"
+annual-only = false
+
+[[tier]]
+id = "lifetime"
+name = "Lifetime"
+rank = 3
+monthly-price = 50000 # $500 one-time, annual-only
+currency = "USD"
+annual-only = true
