@@ -1,0 +1,19 @@
+[package]
+name = "exporters-core"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed export contract — closed ExportFormat (Markdown w/ YAML frontmatter, JSON, JSON-LD per schema.org Article, portable Tarball, ActivityStreams 2.0) projecting CmsSection out to open-standard portable bundles."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = ["serde", "serde-well-known", "macros"] }
+importers-core = { path = "../importers-core" }

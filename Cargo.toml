@@ -146,6 +146,13 @@ members = [
     # closed Block taxonomy. Per-source parsers (WXR XML /
     # Webflow JSON / etc.) plug in via Importer trait.
     "crates/importers-core",
+    # T78: exporters-core — typed export contract: closed
+    # ExportFormat (Markdown w/ YAML frontmatter, JSON,
+    # JSON-LD per schema.org Article, portable tarball,
+    # ActivityStreams 2.0). Builtin Markdown + JSON +
+    # JSON-LD renderers; heavier formats plug in via
+    # Exporter trait.
+    "crates/exporters-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
