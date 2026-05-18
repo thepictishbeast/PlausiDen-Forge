@@ -52,6 +52,7 @@ pub enum ExportFormat {
     PortableTarball,
     /// ActivityStreams 2.0 (RFC 7265) — for federation handoff
     /// to ActivityPub / IndieWeb consumers per #79.
+    #[serde(rename = "activitystreams-2")]
     ActivityStreams2,
 }
 
@@ -592,5 +593,24 @@ mod tests {
     fn rfc3339_emits_well_known_format() {
         let d = datetime!(2026-05-18 12:00:00 UTC);
         assert_eq!(rfc3339(d), "2026-05-18T12:00:00Z");
+    }
+
+    // Regression-guard: serde rename_all="kebab-case" wouldn't
+    // hyphenate `ActivityStreams2` correctly (no boundary between
+    // `s` and `2`). The per-variant `#[serde(rename)]` makes the
+    // wire format match slug(); this test enforces it.
+    #[test]
+    fn format_serde_wire_matches_slug() {
+        for f in [
+            ExportFormat::MarkdownYamlFrontmatter,
+            ExportFormat::Json,
+            ExportFormat::JsonLdSchemaOrg,
+            ExportFormat::PortableTarball,
+            ExportFormat::ActivityStreams2,
+        ] {
+            let wire = serde_json::to_string(&f).unwrap();
+            let stripped = wire.trim_matches('"');
+            assert_eq!(stripped, f.slug(), "wire vs slug for {:?}", f);
+        }
     }
 }

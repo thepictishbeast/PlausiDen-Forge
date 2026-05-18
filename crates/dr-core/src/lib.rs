@@ -36,13 +36,16 @@ use serde::{Deserialize, Serialize};
 pub enum DrTier {
     /// Tier 1 — mission-critical. RTO minutes, RPO seconds.
     /// Examples: payment processing, auth, live publish path.
+    #[serde(rename = "tier-1")]
     Tier1,
     /// Tier 2 — business-important. RTO hours, RPO minutes.
     /// Examples: admin UI, content draft storage, deploy queue.
+    #[serde(rename = "tier-2")]
     Tier2,
     /// Tier 3 — internal / asynchronous. RTO days, RPO hours.
     /// Examples: analytics aggregates, internal dashboards,
     /// historical reports.
+    #[serde(rename = "tier-3")]
     Tier3,
 }
 
@@ -552,5 +555,21 @@ mod tests {
         let bad = r#"{"id":"x","tier":"tier-1","component":"x","region":"us-east-1","scenario":"x","ahem":1}"#;
         let r: Result<Drill, _> = serde_json::from_str(bad);
         assert!(r.is_err());
+    }
+
+    // Regression-guard for the kebab-case-rename / manual-slug
+    // divergence bug: serde's `rename_all = "kebab-case"` does
+    // not insert a hyphen between `tier` and `1`, so a bare
+    // rename_all would emit `tier1` on the wire — but slug()
+    // returns `tier-1`. The per-variant `#[serde(rename)]`
+    // attributes added in T91 fourth wiring make them match;
+    // this test enforces that they stay matched.
+    #[test]
+    fn tier_serde_wire_matches_slug() {
+        for t in DrTier::ALL.iter() {
+            let wire = serde_json::to_string(t).unwrap();
+            let stripped = wire.trim_matches('"');
+            assert_eq!(stripped, t.slug(), "wire vs slug for {:?}", t);
+        }
     }
 }

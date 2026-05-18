@@ -44,6 +44,7 @@ pub enum SearchBackend {
     Tantivy,
     /// SQLite FTS5 — embedded zero-deps, suitable for small
     /// tenants.
+    #[serde(rename = "sqlite-fts5")]
     SqliteFts5,
     /// Quickwit — distributed time-series + full-text.
     Quickwit,
@@ -410,5 +411,25 @@ mod tests {
         let j = serde_json::to_string(&g).unwrap();
         let back: ContentGap = serde_json::from_str(&j).unwrap();
         assert_eq!(g, back);
+    }
+
+    // Regression-guard: serde rename_all="kebab-case" doesn't
+    // insert a hyphen between `fts` and `5` in SqliteFts5, so
+    // a bare rename_all would emit `sqlite-fts5` differently
+    // from slug(). The per-variant #[serde(rename)] enforces a
+    // match; this test pins it.
+    #[test]
+    fn backend_serde_wire_matches_slug() {
+        for b in [
+            SearchBackend::Typesense,
+            SearchBackend::Meilisearch,
+            SearchBackend::Tantivy,
+            SearchBackend::SqliteFts5,
+            SearchBackend::Quickwit,
+        ] {
+            let wire = serde_json::to_string(&b).unwrap();
+            let stripped = wire.trim_matches('"');
+            assert_eq!(stripped, b.slug(), "wire vs slug for {:?}", b);
+        }
     }
 }
