@@ -153,6 +153,13 @@ members = [
     # JSON-LD renderers; heavier formats plug in via
     # Exporter trait.
     "crates/exporters-core",
+    # T79: federation-core — typed federation + IndieWeb
+    # contract: closed FederationProtocol (ActivityPub /
+    # Webmention / WebSub / Nostr / AT Protocol) +
+    # protocol-discriminated FederationAddress + event
+    # lifecycle. Per-protocol clients plug in via
+    # FederationPublisher trait.
+    "crates/federation-core",
     # T20: backend handler scaffolds. One module per [backends.X]
     # entry in backends.toml. Generated + maintained by
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
