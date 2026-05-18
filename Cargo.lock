@@ -214,6 +214,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "commerce-storefront-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+ "time",
+]
+
+[[package]]
 name = "compliance-evidence"
 version = "0.1.0"
 dependencies = [
