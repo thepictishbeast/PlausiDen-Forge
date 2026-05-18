@@ -129,17 +129,19 @@ impl Domain {
 
 /// ACME challenge type per RFC 8555 §8.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
 pub enum AcmeChallenge {
     /// HTTP-01 — operator hosts a file at
     /// `/.well-known/acme-challenge/<token>`. Cannot validate
     /// wildcards (RFC 8555 §8.4).
+    #[serde(rename = "http-01")]
     Http01,
     /// DNS-01 — operator publishes a TXT record at
     /// `_acme-challenge.<domain>`. Required for wildcards.
+    #[serde(rename = "dns-01")]
     Dns01,
     /// TLS-ALPN-01 — operator serves a special TLS handshake
     /// (RFC 8737). Cannot validate wildcards.
+    #[serde(rename = "tls-alpn-01")]
     TlsAlpn01,
 }
 
@@ -183,8 +185,10 @@ pub enum DomainVerification {
     /// CNAME / A / AAAA record not yet pointing at platform.
     DnsPending,
     /// DNS-01 challenge token not yet propagated.
+    #[serde(rename = "dns-01-pending")]
     Dns01Pending,
     /// HTTP-01 token not yet servable.
+    #[serde(rename = "http-01-pending")]
     Http01Pending,
     /// All checks passed; cert issuance is unblocked.
     Verified,
@@ -376,6 +380,43 @@ mod tests {
         assert!(AcmeChallenge::Dns01.validates_wildcard());
         assert!(!AcmeChallenge::Http01.validates_wildcard());
         assert!(!AcmeChallenge::TlsAlpn01.validates_wildcard());
+    }
+
+    // Regression-guard: serde's `rename_all = "kebab-case"`
+    // does NOT insert a hyphen between adjacent lowercase /
+    // digit characters, so `Http01` becomes `http01` (not
+    // `http-01`). The slug() helper returns the human-friendly
+    // `http-01` form. Without per-variant `#[serde(rename)]`,
+    // serde + slug() disagree silently — the kind of bug that
+    // breaks a TOML parser without ever firing a unit test.
+    // This test asserts they match for every challenge variant.
+    #[test]
+    fn challenge_serde_wire_format_matches_slug() {
+        for c in [
+            AcmeChallenge::Http01,
+            AcmeChallenge::Dns01,
+            AcmeChallenge::TlsAlpn01,
+        ] {
+            let wire = serde_json::to_string(&c).unwrap();
+            // Strip surrounding quotes: "\"http-01\"" → "http-01"
+            let stripped = wire.trim_matches('"');
+            assert_eq!(stripped, c.slug(), "wire vs slug for {:?}", c);
+        }
+    }
+
+    #[test]
+    fn verification_serde_wire_format_matches_slug() {
+        for v in [
+            DomainVerification::DnsPending,
+            DomainVerification::Dns01Pending,
+            DomainVerification::Http01Pending,
+            DomainVerification::Verified,
+            DomainVerification::Failed,
+        ] {
+            let wire = serde_json::to_string(&v).unwrap();
+            let stripped = wire.trim_matches('"');
+            assert_eq!(stripped, v.slug(), "wire vs slug for {:?}", v);
+        }
     }
 
     #[test]

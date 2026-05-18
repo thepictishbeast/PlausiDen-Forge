@@ -225,6 +225,24 @@ enum Cmd {
         #[command(subcommand)]
         action: TrustSafetyAction,
     },
+    /// T91 (fourth wiring): domains-core gate. Loads
+    /// `domains.toml` at the project root, projects through
+    /// `domains-core`'s typed Domain + AcmeChallenge + HstsPolicy
+    /// surface (T86), and asserts:
+    ///   * every Domain FQDN passes RFC 1035 validation
+    ///   * Wildcard domains use DNS-01 challenge (RFC 8555 §8.4)
+    ///   * HSTS policy is preload-eligible (max-age ≥ 31_536_000
+    ///     + includeSubDomains + preload)
+    ///   * no duplicate FQDNs
+    ///
+    /// Exit codes:
+    ///   0 — every domain is RFC-valid + challenge-compatible
+    ///   1 — at least one gate violation
+    ///   2 — fatal (missing domains.toml, parse error)
+    Domains {
+        #[command(subcommand)]
+        action: DomainsAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -336,6 +354,18 @@ enum TrustSafetyAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum DomainsAction {
+    /// Validate `domains.toml` at the project root against the
+    /// typed domains-core surface (T86).
+    Validate {
+        /// Emit a JSON-form summary of domain validation to
+        /// stdout. Default is human-readable.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum AttestAction {
     /// Generate a fresh Ed25519 keypair and persist it under
     /// `reports/`. Refuses to overwrite an existing key without
@@ -421,6 +451,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
         Some(Cmd::Privacy { action }) => return run_privacy(&root, action),
         Some(Cmd::TrustSafety { action }) => return run_trust_safety(&root, action),
+        Some(Cmd::Domains { action }) => return run_domains(&root, action),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -2536,6 +2567,267 @@ mod trust_safety_gate_tests {
         write_trust_safety(td.path(), &body);
         let code = run_trust_safety_validate(td.path(), false).unwrap();
         assert_eq!(code, ExitCode::SUCCESS);
+    }
+}
+
+// ============================================================
+// T91 (fourth wiring): domains gate — `forge domains validate`
+//
+// TOML schema:
+//   [[domain]]
+//   fqdn = "example.com"
+//   kind = "apex"          # apex | subdomain | wildcard
+//   challenge = "http-01"  # http-01 | dns-01 | tls-alpn-01
+//
+//   [hsts]
+//   max_age_secs = 63072000
+//   include_subdomains = true
+//   preload = true
+//
+// Invariants enforced:
+//   * every Domain passes RFC 1035 FQDN validation
+//   * Wildcard ⇒ challenge MUST be DNS-01 (RFC 8555 §8.4)
+//   * HSTS policy is preload-eligible (max-age ≥ 31536000 +
+//     includeSubDomains + preload) — refused if explicitly
+//     downgraded
+//   * no duplicate FQDNs
+// ============================================================
+
+#[derive(serde::Deserialize, Debug)]
+struct DomainsToml {
+    #[serde(default)]
+    domain: Vec<DomainEntry>,
+    #[serde(default)]
+    hsts: Option<HstsEntry>,
+}
+
+#[derive(serde::Deserialize, Debug)]
+struct DomainEntry {
+    fqdn: String,
+    kind: domains_core::DomainKind,
+    challenge: domains_core::AcmeChallenge,
+}
+
+#[derive(serde::Deserialize, Debug, Default)]
+struct HstsEntry {
+    #[serde(default)]
+    max_age_secs: Option<u32>,
+    #[serde(default)]
+    include_subdomains: Option<bool>,
+    #[serde(default)]
+    preload: Option<bool>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct DomainsGateSummary {
+    domains_path: String,
+    domain_count: usize,
+    fqdns_valid: usize,
+    hsts_preload_eligible: bool,
+    violations: Vec<String>,
+}
+
+fn run_domains(root: &std::path::Path, action: &DomainsAction) -> Result<ExitCode> {
+    match action {
+        DomainsAction::Validate { json } => run_domains_validate(root, *json),
+    }
+}
+
+fn run_domains_validate(root: &std::path::Path, json: bool) -> Result<ExitCode> {
+    let path = root.join("domains.toml");
+    let mut violations: Vec<String> = Vec::new();
+    let mut summary = DomainsGateSummary {
+        domains_path: path.display().to_string(),
+        domain_count: 0,
+        fqdns_valid: 0,
+        hsts_preload_eligible: false,
+        violations: Vec::new(),
+    };
+
+    if !path.exists() {
+        violations.push(format!("missing domains.toml at {}", path.display()));
+        summary.violations = violations.clone();
+        emit_domains_summary(&summary, json);
+        return Ok(ExitCode::from(2));
+    }
+
+    let s =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let parsed: DomainsToml = match toml::from_str(&s) {
+        Ok(p) => p,
+        Err(e) => {
+            violations.push(format!("domains.toml parse: {e}"));
+            summary.violations = violations.clone();
+            emit_domains_summary(&summary, json);
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    summary.domain_count = parsed.domain.len();
+
+    // FQDN + challenge-compatibility + duplicate checks.
+    let mut seen_fqdn: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    for entry in &parsed.domain {
+        let d = domains_core::Domain {
+            fqdn: entry.fqdn.clone(),
+            kind: entry.kind,
+        };
+        match d.validate() {
+            Ok(()) => summary.fqdns_valid += 1,
+            Err(e) => violations.push(format!("domain {:?}: {e}", entry.fqdn)),
+        }
+        if let Err(e) = domains_core::challenge_compatible(entry.kind, entry.challenge) {
+            violations.push(format!("domain {:?}: {e}", entry.fqdn));
+        }
+        if !seen_fqdn.insert(entry.fqdn.as_str()) {
+            violations.push(format!("duplicate fqdn {:?}", entry.fqdn));
+        }
+    }
+
+    // HSTS policy: use operator-supplied values or platform
+    // defaults; refuse if downgraded below preload eligibility.
+    let default_hsts = domains_core::HstsPolicy::platform_default();
+    let hsts_entry = parsed.hsts.unwrap_or_default();
+    let hsts = domains_core::HstsPolicy {
+        max_age_secs: hsts_entry.max_age_secs.unwrap_or(default_hsts.max_age_secs),
+        include_subdomains: hsts_entry
+            .include_subdomains
+            .unwrap_or(default_hsts.include_subdomains),
+        preload: hsts_entry.preload.unwrap_or(default_hsts.preload),
+    };
+    summary.hsts_preload_eligible = hsts.is_preload_eligible();
+    if !summary.hsts_preload_eligible {
+        violations.push(format!(
+            "HSTS policy not preload-eligible (max-age={}, subdomains={}, preload={}); \
+             RFC 6797 + hstspreload.org require all three",
+            hsts.max_age_secs, hsts.include_subdomains, hsts.preload
+        ));
+    }
+
+    summary.violations = violations.clone();
+    emit_domains_summary(&summary, json);
+
+    if violations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn emit_domains_summary(summary: &DomainsGateSummary, json: bool) {
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(summary)
+                .unwrap_or_else(|_| "{\"error\":\"serialize-failed\"}".to_string())
+        );
+    } else {
+        println!(
+            "domains-gate: {} domains, {} valid FQDN, hsts preload-eligible: {}",
+            summary.domain_count, summary.fqdns_valid, summary.hsts_preload_eligible,
+        );
+        if !summary.violations.is_empty() {
+            println!("violations:");
+            for v in &summary.violations {
+                println!("  - {v}");
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod domains_gate_tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    fn write_domains(dir: &std::path::Path, body: &str) {
+        std::fs::write(dir.join("domains.toml"), body).unwrap();
+    }
+
+    #[test]
+    fn missing_file_exits_2() {
+        let td = TempDir::new().unwrap();
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn malformed_toml_exits_2() {
+        let td = TempDir::new().unwrap();
+        write_domains(td.path(), "this is not toml [[[");
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(2));
+    }
+
+    #[test]
+    fn valid_apex_domain_with_default_hsts_passes() {
+        let td = TempDir::new().unwrap();
+        // Default HSTS (no [hsts] block) is platform_default which
+        // is preload-eligible.
+        write_domains(
+            td.path(),
+            "[[domain]]\nfqdn = \"example.com\"\nkind = \"apex\"\nchallenge = \"http-01\"\n",
+        );
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn wildcard_with_dns_01_passes() {
+        let td = TempDir::new().unwrap();
+        write_domains(
+            td.path(),
+            "[[domain]]\nfqdn = \"*.example.com\"\nkind = \"wildcard\"\nchallenge = \"dns-01\"\n",
+        );
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::SUCCESS);
+    }
+
+    #[test]
+    fn wildcard_with_http_01_violates() {
+        let td = TempDir::new().unwrap();
+        // HTTP-01 cannot validate wildcards per RFC 8555 §8.4.
+        write_domains(
+            td.path(),
+            "[[domain]]\nfqdn = \"*.example.com\"\nkind = \"wildcard\"\nchallenge = \"http-01\"\n",
+        );
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn uppercase_fqdn_violates() {
+        let td = TempDir::new().unwrap();
+        write_domains(
+            td.path(),
+            "[[domain]]\nfqdn = \"Example.com\"\nkind = \"apex\"\nchallenge = \"http-01\"\n",
+        );
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn duplicate_fqdn_violates() {
+        let td = TempDir::new().unwrap();
+        write_domains(
+            td.path(),
+            "[[domain]]\nfqdn = \"example.com\"\nkind = \"apex\"\nchallenge = \"http-01\"\n\
+             [[domain]]\nfqdn = \"example.com\"\nkind = \"apex\"\nchallenge = \"tls-alpn-01\"\n",
+        );
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
+    }
+
+    #[test]
+    fn hsts_downgrade_violates() {
+        let td = TempDir::new().unwrap();
+        write_domains(
+            td.path(),
+            "[[domain]]\nfqdn = \"example.com\"\nkind = \"apex\"\nchallenge = \"http-01\"\n\
+             [hsts]\nmax_age_secs = 60\ninclude_subdomains = false\npreload = false\n",
+        );
+        let code = run_domains_validate(td.path(), false).unwrap();
+        assert_eq!(code, ExitCode::from(1));
     }
 }
 

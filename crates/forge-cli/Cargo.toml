@@ -34,6 +34,12 @@ trust-safety-core = { path = "../trust-safety-core" }
 # KeyFingerprint = base64url(SHA256(verifying-key))[..16]. Used by
 # operator-facing log lines + attestation metadata.
 manifest-attest = { path = "../manifest-attest" }
+# T91 (fourth wiring): domains-core (T86) drives the new
+# `forge domains validate` subcommand — projects domains.toml
+# through DomainKind / AcmeChallenge / HstsPolicy and asserts
+# RFC 1035 FQDN shape + RFC 8555 wildcard/challenge compatibility
+# + HSTS preload-eligibility.
+domains-core = { path = "../domains-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

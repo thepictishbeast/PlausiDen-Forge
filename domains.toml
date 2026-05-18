@@ -1,0 +1,39 @@
+# PlausiDen-Forge custom-domain + TLS policy.
+#
+# Projected through domains-core (T86) by `forge domains validate`
+# (T91 fourth wiring). Enforces:
+#   * every FQDN matches RFC 1035 (lowercase ASCII, ≤63 chars per
+#     label, ≤253 total, no consecutive dots, no leading/trailing
+#     hyphen in labels)
+#   * Wildcard kind ⇒ DNS-01 challenge (RFC 8555 §8.4 — HTTP-01
+#     and TLS-ALPN-01 cannot validate wildcards)
+#   * HSTS policy is preload-eligible per RFC 6797 + hstspreload.org
+#     (max-age ≥ 31_536_000 + includeSubDomains + preload)
+#
+# Per-CA ACME client lives downstream (domains-acme-rustls /
+# domains-acme-acme2). This file declares the operator's
+# intent; the runtime implements the challenge.
+
+[[domain]]
+fqdn = "plausiden.com"
+kind = "apex"
+challenge = "http-01"
+
+[[domain]]
+fqdn = "www.plausiden.com"
+kind = "subdomain"
+challenge = "http-01"
+
+[[domain]]
+fqdn = "*.plausiden.com"
+kind = "wildcard"
+challenge = "dns-01" # RFC 8555 §8.4 — only DNS-01 validates wildcards
+
+# HSTS policy applied across all listed domains.
+# platform_default() = 2 years + includeSubDomains + preload.
+# Operators MAY tighten (longer max-age); CANNOT relax below the
+# preload-eligibility threshold without the gate refusing.
+[hsts]
+max_age_secs = 63072000 # 2 years
+include_subdomains = true
+preload = true
