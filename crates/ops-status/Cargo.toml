@@ -1,0 +1,18 @@
+[package]
+name = "ops-status"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed SLO/SLI definitions + error-budget computation + status-page state. Operators feed in real metrics; this crate computes derived burn rates + page entries deterministically."
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true, features = ["serde", "serde-well-known", "macros"] }
