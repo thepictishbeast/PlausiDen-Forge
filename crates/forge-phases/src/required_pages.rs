@@ -216,7 +216,6 @@ fn checks_for_site_type(cfg: &RequiredPagesConfig) -> Vec<Check> {
                 | "ee"
                 | "cy"
                 | "cz"
-                | "ee"
                 | "gr"
                 | "hr"
                 | "hu"
