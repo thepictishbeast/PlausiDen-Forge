@@ -21,18 +21,6 @@
     },
     {
       "phase": "tokens",
-      "path": "blog.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "blog.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
       "path": "contact.html",
       "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
@@ -40,18 +28,6 @@
     {
       "phase": "tokens",
       "path": "contact.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "docs.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "docs.html",
       "message": "raw hex color in HTML",
       "severity": "warn"
     },
@@ -93,30 +69,6 @@
     },
     {
       "phase": "tokens",
-      "path": "platform.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "platform.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "pricing.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "pricing.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
       "path": "prosperity-club.html",
       "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
@@ -148,30 +100,6 @@
     {
       "phase": "tokens",
       "path": "services.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "signin.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "signin.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "why.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "why.html",
       "message": "raw hex color in HTML",
       "severity": "warn"
     },
@@ -195,30 +123,6 @@
     },
     {
       "phase": "seo",
-      "path": "blog.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "blog.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "blog.html",
-      "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "blog.html",
-      "message": "title too short (16 chars; aim 30-60 for SERP)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
       "path": "contact.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
@@ -233,30 +137,6 @@
       "phase": "seo",
       "path": "contact.html",
       "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "docs.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "docs.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "docs.html",
-      "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "docs.html",
-      "message": "title too short (16 chars; aim 30-60 for SERP)",
       "severity": "warn"
     },
     {
@@ -315,48 +195,6 @@
     },
     {
       "phase": "seo",
-      "path": "platform.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "platform.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "platform.html",
-      "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "pricing.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "pricing.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "pricing.html",
-      "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "pricing.html",
-      "message": "title too short (19 chars; aim 30-60 for SERP)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
       "path": "prosperity-club.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
@@ -407,60 +245,6 @@
       "phase": "seo",
       "path": "services.html",
       "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "signin.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "signin.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "signin.html",
-      "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "signin.html",
-      "message": "title too short (19 chars; aim 30-60 for SERP)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "why.html",
-      "message": "missing Open Graph tags (og:title/description/type/url/image)",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "why.html",
-      "message": "missing Twitter Card tags",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "why.html",
-      "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "platform.html",
-      "message": "21.9K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "signin.html",
-      "message": "20.8K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -489,19 +273,7 @@
     },
     {
       "phase": "sri",
-      "path": "blog.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
       "path": "contact.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "docs.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
@@ -525,18 +297,6 @@
     },
     {
       "phase": "sri",
-      "path": "platform.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "pricing.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
       "path": "prosperity-club.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
@@ -551,24 +311,6 @@
       "phase": "sri",
       "path": "services.html",
       "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "signin.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "why.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "phantom_button",
-      "path": "signin.html",
-      "message": "14 button(s) with no data-backend (UI not declared in backends.toml)",
       "severity": "warn"
     },
     {
@@ -598,7 +340,19 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[cta-contact] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[cta-contact] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-docs] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -611,6 +365,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-encrypted-inquiry] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-github] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -634,7 +394,19 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[cta-platform] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[cta-platform] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-pricing] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -647,6 +419,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-quote] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-signin] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -665,6 +443,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-signout] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-start] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -784,6 +568,12 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[view-blog] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[view-blog] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
@@ -815,6 +605,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-crawler] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-docs] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -880,6 +676,12 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[view-platform] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[view-platform] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
@@ -893,6 +695,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-post] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-pricing] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -970,31 +778,13 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[view-why] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[view-why] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "docs.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "platform.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "pricing.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
     },
     {
@@ -1034,18 +824,6 @@
       "severity": "warn"
     },
     {
-      "phase": "unbuilt_route",
-      "path": "signin.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "why.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
-      "severity": "warn"
-    },
-    {
       "phase": "crawl",
       "path": "127.0.0.1:8123",
       "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
@@ -1053,9 +831,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 175,
-  "duration_ms": 33,
-  "prev_hash": "8705b2a5dc3418f310a931083f6300dd97343504327452bbb2b5798044007e93",
-  "chain_length": 110,
-  "started": "2026-05-19T22:30:58.898909117Z"
+  "warn_count": 138,
+  "duration_ms": 16,
+  "prev_hash": "07b5833209333fdb380d0e15f07d4d6f3a11917e4de55e68888ec6a8bf4540a8",
+  "chain_length": 111,
+  "started": "2026-05-19T22:32:56.765887418Z"
 }

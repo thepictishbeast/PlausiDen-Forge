@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://skillshots.example/sitemap.xml
+Sitemap: https://dev.plausiden.com/sitemap.xml
