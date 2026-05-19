@@ -6842,23 +6842,42 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: 2rem;
   padding: 2rem 1.5rem;
+  /* Default: no card chrome. Substrate stays neutral; the row is
+   * just a grid. Opt-in card chrome via .loom-stat-band--carded
+   * on the outer element (caller chooses). */
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border) 60%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--loom-color-border) 60%, transparent);
+}
+.loom-stat-band.loom-stat-band--carded .loom-stat-band__row {
   border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border) 70%, transparent);
   background:
     linear-gradient(
       135deg,
-      color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 6%, var(--loom-color-surface, var(--loom-bg))),
-      color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 6%, var(--loom-color-surface, var(--loom-bg)))
+      color-mix(in oklab, var(--loom-color-primary) 6%, var(--loom-color-surface)),
+      color-mix(in oklab, var(--loom-color-accent) 6%, var(--loom-color-surface))
     );
-  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
 }
 .loom-stat-band__item {
   display: flex; flex-direction: column; align-items: center;
 }
 .loom-stat-band__value {
+  /* Default: solid ink. Drops the SaaS gradient-clipped-text
+   * trope. Higher contrast on dark themes (where the gradient
+   * mid-stop fell into low-readable violet). Caller can opt
+   * back into the gradient via .loom-stat-band--gradient on
+   * the outer element if a brand explicitly wants it. */
   font: 900 clamp(2.5rem, 5vw, 4rem)/1 var(--loom-font-display);
   letter-spacing: -0.04em;
-  background: linear-gradient(135deg, var(--loom-color-primary, var(--loom-accent)), var(--loom-color-accent-2, var(--loom-accent-2)));
-  -webkit-background-clip: text; background-clip: text;
+  color: var(--loom-color-primary);
+}
+.loom-stat-band.loom-stat-band--gradient .loom-stat-band__value {
+  background: linear-gradient(135deg, var(--loom-color-primary), var(--loom-color-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
   color: transparent;
 }
 .loom-stat-band__label {
