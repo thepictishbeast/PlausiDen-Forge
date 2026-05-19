@@ -55,91 +55,160 @@
       "height": "compact"
     },
     {
-      "kind": "pricing",
-      "heading": "Plans",
-      "lede": "All plans include every primitive, every theme, multi-network deploy, and full source access.",
-      "tiers": [
+      "kind": "heading",
+      "text": "Plans, by what changes between them.",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "Every plan ships the same substrate: 166 primitives, 14 themes, reproducible builds, multi-network publish, signed Merkle-chained audits, the Crucible captcha, Forge-auth, and bring-your-own LLM. What changes between plans is build-minute quota, storage, support latency, and access to the compliance-grade audit channel."
+    },
+    {
+      "kind": "paragraph",
+      "text": "We never charge per page, per visitor, or per primitive. Page count and traffic are uncapped. If you outgrow Solo it is not because someone clicked your site — it is because your team is shipping more compute."
+    },
+    {
+      "kind": "comparison",
+      "heading": "What changes between Solo / Team / Enterprise",
+      "columns": [
+        "Capability",
+        "Solo",
+        "Team",
+        "Enterprise"
+      ],
+      "rows": [
         {
-          "name": "Solo",
-          "price": "$0",
-          "period": "/mo",
-          "tagline": "For one developer.",
-          "features": [
-            "Unlimited builds",
-            "5 sites",
-            "10 GB storage",
-            "Community support",
-            "All 132 primitives",
-            "Multi-network publish"
-          ],
-          "cta": {
-            "label": "Get started",
-            "href": "/start.html",
-            "data_backend": "cta-start"
-          },
-          "highlighted": false
+          "label": "Price",
+          "values": [
+            "",
+            "$0 /mo",
+            "$0+ /seat (first 3 seats free)",
+            "Custom"
+          ]
         },
         {
-          "name": "Team",
-          "price": "$0+",
-          "period": "/seat/mo",
-          "tagline": "First 3 seats free.",
-          "features": [
-            "Everything in Solo",
-            "Unlimited sites",
-            "100 GB storage",
-            "Email support",
-            "Bring-your-own LLM provider",
-            "Per-tenant LFI corpus",
-            "Forge-LFI feature flag access"
-          ],
-          "cta": {
-            "label": "Get started",
-            "href": "/start.html",
-            "data_backend": "cta-start"
-          },
-          "highlighted": false
+          "label": "Best for",
+          "values": [
+            "",
+            "One developer",
+            "Small / mid team",
+            "Compliance shops"
+          ]
         },
         {
-          "name": "Enterprise",
-          "price": "Custom",
-          "period": "",
-          "tagline": "For compliance shops.",
-          "features": [
-            "Everything in Team",
-            "99.97% SLA",
-            "SOC 2 II artifacts",
-            "Same-day support",
-            "Custom DeployAdapter",
-            "Dedicated audit channel",
-            "Private NeuPSL policy library"
-          ],
-          "cta": {
-            "label": "Contact",
-            "href": "/contact.html",
-            "data_backend": "cta-contact"
-          },
-          "highlighted": false
+          "label": "Site count",
+          "values": [
+            "",
+            "5",
+            "Unlimited",
+            "Unlimited"
+          ]
+        },
+        {
+          "label": "Storage",
+          "values": [
+            "",
+            "10 GB",
+            "100 GB",
+            "Custom"
+          ]
+        },
+        {
+          "label": "Build-minute quota",
+          "values": [
+            "",
+            "Unlimited",
+            "Unlimited",
+            "Unlimited"
+          ]
+        },
+        {
+          "label": "Support channel",
+          "values": [
+            "",
+            "Community",
+            "Email",
+            "Same-day"
+          ]
+        },
+        {
+          "label": "Per-tenant LFI corpus",
+          "values": [
+            "",
+            "—",
+            "Yes",
+            "Yes"
+          ]
+        },
+        {
+          "label": "Forge-LFI feature flags",
+          "values": [
+            "",
+            "—",
+            "Yes",
+            "Yes"
+          ]
+        },
+        {
+          "label": "SLA",
+          "values": [
+            "",
+            "—",
+            "—",
+            "99.97%"
+          ]
+        },
+        {
+          "label": "SOC 2 II artifacts",
+          "values": [
+            "",
+            "—",
+            "—",
+            "Yes"
+          ]
+        },
+        {
+          "label": "Custom DeployAdapter",
+          "values": [
+            "",
+            "—",
+            "—",
+            "Yes"
+          ]
+        },
+        {
+          "label": "Private NeuPSL policy library",
+          "values": [
+            "",
+            "—",
+            "—",
+            "Yes"
+          ]
         }
       ]
     },
     {
+      "kind": "pull_quote",
+      "body": "We refused the per-seat tax. Seats don't generate compute; teams do. The platform charges for what it spends, not for who logs in.",
+      "attribution": "PlausiDen pricing doctrine"
+    },
+    {
       "kind": "comparison",
-      "heading": "What every plan includes",
+      "heading": "Included on every plan (no upsell)",
       "columns": [
         "Capability",
         "Included"
       ],
       "rows": [
         {
-          "label": "All 132 Loom primitives",
+          "label": "All 166 Loom primitives",
           "values": [
             "—",
             "Yes"
           ]
         },
         {
-          "label": "All 13 themes",
+          "label": "All 14 themes",
           "values": [
             "—",
             "Yes"

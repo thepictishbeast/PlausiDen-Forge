@@ -280,19 +280,19 @@
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "21.7K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.8K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "platform.html",
-      "message": "22.8K HTML > 20.0K budget — audit blocks / split route",
+      "message": "22.9K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "signin.html",
-      "message": "21.6K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.7K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -304,7 +304,7 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "310K CSS > 64.0K budget — split into per-route bundles",
+      "message": "321K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
@@ -747,12 +747,6 @@
     },
     {
       "phase": "unbuilt_route",
-      "path": "pricing.html",
-      "message": "href=\"/contact.html\" → static/contact.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
       "path": "signin.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
@@ -766,7 +760,7 @@
     {
       "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/pricing.json",
-      "message": "image_desert: page has 6 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "message": "image_desert: page has 10 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
@@ -777,9 +771,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 129,
-  "duration_ms": 41,
-  "prev_hash": "aeef38573d4e86f3aa436839b5a597742ca53c64d6b910f974e9f8e25f4f9fe2",
-  "chain_length": 77,
-  "started": "2026-05-19T13:55:43.2691018Z"
+  "warn_count": 128,
+  "duration_ms": 48,
+  "prev_hash": "09658f37b42e5ce878c5d11387d09534172a88a59c0dabd356059244242e197a",
+  "chain_length": 78,
+  "started": "2026-05-19T20:33:09.720744198Z"
 }
