@@ -81,16 +81,22 @@
       ]
     },
     {
-      "kind": "testimonial",
-      "body": "We replaced three SaaS subscriptions with a single Forge build. Reports go straight to compliance and our auditor stopped asking questions.",
-      "attribution": "Eli K.",
-      "role": "Platform Lead, fictional pilot team"
+      "kind": "heading",
+      "text": "How we work",
+      "level": 2
     },
     {
-      "kind": "testimonial",
-      "body": "PlausiDen made our typed CMS shippable in a week. The reproducible-build guarantee alone is worth the migration.",
-      "attribution": "Vee P.",
-      "role": "Senior Engineer, fictional pilot team"
+      "kind": "paragraph",
+      "text": "PlausiDen is small on purpose. The platform is opinionated because every dilution we resisted was a tradeoff we did not want to ship. We pick the harder typed seam over the convenient string-keyed escape hatch, and we let the compiler reject anything else."
+    },
+    {
+      "kind": "paragraph",
+      "text": "We do not believe in roadmaps that promise a feature in eighteen months. We believe in shipping small, audited, reproducible changes — and in letting the audit chain speak for itself when a customer asks what changed between two builds. The chain hash is the proof; the screenshot diff is the corroboration."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "We replaced three SaaS subscriptions with a single Forge build. The audit chain ships straight to compliance and the auditor stopped asking follow-up questions.",
+      "attribution": "the shape of an outcome the platform is engineered to produce"
     },
     {
       "kind": "feature_spotlight",

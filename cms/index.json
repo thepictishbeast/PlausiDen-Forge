@@ -143,7 +143,7 @@
           "tagline": "First three seats free.",
           "features": ["Everything in Solo", "Bring-your-own LLM", "Per-tenant LFI corpus", "Forge-LFI feature flag"],
           "cta": {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"},
-          "highlighted": true
+          "highlighted": false
         },
         {
           "name": "Enterprise",

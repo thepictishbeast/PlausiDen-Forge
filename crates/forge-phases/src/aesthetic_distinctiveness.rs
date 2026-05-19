@@ -151,7 +151,9 @@ fn check_scaffold_only(
             "image_hero" | "split_hero" | "hero" => has_hero = true,
             "call_to_action" => has_cta = true,
             "paragraph" | "heading" | "pull_quote" | "kv_pair" | "comparison" | "code"
-            | "faq" | "steps" => {
+            | "faq" | "steps" | "feature_spotlight" | "alert" | "roadmap" | "logo_cloud"
+            | "timeline" | "stat_band" | "marquee" | "auth_card" | "mfa_prompt"
+            | "crucible_widget" | "form" | "composer" | "card_feed" => {
                 has_editorial = true;
             }
             _ => {}
@@ -161,7 +163,7 @@ fn check_scaffold_only(
         findings.push(Finding::warn(
             phase,
             path.to_owned(),
-            "scaffold_only: page is hero(s) + CTA with no editorial body (paragraph / heading / pull_quote / kv_pair / comparison / code / faq / steps) — looks like an unfilled template",
+            "scaffold_only: page is hero(s) + CTA with no editorial body — looks like an unfilled template",
         ));
     }
 }

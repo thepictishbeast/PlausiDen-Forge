@@ -55,8 +55,22 @@
       "height": "compact"
     },
     {
+      "kind": "pull_quote",
+      "body": "Posts here trace a real decision — what we tried, what failed, what we kept. No vendor tips. No SEO-optimised listicles. The audit chain is the proof; the writing explains the why.",
+      "attribution": "blog editorial doctrine"
+    },
+    {
+      "kind": "heading",
+      "text": "Recent posts",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "Six most recent — chronological, not algorithmic. Subscribe via the form below or via RSS at /blog.rss."
+    },
+    {
       "kind": "feature_spotlight",
-      "heading": "Recent posts",
+      "heading": "Six most recent",
       "lede": "Six most recent.",
       "columns": 3,
       "items": [

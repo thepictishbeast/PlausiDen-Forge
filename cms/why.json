@@ -115,22 +115,14 @@
       ]
     },
     {
-      "kind": "testimonial",
-      "body": "We replaced three SaaS subscriptions with a single Forge build. Reports go straight to compliance.",
-      "attribution": "Eli K.",
-      "role": "Platform Lead, fictional pilot team"
+      "kind": "pull_quote",
+      "body": "We replaced three SaaS subscriptions with a single Forge build. The audit chain ships straight to compliance — and compliance stopped asking us follow-up questions.",
+      "attribution": "the kind of outcome the build pipeline targets"
     },
     {
-      "kind": "testimonial",
-      "body": "PlausiDen made our typed CMS shippable in a week. We deleted the WordPress instance and never looked back.",
-      "attribution": "Vee P.",
-      "role": "Senior Engineer, fictional pilot team"
-    },
-    {
-      "kind": "testimonial",
-      "body": "Crawler caught two accessibility regressions before the next deploy. That alone paid for the year.",
-      "attribution": "Jules M.",
-      "role": "QA Director, fictional pilot team"
+      "kind": "pull_quote",
+      "body": "Shipping a typed CMS in a week meant deleting the WordPress instance and never looking back. The reproducibility guarantee is the part that actually matters at year three.",
+      "attribution": "what the contract trades dependency-hell for"
     },
     {
       "kind": "roadmap",

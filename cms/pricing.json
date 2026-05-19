@@ -98,7 +98,7 @@
             "href": "/start.html",
             "data_backend": "cta-start"
           },
-          "highlighted": true
+          "highlighted": false
         },
         {
           "name": "Enterprise",
