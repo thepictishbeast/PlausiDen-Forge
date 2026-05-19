@@ -6282,6 +6282,97 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   border-radius: 50%;
   overflow: hidden;
 }
+/* ============================================================
+ * Rich page footer (CmsPage.footer typed slot)
+ * ============================================================ */
+.loom-page-footer.loom-page-footer--rich {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 3rem 1.75rem 2rem;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-size: 0.92rem;
+  background: color-mix(in oklab, var(--loom-color-surface, var(--loom-bg)) 85%, transparent);
+}
+.loom-page-footer__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+  gap: 2rem;
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+}
+.loom-page-footer__col h3.loom-page-footer__heading {
+  margin: 0 0 0.75rem;
+  font: 700 0.72rem/1.4 var(--loom-font-mono, ui-monospace, monospace);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 75%, transparent);
+}
+.loom-page-footer__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.loom-page-footer__links a {
+  text-decoration: none;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
+}
+.loom-page-footer__links a:hover {
+  color: var(--loom-color-primary, var(--loom-accent));
+  text-decoration: underline;
+}
+.loom-page-footer__contact p {
+  margin: 0 0 0.4rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
+}
+.loom-page-footer__contact a {
+  color: inherit;
+  text-decoration: none;
+}
+.loom-page-footer__contact a:hover {
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-page-footer__jurisdiction {
+  font-style: italic;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent) !important;
+}
+.loom-page-footer__legal {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 50%, transparent);
+}
+.loom-page-footer__legal ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.85rem;
+}
+.loom-page-footer__legal a {
+  text-decoration: none;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent);
+}
+.loom-page-footer__legal a:hover {
+  color: var(--loom-color-primary, var(--loom-accent));
+  text-decoration: underline;
+}
+.loom-page-footer__colophon {
+  max-width: 80rem;
+  width: 100%;
+  margin: 0.5rem auto 0;
+  font-size: 0.82rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent);
+}
+
 /* Editorial: pull-quote-style typography, no card chrome. */
 .loom-testimonial.deco-editorial {
   padding: 0;

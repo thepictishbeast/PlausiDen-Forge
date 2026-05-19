@@ -10,6 +10,33 @@
     {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
   ],
   "path": "/quote.html",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Company",
+        "links": [
+          {"label": "About",       "href": "/about.html",       "data_backend": "view-about"},
+          {"label": "Services",    "href": "/services.html",    "data_backend": "view-services"},
+          {"label": "Field Notes", "href": "/field-notes.html", "data_backend": "view-field-notes"},
+          {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact"}
+        ]
+      },
+      {
+        "heading": "Inquiry",
+        "links": [
+          {"label": "Get a quote",      "href": "/quote.html",             "data_backend": "cta-quote"},
+          {"label": "Encrypted Inquiry","href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "PlausiDen LLC",
+      "phone": "978-351-6495",
+      "email": "team@plausiden.com",
+      "jurisdiction": "Massachusetts, USA"
+    },
+    "colophon": "© 2026 PlausiDen LLC. Reproducible builds. Signed audit chains. No third-party trackers."
+  },
   "nav_links": [
     {"label": "Services",   "href": "/services.html",    "data_backend": "view-services"},
     {"label": "About",      "href": "/about.html",       "data_backend": "view-about"},
