@@ -69,40 +69,40 @@
       "text": "Six most recent — chronological, not algorithmic. Subscribe via the form below or via RSS at /blog.rss."
     },
     {
-      "kind": "feature_spotlight",
-      "heading": "Six most recent",
-      "lede": "Six most recent.",
-      "columns": 3,
+      "kind": "heading",
+      "text": "Six most recent",
+      "level": 2
+    },
+    {
+      "kind": "lede",
+      "text": "Each post traces a real architectural decision — what we tried, what didn't work, what shipped."
+    },
+    {
+      "kind": "def_list",
       "items": [
         {
-          "icon_slug": "icon-arrow-right",
-          "title": "Loom catalogue: 142 typed primitives",
-          "body": "T660 P5+P6 closed. 101 new variants across layout, editorial, marketing, media, commerce, social, forms, nav, feedback, game/forum/video — plus the auth + Crucible widget batch."
+          "term": "Loom catalogue: full primitive count shipped",
+          "definition": "T660 P5+P6 closed. 101 new variants across layout, editorial, marketing, media, commerce, social, forms, nav, feedback, game/forum/video — plus the auth + Crucible widget batch."
         },
         {
-          "icon_slug": "icon-check",
-          "title": "T98 closed — runtime CMS wiring",
-          "body": "forge content / forge search / forge assets subcommands wired. 21 tests added, three new CLI families."
+          "term": "T98 closed — runtime CMS wiring",
+          "definition": "forge content / forge search / forge assets subcommands wired. 21 tests added, three new CLI families."
         },
         {
-          "icon_slug": "icon-search",
-          "title": "Why LFI gates AI, not generates it",
-          "body": "The architectural inversion. Critic trait as compiler-enforced seam. Why bypass isn't a code-review policy."
+          "term": "Why LFI gates AI, not generates it",
+          "definition": "The architectural inversion. Critic trait as compiler-enforced seam. Why bypass isn't a code-review policy — it's a type error."
         },
         {
-          "icon_slug": "icon-home",
-          "title": "OLED-true black on every theme",
-          "body": "14 themes share the same OKLCH palette. AMOLED variant has #000 bg + per-token contrast. Battery + readability."
+          "term": "OLED-true black on every theme",
+          "definition": "Every named theme shares the same OKLCH palette. AMOLED variant has #000 bg + per-token contrast. Battery + readability."
         },
         {
-          "icon_slug": "icon-arrow-right",
-          "title": "Catching CVSS 4.0 in the supply chain",
-          "body": "Two transitive deps flagged at the cargo-deny step. CVSS 4.0 vector format support landed at the same time."
+          "term": "Catching CVSS 4.0 in the supply chain",
+          "definition": "Two transitive deps flagged at the cargo-deny step. CVSS 4.0 vector format support landed at the same time."
         },
         {
-          "icon_slug": "icon-check",
-          "title": "SLSA-attested SBOMs, the silent way they fail",
-          "body": "Our supply-chain CI was emitting zero SBOMs for weeks because the glob path mismatched cargo-cyclonedx's per-crate output. Fixed + hardened."
+          "term": "SLSA-attested SBOMs, the silent way they fail",
+          "definition": "Our supply-chain CI was emitting zero SBOMs for weeks because the glob path mismatched cargo-cyclonedx's per-crate output. Fixed + hardened."
         }
       ]
     },
