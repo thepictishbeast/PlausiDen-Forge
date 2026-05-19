@@ -6968,6 +6968,74 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   max-width: 60ch;
   color: color-mix(in oklab, var(--loom-color-ink) 65%, transparent);
 }
+/* ============================================================
+ * KvPair — typed definition-list editorial panel
+ * ============================================================ */
+.loom-kv-section {
+  padding: clamp(2rem, 4vw, 3.5rem) 0;
+}
+.loom-kv-heading {
+  font: 800 clamp(1.5rem, 3vw, 2.25rem)/1.1 var(--loom-font-display);
+  letter-spacing: -0.022em;
+  margin: 0 0 1.5rem;
+  color: var(--loom-color-ink);
+}
+.loom-kv-list {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: 0.5rem 2rem;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border) 65%, transparent);
+}
+.loom-kv-row {
+  display: contents;
+}
+.loom-kv-row > .loom-kv-key,
+.loom-kv-row > .loom-kv-value {
+  padding-block: 1rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--loom-color-border) 65%, transparent);
+}
+.loom-kv-key {
+  margin: 0;
+  font: 600 0.78rem/1.4 var(--loom-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--loom-color-ink) 70%, transparent);
+  align-self: start;
+}
+.loom-kv-value {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--loom-color-ink);
+}
+.loom-kv-text {
+  display: block;
+  font-weight: 600;
+}
+.loom-kv-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: color-mix(in oklab, var(--loom-color-ink) 65%, transparent);
+}
+/* Mobile: stack the columns so keys sit above values. */
+@media (max-width: 640px) {
+  .loom-kv-list {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .loom-kv-row > .loom-kv-key {
+    padding-block: 1rem 0.25rem;
+    border-bottom: none;
+  }
+  .loom-kv-row > .loom-kv-value {
+    padding-block: 0 1rem;
+  }
+}
+
 .loom-pricing.loom-pricing--centered .loom-pricing__heading,
 .loom-pricing.loom-pricing--centered .loom-pricing__lede {
   text-align: center;

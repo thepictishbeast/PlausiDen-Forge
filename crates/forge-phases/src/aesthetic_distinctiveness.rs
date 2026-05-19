@@ -118,6 +118,9 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
 
     check_fake_testimonials(sections, &path_disp, findings, phase);
     check_placeholder_email(sections, &path_disp, findings, phase);
+    check_vague_cta_label(sections, &path_disp, findings, phase);
+    check_roadmap_vagueness(sections, &path_disp, findings, phase);
+    check_image_desert(sections, &path_disp, findings, phase);
 }
 
 fn check_sparse_page(
@@ -474,6 +477,194 @@ fn check_placeholder_email(
             hits.join(", ")
         ),
     ));
+}
+
+/// CTA labels that add no information — generic verbs that
+/// appear on millions of landing pages. Substitute with a
+/// concrete verb tied to what happens.
+/// Genuinely-slop CTA labels — these add no information that the
+/// destination doesn't already imply. Deliberately conservative:
+/// "Get started" and "Sign up" are out because they ARE concrete
+/// primary actions on a marketing page; "Learn more" / "Click here"
+/// / "Read more" / "Submit" / "Continue" / "Go" are not.
+const VAGUE_CTA_LABELS: &[&str] = &[
+    "learn more",
+    "click here",
+    "read more",
+    "submit",
+    "continue",
+    "go",
+    "try it",
+    "try now",
+    "explore",
+    "discover",
+];
+
+fn check_vague_cta_label(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    let mut hits: Vec<(String, String)> = Vec::new();
+    fn walk(v: &Value, hits: &mut Vec<(String, String)>) {
+        match v {
+            Value::Object(obj) => {
+                if let Some(label_val) = obj.get("label") {
+                    if let Some(label) = label_val.as_str() {
+                        let trimmed = label.trim().to_lowercase();
+                        if VAGUE_CTA_LABELS.contains(&trimmed.as_str()) {
+                            let href = obj
+                                .get("href")
+                                .and_then(|h| h.as_str())
+                                .unwrap_or("?")
+                                .to_owned();
+                            hits.push((label.to_owned(), href));
+                        }
+                    }
+                }
+                for (_, val) in obj {
+                    walk(val, hits);
+                }
+            }
+            Value::Array(arr) => {
+                for item in arr {
+                    walk(item, hits);
+                }
+            }
+            _ => {}
+        }
+    }
+    for s in sections {
+        walk(s, &mut hits);
+    }
+    if hits.is_empty() {
+        return;
+    }
+    let examples: Vec<String> = hits
+        .iter()
+        .take(5)
+        .map(|(label, href)| format!("\"{label}\" → {href}"))
+        .collect();
+    findings.push(Finding::warn(
+        phase,
+        path.to_owned(),
+        format!(
+            "vague_cta_label: {} CTA label(s) read as filler ({}); substitute with a concrete verb tied to what the action does (e.g. \"Read the comparison\" rather than \"Learn more\")",
+            hits.len(),
+            examples.join(", ")
+        ),
+    ));
+}
+
+fn check_roadmap_vagueness(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    let mut total_items: usize = 0;
+    let mut vague_items: usize = 0;
+    for section in sections {
+        if section.get("kind").and_then(|k| k.as_str()) != Some("roadmap") {
+            continue;
+        }
+        for bucket_key in &["now", "next", "later", "soon"] {
+            let Some(items) = section.get(bucket_key).and_then(|v| v.as_array()) else {
+                continue;
+            };
+            for item in items {
+                let Some(text) = item.as_str() else { continue };
+                total_items += 1;
+                let lower = text.to_lowercase();
+                if lower.contains("soon")
+                    || lower.contains("tbd")
+                    || lower.contains("eventually")
+                    || lower.contains("later")
+                    || lower.contains("coming")
+                    || lower.contains("planned")
+                {
+                    vague_items += 1;
+                }
+            }
+        }
+    }
+    if total_items == 0 {
+        return;
+    }
+    let ratio = vague_items as f32 / total_items as f32;
+    if ratio > 0.5 {
+        findings.push(Finding::warn(
+            phase,
+            path.to_owned(),
+            format!(
+                "roadmap_vagueness: {vague_items}/{total_items} roadmap items contain hedging language (soon / tbd / eventually / later / coming / planned) — substitute with concrete near-term commitments or remove"
+            ),
+        ));
+    }
+}
+
+fn check_image_desert(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    let content_sections = sections
+        .iter()
+        .filter(|s| {
+            let k = s.get("kind").and_then(|k| k.as_str()).unwrap_or("");
+            !matches!(k, "divider" | "spacer" | "announcement_bar")
+        })
+        .count();
+    if content_sections < 4 {
+        return;
+    }
+    let mut image_count = 0;
+    fn has_image(v: &Value) -> bool {
+        match v {
+            Value::Object(obj) => {
+                if let Some(kind) = obj.get("kind").and_then(|k| k.as_str()) {
+                    if matches!(
+                        kind,
+                        "picture"
+                            | "asset_slug"
+                            | "logo_cloud"
+                            | "logo_wall"
+                            | "feature_spotlight"
+                            | "photo"
+                    ) {
+                        return true;
+                    }
+                }
+                if obj.contains_key("src") || obj.contains_key("icon_slug") {
+                    return true;
+                }
+                for (_, val) in obj {
+                    if has_image(val) {
+                        return true;
+                    }
+                }
+                false
+            }
+            Value::Array(arr) => arr.iter().any(has_image),
+            _ => false,
+        }
+    }
+    for s in sections {
+        if has_image(s) {
+            image_count += 1;
+        }
+    }
+    if image_count == 0 {
+        findings.push(Finding::warn(
+            phase,
+            path.to_owned(),
+            format!(
+                "image_desert: page has {content_sections} content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background"
+            ),
+        ));
+    }
 }
 
 /// Walk every string-valued field across the JSON tree of the

@@ -280,19 +280,19 @@
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "21.5K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.7K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "platform.html",
-      "message": "22.6K HTML > 20.0K budget — audit blocks / split route",
+      "message": "22.8K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "signin.html",
-      "message": "21.4K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.6K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -304,7 +304,7 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "308K CSS > 64.0K budget — split into per-route bundles",
+      "message": "310K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
@@ -764,6 +764,12 @@
       "severity": "warn"
     },
     {
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/pricing.json",
+      "message": "image_desert: page has 6 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "severity": "warn"
+    },
+    {
       "phase": "crawl",
       "path": "127.0.0.1:8123",
       "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
@@ -771,9 +777,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 128,
-  "duration_ms": 17,
-  "prev_hash": "d9949bbe23811fa87a550177f082568584cce6e91a5588661acf51df8654fd1c",
-  "chain_length": 74,
-  "started": "2026-05-19T13:41:41.557526717Z"
+  "warn_count": 129,
+  "duration_ms": 41,
+  "prev_hash": "aeef38573d4e86f3aa436839b5a597742ca53c64d6b910f974e9f8e25f4f9fe2",
+  "chain_length": 77,
+  "started": "2026-05-19T13:55:43.2691018Z"
 }
