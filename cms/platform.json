@@ -60,68 +60,65 @@
       "height": "comfortable"
     },
     {
-      "kind": "feature_spotlight",
-      "heading": "What's in the box",
-      "lede": "Six tools. Use one. Or all six.",
-      "columns": 3,
+      "kind": "heading",
+      "text": "What's in the box",
+      "level": 2
+    },
+    {
+      "kind": "lede",
+      "text": "Six tools. Use one. Or all six. Every tool can be swapped, rewired, or replaced because the contract between them is typed, not configured."
+    },
+    {
+      "kind": "def_list",
       "items": [
         {
-          "icon_slug": "icon-arrow-right",
-          "title": "Forge",
-          "body": "Typed build pipeline. 27 audit phases per commit, Merkle-chained signed reports, deterministic output."
+          "term": "Forge",
+          "definition": "Typed build pipeline. 27 audit phases per commit, Merkle-chained signed reports, deterministic output. The same input compiles to the same bytes — today, next decade, forever."
         },
         {
-          "icon_slug": "icon-check",
-          "title": "Loom",
-          "body": "142 typed UI primitives, 14 themes, OKLCH palette, dual-theme by default, WCAG 2.1 AA gated at build time."
+          "term": "Loom",
+          "definition": "Typed UI primitives + 14 themes + OKLCH palette + dual-theme by default + WCAG 2.1 AA gated at build time. Every CmsSection variant is a closed enum; raw class strings fail lint."
         },
         {
-          "icon_slug": "icon-search",
-          "title": "Crawler",
-          "body": "Runtime auditor walking the real DOM. 120+ typed detectors no static analysis can run."
+          "term": "Crawler",
+          "definition": "Runtime auditor walking the real DOM. 120+ typed detectors no static analysis can run — contrast across translucent stacks, layout collapse at narrow viewports, gradient-text mid-character clipping, phantom focus on off-screen elements."
         },
         {
-          "icon_slug": "icon-home",
-          "title": "Annotator",
-          "body": "Operator capture. Typed event stream, lossless replay, local-first storage, opt-in by user."
+          "term": "Annotator",
+          "definition": "Operator capture. Typed event stream, lossless replay, local-first storage, opt-in by user. Replays the exact session — keystrokes, scroll, focus, latency — without ever leaving the visitor's browser."
         },
         {
-          "icon_slug": "icon-arrow-right",
-          "title": "CMS",
-          "body": "Content as typed data. JSON files in version control. No database, no template language."
+          "term": "CMS",
+          "definition": "Content as typed data. JSON files in version control. No database, no template language. Schema migrations are minutes — the types ARE the migration."
         },
         {
-          "icon_slug": "icon-check",
-          "title": "LFI",
-          "body": "AI evaluation, not generation. Critic trait gates every proposal. LLM-pluggable, optional."
+          "term": "LFI",
+          "definition": "AI evaluation, not generation. The Critic trait gates every proposal at a compiler-enforced seam. LLMs are constrained candidate generators; the Critic is the brain. LLM-pluggable, optional, sandboxable."
         }
       ]
     },
     {
-      "kind": "stat_band",
-      "heading": "Built on standards",
-      "items": [
-        {
-          "value": "27",
-          "label": "Audit phases",
-          "hint": "Per commit"
-        },
-        {
-          "value": "142",
-          "label": "Loom primitives",
-          "hint": "Typed CmsSection variants"
-        },
-        {
-          "value": "14",
-          "label": "Themes",
-          "hint": "Including AMOLED + HC pair"
-        },
-        {
-          "value": "6",
-          "label": "Networks",
-          "hint": "Clearnet + Tor + I2P + IPFS + Gemini + Lokinet"
-        }
-      ]
+      "kind": "heading",
+      "text": "Built on standards",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge runs 27 audit phases on every commit. Loom ships the typed primitive count via a renderer-injected fact — currently:"
+    },
+    {
+      "kind": "loom_fact",
+      "which": "primitive_count",
+      "shape": "sentence"
+    },
+    {
+      "kind": "loom_fact",
+      "which": "theme_count",
+      "shape": "sentence"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Six deploy networks ship today (clearnet, Tor, I2P, IPFS, Gemini, Lokinet) — the same Forge build produces every variant from the same input."
     },
     {
       "kind": "steps",

@@ -316,7 +316,7 @@
     {
       "phase": "perf_budget",
       "path": "platform.html",
-      "message": "22.9K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.7K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -885,6 +885,12 @@
     },
     {
       "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/platform.json",
+      "message": "image_desert: page has 14 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "severity": "warn"
+    },
+    {
+      "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/prosperity-club.json",
       "message": "image_desert: page has 17 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
@@ -909,9 +915,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 151,
-  "duration_ms": 18,
-  "prev_hash": "32ac513cfcbed967a46df98b65db1620f21a19f4e2120b8c2b37f9fbd668d745",
-  "chain_length": 89,
-  "started": "2026-05-19T21:35:49.550815255Z"
+  "warn_count": 152,
+  "duration_ms": 15,
+  "prev_hash": "7767d16f19193f27f5bb67b48665d7a871946c60539f31cbc0bfc0943d6ca0e9",
+  "chain_length": 90,
+  "started": "2026-05-19T21:36:55.530737415Z"
 }
