@@ -55,32 +55,6 @@
       "height": "comfortable"
     },
     {
-      "kind": "stat_band",
-      "heading": "How we work",
-      "items": [
-        {
-          "value": "Slow",
-          "label": "On purpose",
-          "hint": "Discipline-gate before merge"
-        },
-        {
-          "value": "Open",
-          "label": "MIT / Apache-2",
-          "hint": "Every commit signed"
-        },
-        {
-          "value": "Funded",
-          "label": "By revenue",
-          "hint": "No VC. Grants where aligned."
-        },
-        {
-          "value": "Verified",
-          "label": "End-to-end",
-          "hint": "Reproducible builds + SBOM"
-        }
-      ]
-    },
-    {
       "kind": "heading",
       "text": "How we work",
       "level": 2
@@ -94,35 +68,59 @@
       "text": "We do not believe in roadmaps that promise a feature in eighteen months. We believe in shipping small, audited, reproducible changes — and in letting the audit chain speak for itself when a customer asks what changed between two builds. The chain hash is the proof; the screenshot diff is the corroboration."
     },
     {
+      "kind": "kv_pair",
+      "heading": "Operating posture",
+      "items": [
+        {
+          "key": "Slow on purpose",
+          "value": "Discipline-gate before merge — tests, docs, audit, security.",
+          "hint": "A new feature isn't done when it compiles; it's done when the audit chain accepts it."
+        },
+        {
+          "key": "Open by license",
+          "value": "MIT / Apache-2 source. Every commit signed. Every release tagged.",
+          "hint": "Forks are first-class; no \"open core\" carve-outs."
+        },
+        {
+          "key": "Revenue-funded",
+          "value": "No venture capital. Grants accepted where the mission aligns.",
+          "hint": "Customer money keeps the incentives straight."
+        },
+        {
+          "key": "Verified end-to-end",
+          "value": "Reproducible builds + signed SBOMs. Same input, same hash, forever.",
+          "hint": "Compliance auditors stop asking follow-up questions after the first chain replay."
+        }
+      ]
+    },
+    {
       "kind": "pull_quote",
       "body": "We replaced three SaaS subscriptions with a single Forge build. The audit chain ships straight to compliance and the auditor stopped asking follow-up questions.",
       "attribution": "the shape of an outcome the platform is engineered to produce"
     },
     {
-      "kind": "feature_spotlight",
-      "heading": "Principles",
-      "lede": "What we won't compromise on.",
-      "columns": 2,
+      "kind": "heading",
+      "text": "What we won't compromise on",
+      "level": 2
+    },
+    {
+      "kind": "def_list",
       "items": [
         {
-          "icon_slug": "icon-check",
-          "title": "Discipline first",
-          "body": "Tests + docs + audit on every commit. Codified in scripts/discipline-check.sh --strict."
+          "term": "Discipline first",
+          "definition": "Tests + docs + audit on every commit. Codified in scripts/discipline-check.sh --strict. The discipline gate runs before merge, not after; missing tests are a build failure, not a TODO."
         },
         {
-          "icon_slug": "icon-arrow-right",
-          "title": "Typed contracts at every boundary",
-          "body": "If the types compile, the system doesn't break at runtime."
+          "term": "Typed contracts at every boundary",
+          "definition": "If the types compile, the system doesn't break at runtime. Every cross-crate seam, every JSON wire shape, every IPC frame carries a closed Rust enum or struct with deny_unknown_fields."
         },
         {
-          "icon_slug": "icon-search",
-          "title": "Reproducible builds",
-          "body": "Same input → same hash. Independently verifiable; not a trust-the-vendor claim."
+          "term": "Reproducible builds",
+          "definition": "Same input → same hash. Independently verifiable; not a trust-the-vendor claim. The Merkle-chained audit report ships alongside every binary."
         },
         {
-          "icon_slug": "icon-home",
-          "title": "Privacy by default",
-          "body": "Self-host everything. No third-party fonts, no analytics, no telemetry, no CDNs."
+          "term": "Privacy by default",
+          "definition": "Self-host everything. No third-party fonts, no analytics, no telemetry, no CDNs. The browser makes the same requests every visit, no matter who the visitor is."
         }
       ]
     },
