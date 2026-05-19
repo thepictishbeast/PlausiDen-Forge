@@ -7759,6 +7759,45 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-article { max-width: 42rem; margin: 0 auto; font-size: 1.06rem; line-height: 1.7; }
 .loom-subhead { margin-top: 2rem; font-family: var(--loom-font-display); letter-spacing: -0.02em; }
 .loom-lede { font-size: 1.25rem; line-height: 1.55; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent); margin-bottom: 2rem; }
+.loom-sublede {
+  margin: -1rem 0 1.75rem;
+  font: italic 400 1.05rem/1.5 var(--loom-font-serif, var(--loom-font-display));
+  letter-spacing: 0.005em;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
+}
+.loom-kicker {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.18rem 0.55rem;
+  font: 700 0.72rem/1 var(--loom-font-mono, ui-monospace, monospace);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--loom-color-primary, var(--loom-accent));
+  border: 1px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 50%, transparent);
+  border-radius: 2px;
+}
+.loom-byline {
+  margin: 0 0 1.5rem;
+  font: 500 0.92rem/1.5 var(--loom-font-sans, sans-serif);
+  letter-spacing: 0.01em;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
+}
+.loom-byline__author { font-weight: 700; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 90%, transparent); }
+.loom-byline__role,
+.loom-byline__dateline,
+.loom-byline__reading-time { color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent); }
+.loom-endnote {
+  margin: 0.5rem 0;
+  font: 400 0.92rem/1.5 var(--loom-font-serif, var(--loom-font-display));
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 75%, transparent);
+  padding-left: 1.5rem;
+  text-indent: -1.5rem;
+}
+.loom-endnote__num {
+  font-weight: 700;
+  font-family: var(--loom-font-mono, ui-monospace, monospace);
+  color: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 80%, transparent);
+}
 .loom-dropcap::first-letter { initial-letter: 3; -webkit-initial-letter: 3; font-family: var(--loom-font-display); font-weight: 900; color: var(--loom-color-primary, var(--loom-accent)); margin-right: 0.4rem; }
 .loom-figure { margin: 2rem 0; }
 .loom-figure__media { aspect-ratio: 16 / 9; border-radius: 12px; background: linear-gradient(135deg, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 30%, transparent), color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 30%, transparent)); display: grid; place-items: center; }

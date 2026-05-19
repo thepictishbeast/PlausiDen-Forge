@@ -128,7 +128,7 @@
       "kind": "roadmap",
       "now": [
         "Forge build pipeline shipping",
-        "132 Loom typed primitives",
+        "170 Loom typed primitives",
         "Multi-network DeployAdapter"
       ],
       "next": [
