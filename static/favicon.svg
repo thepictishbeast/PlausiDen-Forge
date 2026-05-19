@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>PlausiDen</title>
+  <desc>Audit-chain monolith — three linked nodes inside the bowl of a P, on a deep ink ground.</desc>
+  <!-- Ground -->
+  <rect width="64" height="64" rx="10" fill="#0F1019"/>
+  <!-- Primary P stem + bowl -->
+  <path d="M14 12 L14 52 L22 52 L22 38 L33 38 C42 38 49 32 49 25 C49 18 42 12 33 12 Z M22 19 L33 19 C37 19 41 21.5 41 25 C41 28.5 37 31 33 31 L22 31 Z" fill="#FBFAF7"/>
+  <!-- Three audit-chain nodes inside the bowl counter (Merkle link motif) -->
+  <circle cx="28" cy="25" r="1.8" fill="#0F1019"/>
+  <circle cx="32" cy="25" r="1.8" fill="#A5A6FF"/>
+  <circle cx="36" cy="25" r="1.8" fill="#0F1019"/>
+  <!-- Hairline accent under the wordmark -->
+  <line x1="14" y1="56" x2="50" y2="56" stroke="#A5A6FF" stroke-width="1.4" stroke-linecap="square"/>
+</svg>
