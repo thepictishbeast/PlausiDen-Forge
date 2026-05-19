@@ -156,10 +156,22 @@ impl Phase for RenderPhase {
             // Closed allow-list ("light"|"dark") at every layer.
             let env_theme = std::env::var("FORGE_THEME").ok();
             let toml_theme = forge_toml_theme(&ctx.root);
-            let theme_owned = env_theme.or(toml_theme);
-            let theme_ref = theme_owned
-                .as_deref()
-                .filter(|t| matches!(*t, "light" | "dark"));
+            // Per-page theme on CmsPage wins over env / forge.toml.
+            // Falls back to LOOM_THEME env, then forge.toml [theme].
+            // The allowlist is wider than light/dark — page_shell_themed
+            // re-validates against the closed enum, so we just need
+            // some value to pass through.
+            let theme_owned = page
+                .theme
+                .clone()
+                .or(env_theme)
+                .or(toml_theme);
+            let theme_ref = theme_owned.as_deref().filter(|t| {
+                matches!(
+                    *t,
+                    "light" | "dark" | "auto" | "warm" | "ocean" | "forest" | "violet" | "rose"
+                )
+            });
             let body_markup = loom_cms_render::render_page(&page).into_string();
             let html = loom_cms_render::page_shell_themed(
                 &page,

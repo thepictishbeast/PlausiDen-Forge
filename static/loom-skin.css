@@ -7573,7 +7573,7 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
  * ============================================================ */
 
 body[data-chrome="floating-pill"] {
-  background: var(--loom-color-bg, var(--loom-bg));
+  background: var(--loom-color-bg-canvas);
   background-image: none;
   background-attachment: scroll;
 }
@@ -7587,7 +7587,7 @@ body[data-chrome="floating-pill"]::before {
     ),
     radial-gradient(
       40rem 22rem at 88% 12%,
-      color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 14%, transparent) 0%,
+      color-mix(in oklab, var(--loom-color-accent) 14%, transparent) 0%,
       transparent 65%
     );
   pointer-events: none;
