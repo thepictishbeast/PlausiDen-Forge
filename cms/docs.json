@@ -81,7 +81,7 @@
       "kind": "split_hero",
       "eyebrow": "A page in 20 lines",
       "title": "Author once. Render every variant.",
-      "lede": "Closed-enum CmsSection variants render through one render_page() function. 142 primitives compose every layout shape you've seen.",
+      "lede": "Closed-enum CmsSection variants render through one render_page() function. The full primitive catalogue composes every layout shape you've seen — see the reference below for the current count.",
       "cta": {
         "label": "Platform",
         "href": "/platform.html",
@@ -95,27 +95,49 @@
       "visual_right": true
     },
     {
-      "kind": "feature_spotlight",
-      "heading": "Reference",
-      "lede": "The complete documentation lives in the source tree.",
-      "columns": 3,
+      "kind": "heading",
+      "text": "Reference",
+      "level": 2
+    },
+    {
+      "kind": "lede",
+      "text": "The complete documentation lives in the source tree."
+    },
+    {
+      "kind": "def_list",
       "items": [
         {
-          "icon_slug": "icon-arrow-right",
-          "title": "142 section kinds",
-          "body": "Closed-enum CmsSection variants across Structural, Editorial, Marketing, Media, Commerce, Social, Forms, Navigation, Feedback, Game-Forum-Video, Auth, Crucible."
+          "term": "Section kinds",
+          "definition": "Closed-enum CmsSection variants spanning Structural, Editorial, Marketing, Media, Commerce, Social, Forms, Navigation, Feedback, Game-Forum-Video, Auth, and Crucible families. Every kind carries deny_unknown_fields; a typo at author time is a parse failure, not a render-time blank."
         },
         {
-          "icon_slug": "icon-check",
-          "title": "14 themes",
-          "body": "AMOLED true-black, WCAG-AA high-contrast pair, sepia, warm, ocean, forest, violet, rose. Picked via data-theme attribute or in-page toggle."
+          "term": "Themes",
+          "definition": "AMOLED true-black, WCAG-AA high-contrast pair, sepia, warm, ocean, forest, violet, rose. Picked via data-theme attribute on <html> or via the in-page toggle. Same OKLCH palette; no theme uses a different color scale."
         },
         {
-          "icon_slug": "icon-search",
-          "title": "27 audit phases",
-          "body": "Configured in forge.toml. Tokens / CSP / a11y landmarks / theme contrast / phantom-button / unbuilt-route / external-assets / and more."
+          "term": "Audit phases",
+          "definition": "Configured in forge.toml. Tokens / CSP / a11y landmarks / theme contrast / phantom-button / unbuilt-route / external-assets / image-desert / heading-order / contrast-AA / and more. Each phase is a typed Rust struct; severities are info / warn / strict."
         }
       ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "Concrete counts as of the current build:"
+    },
+    {
+      "kind": "loom_fact",
+      "which": "primitive_count",
+      "shape": "sentence"
+    },
+    {
+      "kind": "loom_fact",
+      "which": "theme_count",
+      "shape": "sentence"
+    },
+    {
+      "kind": "loom_fact",
+      "which": "forge_audit_phase_count",
+      "shape": "sentence"
     },
     {
       "kind": "faq",
