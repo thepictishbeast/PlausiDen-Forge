@@ -44,18 +44,8 @@
   ],
   "sections": [
     {
-      "kind": "announcement_bar",
-      "text": "Forge 0.18 ships typed CMS pipeline + 125 Loom primitives.",
-      "tone": "info",
-      "cta": {
-        "label": "Blog",
-        "href": "/blog.html",
-        "data_backend": "cta-blog"
-      }
-    },
-    {
       "kind": "image_hero",
-      "eyebrow": "Build platform · Beta",
+      "eyebrow": "Forge 0.18 · 125 Loom primitives · 13 themes",
       "title": "Software that lasts a thousand years.",
       "lede": "Typed contracts at every boundary, audited at every commit, engineered for the privacy-first internet.",
       "cta": {
@@ -67,6 +57,11 @@
         "kind": "gradient_mesh"
       },
       "height": "tall"
+    },
+    {
+      "kind": "pull_quote",
+      "body": "We were tired of CMSes that rot. So we built the substrate the way compilers ship software — typed, audited, reproducible.",
+      "attribution": "PlausiDen build doctrine"
     },
     {
       "kind": "marquee",
@@ -119,32 +114,32 @@
       "columns": 3,
       "items": [
         {
-          "icon_slug": "icon-arrow-right",
+          "icon_slug": "terminal",
           "title": "Forge",
           "body": "Typed build pipeline. 27 audit phases per commit, Merkle-chained signed reports."
         },
         {
-          "icon_slug": "icon-check",
+          "icon_slug": "code",
           "title": "Loom",
           "body": "125 typed UI primitives, 13 themes, OKLCH palette, dual-theme by default."
         },
         {
-          "icon_slug": "icon-search",
+          "icon_slug": "globe",
           "title": "Crawler",
           "body": "Runtime auditor walking the real DOM. 120+ detectors no static analysis can run."
         },
         {
-          "icon_slug": "icon-home",
+          "icon_slug": "clipboard-check",
           "title": "Annotator",
           "body": "Operator capture. Typed event stream, lossless replay, local-first storage."
         },
         {
-          "icon_slug": "icon-arrow-right",
+          "icon_slug": "file-text",
           "title": "CMS",
           "body": "Content as typed data. JSON files in version control. No database, no template language."
         },
         {
-          "icon_slug": "icon-check",
+          "icon_slug": "brain-circuit",
           "title": "LFI",
           "body": "AI evaluation, not generation. Critic trait gates every proposal. LLM-pluggable."
         }

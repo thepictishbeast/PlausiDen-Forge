@@ -1016,10 +1016,11 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 [[package]]
 name = "loom-cms-render"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#eba33bdb26757db0d8579478acb43e5a1e40201a"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#4b466d1ff45ace3013634cfa50daa045013c3f87"
 dependencies = [
  "base64",
  "loom-components",
+ "loom-icons",
  "maud",
  "schemars",
  "serde",
@@ -1030,7 +1031,7 @@ dependencies = [
 [[package]]
 name = "loom-components"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#eba33bdb26757db0d8579478acb43e5a1e40201a"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#4b466d1ff45ace3013634cfa50daa045013c3f87"
 dependencies = [
  "loom-icons",
  "loom-tokens",
@@ -1041,12 +1042,12 @@ dependencies = [
 [[package]]
 name = "loom-icons"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#eba33bdb26757db0d8579478acb43e5a1e40201a"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#4b466d1ff45ace3013634cfa50daa045013c3f87"
 
 [[package]]
 name = "loom-lint"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#eba33bdb26757db0d8579478acb43e5a1e40201a"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#4b466d1ff45ace3013634cfa50daa045013c3f87"
 dependencies = [
  "anyhow",
  "regex",
@@ -1057,7 +1058,7 @@ dependencies = [
 [[package]]
 name = "loom-tokens"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#eba33bdb26757db0d8579478acb43e5a1e40201a"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#4b466d1ff45ace3013634cfa50daa045013c3f87"
 dependencies = [
  "serde",
  "serde_json",
