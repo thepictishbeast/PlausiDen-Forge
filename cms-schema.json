@@ -130,6 +130,17 @@
           "description": "Primary card link target. Validated by `is_safe_url`.",
           "type": "string"
         },
+        "media": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CmsCardMedia"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "T70a: optional 16:9 media slot rendered ABOVE the body. When None, no media block is emitted (card is pure text). When Some, a `<div class=\"loom-card-feed-item__media\">` wraps the asset (image / picture / video). Lazy-load via loading=\"lazy\". Object-fit:cover via skin.css."
+        },
         "stats": {
           "default": [],
           "description": "Stats grid below the body. Empty → no grid emitted.",
@@ -148,6 +159,13 @@
         "title": {
           "description": "Card title (rendered as h3).",
           "type": "string"
+        },
+        "tone": {
+          "description": "Optional `data-tone` value for the tag chip (curated palette in skin.css: violet/indigo/ocean/forest/amber/rose/ruby/ walnut/slate/teal). When set, drives the chip's bg/fg/border hue. Falls back to the site's primary brand color when None. Sites that need a custom hue should keep `tone` None and emit inline `style=\"--tag-color: …\"` via a future field.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -157,6 +175,123 @@
         "title"
       ],
       "type": "object"
+    },
+    "CmsCardMedia": {
+      "description": "T70a: media slot for [`CmsCard`]. Three shapes: - `Image { src, alt, srcset?, width?, height? }` — `<img loading=\"lazy\">` - `Video { poster?, src, type, alt }` — native `<video>` (no autoplay) - `Placeholder { tone? }` — visible empty media area with gradient bg (no `<img>`/`<video>`), useful while content is being authored. data-empty=\"true\" lets skin.css show a soft pattern.\n\nAll variants are SAFE: src/poster validated by `is_safe_url`; alt is REQUIRED for Image (a11y); type is restricted to known safe MIME values for Video.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Static image. `loading=\"lazy\"`. `decoding=\"async\"`.",
+          "properties": {
+            "alt": {
+              "description": "REQUIRED accessible-name text. Empty string allowed only for purely decorative media (then aria-hidden will be set by the renderer too).",
+              "type": "string"
+            },
+            "height": {
+              "description": "See `width`.",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "image"
+              ],
+              "type": "string"
+            },
+            "src": {
+              "description": "Resource URL. Validated by `is_safe_url`.",
+              "type": "string"
+            },
+            "srcset": {
+              "description": "Optional `srcset` for responsive density (1x/2x/3x).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "width": {
+              "description": "Optional intrinsic dimensions (drives layout-shift avoidance via the rendered width/height attrs).",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "src"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Native HTML `<video>`. No autoplay. controls=true. preload=metadata.",
+          "properties": {
+            "alt": {
+              "description": "Accessible-name (for screen-reader fallback).",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "video"
+              ],
+              "type": "string"
+            },
+            "mime": {
+              "description": "MIME type — must be one of: video/mp4, video/webm, video/ogg.",
+              "type": "string"
+            },
+            "poster": {
+              "description": "Optional poster image (shown before play).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "src": {
+              "description": "Video resource URL.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "mime",
+            "src"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Visible-but-empty media area. CSS gradient placeholder.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "placeholder"
+              ],
+              "type": "string"
+            },
+            "tone": {
+              "description": "Optional `data-tone` to colorize the placeholder.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "CmsCardStat": {
       "additionalProperties": false,
@@ -514,6 +649,32 @@
       ],
       "type": "object"
     },
+    "CmsKvItem": {
+      "additionalProperties": false,
+      "description": "FORGE_ROADMAP item 41: one entry in a [`CmsSection::KvPair`].\n\nBUG ASSUMPTION: `key` and `value` carry no markup; renderer auto-escapes via Maud. `hint` is also escaped and rendered as a muted single-line caption — not a place for arbitrary HTML.",
+      "properties": {
+        "hint": {
+          "description": "Optional muted caption shown below the value.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "description": "Label / dt text. Auto-escaped on render.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Value / dd text. Auto-escaped on render.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ],
+      "type": "object"
+    },
     "CmsLoading": {
       "description": "Mirror of [`PictureLoading`].",
       "oneOf": [
@@ -532,6 +693,27 @@
           "type": "string"
         }
       ]
+    },
+    "CmsLogoItem": {
+      "additionalProperties": false,
+      "description": "T660 P1: one brand logo entry in a [`CmsSection::LogoWall`].\n\n`name` is the canonical brand name + lookup key into the future `loom-brand-icons` registry. `href` is the brand's website. Until the registry crate lands, the renderer falls back to typographic rendering (the name in `loom-font-display`).\n\nAVP-2: never carries inline SVG; the registry is the only path through which SVG markup reaches the page.",
+      "properties": {
+        "href": {
+          "description": "Brand website URL. Auto-escaped + rendered as the wrap element if non-empty.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Brand name (also the lookup key into `loom-brand-icons`). Examples: \"Stripe\", \"Linear\", \"Vercel\".",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
     },
     "CmsNavLink": {
       "additionalProperties": false,
@@ -762,7 +944,7 @@
               "type": "string"
             },
             "lede": {
-              "description": "Optional subhead paragraph.",
+              "description": "Optional subhead paragraph.\n\nREGRESSION-GUARD: serde alias `subtitle` accepts the pre-2026-05 field name. Older fixture files written by the form-builder still use `subtitle`; without the alias the renderer 500s on read because `deny_unknown_fields` rejects unknown keys. Save-path scrubbing handles the write side; this handles the read side. Cycle 52 /preview-edit/about.html 500 was the trigger.",
               "type": [
                 "string",
                 "null"
@@ -1092,7 +1274,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "A heading. Level constrained to 2-4 (h1 is owned by the page-shell template, not section content).",
+          "description": "A heading. Level constrained to 2-6 (h1 is owned by the page-shell template, not section content). T36 (2026-05-14): `level` is a typed `HeadingLevel` enum so out-of-range values are uncompilable AND parse-failed at the JSON boundary — no runtime clamp surface.",
           "properties": {
             "kind": {
               "enum": [
@@ -1101,10 +1283,12 @@
               "type": "string"
             },
             "level": {
-              "description": "`2` → `<h2>`, etc. Validation in [`render_section`].",
-              "format": "uint8",
-              "minimum": 0.0,
-              "type": "integer"
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeadingLevel"
+                }
+              ],
+              "description": "Typed heading level. JSON: integer 2..=6 (anything else fails parse with `deny_unknown_fields`-style strictness)."
             },
             "text": {
               "description": "Heading text.",
@@ -1115,6 +1299,139 @@
             "kind",
             "level",
             "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "FORGE_ROADMAP item 41 — typed key/value list (definition-list shape). Renders as a `<dl>` with one `<dt>/<dd>` pair per item; optional `hint` shows as a muted span under the value. Use cases: \"Settings\", \"Match details\", \"Spec sheet\", \"Receipt fields\", \"Profile facts\" — anywhere a label-and-value row stack would otherwise be hand-rolled markup.",
+          "properties": {
+            "heading": {
+              "description": "Optional heading (rendered as h2 above the list).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "description": "Items, top to bottom.",
+              "items": {
+                "$ref": "#/definitions/CmsKvItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "kv_pair"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "T660 P1 LogoWall — a wall of vetted brand logos used as social-proof on marketing landings (\"Trusted by Stripe, Linear, Vercel, ...\"). Surfaced in 4 of 5 T660 dogfood rebuilds — highest dedup-priority variant in the registry.\n\n`items` carries explicit text labels because the actual SVG markup lives in a vetted `loom-brand-icons` registry crate (queued separately). Until that registry lands, the renderer emits a typographic placeholder; once it lands, the registry lookup happens at render time keyed by the label.\n\nAVP-2: brand SVG bodies are TRUSTED content; this CmsSection never accepts inline SVG from user input.",
+          "properties": {
+            "heading": {
+              "description": "Optional heading rendered above the wall (\"Trusted by\", \"Customers\", etc.).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "description": "Brand entries, left-to-right then wrap.",
+              "items": {
+                "$ref": "#/definitions/CmsLogoItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "logo_wall"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "T660 P2 Quote — testimonial card. Surfaced in 3 of 3 T660 marketing rebuilds (Stripe, Linear, Vercel) — second-highest dedup-priority. Single quote per section; multi-quote carousels = multiple Quote sections (deliberate, lets downstream operators reorder via the picker).",
+          "properties": {
+            "attribution": {
+              "description": "Speaker name (e.g. \"Patrick Collison\").",
+              "type": "string"
+            },
+            "body": {
+              "description": "The quoted text. Auto-escaped on render.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "quote"
+              ],
+              "type": "string"
+            },
+            "role": {
+              "description": "Speaker role / company (e.g. \"CEO, Stripe\").",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "attribution",
+            "body",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "T660 P3 Code — fenced code or terminal-output block. Surfaced in 2 of 3 T660 marketing rebuilds (Stripe API callouts + Vercel `npx vercel` snippets). Renders as semantic `<pre><code class=\"language-<lang>\">`; the typed `lang` field keeps callers honest about syntax-highlighting hints without shipping a runtime highlighter in v1.",
+          "properties": {
+            "body": {
+              "description": "Body of the block. Auto-escaped via Maud. Multi-line OK.",
+              "type": "string"
+            },
+            "caption": {
+              "description": "Optional caption rendered above the block.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "code"
+              ],
+              "type": "string"
+            },
+            "lang": {
+              "default": "",
+              "description": "Fence language hint. Empty = generic. Examples: \"bash\", \"rust\", \"javascript\", \"terminal\".",
+              "type": "string"
+            },
+            "terminal": {
+              "default": false,
+              "description": "True if the block represents terminal/shell output (sets data-loom-terminal so the skin can render a chrome bar).",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "body",
+            "kind"
           ],
           "type": "object"
         }
@@ -1138,6 +1455,17 @@
         "value"
       ],
       "type": "object"
+    },
+    "HeadingLevel": {
+      "description": "Heading level (h2-h6). h1 is reserved for the page-shell.",
+      "enum": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "type": "integer"
     },
     "HeroCta": {
       "additionalProperties": false,
@@ -1168,6 +1496,13 @@
   "properties": {
     "$schema": {
       "description": "JSON Schema reference. Editors with jsonls (VS Code, Helix, Zed) read this to provide inline autocomplete + validation. The bridge ignores the value — it's the editor's contract, not the renderer's. Authors should generate the schema via `loom cms-schema --out ...` and reference it here as `\"$schema\": \"../cms-schema.json\"`.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "brand": {
+      "description": "Top-of-page brand label rendered as the `loom-page-brand` link. When omitted, the renderer derives a brand from the first segment of `title` before \" — \" / \" · \" / \"—\" / \" - \" separators.",
       "type": [
         "string",
         "null"

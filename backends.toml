@@ -168,3 +168,15 @@ method = "GET"
 path = "/blog/{slug}"
 purpose = "Blog post (placeholder)"
 impl_files = []
+
+[backends.cta-blog]
+method = "GET"
+path = "/blog"
+purpose = "CTA: blog / changelog"
+impl_files = []
+
+[backends.cta-changelog]
+method = "GET"
+path = "/blog"
+purpose = "CTA: changelog"
+impl_files = []

@@ -37,6 +37,7 @@ members = [
     "crates/forge-phases",
     "crates/forge-cli",
     "crates/forge-critic",
+    "crates/forge-auth",
     "crates/forge-serve",
     "crates/forge-replay",
     # T29: manifest-core — the keystone PlatformManifest type. Every
