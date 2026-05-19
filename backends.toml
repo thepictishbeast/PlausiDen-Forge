@@ -216,9 +216,3 @@ method = "GET"
 path = "/trial"
 purpose = "CTA: start trial"
 impl_files = []
-
-[backends.view-post]
-method = "GET"
-path = "/blog/{slug}"
-purpose = "Blog post placeholder"
-impl_files = []
