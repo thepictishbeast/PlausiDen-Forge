@@ -6838,6 +6838,62 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 
 /* ============================================================
+ * FeatureSpotlight decoration variants (substrate-de-consumer-shaping)
+ * ============================================================ */
+/* Editorial: strip card chrome to typography + top accent rule. */
+.loom-feature-spotlight.deco-editorial .loom-feature-spotlight__item {
+  padding: 1rem 0 1.25rem;
+  border: 0;
+  border-top: 2px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 60%, transparent);
+  border-radius: 0;
+  background: transparent;
+  transition: none;
+}
+.loom-feature-spotlight.deco-editorial .loom-feature-spotlight__item:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-feature-spotlight.deco-editorial .loom-feature-spotlight__icon {
+  width: auto; height: auto;
+  background: none;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--loom-color-primary, var(--loom-accent));
+  display: inline-flex;
+}
+.loom-feature-spotlight.deco-editorial .loom-feature-spotlight__title {
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+/* Minimal: tightest, no decoration at all. */
+.loom-feature-spotlight.deco-minimal .loom-feature-spotlight__item {
+  padding: 0.5rem 0;
+  border: 0;
+  background: transparent;
+  transition: none;
+}
+.loom-feature-spotlight.deco-minimal .loom-feature-spotlight__item:hover {
+  transform: none;
+  box-shadow: none;
+}
+.loom-feature-spotlight.deco-minimal .loom-feature-spotlight__icon {
+  display: none;
+}
+.loom-feature-spotlight.deco-minimal .loom-feature-spotlight__title {
+  font-weight: 600;
+  font-size: 0.98rem;
+  margin-bottom: 0.25rem;
+}
+.loom-feature-spotlight.deco-minimal .loom-feature-spotlight__body {
+  font-size: 0.9rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 75%, transparent);
+}
+
+/* ============================================================
  * StatBand — row of large animated numbers
  * ============================================================ */
 .loom-stat-band {
