@@ -73,7 +73,7 @@
         {
           "icon_slug": "icon-check",
           "title": "Loom",
-          "body": "170 typed UI primitives, 14 themes, OKLCH palette, dual-theme by default, WCAG 2.1 AA gated at build time."
+          "body": "142 typed UI primitives, 14 themes, OKLCH palette, dual-theme by default, WCAG 2.1 AA gated at build time."
         },
         {
           "icon_slug": "icon-search",
@@ -107,7 +107,7 @@
           "hint": "Per commit"
         },
         {
-          "value": "170",
+          "value": "142",
           "label": "Loom primitives",
           "hint": "Typed CmsSection variants"
         },
@@ -209,7 +209,7 @@
         },
         {
           "when": "2026 Q3",
-          "title": "Loom 0.4 — 170 typed primitives",
+          "title": "Loom 0.4 — 142 typed primitives",
           "body": "Catalogue: Layout / Editorial / Marketing / Media / Commerce / Social / Forms / Navigation / Feedback / Auth + Crucible widget."
         },
         {

@@ -132,7 +132,7 @@
           "price": "$0",
           "period": "/mo",
           "tagline": "Free forever, one developer.",
-          "features": ["Unlimited builds", "All 170 primitives", "All 14 themes", "Multi-network deploy"],
+          "features": ["Unlimited builds", "All 142 primitives", "All 14 themes", "Multi-network deploy"],
           "cta": {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"},
           "highlighted": false
         },

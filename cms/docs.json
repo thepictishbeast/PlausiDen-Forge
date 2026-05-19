@@ -81,7 +81,7 @@
       "kind": "split_hero",
       "eyebrow": "A page in 20 lines",
       "title": "Author once. Render every variant.",
-      "lede": "Closed-enum CmsSection variants render through one render_page() function. 170 primitives compose every layout shape you've seen.",
+      "lede": "Closed-enum CmsSection variants render through one render_page() function. 142 primitives compose every layout shape you've seen.",
       "cta": {
         "label": "Platform",
         "href": "/platform.html",
@@ -102,7 +102,7 @@
       "items": [
         {
           "icon_slug": "icon-arrow-right",
-          "title": "170 section kinds",
+          "title": "142 section kinds",
           "body": "Closed-enum CmsSection variants across Structural, Editorial, Marketing, Media, Commerce, Social, Forms, Navigation, Feedback, Game-Forum-Video, Auth, Crucible."
         },
         {

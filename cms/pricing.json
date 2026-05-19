@@ -61,7 +61,7 @@
     },
     {
       "kind": "paragraph",
-      "text": "Every plan ships the same substrate: 170 primitives, 14 themes, reproducible builds, multi-network publish, signed Merkle-chained audits, the Crucible captcha, Forge-auth, and bring-your-own LLM. What changes between plans is build-minute quota, storage, support latency, and access to the compliance-grade audit channel."
+      "text": "Every plan ships the same substrate: 142 primitives, 14 themes, reproducible builds, multi-network publish, signed Merkle-chained audits, the Crucible captcha, Forge-auth, and bring-your-own LLM. What changes between plans is build-minute quota, storage, support latency, and access to the compliance-grade audit channel."
     },
     {
       "kind": "paragraph",
@@ -201,7 +201,7 @@
       ],
       "rows": [
         {
-          "label": "All 170 Loom primitives",
+          "label": "All 142 Loom primitives",
           "values": [
             "—",
             "Yes"
