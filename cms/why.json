@@ -55,39 +55,40 @@
       "height": "comfortable"
     },
     {
-      "kind": "stat_band",
-      "heading": "Six axes, simultaneously",
-      "lede": "Most stacks pick two or three. We refuse the tradeoff.",
+      "kind": "heading",
+      "text": "Six axes, simultaneously",
+      "level": 2
+    },
+    {
+      "kind": "lede",
+      "text": "Most stacks pick two or three. We refuse the tradeoff."
+    },
+    {
+      "kind": "def_list",
       "items": [
         {
-          "value": "Fast",
-          "label": "Static-first",
-          "hint": "No runtime DB for content"
+          "term": "Fast — static-first",
+          "definition": "No runtime database for content. Every page is HTML on disk; serving is a file read. The audit chain proves the same input produces the same bytes."
         },
         {
-          "value": "Reliable",
-          "label": "Reproducible",
-          "hint": "Merkle + Ed25519"
+          "term": "Reliable — reproducible",
+          "definition": "Merkle-chained signed reports + Ed25519 keys. Byte-identical builds across machines, across years. The CI doesn't sign off; the chain does."
         },
         {
-          "value": "Robust",
-          "label": "Typed seams",
-          "hint": "Compile-time guarantees"
+          "term": "Robust — typed seams",
+          "definition": "Closed Rust enums + deny_unknown_fields at every JSON wire shape. Compile-time guarantees: if it builds, the categorical class of \"runtime field-name typo\" doesn't exist."
         },
         {
-          "value": "Secure",
-          "label": "Build-gated",
-          "hint": "WCAG · CSP · SLSA"
+          "term": "Secure — build-gated",
+          "definition": "WCAG 2.1 AA + CSP-L3 + SLSA-3 enforced at build time. A regression doesn't ship; the audit phase rejects the commit."
         },
         {
-          "value": "Anon",
-          "label": "Multi-network",
-          "hint": "Tor · I2P · IPFS · Gemini · Lokinet"
+          "term": "Anonymous — multi-network",
+          "definition": "Same Forge build, six deploy adapters: clearnet, Tor, I2P, IPFS, Gemini, Lokinet. Visitor picks the network; site doesn't care."
         },
         {
-          "value": "Private",
-          "label": "Self-hosted",
-          "hint": "Zero CDN · zero analytics"
+          "term": "Private — self-hosted",
+          "definition": "Zero CDN. Zero analytics. Zero third-party fonts. The browser makes the same requests every visit, no matter who the visitor is. The site can't see your visitors any better than you can."
         }
       ]
     },
@@ -97,20 +98,26 @@
       "attribution": "PlausiDen architecture team"
     },
     {
-      "kind": "feature_spotlight",
-      "heading": "The architectural inversion",
-      "lede": "LFI is the brain. LLM is a constrained candidate generator. Every proposal flows through Critic::evaluate → Decision.",
-      "columns": 2,
+      "kind": "heading",
+      "text": "The architectural inversion",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "LFI is the brain. LLM is a constrained candidate generator. Every proposal flows through Critic::evaluate → Decision before any commit. The split:"
+    },
+    {
+      "kind": "kv_pair",
       "items": [
         {
-          "icon_slug": "icon-arrow-right",
-          "title": "What LFI does",
-          "body": "Policy evaluation (NeuPSL weighted rules), similarity (HDC vectors), drift detection (VSA), brand-voice gating, abuse detection. Auditable + interpretable."
+          "key": "LFI does",
+          "value": "Policy evaluation (NeuPSL weighted rules), similarity (HDC vectors), drift detection (VSA), brand-voice gating, abuse detection. Auditable + interpretable.",
+          "hint": "Every Decision traces back to specific RuleId / Strength pairs an operator can read."
         },
         {
-          "icon_slug": "icon-check",
-          "title": "What LLM does",
-          "body": "Fluent copy generation, open-ended intent extraction. That's it. Everything else flows through the Critic before commit."
+          "key": "LLM does",
+          "value": "Fluent copy generation. Open-ended intent extraction. That's it.",
+          "hint": "Everything else flows through the Critic before commit."
         }
       ]
     },

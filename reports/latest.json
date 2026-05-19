@@ -897,6 +897,12 @@
     },
     {
       "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/why.json",
+      "message": "image_desert: page has 13 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "severity": "warn"
+    },
+    {
+      "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/about.json",
       "message": "image_desert: page has 10 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
@@ -915,9 +921,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 152,
-  "duration_ms": 15,
-  "prev_hash": "7767d16f19193f27f5bb67b48665d7a871946c60539f31cbc0bfc0943d6ca0e9",
-  "chain_length": 90,
-  "started": "2026-05-19T21:36:55.530737415Z"
+  "warn_count": 153,
+  "duration_ms": 17,
+  "prev_hash": "457840161ec736a1888db344f62168ddeb0927c847e81ddf44767124d3f34c74",
+  "chain_length": 91,
+  "started": "2026-05-19T21:38:25.117603539Z"
 }
