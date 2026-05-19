@@ -6959,13 +6959,19 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   font: 800 clamp(1.75rem, 3.5vw, 2.5rem)/1.1 var(--loom-font-display);
   letter-spacing: -0.025em;
   margin: 0 0 0.5rem;
-  text-align: center;
+  /* Default: align with body content. Centered headings are
+   * opt-in via .loom-pricing--centered on the outer element. */
+  text-align: start;
 }
 .loom-pricing__lede {
-  margin: 0 auto 3rem;
+  margin: 0 0 3rem;
   max-width: 60ch;
+  color: color-mix(in oklab, var(--loom-color-ink) 65%, transparent);
+}
+.loom-pricing.loom-pricing--centered .loom-pricing__heading,
+.loom-pricing.loom-pricing--centered .loom-pricing__lede {
   text-align: center;
-  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
+  margin-inline: auto;
 }
 .loom-pricing__row {
   display: grid;
@@ -6977,34 +6983,56 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   display: flex;
   flex-direction: column;
   padding: 2rem 1.75rem;
-  border-radius: 18px;
-  background: var(--loom-color-surface, var(--loom-bg));
-  border: 1px solid var(--loom-color-border, var(--loom-border));
-  transition: transform var(--loom-motion-base, 280ms) var(--loom-ease-spring, ease), box-shadow var(--loom-motion-base, 280ms) var(--loom-ease-out, ease);
-}
-.loom-pricing__tier:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 24px 48px color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 12%, transparent);
+  /* Default: flat editorial card. Square hairline border, no
+   * lift-on-hover, no heavy shadow. The pricing-as-marketing-
+   * spectacle look (rounded card + shadow + hover lift + glow
+   * on highlighted tier) is opt-in via .loom-pricing--carded
+   * on the outer element. */
+  background: var(--loom-color-surface);
+  border: 1px solid var(--loom-color-border);
+  border-radius: 0;
+  position: relative;
 }
 .loom-pricing__tier.is-highlighted {
-  border-color: var(--loom-color-primary, var(--loom-accent));
+  border-color: var(--loom-color-primary);
+  border-width: 2px;
+  /* Default highlight: heavier border, same flat shape. */
+}
+.loom-pricing.loom-pricing--carded .loom-pricing__tier {
+  border-radius: 18px;
+  transition: transform var(--loom-motion-base, 280ms) var(--loom-ease-spring, ease), box-shadow var(--loom-motion-base, 280ms) var(--loom-ease-out, ease);
+}
+.loom-pricing.loom-pricing--carded .loom-pricing__tier:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px color-mix(in oklab, var(--loom-color-ink) 12%, transparent);
+}
+.loom-pricing.loom-pricing--carded .loom-pricing__tier.is-highlighted {
+  border-radius: 18px;
   box-shadow:
-    0 0 0 1px var(--loom-color-primary, var(--loom-accent)) inset,
-    0 24px 48px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 22%, transparent);
+    0 0 0 1px var(--loom-color-primary) inset,
+    0 24px 48px color-mix(in oklab, var(--loom-color-primary) 22%, transparent);
   transform: translateY(-6px);
-  position: relative;
 }
 .loom-pricing__badge {
   position: absolute;
-  top: -0.7rem; left: 50%;
-  transform: translateX(-50%);
+  top: -0.7rem; left: 1.25rem;
+  /* Default: flat solid label. Squared corners, single ink, no
+   * gradient. The pill-shaped gradient "MOST POPULAR" badge is
+   * opt-in via .loom-pricing--carded which restores the
+   * rounded-pill + gradient look. */
   padding: 0.3rem 0.8rem;
-  border-radius: 999px;
+  border-radius: 2px;
   font: 600 0.72rem/1 var(--loom-font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: linear-gradient(135deg, var(--loom-color-primary, var(--loom-accent)), var(--loom-color-accent-2, var(--loom-accent-2)));
-  color: var(--loom-color-on-primary, white);
+  background: var(--loom-color-primary);
+  color: var(--loom-color-primary-fg);
+}
+.loom-pricing.loom-pricing--carded .loom-pricing__badge {
+  top: -0.7rem; left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--loom-color-primary), var(--loom-color-accent));
 }
 .loom-pricing__name {
   margin: 0 0 0.75rem;
@@ -7044,10 +7072,16 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
 }
 .loom-pricing__feature::before {
-  content: "✓";
+  /* Default: typographic em-dash, not the green-checkmark trope.
+   * The "✓" gloss is reserved for opt-in .loom-pricing--carded. */
+  content: "—";
   position: absolute; left: 0; top: 0;
   font-weight: 700;
-  color: var(--loom-color-primary, var(--loom-accent));
+  color: color-mix(in oklab, var(--loom-color-ink) 50%, transparent);
+}
+.loom-pricing.loom-pricing--carded .loom-pricing__feature::before {
+  content: "✓";
+  color: var(--loom-color-primary);
 }
 .loom-pricing__cta {
   margin-top: auto;
