@@ -117,6 +117,11 @@
       "text": "LFI is the brain. LLM is a constrained candidate generator. Every proposal flows through Critic::evaluate → Decision before any commit. The split:"
     },
     {
+      "kind": "figure",
+      "caption": "LFI: the brain. LLM: the candidate generator.",
+      "asset_slug": "photos/stock-78"
+    },
+    {
       "kind": "kv_pair",
       "items": [
         {

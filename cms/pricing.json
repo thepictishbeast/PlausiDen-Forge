@@ -68,6 +68,11 @@
       "text": "We never charge per page, per visitor, or per primitive. Page count and traffic are uncapped. If you outgrow Solo it is not because someone clicked your site — it is because your team is shipping more compute."
     },
     {
+      "kind": "figure",
+      "caption": "Pay for compute. Not for seats.",
+      "asset_slug": "photos/stock-72"
+    },
+    {
       "kind": "comparison",
       "heading": "What changes between Solo / Team / Enterprise",
       "columns": [

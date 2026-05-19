@@ -135,6 +135,11 @@
       "text": "Concrete counts as of the current build:"
     },
     {
+      "kind": "figure",
+      "caption": "JSON in version control, not a runtime database.",
+      "asset_slug": "photos/stock-77"
+    },
+    {
       "kind": "loom_fact",
       "which": "primitive_count",
       "shape": "sentence"

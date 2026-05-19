@@ -120,6 +120,11 @@
       "text": "Forge runs 27 audit phases on every commit. Loom ships the typed primitive count via a renderer-injected fact — currently:"
     },
     {
+      "kind": "figure",
+      "caption": "Standards-anchored: WCAG 2.1 AA, SLSA-3, ISO 8601 / 25010 / 40500 / 27001 / 9075.",
+      "asset_slug": "photos/stock-74"
+    },
+    {
       "kind": "loom_fact",
       "which": "primitive_count",
       "shape": "sentence"

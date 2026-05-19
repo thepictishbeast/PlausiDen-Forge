@@ -181,6 +181,11 @@
       ]
     },
     {
+      "kind": "figure",
+      "caption": "Direct contact, no newsletter signup.",
+      "asset_slug": "photos/stock-75"
+    },
+    {
       "kind": "call_to_action",
       "eyebrow": "Direct contact",
       "title": "Have a specific question? Ask directly.",

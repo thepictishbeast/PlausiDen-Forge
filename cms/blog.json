@@ -50,7 +50,10 @@
       "title": "Notes from the build.",
       "lede": "Architectural decisions, post-mortems, and the occasional rant about static typing.",
       "background": {
-        "kind": "gradient_mesh"
+        "kind": "photo",
+        "src": "/assets/photos/stock-71.jpg",
+        "alt": "Editorial photograph evoking writing + craft",
+        "overlay": "dark"
       },
       "height": "compact"
     },
@@ -115,6 +118,11 @@
           "definition": "Our supply-chain CI was emitting zero SBOMs for weeks because the glob path mismatched cargo-cyclonedx's per-crate output. Fixed + hardened."
         }
       ]
+    },
+    {
+      "kind": "figure",
+      "caption": "Build notes — one email a fortnight, no tracking pixels.",
+      "asset_slug": "photos/stock-79"
     },
     {
       "kind": "newsletter_signup",
