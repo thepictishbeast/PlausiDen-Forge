@@ -1,0 +1,138 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Services — PlausiDen LLC",
+  "description": "Comprehensive IT, specifically scoped. Eight engineering practices under one team — operations, disaster recovery, cyber security, AI, industrial automation, software, hardware, network architecture.",
+  "brand": "PlausiDen LLC",
+  "chrome": "floating_pill",
+  "theme": "light",
+  "nav_actions": [
+    {"label": "Encrypted Inquiry", "href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"},
+    {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
+  ],
+  "path": "/services.html",
+  "nav_links": [
+    {"label": "Services",   "href": "/services.html",    "data_backend": "view-services",   "current": true},
+    {"label": "About",      "href": "/about.html",       "data_backend": "view-about"},
+    {"label": "Field Notes","href": "/field-notes.html", "data_backend": "view-field-notes"},
+    {"label": "Contact",    "href": "/contact.html",     "data_backend": "view-contact"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "eyebrow": "Services",
+      "title": "Comprehensive IT, specifically scoped.",
+      "lede": "General scope, specific expertise. Full IT engineering for organizations that want auditable, self-sufficient infrastructure — and the documentation to operate it after we leave.",
+      "cta": {
+        "label": "Get a quote",
+        "href": "/quote.html",
+        "data_backend": "cta-quote"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-88.jpg",
+        "alt": "Wide editorial photograph evoking enterprise IT engineering",
+        "overlay": "dark"
+      },
+      "height": "comfortable"
+    },
+    {
+      "kind": "heading",
+      "text": "Eight engineering practices",
+      "level": 2
+    },
+    {
+      "kind": "lede",
+      "text": "Every engagement is scoped in writing, executed with documented change control, and handed off so successor operators can run the system without us."
+    },
+    {
+      "kind": "def_list",
+      "items": [
+        {
+          "term": "IT Operations",
+          "definition": "Infrastructure management: monitoring, maintenance, patching, support. Written runbooks, change management with rollback paths, incident retrospectives that surface root causes. Right-sized for practices and small businesses with 5–100 staff."
+        },
+        {
+          "term": "Disaster Recovery",
+          "definition": "DR plans that don't get rehearsed are theater. We engineer tested procedures, run tabletop exercises, and ship compliance evidence packets that auditors accept on first review. RTO / RPO targets are written, measured, and verified."
+        },
+        {
+          "term": "Cyber Security",
+          "definition": "Defense in depth matched to your actual threat model — not a generic checklist. Threat modeling, endpoint defense, email authentication (SPF / DKIM / DMARC), penetration testing, incident-response retainers for regulated industries (healthcare, finance, legal)."
+        },
+        {
+          "term": "Artificial Intelligence",
+          "definition": "Custom ML models for narrow problems. Document automation. Natural-language search over your internal corpus. We start by asking what a 30% improvement on this specific workflow would be worth — not by selling you on the technology."
+        },
+        {
+          "term": "Industrial Automation",
+          "definition": "RPA for office workflows. PLC programming + OT/IT network segmentation for manufacturers. Predictive maintenance for industrial and logistics operators. The same engineering discipline as the office stack — applied to the factory floor."
+        },
+        {
+          "term": "Software Development",
+          "definition": "Custom applications built for eventual handoff: typed, tested, documented, deployable. Web, mobile, and legacy-system modernization. You get the source, the deploy pipeline, the audit chain, and the handover documentation."
+        },
+        {
+          "term": "Hardware Solutions",
+          "definition": "Procurement at vendor-neutral pricing, fleet standardization, mobile device management, asset tracking, lifecycle planning, secure end-of-life disposal. Hardware as a managed engineering practice, not a buying chore."
+        },
+        {
+          "term": "Network Architecture",
+          "definition": "Design documentation, VPN solutions, Wi-Fi segmentation, zero-trust patterns at small-organization scale. The network is the substrate every other service rides on — we treat it that way."
+        }
+      ]
+    },
+    {
+      "kind": "figure",
+      "caption": "Eight practices, one team, one audit chain.",
+      "asset_slug": "photos/stock-89"
+    },
+    {
+      "kind": "pull_quote",
+      "body": "Every engagement starts with a written proposal, runs with scoped access and audit-ready documentation, and ends with a handover the next operator can use.",
+      "attribution": "PlausiDen engagement model"
+    },
+    {
+      "kind": "heading",
+      "text": "How we engage",
+      "level": 2
+    },
+    {
+      "kind": "kv_pair",
+      "items": [
+        {
+          "key": "Written proposals",
+          "value": "Every engagement begins with a scoped, written proposal. No verbal commitments, no scope drift, no surprises."
+        },
+        {
+          "key": "Scoped access",
+          "value": "Least-privilege access for the duration. Time-bound credentials. Every access logged + audited."
+        },
+        {
+          "key": "Audit-ready documentation",
+          "value": "Every change, every commit, every config switch is documented and signed. The deliverable is the documentation as much as the system."
+        },
+        {
+          "key": "Structured handover",
+          "value": "Successor operators can run the system without us. Runbooks, recovery playbooks, contact escalation paths — all written down before we walk away."
+        }
+      ]
+    },
+    {
+      "kind": "call_to_action",
+      "eyebrow": "Free intake consultation",
+      "title": "Tell us about your stack.",
+      "lede": "Thirty minutes, no obligation. We listen first. We do not pitch.",
+      "cta": {
+        "label": "Get a quote",
+        "href": "/quote.html",
+        "data_backend": "cta-quote"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-90.jpg",
+        "alt": "Engagement-model image",
+        "overlay": "dark"
+      }
+    }
+  ]
+}

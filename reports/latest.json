@@ -93,6 +93,18 @@
     },
     {
       "phase": "tokens",
+      "path": "services.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
+      "path": "services.html",
+      "message": "raw hex color in HTML",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
       "path": "signin.html",
       "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
@@ -131,12 +143,6 @@
       "phase": "seo",
       "path": "about.html",
       "message": "no JSON-LD structured data",
-      "severity": "warn"
-    },
-    {
-      "phase": "seo",
-      "path": "about.html",
-      "message": "title too short (17 chars; aim 30-60 for SERP)",
       "severity": "warn"
     },
     {
@@ -262,6 +268,24 @@
     {
       "phase": "seo",
       "path": "prosperity-club.html",
+      "message": "no JSON-LD structured data",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "services.html",
+      "message": "missing Open Graph tags (og:title/description/type/url/image)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "services.html",
+      "message": "missing Twitter Card tags",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "services.html",
       "message": "no JSON-LD structured data",
       "severity": "warn"
     },
@@ -376,6 +400,12 @@
     {
       "phase": "sri",
       "path": "prosperity-club.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "services.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
@@ -802,13 +832,25 @@
     {
       "phase": "unbuilt_route",
       "path": "about.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
+      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
       "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
       "path": "about.html",
       "message": "href=\"/contact.html\" → static/contact.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "about.html",
+      "message": "href=\"/encrypted-inquiry.html\" → static/encrypted-inquiry.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "about.html",
+      "message": "href=\"/quote.html\" → static/quote.html does not exist",
       "severity": "warn"
     },
     {
@@ -821,12 +863,6 @@
       "phase": "unbuilt_route",
       "path": "docs.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/services.html\" → static/services.html does not exist",
       "severity": "warn"
     },
     {
@@ -903,6 +939,30 @@
     },
     {
       "phase": "unbuilt_route",
+      "path": "services.html",
+      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "services.html",
+      "message": "href=\"/contact.html\" → static/contact.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "services.html",
+      "message": "href=\"/encrypted-inquiry.html\" → static/encrypted-inquiry.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "services.html",
+      "message": "href=\"/quote.html\" → static/quote.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
       "path": "signin.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
@@ -945,9 +1005,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 157,
-  "duration_ms": 13,
-  "prev_hash": "2db38c4646872ccb5440135452903c0952de2fb97fc1f27504b4fa9503352622",
-  "chain_length": 103,
-  "started": "2026-05-19T22:23:33.158790392Z"
+  "warn_count": 167,
+  "duration_ms": 19,
+  "prev_hash": "3d6f59aec74dc0c4929bfd95585fcfd00425aa54c75d256c04bb40ce42c3a2f2",
+  "chain_length": 106,
+  "started": "2026-05-19T22:26:13.563352734Z"
 }

@@ -1,190 +1,127 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "PlausiDen — about",
-  "description": "An independent platform shop building software that lasts.",
-  "brand": "PlausiDen",
+  "title": "About — PlausiDen LLC",
+  "description": "Independent IT consultancy based in Massachusetts. General-purpose AND specific-purpose technology engineering for businesses that take infrastructure seriously.",
+  "brand": "PlausiDen LLC",
   "chrome": "floating_pill",
-  "theme": "dark",
+  "theme": "light",
   "nav_actions": [
-    {"label": "Sign in", "href": "/signin.html", "data_backend": "cta-signin"},
-    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+    {"label": "Encrypted Inquiry", "href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"},
+    {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
   ],
   "path": "/about.html",
   "nav_links": [
-    {
-      "label": "Platform",
-      "href": "/platform.html",
-      "data_backend": "view-platform"
-    },
-    {
-      "label": "Why",
-      "href": "/why.html",
-      "data_backend": "view-why"
-    },
-    {
-      "label": "Pricing",
-      "href": "/pricing.html",
-      "data_backend": "view-pricing"
-    },
-    {
-      "label": "Docs",
-      "href": "/docs.html",
-      "data_backend": "view-docs"
-    },
-    {
-      "label": "Blog",
-      "href": "/blog.html",
-      "data_backend": "view-blog"
-    },
-    {
-      "label": "About",
-      "href": "/about.html",
-      "data_backend": "view-about",
-      "current": true
-    }
+    {"label": "Services",   "href": "/services.html",    "data_backend": "view-services"},
+    {"label": "About",      "href": "/about.html",       "data_backend": "view-about",       "current": true},
+    {"label": "Field Notes","href": "/field-notes.html", "data_backend": "view-field-notes"},
+    {"label": "Contact",    "href": "/contact.html",     "data_backend": "view-contact"}
   ],
   "sections": [
     {
       "kind": "image_hero",
-      "eyebrow": "About",
-      "title": "An independent platform shop.",
-      "lede": "Built by a small team that thinks software should be auditable, accessible, and reproducible — by default, not as a checkbox.",
+      "eyebrow": "About PlausiDen LLC",
+      "title": "Technology as an enabler — not as an end.",
+      "lede": "An independent IT consultancy that delivers high-quality, reliable, innovative solutions that empower businesses to operate securely and efficiently in a digital-first world.",
+      "cta": {
+        "label": "Services",
+        "href": "/services.html",
+        "data_backend": "view-services"
+      },
       "background": {
         "kind": "photo",
-        "src": "/assets/photos/stock-32.jpg",
-        "alt": "Wide editorial photograph evoking craft + deliberation",
+        "src": "/assets/photos/stock-84.jpg",
+        "alt": "Modern corporate architecture evoking enterprise IT scale",
         "overlay": "dark"
       },
       "height": "comfortable"
     },
     {
       "kind": "heading",
-      "text": "How we work",
+      "text": "Mission",
       "level": 2
     },
     {
       "kind": "paragraph",
-      "text": "PlausiDen is small on purpose. The platform is opinionated because every dilution we resisted was a tradeoff we did not want to ship. We pick the harder typed seam over the convenient string-keyed escape hatch, and we let the compiler reject anything else."
-    },
-    {
-      "kind": "paragraph",
-      "text": "We do not believe in roadmaps that promise a feature in eighteen months. We believe in shipping small, audited, reproducible changes — and in letting the audit chain speak for itself when a customer asks what changed between two builds. The chain hash is the proof; the screenshot diff is the corroboration."
-    },
-    {
-      "kind": "figure",
-      "caption": "Reproducible builds — same input, same hash, forever.",
-      "asset_slug": "photos/stock-7"
-    },
-    {
-      "kind": "kv_pair",
-      "heading": "Operating posture",
-      "items": [
-        {
-          "key": "Slow on purpose",
-          "value": "Discipline-gate before merge — tests, docs, audit, security.",
-          "hint": "A new feature isn't done when it compiles; it's done when the audit chain accepts it."
-        },
-        {
-          "key": "Open by license",
-          "value": "MIT / Apache-2 source. Every commit signed. Every release tagged.",
-          "hint": "Forks are first-class; no \"open core\" carve-outs."
-        },
-        {
-          "key": "Revenue-funded",
-          "value": "No venture capital. Grants accepted where the mission aligns.",
-          "hint": "Customer money keeps the incentives straight."
-        },
-        {
-          "key": "Verified end-to-end",
-          "value": "Reproducible builds + signed SBOMs. Same input, same hash, forever.",
-          "hint": "Compliance auditors stop asking follow-up questions after the first chain replay."
-        }
-      ]
-    },
-    {
-      "kind": "pull_quote",
-      "body": "We replaced three SaaS subscriptions with a single Forge build. The audit chain ships straight to compliance and the auditor stopped asking follow-up questions.",
-      "attribution": "the shape of an outcome the platform is engineered to produce"
-    },
-    {
-      "kind": "figure",
-      "caption": "Discipline over velocity — the part of the road map that doesn't ship a feature.",
-      "asset_slug": "photos/stock-3"
-    },
-    {
-      "kind": "figure",
-      "caption": "Four principles. No exceptions.",
-      "asset_slug": "photos/stock-73"
+      "text": "Deliver high-quality, reliable, and innovative IT solutions that empower businesses to operate securely and efficiently in a digital-first world. The technology disappears; the business outcomes are what stay visible."
     },
     {
       "kind": "heading",
-      "text": "What we won't compromise on",
+      "text": "Vision",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "To be the trusted partner for enterprises navigating the complexity of modern IT operations, security, and automation — not the vendor that adds another layer, but the consultancy that simplifies the layer that already exists."
+    },
+    {
+      "kind": "figure",
+      "caption": "General yet specific — the methodology that fits both the ecosystem view and the per-system detail.",
+      "asset_slug": "photos/stock-85"
+    },
+    {
+      "kind": "heading",
+      "text": "Approach",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "General yet specific. We treat every engagement as both a system-wide ecosystem audit and a discipline of per-component decisions. The general view tells us where the leverage lives; the specific view tells us exactly which lever to pull and how far. Most consultancies do one or the other. We refuse the choice."
+    },
+    {
+      "kind": "paragraph",
+      "text": "We work with clients who already have an IT team and need a peer, not a replacement. We work with compliance shops that ship audit evidence directly to regulators. We work with founders who refuse the trade-off between fast, reliable, and secure — and we prove every engagement that the math says they don't have to choose."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "We replaced three SaaS subscriptions plus a staff IT contractor with PlausiDen. The audit chain ships straight to compliance and the auditor stopped asking follow-up questions.",
+      "attribution": "the kind of outcome the engagement model targets"
+    },
+    {
+      "kind": "heading",
+      "text": "Core values",
       "level": 2
     },
     {
       "kind": "def_list",
       "items": [
         {
-          "term": "Discipline first",
-          "definition": "Tests + docs + audit on every commit. Codified in scripts/discipline-check.sh --strict. The discipline gate runs before merge, not after; missing tests are a build failure, not a TODO."
+          "term": "Integrity",
+          "definition": "Every recommendation is the recommendation we would make if we owned the budget. No upselling to vendors who pay us; no inflating scope to bill more hours. The advice survives the engagement."
         },
         {
-          "term": "Typed contracts at every boundary",
-          "definition": "If the types compile, the system doesn't break at runtime. Every cross-crate seam, every JSON wire shape, every IPC frame carries a closed Rust enum or struct with deny_unknown_fields."
+          "term": "Excellence",
+          "definition": "Reproducible builds, signed audit chains, threat-modeled architecture, peer-reviewed delivery. The artifacts we ship would pass an independent third-party review — because they will. Compliance auditors stop asking follow-up questions after the first chain replay."
         },
         {
-          "term": "Reproducible builds",
-          "definition": "Same input → same hash. Independently verifiable; not a trust-the-vendor claim. The Merkle-chained audit report ships alongside every binary."
+          "term": "Innovation",
+          "definition": "AI deployment with the Critic-gated proposal model. Custom Rust + WASM. Multi-network architecture (Tor / I2P / clearnet) where the threat model warrants it. Engineering that anticipates the next decade, not just this quarter."
         },
         {
-          "term": "Privacy by default",
-          "definition": "Self-host everything. No third-party fonts, no analytics, no telemetry, no CDNs. The browser makes the same requests every visit, no matter who the visitor is."
+          "term": "Security, default-on",
+          "definition": "Zero-trust architecture, supply-chain attestation, SOC 2 II / HIPAA / GDPR readiness, secure end-of-life disposal. Security is not a phase-two add-on; it is the first design decision."
         }
       ]
     },
     {
-      "kind": "timeline",
-      "heading": "Where we've been",
-      "items": [
-        {
-          "when": "2026 Q1",
-          "title": "Forge alpha",
-          "body": "First typed CMS pipeline. 9-page SkillShots dogfood site built end-to-end."
-        },
-        {
-          "when": "2026 Q2",
-          "title": "Forge 0.18 — typed CMS GA path",
-          "body": "27 audit phases stable. Loom catalogue at 142 primitives. forge-auth + Crucible scaffolded."
-        },
-        {
-          "when": "2026 Q3",
-          "title": "Multi-network publish",
-          "body": "Six DeployAdapter implementations: Tor, I2P, IPFS, Gemini, Lokinet, clearnet."
-        },
-        {
-          "when": "2026 Q4",
-          "title": "LFI integration",
-          "body": "Critic trait + Forge-LFI downstream. Neurosymbolic substrate gates AI proposals."
-        },
-        {
-          "when": "2027 Q1",
-          "title": "Forge GA",
-          "body": "Production-mode strict gate. Public SLA + support tiers."
-        }
-      ]
+      "kind": "figure",
+      "caption": "Four principles. No exceptions.",
+      "asset_slug": "photos/stock-86"
     },
     {
       "kind": "call_to_action",
-      "eyebrow": "Get in touch",
-      "title": "Say hello.",
-      "lede": "Working on something where this would help? We read every email.",
+      "eyebrow": "Ready to talk?",
+      "title": "Start with a free consultation.",
+      "lede": "No card, no commitment, no scope inflation. We listen first.",
       "cta": {
-        "label": "Contact",
-        "href": "/contact.html",
-        "data_backend": "cta-contact"
+        "label": "Get a quote",
+        "href": "/quote.html",
+        "data_backend": "cta-quote"
       },
       "background": {
-        "kind": "stripes"
+        "kind": "photo",
+        "src": "/assets/photos/stock-87.jpg",
+        "alt": "Team collaboration evoking PlausiDen engagement model",
+        "overlay": "dark"
       }
     }
   ]
