@@ -7977,7 +7977,33 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 .loom-dropcap::first-letter { initial-letter: 3; -webkit-initial-letter: 3; font-family: var(--loom-font-display); font-weight: 900; color: var(--loom-color-primary, var(--loom-accent)); margin-right: 0.4rem; }
 .loom-figure { margin: 2rem 0; }
-.loom-figure__media { aspect-ratio: 16 / 9; border-radius: 12px; background: linear-gradient(135deg, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 30%, transparent), color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 30%, transparent)); display: grid; place-items: center; }
+.loom-figure__media {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 18%, transparent),
+    color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 18%, transparent));
+  display: grid;
+  place-items: center;
+}
+.loom-figure__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.loom-figure__caption {
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
+  font-style: italic;
+  line-height: 1.45;
+}
+.loom-figure__credit {
+  font-style: normal;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 50%, transparent);
+}
 .loom-figure__caption { margin-top: 0.75rem; font-size: 0.92rem; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent); }
 .loom-figure__credit { font-style: italic; }
 .loom-caption { font-size: 0.92rem; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent); margin-top: 0.5rem; }
