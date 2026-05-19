@@ -6872,14 +6872,15 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   border: 1px solid var(--loom-color-border, var(--loom-border));
   box-shadow: var(--loom-shadow-lg);
 }
-.loom-asset-placeholder {
-  font-family: var(--loom-font-mono);
-  font-size: 0.85rem;
-  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent);
-}
+/* `.loom-asset-placeholder` removed in PlausiDen-Loom 1ca0947:
+ * all primitives now emit real <img> tags. The selector no
+ * longer matches anything in rendered output. */
 
 /* ============================================================
  * FeatureSpotlight — multi-column feature grid
+ * Default: left-aligned editorial heading. Center is opt-in via
+ * `.loom-feature-spotlight--centered` on the outer element
+ * (callers that explicitly want the centered-marketing shape).
  * ============================================================ */
 .loom-feature-spotlight {
   padding: clamp(3rem, 5vw, 5rem) 0;
@@ -6888,12 +6889,17 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   font: 800 clamp(1.75rem, 3.5vw, 2.5rem)/1.1 var(--loom-font-display);
   letter-spacing: -0.025em;
   margin: 0 0 0.75rem;
+  text-align: start;
+}
+.loom-feature-spotlight.loom-feature-spotlight--centered .loom-feature-spotlight__heading,
+.loom-feature-spotlight.loom-feature-spotlight--centered .loom-feature-spotlight__lede {
   text-align: center;
+  margin-inline: auto;
 }
 .loom-feature-spotlight__lede {
-  margin: 0 auto 3rem;
+  margin: 0 0 3rem;
   max-width: 60ch;
-  text-align: center;
+  text-align: start;
   font-size: 1.1rem;
   line-height: 1.5;
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
@@ -7017,8 +7023,14 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 /* ============================================================
  * StatBand — row of large animated numbers
  * ============================================================ */
+/* StatBand — default left-aligned. Centered alignment opt-in
+ * via .loom-stat-band--centered on the outer element. Mirrors
+ * the same pattern in FeatureSpotlight + Pricing + LogoCloud. */
 .loom-stat-band {
   padding: clamp(3rem, 5vw, 5rem) 0;
+  text-align: start;
+}
+.loom-stat-band.loom-stat-band--centered {
   text-align: center;
 }
 .loom-stat-band__heading {
@@ -8039,9 +8051,13 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-testimonial__avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--loom-color-primary, var(--loom-accent)), var(--loom-color-accent-2, var(--loom-accent-2))); }
 .loom-testimonial__name { font-weight: 700; }
 .loom-testimonial__role { color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent); }
-.loom-logo-cloud { padding: 2rem 0; text-align: center; }
+/* LogoCloud — default left-aligned + flex-start. Centered
+ * opt-in via .loom-logo-cloud--centered on the outer element. */
+.loom-logo-cloud { padding: 2rem 0; text-align: start; }
 .loom-logo-cloud__heading { font-size: 0.92rem; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent); margin-bottom: 1.25rem; }
-.loom-logo-cloud__row { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; align-items: center; }
+.loom-logo-cloud__row { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: flex-start; align-items: center; }
+.loom-logo-cloud.loom-logo-cloud--centered { text-align: center; }
+.loom-logo-cloud.loom-logo-cloud--centered .loom-logo-cloud__row { justify-content: center; }
 .loom-logo-cloud__item { font: 700 1.1rem/1 var(--loom-font-display); letter-spacing: -0.018em; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent); transition: color 200ms; }
 .loom-logo-cloud__item:hover { color: var(--loom-color-ink, var(--loom-fg)); }
 .loom-comparison__table { width: 100%; border-collapse: collapse; }
