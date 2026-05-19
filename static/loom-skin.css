@@ -7561,3 +7561,135 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-password-reset__description { color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent); margin-bottom: 1.25rem; }
 .loom-password-reset__form { display: flex; flex-direction: column; gap: 0.6rem; }
 .loom-password-reset__form input { padding: 0.7rem 0.9rem; border-radius: 10px; border: 1px solid var(--loom-color-border, var(--loom-border)); background: var(--loom-color-surface, var(--loom-bg)); min-height: 44px; }
+
+/* ============================================================
+ * T660 P7 — FloatingPill chrome
+ *
+ * Replaces the page-shell sticky bar with a glass-morphism pill
+ * anchored top-center. Drops the cream three-radial body
+ * backdrop in favour of a single soft halo above the hero +
+ * a flat surface below. Body switches via `data-chrome`
+ * attribute on <body>.
+ * ============================================================ */
+
+body[data-chrome="floating-pill"] {
+  background: var(--loom-color-bg, var(--loom-bg));
+  background-image: none;
+  background-attachment: scroll;
+}
+body[data-chrome="floating-pill"]::before {
+  content: ""; position: fixed; inset: 0 0 auto 0; height: 60vh; z-index: -1;
+  background:
+    radial-gradient(
+      80rem 38rem at 50% -10%,
+      color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 18%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      40rem 22rem at 88% 12%,
+      color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 14%, transparent) 0%,
+      transparent 65%
+    );
+  pointer-events: none;
+}
+body[data-chrome="floating-pill"]::after {
+  content: ""; position: fixed; inset: 0; z-index: -2;
+  background:
+    radial-gradient(circle at center,
+      color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 4%, transparent) 1px,
+      transparent 1.2px) 0 0 / 28px 28px;
+  mask-image: linear-gradient(180deg, black, transparent 70%);
+  pointer-events: none; opacity: 0.6;
+}
+
+.loom-floating-pill {
+  position: fixed; top: 0.85rem; left: 50%;
+  transform: translateX(-50%);
+  width: min(72rem, calc(100vw - 1.5rem));
+  z-index: 80;
+}
+.loom-floating-pill__nav {
+  display: flex; align-items: center; gap: 1.25rem;
+  padding: 0.5rem 0.55rem 0.5rem 1.25rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--loom-color-surface, var(--loom-bg)) 65%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  box-shadow:
+    0 1px 0 oklch(100% 0 0 / 0.5) inset,
+    0 0 0 1px color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent) inset,
+    0 14px 40px oklch(20% 0.02 280 / 0.10);
+}
+.loom-floating-pill__brand {
+  font: 800 1.05rem/1 var(--loom-font-display, var(--loom-font-stack));
+  letter-spacing: -0.025em;
+  color: var(--loom-color-ink, var(--loom-fg));
+  text-decoration: none;
+  flex: 0 0 auto;
+  padding: 0.3rem 0;
+}
+.loom-floating-pill__links {
+  display: flex; gap: 0.3rem; flex: 1 1 auto;
+  margin-left: 0.75rem;
+}
+.loom-floating-pill__links a {
+  text-decoration: none;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font: 500 0.92rem/1 var(--loom-font-display, var(--loom-font-stack));
+  letter-spacing: -0.005em;
+  min-height: 36px;
+  display: inline-flex; align-items: center;
+  transition:
+    color var(--loom-motion-fast, 140ms) var(--loom-ease-out, ease),
+    background var(--loom-motion-fast, 140ms) var(--loom-ease-out, ease);
+}
+.loom-floating-pill__links a:hover {
+  color: var(--loom-color-ink, var(--loom-fg));
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 6%, transparent);
+}
+.loom-floating-pill__links a[aria-current="page"] {
+  color: var(--loom-color-primary, var(--loom-accent));
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 12%, transparent);
+  font-weight: 600;
+}
+.loom-floating-pill__actions {
+  display: flex; gap: 0.4rem; align-items: center;
+  flex: 0 0 auto;
+}
+.loom-floating-pill__action {
+  padding: 0.45rem 0.95rem !important;
+  min-height: 36px !important;
+  font-size: 0.88rem !important;
+}
+.loom-floating-pill .loom-theme-toggle {
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  background: transparent;
+  font-size: 0.95rem;
+}
+
+/* When FloatingPill chrome is active, add top-padding so the
+ * fixed pill never overlaps the hero's first pixel. */
+body[data-chrome="floating-pill"] main#content {
+  padding-top: 5.5rem;
+}
+body[data-chrome="floating-pill"] .loom-image-hero,
+body[data-chrome="floating-pill"] .loom-split-hero {
+  margin-top: -3rem;
+  padding-top: 6rem;
+}
+
+/* Mobile compaction */
+@media (max-width: 760px) {
+  .loom-floating-pill { left: 0.75rem; right: 0.75rem; transform: none; width: auto; }
+  .loom-floating-pill__nav { gap: 0.6rem; padding: 0.4rem 0.45rem 0.4rem 1rem; }
+  .loom-floating-pill__links { display: none; }
+  .loom-floating-pill__brand { font-size: 0.95rem; }
+}
+
+/* Minimal chrome — body adjustments so first section has top
+ * breathing room since there's no header reserving space. */
+body[data-chrome="minimal"] main#content { padding-top: 2rem; }

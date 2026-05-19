@@ -3,6 +3,11 @@
   "title": "Sign in — PlausiDen",
   "description": "Sign in with passkey, WebAuthn, magic link, or password.",
   "brand": "PlausiDen",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+  ],
   "path": "/signin.html",
   "nav_links": [
     {"label": "Platform", "href": "/platform.html", "data_backend": "view-platform"},

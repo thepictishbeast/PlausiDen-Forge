@@ -3,6 +3,12 @@
   "title": "PlausiDen — about",
   "description": "An independent platform shop building software that lasts.",
   "brand": "PlausiDen",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Sign in", "href": "/signin.html", "data_backend": "cta-signin"},
+    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+  ],
   "path": "/about.html",
   "nav_links": [
     {

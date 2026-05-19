@@ -3,6 +3,12 @@
   "title": "Why PlausiDen exists",
   "description": "Software written today should outlive its dependencies.",
   "brand": "PlausiDen",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Sign in", "href": "/signin.html", "data_backend": "cta-signin"},
+    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+  ],
   "path": "/why.html",
   "nav_links": [
     {

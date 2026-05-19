@@ -3,6 +3,12 @@
   "title": "PlausiDen — pricing",
   "description": "Free for solo. First 3 team seats free. Then by build-minute, not by user.",
   "brand": "PlausiDen",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Sign in", "href": "/signin.html", "data_backend": "cta-signin"},
+    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+  ],
   "path": "/pricing.html",
   "nav_links": [
     {
@@ -67,7 +73,7 @@
             "Multi-network publish"
           ],
           "cta": {
-            "label": "Start free",
+            "label": "Get started",
             "href": "/start.html",
             "data_backend": "cta-start"
           },
@@ -88,7 +94,7 @@
             "Forge-LFI feature flag access"
           ],
           "cta": {
-            "label": "Start free",
+            "label": "Get started",
             "href": "/start.html",
             "data_backend": "cta-start"
           },
@@ -219,7 +225,7 @@
       "title": "Pre-order with zero commitment.",
       "lede": "We'll email when your tenant is provisioned. Everything you ship is yours.",
       "cta": {
-        "label": "Start free",
+        "label": "Get started",
         "href": "/start.html",
         "data_backend": "cta-start"
       },

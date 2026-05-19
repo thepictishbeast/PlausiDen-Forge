@@ -280,19 +280,19 @@
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "30.4K HTML > 20.0K budget — audit blocks / split route",
+      "message": "30.9K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "platform.html",
-      "message": "20.9K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.4K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "signin.html",
-      "message": "20.4K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.7K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -304,7 +304,7 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "298K CSS > 64.0K budget — split into per-route bundles",
+      "message": "303K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
@@ -419,12 +419,6 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-pricing] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-signin] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -688,7 +682,25 @@
     {
       "phase": "unbuilt_route",
       "path": "about.html",
+      "message": "href=\"/start.html\" → static/start.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "about.html",
       "message": "href=\"/contact.html\" → static/contact.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "blog.html",
+      "message": "href=\"/start.html\" → static/start.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "docs.html",
+      "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
     },
     {
@@ -705,6 +717,12 @@
     },
     {
       "phase": "unbuilt_route",
+      "path": "platform.html",
+      "message": "href=\"/start.html\" → static/start.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
       "path": "pricing.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
@@ -713,6 +731,18 @@
       "phase": "unbuilt_route",
       "path": "pricing.html",
       "message": "href=\"/contact.html\" → static/contact.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "signin.html",
+      "message": "href=\"/start.html\" → static/start.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "why.html",
+      "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
     },
     {
@@ -723,9 +753,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 120,
-  "duration_ms": 71,
-  "prev_hash": "0799cdbf850b6982026ad2183a087fed6c9efaa4a49af48f423ea98b88491746",
-  "chain_length": 47,
-  "started": "2026-05-19T11:20:47.282812163Z"
+  "warn_count": 125,
+  "duration_ms": 78,
+  "prev_hash": "48b337fd9a79a5e2990785773053df4757d1f558d15b3cb7d08bb4e3874619cc",
+  "chain_length": 51,
+  "started": "2026-05-19T11:41:46.652675116Z"
 }

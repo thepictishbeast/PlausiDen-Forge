@@ -3,6 +3,12 @@
   "title": "PlausiDen — typed substrate for software that lasts",
   "description": "A typed-substrate platform for teams that want their tools to outlive their dependencies.",
   "brand": "PlausiDen",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Sign in", "href": "/signin.html", "data_backend": "cta-signin"},
+    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+  ],
   "path": "/",
   "nav_links": [
     {
@@ -382,7 +388,7 @@
             "Multi-network publish"
           ],
           "cta": {
-            "label": "Start free",
+            "label": "Get started",
             "href": "/start.html",
             "data_backend": "cta-start"
           },
@@ -402,7 +408,7 @@
             "Per-tenant LFI corpus"
           ],
           "cta": {
-            "label": "Start free",
+            "label": "Get started",
             "href": "/start.html",
             "data_backend": "cta-start"
           },

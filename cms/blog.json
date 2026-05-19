@@ -3,6 +3,12 @@
   "title": "PlausiDen — blog",
   "description": "Notes on building a typed-substrate platform.",
   "brand": "PlausiDen",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Sign in", "href": "/signin.html", "data_backend": "cta-signin"},
+    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+  ],
   "path": "/blog.html",
   "nav_links": [
     {

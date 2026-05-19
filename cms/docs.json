@@ -3,6 +3,12 @@
   "title": "PlausiDen — docs",
   "description": "Install Forge. Author typed CMS. Ship in 60 seconds.",
   "brand": "PlausiDen",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Sign in", "href": "/signin.html", "data_backend": "cta-signin"},
+    {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"}
+  ],
   "path": "/docs.html",
   "nav_links": [
     {
