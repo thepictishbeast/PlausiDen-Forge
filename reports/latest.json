@@ -160,13 +160,13 @@
     {
       "phase": "perf_budget",
       "path": "services.html",
-      "message": "20.2K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.4K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "20.0K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.2K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -754,8 +754,8 @@
   ],
   "strict_count": 0,
   "warn_count": 125,
-  "duration_ms": 18,
-  "prev_hash": "dcbbe40ae229c5309490a1090adbe1a1a2cf99c3cf728ab3e810cac6917860d4",
-  "chain_length": 118,
-  "started": "2026-05-19T23:06:18.937300322Z"
+  "duration_ms": 14,
+  "prev_hash": "02cf5a57d9b4964ed0772b9cdfc2ee388b2fa2b20c9d8f6f3d3f485dc603cb7a",
+  "chain_length": 122,
+  "started": "2026-05-19T23:13:25.930681027Z"
 }

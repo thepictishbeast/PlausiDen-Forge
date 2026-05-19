@@ -10,6 +10,8 @@
     {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
   ],
   "path": "/services.html",
+  "site_origin": "https://dev.plausiden.com",
+  "social_image": "/assets/photos/stock-88.jpg",
   "footer": {
     "columns": [
       {
