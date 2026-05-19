@@ -216,3 +216,53 @@ method = "GET"
 path = "/trial"
 purpose = "CTA: start trial"
 impl_files = []
+
+# Prosperity Club — pixel-rebuild target (#112 / #118).
+# Same site, separate backend namespace via prosperity- prefix.
+[backends.prosperity-view-about]
+method = "GET"
+path = "/prosperity-about.html"
+purpose = "Prosperity Club: about Deborah Armstrong"
+impl_files = []
+
+[backends.prosperity-view-prosper]
+method = "GET"
+path = "/prosperity-prosper.html"
+purpose = "Prosperity Club: prosper-in-life column"
+impl_files = []
+
+[backends.prosperity-view-blog]
+method = "GET"
+path = "/prosperity-blog.html"
+purpose = "Prosperity Club: blogs index"
+impl_files = []
+
+[backends.prosperity-view-finance]
+method = "GET"
+path = "/prosperity-finance.html"
+purpose = "Prosperity Club: finance + insurance column"
+impl_files = []
+
+[backends.prosperity-view-resources]
+method = "GET"
+path = "/prosperity-resources.html"
+purpose = "Prosperity Club: financial resources index"
+impl_files = []
+
+[backends.prosperity-view-contact]
+method = "GET"
+path = "/prosperity-contact.html"
+purpose = "Prosperity Club: contact page"
+impl_files = []
+
+[backends.prosperity-view-master-class]
+method = "GET"
+path = "/master-class.html"
+purpose = "Prosperity Club: master-class videos"
+impl_files = []
+
+[backends.prosperity-cta-contact]
+method = "POST"
+path = "/prosperity-contact"
+purpose = "Prosperity Club CTA: contact form submit"
+impl_files = []

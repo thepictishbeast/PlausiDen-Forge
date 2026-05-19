@@ -81,6 +81,18 @@
     },
     {
       "phase": "tokens",
+      "path": "prosperity-club.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
+      "path": "prosperity-club.html",
+      "message": "raw hex color in HTML",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
       "path": "signin.html",
       "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
@@ -237,6 +249,24 @@
     },
     {
       "phase": "seo",
+      "path": "prosperity-club.html",
+      "message": "missing Open Graph tags (og:title/description/type/url/image)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "prosperity-club.html",
+      "message": "missing Twitter Card tags",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "prosperity-club.html",
+      "message": "no JSON-LD structured data",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
       "path": "signin.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
@@ -346,6 +376,12 @@
     {
       "phase": "sri",
       "path": "pricing.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "prosperity-club.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
@@ -491,6 +527,60 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-why] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-cta-contact] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-about] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-blog] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-contact] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-finance] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-master-class] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-master-class] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-prosper] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-resources] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -747,6 +837,42 @@
     },
     {
       "phase": "unbuilt_route",
+      "path": "prosperity-club.html",
+      "message": "href=\"/prosperity-about.html\" → static/prosperity-about.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "prosperity-club.html",
+      "message": "href=\"/prosperity-prosper.html\" → static/prosperity-prosper.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "prosperity-club.html",
+      "message": "href=\"/prosperity-blog.html\" → static/prosperity-blog.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "prosperity-club.html",
+      "message": "href=\"/prosperity-finance.html\" → static/prosperity-finance.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "prosperity-club.html",
+      "message": "href=\"/prosperity-resources.html\" → static/prosperity-resources.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "prosperity-club.html",
+      "message": "href=\"/prosperity-contact.html\" → static/prosperity-contact.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
       "path": "signin.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
@@ -755,6 +881,12 @@
       "phase": "unbuilt_route",
       "path": "why.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/prosperity-club.json",
+      "message": "image_desert: page has 17 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
@@ -771,9 +903,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 128,
-  "duration_ms": 27,
-  "prev_hash": "6add005693acad5859e17e09bb0369f63af4a47d7eca843ba59fc882536be183",
-  "chain_length": 81,
-  "started": "2026-05-19T21:28:40.114464101Z"
+  "warn_count": 150,
+  "duration_ms": 18,
+  "prev_hash": "1d5f4cf5f5f285a2d474543f2478b23d15635ff04de228374725b5ba96669161",
+  "chain_length": 88,
+  "started": "2026-05-19T21:31:36.098464243Z"
 }
