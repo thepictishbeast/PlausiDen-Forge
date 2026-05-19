@@ -204,11 +204,19 @@ pub struct CmsSection {
     /// to live at after import. Defaults to `/{slug}` downstream.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub canonical_path: Option<String>,
-    /// Source publish-time, if known. UTC.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// Source publish-time, if known. UTC. RFC 3339 wire format.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "time::serde::rfc3339::option"
+    )]
     pub published_at: Option<time::OffsetDateTime>,
-    /// Source last-update time. UTC.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    /// Source last-update time. UTC. RFC 3339 wire format.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        with = "time::serde::rfc3339::option"
+    )]
     pub updated_at: Option<time::OffsetDateTime>,
     /// Operator-side author handle (opaque).
     #[serde(default, skip_serializing_if = "Option::is_none")]

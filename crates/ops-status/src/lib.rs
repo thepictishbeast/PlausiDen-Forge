@@ -120,7 +120,8 @@ pub struct SliMeasurement {
     pub sli: SliId,
     /// Measured value at this point.
     pub value: f64,
-    /// ISO-8601 timestamp of the measurement.
+    /// RFC 3339 / ISO 8601 timestamp of the measurement.
+    #[serde(with = "time::serde::rfc3339")]
     pub at: time::OffsetDateTime,
 }
 
@@ -329,7 +330,8 @@ pub struct StatusEntry {
     /// Optional severity classification.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub severity: Option<IncidentSeverity>,
-    /// ISO-8601 last-updated timestamp.
+    /// RFC 3339 / ISO 8601 last-updated timestamp.
+    #[serde(with = "time::serde::rfc3339")]
     pub updated_at: time::OffsetDateTime,
 }
 

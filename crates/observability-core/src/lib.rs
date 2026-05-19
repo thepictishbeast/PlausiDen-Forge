@@ -220,7 +220,11 @@ pub enum AttributeValue {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct SpanEvent {
-    /// ISO-8601 timestamp.
+    /// RFC 3339 / ISO 8601 timestamp. The `serde(with =
+    /// "time::serde::rfc3339")` attribute pins the wire format
+    /// — without it the `time` crate defaults to a struct
+    /// representation that fails the Forge iso_8601 phase.
+    #[serde(with = "time::serde::rfc3339")]
     pub at: time::OffsetDateTime,
     /// Event name.
     pub name: String,
@@ -292,7 +296,11 @@ pub struct AuditEntry {
     /// Actor responsible — operator handle, service name, or
     /// `"system"`.
     pub actor: String,
-    /// ISO-8601 timestamp.
+    /// RFC 3339 / ISO 8601 timestamp. The `serde(with =
+    /// "time::serde::rfc3339")` attribute pins the wire format
+    /// — without it the `time` crate defaults to a struct
+    /// representation that fails the Forge iso_8601 phase.
+    #[serde(with = "time::serde::rfc3339")]
     pub at: time::OffsetDateTime,
     /// Event kind slug (e.g. `"forge.build.start"`,
     /// `"cms.page.publish"`, `"deploy.target.add"`).

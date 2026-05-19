@@ -92,7 +92,8 @@ pub struct IndexDoc {
     /// BCP-47 language tag for analyzer selection.
     pub lang: String,
     /// Publish time, for date-faceted ranking + per-period
-    /// content-gap analysis.
+    /// content-gap analysis. RFC 3339 wire format.
+    #[serde(with = "time::serde::rfc3339")]
     pub published_at: time::OffsetDateTime,
 }
 
