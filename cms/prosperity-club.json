@@ -10,6 +10,7 @@
     {"label": "Master Class", "href": "/master-class.html", "data_backend": "prosperity-view-master-class"}
   ],
   "path": "/prosperity-club.html",
+  "site_origin": "https://dev.plausiden.com",
   "nav_links": [
     {"label": "About",            "href": "/prosperity-about.html",     "data_backend": "prosperity-view-about"},
     {"label": "Prosper in Life",  "href": "/prosperity-prosper.html",   "data_backend": "prosperity-view-prosper"},
