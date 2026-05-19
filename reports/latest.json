@@ -81,6 +81,18 @@
     },
     {
       "phase": "tokens",
+      "path": "signin.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
+      "path": "signin.html",
+      "message": "raw hex color in HTML",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
       "path": "why.html",
       "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
@@ -225,6 +237,30 @@
     },
     {
       "phase": "seo",
+      "path": "signin.html",
+      "message": "missing Open Graph tags (og:title/description/type/url/image)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "signin.html",
+      "message": "missing Twitter Card tags",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "signin.html",
+      "message": "no JSON-LD structured data",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "signin.html",
+      "message": "title too short (19 chars; aim 30-60 for SERP)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
       "path": "why.html",
       "message": "missing Open Graph tags (og:title/description/type/url/image)",
       "severity": "warn"
@@ -249,6 +285,18 @@
     },
     {
       "phase": "perf_budget",
+      "path": "platform.html",
+      "message": "20.9K HTML > 20.0K budget — audit blocks / split route",
+      "severity": "warn"
+    },
+    {
+      "phase": "perf_budget",
+      "path": "signin.html",
+      "message": "20.4K HTML > 20.0K budget — audit blocks / split route",
+      "severity": "warn"
+    },
+    {
+      "phase": "perf_budget",
       "path": "loom.css",
       "message": "90.9K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
@@ -256,19 +304,7 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "288K CSS > 64.0K budget — split into per-route bundles",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "forge-overlay.js",
-      "message": "8.39K JS > 8.00K budget — code-split or tree-shake",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "forge-findings.js",
-      "message": "14.0K JS > 8.00K budget — code-split or tree-shake",
+      "message": "298K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
@@ -309,8 +345,20 @@
     },
     {
       "phase": "sri",
+      "path": "signin.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
       "path": "why.html",
       "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "phantom_button",
+      "path": "signin.html",
+      "message": "14 button(s) with no data-backend (UI not declared in backends.toml)",
       "severity": "warn"
     },
     {
@@ -346,13 +394,19 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[cta-github] declared but no UI references it (dead spec)",
+      "message": "[cta-github] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[cta-github] declared but impl_files is empty (PARTIAL — stub)",
+      "message": "[cta-passkey-enroll] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-passkey-enroll] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -364,13 +418,31 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[cta-pricing] declared but no UI references it (dead spec)",
+      "message": "[cta-pricing] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[cta-pricing] declared but impl_files is empty (PARTIAL — stub)",
+      "message": "[cta-signin] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-signin] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-signout] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-signout] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -389,6 +461,18 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-subscribe] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-trial] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-trial] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -431,6 +515,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-cms] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-contact] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -514,6 +604,12 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[view-post] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[view-post] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
@@ -521,6 +617,18 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-pricing] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-signin] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-signin] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -562,54 +670,24 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[view-trial] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-trial] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[view-why] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
       "path": "about.html",
-      "message": "href=\"/contact.html\" → static/contact.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
-      "message": "href=\"/blog/t98-runtime-wiring.html\" → static/blog/t98-runtime-wiring.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
-      "message": "href=\"/blog/lfi-as-gate.html\" → static/blog/lfi-as-gate.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
-      "message": "href=\"/blog/cvss-4-0.html\" → static/blog/cvss-4-0.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
-      "message": "href=\"/blog/amoled-true-black.html\" → static/blog/amoled-true-black.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
-      "message": "href=\"/blog/discipline-gate.html\" → static/blog/discipline-gate.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
-      "message": "href=\"/blog/silent-sbom.html\" → static/blog/silent-sbom.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "blog.html",
       "message": "href=\"/contact.html\" → static/contact.html does not exist",
       "severity": "warn"
     },
@@ -628,19 +706,13 @@
     {
       "phase": "unbuilt_route",
       "path": "pricing.html",
-      "message": "href=\"/start\" → static/start does not exist",
+      "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
       "path": "pricing.html",
-      "message": "href=\"/contact\" → static/contact does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "label_consistency",
-      "path": "static/",
-      "message": "a[/start] — 3 distinct labels with PARTIAL data-loom-poly-action (2/3 elements opted out): \"Pre-order\" (1x), \"SoFreeSoloFor one developerMonthly$0Build minUnlimitedSites5Storage10 GB\" (1x), \"TeBetaTeamFor shipping teamsMonthlyFrom $0Seats3 free + $9/extraSitesUnlimitedStorage100 GB\" (1x) — annotate the remaining elements OR remove the attribute on all",
+      "message": "href=\"/contact.html\" → static/contact.html does not exist",
       "severity": "warn"
     },
     {
@@ -651,9 +723,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 108,
-  "duration_ms": 64,
-  "prev_hash": "f77129dd2ecfb01902eccc6037234812918df09c05e6b57021f15665e0d24987",
-  "chain_length": 40,
-  "started": "2026-05-19T10:39:13.494845799Z"
+  "warn_count": 120,
+  "duration_ms": 71,
+  "prev_hash": "0799cdbf850b6982026ad2183a087fed6c9efaa4a49af48f423ea98b88491746",
+  "chain_length": 47,
+  "started": "2026-05-19T11:20:47.282812163Z"
 }

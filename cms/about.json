@@ -8,114 +8,155 @@
     {
       "label": "Platform",
       "href": "/platform.html",
-      "current": false,
       "data_backend": "view-platform"
     },
     {
       "label": "Why",
       "href": "/why.html",
-      "current": false,
       "data_backend": "view-why"
     },
     {
       "label": "Pricing",
       "href": "/pricing.html",
-      "current": false,
       "data_backend": "view-pricing"
     },
     {
       "label": "Docs",
       "href": "/docs.html",
-      "current": false,
       "data_backend": "view-docs"
     },
     {
       "label": "Blog",
       "href": "/blog.html",
-      "current": false,
       "data_backend": "view-blog"
     },
     {
       "label": "About",
       "href": "/about.html",
-      "current": true,
-      "data_backend": "view-about"
+      "data_backend": "view-about",
+      "current": true
     }
   ],
   "sections": [
     {
-      "kind": "hero",
+      "kind": "image_hero",
       "eyebrow": "About",
       "title": "An independent platform shop.",
-      "lede": "PlausiDen is built by a small team that thinks software should be auditable, accessible, and reproducible — by default, not as a checkbox."
+      "lede": "Built by a small team that thinks software should be auditable, accessible, and reproducible — by default, not as a checkbox.",
+      "background": {
+        "kind": "gradient_mesh"
+      },
+      "height": "comfortable"
     },
     {
-      "kind": "heading",
-      "level": 2,
-      "text": "How we work"
-    },
-    {
-      "kind": "paragraph",
-      "text": "Every commit produces a deterministic artifact plus a signed audit report. The reports are stored alongside the source — anyone can verify any historical build. The discipline gate refuses to merge code that doesn't carry inline tests, inline docs, and a passing audit. We don't have a separate QA pass because the build is the QA pass."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "How we ship"
-    },
-    {
-      "kind": "paragraph",
-      "text": "Slow on purpose. We don't release on a calendar; we release when the discipline gate is green and the audit chain is intact. A bad release isn't a missed deadline — it's an apology to every team running the previous version. We've never shipped a CVE because we ship slowly and audit obsessively."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "How we fund"
-    },
-    {
-      "kind": "paragraph",
-      "text": "Revenue-funded. No venture capital. Grants where they align with the privacy-first internet (Tor Project, NLnet, NGI). Our pricing is honest: free for solo, scale by use, no per-seat tax. The platform stays independent because the funding stays independent."
-    },
-    {
-      "kind": "kv_pair",
-      "heading": "Principles",
+      "kind": "stat_band",
+      "heading": "How we work",
       "items": [
         {
-          "key": "Discipline first",
-          "value": "Tests + docs + audit on every commit",
-          "hint": "Codified in scripts/discipline-check.sh --strict."
+          "value": "Slow",
+          "label": "On purpose",
+          "hint": "Discipline-gate before merge"
         },
         {
-          "key": "Typed contracts",
-          "value": "At every boundary",
-          "hint": "If the types compile, the system doesn't break."
+          "value": "Open",
+          "label": "MIT / Apache-2",
+          "hint": "Every commit signed"
         },
         {
-          "key": "Reproducible builds",
-          "value": "Same input → same hash",
-          "hint": "Independently verifiable; not a trust-the-vendor claim."
+          "value": "Funded",
+          "label": "By revenue",
+          "hint": "No VC. Grants where aligned."
         },
         {
-          "key": "Privacy by default",
-          "value": "Self-host everything",
-          "hint": "No third-party fonts, no analytics, no telemetry, no CDNs."
-        },
-        {
-          "key": "No lock-in",
-          "value": "Your content is JSON in git",
-          "hint": "Walk away with a tar.gz; the platform produces no proprietary artifact."
+          "value": "Verified",
+          "label": "End-to-end",
+          "hint": "Reproducible builds + SBOM"
         }
       ]
     },
     {
-      "kind": "hero",
+      "kind": "testimonial",
+      "body": "We replaced three SaaS subscriptions with a single Forge build. Reports go straight to compliance and our auditor stopped asking questions.",
+      "attribution": "Eli K.",
+      "role": "Platform Lead, fictional pilot team"
+    },
+    {
+      "kind": "testimonial",
+      "body": "PlausiDen made our typed CMS shippable in a week. The reproducible-build guarantee alone is worth the migration.",
+      "attribution": "Vee P.",
+      "role": "Senior Engineer, fictional pilot team"
+    },
+    {
+      "kind": "feature_spotlight",
+      "heading": "Principles",
+      "lede": "What we won't compromise on.",
+      "columns": 2,
+      "items": [
+        {
+          "icon_slug": "icon-check",
+          "title": "Discipline first",
+          "body": "Tests + docs + audit on every commit. Codified in scripts/discipline-check.sh --strict."
+        },
+        {
+          "icon_slug": "icon-arrow-right",
+          "title": "Typed contracts at every boundary",
+          "body": "If the types compile, the system doesn't break at runtime."
+        },
+        {
+          "icon_slug": "icon-search",
+          "title": "Reproducible builds",
+          "body": "Same input → same hash. Independently verifiable; not a trust-the-vendor claim."
+        },
+        {
+          "icon_slug": "icon-home",
+          "title": "Privacy by default",
+          "body": "Self-host everything. No third-party fonts, no analytics, no telemetry, no CDNs."
+        }
+      ]
+    },
+    {
+      "kind": "timeline",
+      "heading": "Where we've been",
+      "items": [
+        {
+          "when": "2026 Q1",
+          "title": "Forge alpha",
+          "body": "First typed CMS pipeline. 9-page SkillShots dogfood site built end-to-end."
+        },
+        {
+          "when": "2026 Q2",
+          "title": "Forge 0.18 — typed CMS GA path",
+          "body": "27 audit phases stable. Loom catalogue at 132 primitives. forge-auth + Crucible scaffolded."
+        },
+        {
+          "when": "2026 Q3",
+          "title": "Multi-network publish",
+          "body": "Six DeployAdapter implementations: Tor, I2P, IPFS, Gemini, Lokinet, clearnet."
+        },
+        {
+          "when": "2026 Q4",
+          "title": "LFI integration",
+          "body": "Critic trait + Forge-LFI downstream. Neurosymbolic substrate gates AI proposals."
+        },
+        {
+          "when": "2027 Q1",
+          "title": "Forge GA",
+          "body": "Production-mode strict gate. Public SLA + support tiers."
+        }
+      ]
+    },
+    {
+      "kind": "call_to_action",
       "eyebrow": "Get in touch",
       "title": "Say hello.",
-      "lede": "Working on something where this would help? Curious how a typed substrate would change your stack? We read every email.",
+      "lede": "Working on something where this would help? We read every email.",
       "cta": {
         "label": "Contact",
         "href": "/contact.html",
         "data_backend": "cta-contact"
+      },
+      "background": {
+        "kind": "stripes"
       }
     }
   ]

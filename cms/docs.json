@@ -1,140 +1,158 @@
 {
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — docs",
-  "description": "Read the manifesto, install Forge, ship typed in 60 seconds.",
+  "description": "Install Forge. Author typed CMS. Ship in 60 seconds.",
   "brand": "PlausiDen",
   "path": "/docs.html",
   "nav_links": [
     {
       "label": "Platform",
       "href": "/platform.html",
-      "current": false,
       "data_backend": "view-platform"
     },
     {
       "label": "Why",
       "href": "/why.html",
-      "current": false,
       "data_backend": "view-why"
     },
     {
       "label": "Pricing",
       "href": "/pricing.html",
-      "current": false,
       "data_backend": "view-pricing"
     },
     {
       "label": "Docs",
       "href": "/docs.html",
-      "current": true,
-      "data_backend": "view-docs"
+      "data_backend": "view-docs",
+      "current": true
     },
     {
       "label": "Blog",
       "href": "/blog.html",
-      "current": false,
       "data_backend": "view-blog"
     },
     {
       "label": "About",
       "href": "/about.html",
-      "current": false,
       "data_backend": "view-about"
     }
   ],
   "sections": [
     {
-      "kind": "hero",
+      "kind": "image_hero",
       "eyebrow": "Docs",
       "title": "Ship a typed site in 60 seconds.",
-      "lede": "Forge is one cargo install away. From zero to deployed in three commands."
+      "lede": "Forge is one cargo install away. From zero to deployed in four commands.",
+      "background": {
+        "kind": "gradient_mesh"
+      },
+      "height": "compact"
     },
     {
-      "kind": "heading",
-      "level": 2,
-      "text": "Install"
-    },
-    {
-      "kind": "code",
-      "lang": "bash",
-      "caption": "Pinned cargo install. No CDN, no curl-pipe-bash.",
-      "body": "$ cargo install --git https://github.com/thepictishbeast/PlausiDen-Forge \\\n    --locked --tag v0.18 forge-cli\n\n$ forge --version\nforge 0.18 (commit c091b54, built 2026-05-18)"
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "Author a page"
-    },
-    {
-      "kind": "paragraph",
-      "text": "Every page is one JSON file. Drop it in cms/ and Forge builds it. Editor autocomplete via the JSON Schema reference."
-    },
-    {
-      "kind": "code",
-      "lang": "json",
-      "caption": "cms/landing.json — a complete page in 20 lines.",
-      "body": "{\n  \"$schema\": \"../cms-schema.json\",\n  \"title\": \"Landing\",\n  \"description\": \"Marketing page.\",\n  \"path\": \"/\",\n  \"nav_links\": [],\n  \"sections\": [\n    {\n      \"kind\": \"hero\",\n      \"eyebrow\": \"New\",\n      \"title\": \"Welcome.\",\n      \"lede\": \"This page is one JSON file.\",\n      \"cta\": {\n        \"label\": \"Read more\",\n        \"href\": \"/about\"\n      }\n    }\n  ]\n}"
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "Build"
-    },
-    {
-      "kind": "code",
-      "lang": "terminal",
-      "caption": "27 audit phases, one report, deterministic output.",
-      "body": "$ forge build\n== phase: tokens ==\n  ok      no findings (1ms)\n== phase: html_semantic ==\n  ok      no findings (2ms)\n== phase: csp ==\n  ok      no findings (0ms)\n== phase: a11y_landmarks ==\n  ok      no findings (1ms)\n== phase: theme_contrast ==\n  ok      no findings (28ms)\n== summary ==\n  mode:                production\n  strict findings:     0\n  duration:            66ms\n  signature:           ed25519 (verified)\nforge build OK"
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "Deploy"
-    },
-    {
-      "kind": "paragraph",
-      "text": "The output lives in static/. Copy it anywhere — Caddy, nginx, IPFS, Tor hidden service, S3, your laptop. The audit report in reports/ is verifiable independently."
-    },
-    {
-      "kind": "code",
-      "lang": "bash",
-      "body": "$ rsync -av static/ user@your-host:/var/www/your-site/\n$ forge verify reports/build-20260518T074342Z.json --chain --signatures"
-    },
-    {
-      "kind": "kv_pair",
-      "heading": "Reference",
+      "kind": "steps",
+      "heading": "From zero to deployed",
+      "lede": "Four commands. No accounts. No clouds. Just types.",
       "items": [
         {
-          "key": "Section kinds",
-          "value": "14",
-          "hint": "hero, banner, group, card_feed, sidebar, composer, form, picture, paragraph, heading, kv_pair, logo_wall, quote, code."
+          "title": "Install",
+          "body": "cargo install --git https://github.com/thepictishbeast/PlausiDen-Forge --locked --tag v0.18 forge-cli"
         },
         {
-          "key": "Themes",
-          "value": "13",
-          "hint": "Loaded automatically; pick via data-theme attribute or via the in-page toggle."
+          "title": "Author",
+          "body": "Drop one JSON file per page in cms/. Editor autocomplete via the $schema reference; closed-enum CmsSection variants enforce shape at parse time."
         },
         {
-          "key": "Build phases",
-          "value": "27",
-          "hint": "Configured in forge.toml; each phase's strictness is operator-controllable."
+          "title": "Build",
+          "body": "forge build runs 27 audit phases + emits a Merkle-chained Ed25519-signed report. Output: static/ + reports/."
         },
         {
-          "key": "JSON Schema",
-          "value": "2020-12",
-          "hint": "cms-schema.json at project root. Editor LSPs (VS Code, Helix, Zed) provide inline autocomplete."
+          "title": "Deploy",
+          "body": "rsync static/ to any host. Caddy, nginx, IPFS, Tor hidden service, your laptop. No platform lock-in."
         }
       ]
     },
     {
-      "kind": "hero",
-      "eyebrow": "Ready",
-      "title": "Read the source.",
-      "lede": "Forge, Loom, Crawler, Annotator, CMS are all open source. Every commit is signed. Every PR is reviewed against the discipline gate.",
+      "kind": "split_hero",
+      "eyebrow": "A page in 20 lines",
+      "title": "Author once. Render every variant.",
+      "lede": "Closed-enum CmsSection variants render through one render_page() function. 132 primitives compose every layout shape you've seen.",
       "cta": {
-        "label": "github.com/thepictishbeast",
+        "label": "Platform",
+        "href": "/platform.html",
+        "data_backend": "cta-platform"
+      },
+      "visual": {
+        "kind": "code_snippet",
+        "lang": "json",
+        "body": "{\n  \"kind\": \"image_hero\",\n  \"title\": \"Welcome.\",\n  \"lede\": \"Typed contracts.\",\n  \"cta\": {\n    \"label\": \"Start\",\n    \"href\": \"/start\"\n  }\n}"
+      },
+      "visual_right": true
+    },
+    {
+      "kind": "feature_spotlight",
+      "heading": "Reference",
+      "lede": "The complete documentation lives in the source tree.",
+      "columns": 3,
+      "items": [
+        {
+          "icon_slug": "icon-arrow-right",
+          "title": "132 section kinds",
+          "body": "Closed-enum CmsSection variants across Structural, Editorial, Marketing, Media, Commerce, Social, Forms, Navigation, Feedback, Game-Forum-Video, Auth, Crucible."
+        },
+        {
+          "icon_slug": "icon-check",
+          "title": "13 themes",
+          "body": "AMOLED true-black, WCAG-AA high-contrast pair, sepia, warm, ocean, forest, violet, rose. Picked via data-theme attribute or in-page toggle."
+        },
+        {
+          "icon_slug": "icon-search",
+          "title": "27 audit phases",
+          "body": "Configured in forge.toml. Tokens / CSP / a11y landmarks / theme contrast / phantom-button / unbuilt-route / external-assets / and more."
+        }
+      ]
+    },
+    {
+      "kind": "faq",
+      "heading": "Common questions",
+      "items": [
+        {
+          "question": "Where's the schema?",
+          "answer": [
+            "cms-schema.json at your project root. Reference it via \"$schema\": \"../cms-schema.json\" in every cms/*.json. Editors with jsonls (VS Code / Zed / Helix / Neovim) provide inline autocomplete + validation."
+          ]
+        },
+        {
+          "question": "How do I add a new primitive?",
+          "answer": [
+            "Loom-side concern: extend CmsSection enum + render_section arm + skin.css block. See the PlausiDen-Loom contribution guide for the pattern."
+          ]
+        },
+        {
+          "question": "Can I author with the GUI?",
+          "answer": [
+            "loom edit serve ships a typed-CMS editor that writes back to cms/*.json. Or hand-edit the JSON — both paths are first-class."
+          ]
+        },
+        {
+          "question": "How do I host on Tor?",
+          "answer": [
+            "Add a DeployAdapter entry to your deploy.toml with kind = \"onion\". forge deploy then publishes your build to the hidden service."
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "call_to_action",
+      "eyebrow": "Read the source",
+      "title": "Open everything.",
+      "lede": "Forge, Loom, Crawler, Annotator, CMS are all open source. Every commit signed.",
+      "cta": {
+        "label": "Platform",
         "href": "https://github.com/thepictishbeast",
-        "data_backend": "cta-https:--github.com-thepictishbeast"
+        "data_backend": "cta-github"
+      },
+      "background": {
+        "kind": "stripes"
       }
     }
   ]

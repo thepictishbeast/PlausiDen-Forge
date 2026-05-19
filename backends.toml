@@ -180,3 +180,45 @@ method = "GET"
 path = "/blog"
 purpose = "CTA: changelog"
 impl_files = []
+
+[backends.view-signin]
+method = "GET"
+path = "/signin"
+purpose = "Sign in page"
+impl_files = []
+
+[backends.cta-signin]
+method = "GET"
+path = "/signin"
+purpose = "CTA: sign in"
+impl_files = []
+
+[backends.cta-signout]
+method = "POST"
+path = "/auth/signout"
+purpose = "CTA: sign out"
+impl_files = []
+
+[backends.cta-passkey-enroll]
+method = "POST"
+path = "/auth/passkey/enroll"
+purpose = "CTA: enroll passkey"
+impl_files = []
+
+[backends.view-trial]
+method = "GET"
+path = "/trial"
+purpose = "Start trial"
+impl_files = []
+
+[backends.cta-trial]
+method = "GET"
+path = "/trial"
+purpose = "CTA: start trial"
+impl_files = []
+
+[backends.view-post]
+method = "GET"
+path = "/blog/{slug}"
+purpose = "Blog post placeholder"
+impl_files = []

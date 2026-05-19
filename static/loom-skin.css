@@ -6472,9 +6472,9 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   overflow: hidden;
   isolation: isolate;
 }
-.loom-image-hero.h-comfortable { min-height: 60vh; }
-.loom-image-hero.h-compact     { min-height: 40vh; }
-.loom-image-hero.h-tall        { min-height: 82vh; }
+.loom-image-hero.h-compact     { padding-top: clamp(2.5rem, 4vw, 3.5rem); padding-bottom: clamp(2.5rem, 4vw, 3.5rem); }
+.loom-image-hero.h-comfortable { padding-top: clamp(3.5rem, 5vw, 5rem);   padding-bottom: clamp(3.5rem, 5vw, 5rem); }
+.loom-image-hero.h-tall        { padding-top: clamp(5rem, 7vw, 7rem);     padding-bottom: clamp(5rem, 7vw, 7rem); }
 .loom-image-hero__inner {
   max-width: 64rem;
   width: 100%;
@@ -7016,7 +7016,6 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   display: inline-flex;
   gap: 3rem;
   white-space: nowrap;
-  padding-left: 100%;
   will-change: transform;
 }
 .loom-marquee.marquee-left  .loom-marquee__track { animation: loom-marquee-left  40s linear infinite; }
@@ -7448,3 +7447,117 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-feed-post__at { color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent); }
 .loom-feed-post__body { margin: 0 0 0.85rem; }
 .loom-feed-post__footer { font-size: 0.85rem; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent); }
+
+/* ============================================================
+ * T660 P6 — auth + Crucible widget primitives
+ * AuthCard / MfaPrompt / CrucibleWidget / AuthFlowStepper /
+ * SignedInCard / PasswordReset
+ * ============================================================ */
+
+.loom-auth-card {
+  max-width: 26rem;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 16px;
+  background: var(--loom-color-surface, var(--loom-bg));
+  border: 1px solid var(--loom-color-border, var(--loom-border));
+  box-shadow: var(--loom-shadow-lg);
+}
+.loom-auth-card__header { text-align: center; margin-bottom: 1.5rem; }
+.loom-auth-card__title  { margin: 0 0 0.5rem; font: 800 1.5rem/1.2 var(--loom-font-display); letter-spacing: -0.022em; }
+.loom-auth-card__tagline{ margin: 0; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent); }
+.loom-auth-card__methods{ display: flex; flex-direction: column; gap: 0.6rem; }
+.loom-auth-card__footer { margin-top: 1.25rem; font-size: 0.82rem; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent); text-align: center; }
+
+.loom-auth-method { width: 100%; }
+.loom-auth-method__icon { width: 22px; display: inline-grid; place-items: center; }
+.loom-auth-method--social.provider-github   .loom-auth-method__icon::before { content: "🐙"; }
+.loom-auth-method--social.provider-google   .loom-auth-method__icon::before { content: "G"; font-weight: 900; }
+.loom-auth-method--social.provider-apple    .loom-auth-method__icon::before { content: ""; }
+.loom-auth-method--social.provider-microsoft .loom-auth-method__icon::before { content: "▤"; }
+.loom-auth-method--magic-link, .loom-auth-method--sms-otp, .loom-auth-method--password, .loom-auth-method--sso { display: flex; flex-direction: column; gap: 0.5rem; }
+.loom-auth-method input { padding: 0.7rem 0.9rem; border-radius: 10px; border: 1px solid var(--loom-color-border, var(--loom-border)); background: var(--loom-color-surface, var(--loom-bg)); min-height: 44px; font: inherit; }
+.loom-auth-method input:focus-visible { outline: 2px solid var(--loom-color-primary, var(--loom-accent)); outline-offset: 2px; border-color: var(--loom-color-primary, var(--loom-accent)); }
+.loom-auth-method__row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; }
+.loom-auth-method__forgot { font-size: 0.85rem; color: var(--loom-color-primary, var(--loom-accent)); text-decoration: none; }
+
+.loom-auth-method-divider { display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent); font-size: 0.85rem; }
+.loom-auth-method-divider__line { flex: 1; height: 1px; background: var(--loom-color-border, var(--loom-border)); }
+
+.loom-mfa-prompt {
+  max-width: 26rem; margin: 2rem auto; padding: 2rem;
+  border-radius: 16px;
+  background: var(--loom-color-surface, var(--loom-bg));
+  border: 1px solid var(--loom-color-border, var(--loom-border));
+  box-shadow: var(--loom-shadow-lg); text-align: center;
+}
+.loom-mfa-prompt__title       { margin: 0 0 0.5rem; font: 800 1.4rem/1.2 var(--loom-font-display); letter-spacing: -0.022em; }
+.loom-mfa-prompt__instructions{ color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent); margin-bottom: 1.5rem; }
+.loom-mfa-prompt__otp { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.25rem; }
+.loom-mfa-prompt__digit {
+  width: 3rem; height: 3.5rem;
+  text-align: center; font: 700 1.5rem/1 var(--loom-font-mono);
+  border-radius: 10px; border: 2px solid var(--loom-color-border, var(--loom-border));
+  background: var(--loom-color-surface, var(--loom-bg)); color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-mfa-prompt__digit:focus-visible { outline: 0; border-color: var(--loom-color-primary, var(--loom-accent)); box-shadow: 0 0 0 4px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent); }
+.loom-mfa-prompt__webauthn { display: inline-flex; align-items: center; gap: 0.6rem; padding: 1rem 1.5rem; }
+.loom-mfa-prompt__submit   { width: 100%; }
+.loom-mfa-prompt__switch   { display: block; margin-top: 0.75rem; width: 100%; font-size: 0.88rem; }
+
+.loom-crucible {
+  max-width: 32rem; margin: 2rem auto; padding: 1.5rem;
+  border-radius: 16px;
+  background: var(--loom-color-surface, var(--loom-bg));
+  border: 1px solid var(--loom-color-border, var(--loom-border));
+  box-shadow: var(--loom-shadow-lg);
+}
+.loom-crucible__header { margin-bottom: 1.25rem; }
+.loom-crucible__badge { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 999px; font: 700 0.7rem/1 var(--loom-font-mono); letter-spacing: 0.08em; text-transform: uppercase; background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 14%, transparent); color: var(--loom-color-primary, var(--loom-accent)); }
+.loom-crucible.difficulty-medium      .loom-crucible__badge { background: color-mix(in oklab, oklch(72% 0.16 75) 18%, transparent); color: oklch(50% 0.18 75); }
+.loom-crucible.difficulty-hard        .loom-crucible__badge { background: color-mix(in oklab, oklch(60% 0.22 25) 18%, transparent); color: oklch(40% 0.22 25); }
+.loom-crucible.difficulty-adversarial .loom-crucible__badge { background: oklch(0% 0 0); color: oklch(98% 0 0); }
+.loom-crucible__prompt { margin: 0.5rem 0 0; font: 600 1.05rem/1.4 var(--loom-font-display); letter-spacing: -0.018em; }
+.loom-crucible__options {
+  display: grid; gap: 0.5rem;
+  grid-template-columns: repeat(3, 1fr); /* default 3-column grid; image-classify n=9 fits cleanly */
+  margin-bottom: 1.25rem;
+}
+.loom-crucible.kind-semantic-similarity .loom-crucible__options,
+.loom-crucible.kind-prompt-injection-detect .loom-crucible__options,
+.loom-crucible.kind-math-arithmetic .loom-crucible__options { grid-template-columns: 1fr; }
+.loom-crucible__option {
+  aspect-ratio: 1; padding: 0; border: 2px solid var(--loom-color-border, var(--loom-border));
+  border-radius: 10px; background: linear-gradient(135deg, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 14%, transparent), color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 14%, transparent));
+  cursor: pointer; transition: transform var(--loom-motion-fast, 140ms) var(--loom-ease-out, ease), border-color var(--loom-motion-fast, 140ms) var(--loom-ease-out, ease);
+}
+.loom-crucible.kind-semantic-similarity .loom-crucible__option,
+.loom-crucible.kind-prompt-injection-detect .loom-crucible__option { aspect-ratio: auto; padding: 0.85rem 1.1rem; text-align: left; }
+.loom-crucible__option:hover { transform: scale(1.02); border-color: var(--loom-color-primary, var(--loom-accent)); }
+.loom-crucible__option[aria-pressed="true"] { border-color: var(--loom-color-primary, var(--loom-accent)); box-shadow: 0 0 0 4px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent); }
+.loom-crucible__option-glyph { display: block; width: 100%; height: 100%; }
+.loom-crucible__footer { display: flex; flex-direction: column; gap: 0.6rem; }
+.loom-crucible__submit { width: 100%; }
+.loom-crucible__attribution { margin: 0; font-size: 0.78rem; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent); text-align: center; }
+
+.loom-auth-stepper { margin: 1rem auto 2rem; max-width: 36rem; }
+.loom-auth-stepper__list { list-style: none; padding: 0; display: flex; gap: 0.5rem; counter-reset: step; }
+.loom-auth-stepper__step { flex: 1; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.85rem; border-radius: 10px; border: 1px solid var(--loom-color-border, var(--loom-border)); font-size: 0.88rem; }
+.loom-auth-stepper__num { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 14%, transparent); font: 700 0.78rem/1 var(--loom-font-mono); }
+.loom-auth-stepper__step.is-current { border-color: var(--loom-color-primary, var(--loom-accent)); }
+.loom-auth-stepper__step.is-current .loom-auth-stepper__num { background: var(--loom-color-primary, var(--loom-accent)); color: var(--loom-color-on-primary, white); }
+.loom-auth-stepper__step.is-done { color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent); }
+.loom-auth-stepper__step.is-done .loom-auth-stepper__num { background: color-mix(in oklab, oklch(60% 0.18 150) 35%, transparent); color: white; }
+.loom-auth-stepper__step.is-done .loom-auth-stepper__num::before { content: "✓"; }
+.loom-auth-stepper__step.is-done .loom-auth-stepper__num span { display: none; }
+
+.loom-signed-in-card { display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem 1rem; border-radius: 12px; background: var(--loom-color-surface, var(--loom-bg)); border: 1px solid var(--loom-color-border, var(--loom-border)); }
+.loom-signed-in-card__body { display: flex; flex-direction: column; flex: 1; }
+.loom-signed-in-card__name { font-weight: 700; }
+.loom-signed-in-card__handle { font-size: 0.85rem; color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent); }
+
+.loom-password-reset { max-width: 24rem; margin: 2rem auto; padding: 2rem; border-radius: 14px; background: var(--loom-color-surface, var(--loom-bg)); border: 1px solid var(--loom-color-border, var(--loom-border)); }
+.loom-password-reset__title { margin: 0 0 0.5rem; font: 800 1.3rem/1.2 var(--loom-font-display); letter-spacing: -0.022em; }
+.loom-password-reset__description { color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent); margin-bottom: 1.25rem; }
+.loom-password-reset__form { display: flex; flex-direction: column; gap: 0.6rem; }
+.loom-password-reset__form input { padding: 0.7rem 0.9rem; border-radius: 10px; border: 1px solid var(--loom-color-border, var(--loom-border)); background: var(--loom-color-surface, var(--loom-bg)); min-height: 44px; }

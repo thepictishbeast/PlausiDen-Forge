@@ -1,0 +1,39 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Sign in — PlausiDen",
+  "description": "Sign in with passkey, WebAuthn, magic link, or password.",
+  "brand": "PlausiDen",
+  "path": "/signin.html",
+  "nav_links": [
+    {"label": "Platform", "href": "/platform.html", "data_backend": "view-platform"},
+    {"label": "Why", "href": "/why.html", "data_backend": "view-why"},
+    {"label": "Pricing", "href": "/pricing.html", "data_backend": "view-pricing"},
+    {"label": "Docs", "href": "/docs.html", "data_backend": "view-docs"},
+    {"label": "Blog", "href": "/blog.html", "data_backend": "view-blog"},
+    {"label": "About", "href": "/about.html", "data_backend": "view-about"}
+  ],
+  "sections": [
+    {"kind": "image_hero", "eyebrow": "Sign in", "title": "Welcome back.", "lede": "Use a passkey, your security key, or sign in with email.", "background": {"kind": "gradient_mesh"}, "height": "compact"},
+    {"kind": "auth_flow_stepper", "steps": ["Identify", "Verify", "Choose tenant"], "current": 0},
+    {"kind": "auth_card", "title": "Sign in to PlausiDen", "tagline": "Pick a method. We default to passkey — it's phishing-resistant by construction.", "methods": [
+      {"kind": "passkey", "label": "Continue with Passkey"},
+      {"kind": "webauthn_roaming", "label": "Use a security key"},
+      {"kind": "divider", "label": "or"},
+      {"kind": "social", "provider": "github", "label": "Continue with GitHub"},
+      {"kind": "social", "provider": "google", "label": "Continue with Google"},
+      {"kind": "divider", "label": "or"},
+      {"kind": "magic_link", "placeholder": "you@yourcompany.com", "submit_label": "Send magic link"},
+      {"kind": "divider", "label": "or"},
+      {"kind": "sso", "label": "Continue with SSO", "placeholder": "yourcompany.com"}
+    ], "footer": "By signing in you accept the Terms + Privacy policy. We never see your prompts or content."},
+    {"kind": "mfa_prompt", "title": "Enter your code", "factor": "totp", "instructions": "Enter the 6-digit code from your authenticator app.", "otp_length": 6, "submit_label": "Verify", "switch_label": "Use a different factor"},
+    {"kind": "crucible_widget", "challenge_kind": "image_classify", "prompt": "Select all photos that contain a bird.", "difficulty": "medium", "option_count": 9, "submit_label": "Verify", "attribution_hint": "Your response helps train PlausiDen-LFI. Curated for the open corpus."},
+    {"kind": "feature_spotlight", "heading": "Why these methods", "lede": "Forge-auth ships nine typed AuthMethod variants. Operators pick the mix per tenant.", "columns": 3, "items": [
+      {"icon_slug": "icon-check", "title": "Passkey + WebAuthn", "body": "Phishing-resistant by construction. The signature is bound to your device + the origin."},
+      {"icon_slug": "icon-arrow-right", "title": "Magic link + SMS OTP", "body": "Server never stores a password. Lower phishing resistance, higher recoverability."},
+      {"icon_slug": "icon-search", "title": "Password + MFA", "body": "Classic salted Argon2id with mandatory MFA (TOTP / WebAuthn / SMS / Email OTP / backup codes)."}
+    ]},
+    {"kind": "alert", "tone": "info", "title": "Bring your own provider", "body": "forge-auth wraps a typed AuthProvider trait. Postgres-Argon2id, vault-WebAuthn, OAuth-2 / OIDC against any IdP — pick your impl, plug it in.", "dismissible": false},
+    {"kind": "call_to_action", "eyebrow": "New here", "title": "Start free.", "lede": "Solo plan is free forever. Team plan's first three seats are free.", "cta": {"label": "Pricing", "href": "/pricing.html", "data_backend": "cta-pricing"}, "background": {"kind": "dots"}}
+  ]
+}

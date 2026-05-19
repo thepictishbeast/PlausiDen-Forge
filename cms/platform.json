@@ -1,153 +1,266 @@
 {
   "$schema": "../cms-schema.json",
   "title": "PlausiDen — the platform",
-  "description": "Six tools, one typed substrate. Forge, Loom, Crawler, Annotator, CMS, LFI.",
+  "description": "Six tools, one typed substrate.",
   "brand": "PlausiDen",
   "path": "/platform.html",
   "nav_links": [
     {
       "label": "Platform",
       "href": "/platform.html",
-      "current": true,
-      "data_backend": "view-platform"
+      "data_backend": "view-platform",
+      "current": true
     },
     {
       "label": "Why",
       "href": "/why.html",
-      "current": false,
       "data_backend": "view-why"
     },
     {
       "label": "Pricing",
       "href": "/pricing.html",
-      "current": false,
       "data_backend": "view-pricing"
     },
     {
       "label": "Docs",
       "href": "/docs.html",
-      "current": false,
       "data_backend": "view-docs"
     },
     {
       "label": "Blog",
       "href": "/blog.html",
-      "current": false,
       "data_backend": "view-blog"
     },
     {
       "label": "About",
       "href": "/about.html",
-      "current": false,
       "data_backend": "view-about"
     }
   ],
   "sections": [
     {
-      "kind": "hero",
+      "kind": "image_hero",
       "eyebrow": "The platform",
       "title": "Six tools. One substrate.",
-      "lede": "Every PlausiDen tool shares the same typed contracts. Compose what you need; ignore what you don't."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "Forge"
-    },
-    {
-      "kind": "paragraph",
-      "text": "The typed build pipeline. 27 audit phases run on every build: tokens, CSP, a11y landmarks, semantic HTML, theme contrast, phantom-button detection, unbuilt-route detection, external-asset blocking, jurisdiction compliance, label consistency, link check, locale html-lang, motion preferences, path consistency, perf budget, print stylesheet, reader safety, render correctness, required pages, self-check, SEO, SRI, structured data, theme consistency, viewport audit. Every commit produces a Merkle-chained Ed25519-signed report."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "Loom"
-    },
-    {
-      "kind": "paragraph",
-      "text": "The typed UI primitive library. Closed-enum CmsSection variants render through a single render_page() function. 13 themes including AMOLED-true dark and WCAG-AA-targeted high-contrast pair. OKLCH-based palette, system-font stack, dual-theme by default, reduced-motion honoured automatically."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "Crawler"
-    },
-    {
-      "kind": "paragraph",
-      "text": "The runtime auditor. Walks the rendered DOM with a headless browser, runs 120+ typed detectors against the actual page state, emits a journey schema that Forge consumes as a phase. Catches what static analysis cannot — focus traps in modals, hydration mismatches, broken aria-controls links, layout shifts under real network conditions."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "Annotator"
-    },
-    {
-      "kind": "paragraph",
-      "text": "Operator capture. Records what your users actually do — typed event stream, lossless replay, local-first storage, opt-in by user. No cloud upload, no third-party telemetry. Use it to derive new audit detectors, debug a regression, or hand a session to support."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "CMS"
-    },
-    {
-      "kind": "paragraph",
-      "text": "Content as typed data. Your pages are JSON files in version control. Sections are closed-enum variants validated at parse time. No database, no editor lock-in, no migration scripts when your schema evolves — types are the migration."
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "LFI"
-    },
-    {
-      "kind": "paragraph",
-      "text": "AI evaluation, not generation. The Critic trait gates every AI proposal — Claude, Gemini, GPT, or a locally-run model — through a typed Decision: Accept, Reject, or Refine with explicit regeneration guidance. Pluggable provider, pluggable critic. Today: LLM-only Critic ships immediately. Tomorrow: neurosymbolic LFI Critic drops in via a feature flag, zero changes at the call site."
-    },
-    {
-      "kind": "kv_pair",
-      "heading": "Built on standards",
-      "items": [
-        {
-          "key": "Type system",
-          "value": "Rust",
-          "hint": "#[forbid(unsafe_code)] across every workspace crate."
-        },
-        {
-          "key": "Date format",
-          "value": "ISO 8601 / RFC 3339",
-          "hint": "No bespoke timestamps."
-        },
-        {
-          "key": "Accessibility",
-          "value": "WCAG 2.1 AA",
-          "hint": "Gated at build time, not retrofitted."
-        },
-        {
-          "key": "Schema",
-          "value": "JSON Schema 2020-12",
-          "hint": "Editor-validated content authoring."
-        },
-        {
-          "key": "Supply chain",
-          "value": "SLSA + CycloneDX 1.5",
-          "hint": "Sigstore-attested SBOM per workspace member."
-        },
-        {
-          "key": "Quality model",
-          "value": "ISO/IEC 25010",
-          "hint": "Functional suitability, performance, compatibility, usability, reliability, security, maintainability, portability."
-        }
-      ]
-    },
-    {
-      "kind": "hero",
-      "eyebrow": "Compose your stack",
-      "title": "Use one. Or all six.",
-      "lede": "PlausiDen is opinionated about types and unopinionated about adoption. Bring just Forge for typed CMS builds, or layer Loom + Crawler + LFI for full coverage.",
+      "lede": "Every PlausiDen tool shares the same typed contracts. Compose what you need; ignore what you don't.",
       "cta": {
         "label": "Docs",
         "href": "/docs.html",
         "data_backend": "cta-docs"
+      },
+      "background": {
+        "kind": "gradient_mesh"
+      },
+      "height": "comfortable"
+    },
+    {
+      "kind": "feature_spotlight",
+      "heading": "What's in the box",
+      "lede": "Six tools. Use one. Or all six.",
+      "columns": 3,
+      "items": [
+        {
+          "icon_slug": "icon-arrow-right",
+          "title": "Forge",
+          "body": "Typed build pipeline. 27 audit phases per commit, Merkle-chained signed reports, deterministic output."
+        },
+        {
+          "icon_slug": "icon-check",
+          "title": "Loom",
+          "body": "132 typed UI primitives, 13 themes, OKLCH palette, dual-theme by default, WCAG 2.1 AA gated at build time."
+        },
+        {
+          "icon_slug": "icon-search",
+          "title": "Crawler",
+          "body": "Runtime auditor walking the real DOM. 120+ typed detectors no static analysis can run."
+        },
+        {
+          "icon_slug": "icon-home",
+          "title": "Annotator",
+          "body": "Operator capture. Typed event stream, lossless replay, local-first storage, opt-in by user."
+        },
+        {
+          "icon_slug": "icon-arrow-right",
+          "title": "CMS",
+          "body": "Content as typed data. JSON files in version control. No database, no template language."
+        },
+        {
+          "icon_slug": "icon-check",
+          "title": "LFI",
+          "body": "AI evaluation, not generation. Critic trait gates every proposal. LLM-pluggable, optional."
+        }
+      ]
+    },
+    {
+      "kind": "stat_band",
+      "heading": "Built on standards",
+      "items": [
+        {
+          "value": "27",
+          "label": "Audit phases",
+          "hint": "Per commit"
+        },
+        {
+          "value": "132",
+          "label": "Loom primitives",
+          "hint": "Typed CmsSection variants"
+        },
+        {
+          "value": "13",
+          "label": "Themes",
+          "hint": "Including AMOLED + HC pair"
+        },
+        {
+          "value": "6",
+          "label": "Networks",
+          "hint": "Clearnet + Tor + I2P + IPFS + Gemini + Lokinet"
+        }
+      ]
+    },
+    {
+      "kind": "steps",
+      "heading": "How a build runs",
+      "lede": "Every commit traces through the same pipeline.",
+      "items": [
+        {
+          "title": "Parse CMS",
+          "body": "Read cms/*.json. Closed-enum CmsSection variants with deny_unknown_fields catch malformed input at the boundary."
+        },
+        {
+          "title": "Validate",
+          "body": "27 audit phases — tokens, CSP, a11y landmarks, semantic HTML, theme contrast, path consistency, perf budget."
+        },
+        {
+          "title": "Render",
+          "body": "loom-cms-render walks the typed page, emits semantic HTML + the Loom skin. No template language."
+        },
+        {
+          "title": "Sign + chain",
+          "body": "Build report hashed into the Merkle chain. Ed25519 signature. Independently verifiable."
+        }
+      ]
+    },
+    {
+      "kind": "comparison",
+      "heading": "PlausiDen vs. template-language CMS",
+      "columns": [
+        "Template-language",
+        "PlausiDen"
+      ],
+      "rows": [
+        {
+          "label": "Content shape validated at",
+          "values": [
+            "publish time",
+            "parse time"
+          ]
+        },
+        {
+          "label": "Schema migration cost",
+          "values": [
+            "weeks",
+            "types are the migration"
+          ]
+        },
+        {
+          "label": "Database required",
+          "values": [
+            "yes",
+            "no"
+          ]
+        },
+        {
+          "label": "Build reproducibility",
+          "values": [
+            "no",
+            "Merkle-chained + Ed25519 signed"
+          ]
+        },
+        {
+          "label": "Multi-network publish",
+          "values": [
+            "clearnet only",
+            "Tor / I2P / IPFS / Gemini / Lokinet / clearnet"
+          ]
+        },
+        {
+          "label": "Third-party fetches",
+          "values": [
+            "5-15 typical",
+            "0"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "timeline",
+      "heading": "Where we are",
+      "items": [
+        {
+          "when": "2026 Q2",
+          "title": "Forge 0.18 — typed CMS pipeline",
+          "body": "27 audit phases + SLSA-attested SBOMs + Multi-network DeployAdapter."
+        },
+        {
+          "when": "2026 Q3",
+          "title": "Loom 0.4 — 132 typed primitives",
+          "body": "Catalogue: Layout / Editorial / Marketing / Media / Commerce / Social / Forms / Navigation / Feedback / Auth + Crucible widget."
+        },
+        {
+          "when": "2026 Q3",
+          "title": "forge-auth + Crucible",
+          "body": "Passwordless / WebAuthn / MFA via typed AuthProvider."
+        },
+        {
+          "when": "2026 Q4",
+          "title": "LFI-augmented Critic",
+          "body": "Neurosymbolic substrate via the Critic trait. Drop-in via cargo --features lfi."
+        },
+        {
+          "when": "2027 Q1",
+          "title": "Forge GA",
+          "body": "Production-mode discipline gate enforced workspace-wide."
+        }
+      ]
+    },
+    {
+      "kind": "faq",
+      "heading": "Platform questions",
+      "items": [
+        {
+          "question": "Can I use only one tool?",
+          "answer": [
+            "Yes. Forge is the build pipeline; everything else is opt-in.",
+            "Common starting point: Forge + Loom. Add Crawler when you want runtime audits. Add Crucible + forge-auth when you ship logins."
+          ]
+        },
+        {
+          "question": "How does the LFI integration work?",
+          "answer": [
+            "forge-critic ships the Critic trait + NoopCritic + LlmCritic in every build. The LFI-backed Critic is gated behind cargo --features lfi.",
+            "Bring your own LLM provider. The platform never sees your prompts."
+          ]
+        },
+        {
+          "question": "Does it deploy to Tor / I2P / IPFS?",
+          "answer": [
+            "Yes. Six DeployAdapter implementations: clearnet, Tor onion, I2P eepsite, IPFS/IPNS, Gemini, Lokinet."
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "call_to_action",
+      "eyebrow": "Compose your stack",
+      "title": "Use one. Or all six.",
+      "lede": "PlausiDen is opinionated about types and unopinionated about adoption.",
+      "cta": {
+        "label": "Docs",
+        "href": "/docs.html",
+        "data_backend": "cta-docs"
+      },
+      "background": {
+        "kind": "stripes"
       }
     }
   ]
