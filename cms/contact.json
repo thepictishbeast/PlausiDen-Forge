@@ -1,0 +1,120 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Contact — PlausiDen LLC",
+  "description": "Reach PlausiDen LLC for a free consultation. Phone, email, encrypted inquiry, or message form — Massachusetts, USA.",
+  "brand": "PlausiDen LLC",
+  "chrome": "floating_pill",
+  "theme": "light",
+  "nav_actions": [
+    {"label": "Encrypted Inquiry", "href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"},
+    {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
+  ],
+  "path": "/contact.html",
+  "nav_links": [
+    {"label": "Services",   "href": "/services.html",    "data_backend": "view-services"},
+    {"label": "About",      "href": "/about.html",       "data_backend": "view-about"},
+    {"label": "Field Notes","href": "/field-notes.html", "data_backend": "view-field-notes"},
+    {"label": "Contact",    "href": "/contact.html",     "data_backend": "view-contact",     "current": true}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "eyebrow": "Contact",
+      "title": "Reach out for a quote and free consultation today.",
+      "lede": "We're here to answer questions about our IT solutions. Pick the channel that fits your threat model — phone, email, encrypted inquiry, or the message form below.",
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-91.jpg",
+        "alt": "Wide editorial photograph evoking direct communication",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "heading",
+      "text": "Direct channels",
+      "level": 2
+    },
+    {
+      "kind": "kv_pair",
+      "items": [
+        {
+          "key": "Phone",
+          "value": "978-351-6495",
+          "hint": "Business hours, Eastern time. Voicemail outside hours; we return calls the next business morning."
+        },
+        {
+          "key": "Email",
+          "value": "team@plausiden.com",
+          "hint": "Replies typically within two business days. No newsletter signup, no marketing follow-up."
+        },
+        {
+          "key": "Location",
+          "value": "Massachusetts, USA",
+          "hint": "Remote engagements globally; on-site in New England by appointment."
+        },
+        {
+          "key": "Encrypted inquiry",
+          "value": "age + PGP supported. See /encrypted-inquiry for keys.",
+          "hint": "For threat models that warrant encrypted intake — journalism, healthcare, finance, legal."
+        }
+      ]
+    },
+    {
+      "kind": "figure",
+      "caption": "Pick the channel that fits the threat model.",
+      "asset_slug": "photos/stock-92"
+    },
+    {
+      "kind": "heading",
+      "text": "Service interest",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "If you know which practice fits your engagement, mention it in the subject line. If you don't, we'll triage from your description."
+    },
+    {
+      "kind": "kv_pair",
+      "items": [
+        {
+          "key": "IT Operations",
+          "value": "Subject: \"IT Operations — <one-line problem>\"."
+        },
+        {
+          "key": "Cyber Security",
+          "value": "Subject: \"Cyber Security — <threat model or compliance scope>\"."
+        },
+        {
+          "key": "Artificial Intelligence",
+          "value": "Subject: \"AI — <specific workflow you'd improve>\"."
+        },
+        {
+          "key": "Industrial Automation",
+          "value": "Subject: \"Automation — <PLC / RPA / OT-IT scope>\"."
+        },
+        {
+          "key": "Software Development",
+          "value": "Subject: \"Software — <web / mobile / legacy modernization>\"."
+        },
+        {
+          "key": "Hardware Solutions",
+          "value": "Subject: \"Hardware — <fleet size / lifecycle stage>\"."
+        },
+        {
+          "key": "Network Architecture",
+          "value": "Subject: \"Networking — <segmentation / VPN / Wi-Fi / zero-trust>\"."
+        },
+        {
+          "key": "Other / general",
+          "value": "Anything else — describe the system, the constraint, and the outcome you want."
+        }
+      ]
+    },
+    {
+      "kind": "pull_quote",
+      "body": "We do not pitch back. We respond with a scoped intake call or a written follow-up — never with a sales drip.",
+      "attribution": "engagement-model promise"
+    }
+  ]
+}

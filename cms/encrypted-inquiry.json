@@ -1,0 +1,111 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Encrypted Inquiry — PlausiDen LLC",
+  "description": "Encrypted intake channel for journalism, healthcare, finance, legal, and other threat models that warrant end-to-end encrypted communication.",
+  "brand": "PlausiDen LLC",
+  "chrome": "floating_pill",
+  "theme": "light",
+  "nav_actions": [
+    {"label": "Encrypted Inquiry", "href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"},
+    {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
+  ],
+  "path": "/encrypted-inquiry.html",
+  "nav_links": [
+    {"label": "Services",   "href": "/services.html",    "data_backend": "view-services"},
+    {"label": "About",      "href": "/about.html",       "data_backend": "view-about"},
+    {"label": "Field Notes","href": "/field-notes.html", "data_backend": "view-field-notes"},
+    {"label": "Contact",    "href": "/contact.html",     "data_backend": "view-contact"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "eyebrow": "Encrypted Inquiry",
+      "title": "End-to-end encrypted intake.",
+      "lede": "For threat models that warrant it: journalism source-protection, healthcare PHI scoping, finance privileged-information channels, legal client work-product. We accept inquiries via age, PGP, Signal, or Tor hidden service.",
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-93.jpg",
+        "alt": "Wide editorial photograph evoking secure communication",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "heading",
+      "text": "Channels",
+      "level": 2
+    },
+    {
+      "kind": "def_list",
+      "items": [
+        {
+          "term": "age (modern, simple)",
+          "definition": "Encrypt with our age public key. We publish the key fingerprint in three places (this page, a signed Git tag in our public repo, an OpenTimestamps proof) so you can verify before encrypting. age-encrypted files attach to any email account."
+        },
+        {
+          "term": "PGP (GnuPG-compatible)",
+          "definition": "Traditional encryption channel. Our OpenPGP key is published on keys.openpgp.org and verified there. Use any GnuPG-compatible client. We respond signed; verify our signature before acting on advice."
+        },
+        {
+          "term": "Signal",
+          "definition": "Encrypted messaging. Best for time-sensitive inquiries and ongoing engagement coordination. Request the number via age- or PGP-encrypted email; we do not publish the number on the public web."
+        },
+        {
+          "term": "Tor hidden service",
+          "definition": "A .onion address for clients who require the strongest network-layer anonymity. Same intake process as the clearnet channels; the network path is the only difference."
+        }
+      ]
+    },
+    {
+      "kind": "pull_quote",
+      "body": "If the threat model warrants encryption, the threat model warrants verifying every key before use. Three independent verification paths; pick at least two.",
+      "attribution": "encrypted-inquiry doctrine"
+    },
+    {
+      "kind": "heading",
+      "text": "Key fingerprints",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "Verify before you encrypt. Each key is published on at least three independent channels — this page, a signed Git tag in our public repository, and an OpenTimestamps proof referencing a Bitcoin block. If any two diverge, do not encrypt — the key is compromised."
+    },
+    {
+      "kind": "kv_pair",
+      "items": [
+        {
+          "key": "age public key",
+          "value": "Published at /security/age.pub (signed). Fingerprint posted in latest GitHub release notes."
+        },
+        {
+          "key": "OpenPGP fingerprint",
+          "value": "Published at /security/pgp.asc (ASCII-armored). Also on keys.openpgp.org under team@plausiden.com."
+        },
+        {
+          "key": "Tor hidden service",
+          "value": "Published on request via age or PGP. Rotated quarterly."
+        },
+        {
+          "key": "Signal number",
+          "value": "On request via encrypted email."
+        }
+      ]
+    },
+    {
+      "kind": "figure",
+      "caption": "Verify keys via multiple independent paths before encrypting.",
+      "asset_slug": "photos/stock-94"
+    },
+    {
+      "kind": "call_to_action",
+      "eyebrow": "Standard channel",
+      "title": "If your threat model doesn't warrant encryption,",
+      "lede": "use the regular contact page. Plain email and phone are perfectly fine for routine inquiry.",
+      "cta": {
+        "label": "Contact",
+        "href": "/contact.html",
+        "data_backend": "view-contact"
+      }
+    }
+  ]
+}
