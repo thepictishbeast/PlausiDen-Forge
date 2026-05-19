@@ -217,6 +217,31 @@ path = "/trial"
 purpose = "CTA: start trial"
 impl_files = []
 
+# PlausiDen LLC site rebuild (IT consultancy positioning).
+[backends.view-services]
+method = "GET"
+path = "/services.html"
+purpose = "Services overview"
+impl_files = []
+
+[backends.view-field-notes]
+method = "GET"
+path = "/field-notes.html"
+purpose = "Field notes / engineering blog"
+impl_files = []
+
+[backends.cta-encrypted-inquiry]
+method = "GET"
+path = "/encrypted-inquiry.html"
+purpose = "CTA: encrypted inquiry channel (age/PGP)"
+impl_files = []
+
+[backends.cta-quote]
+method = "GET"
+path = "/quote.html"
+purpose = "CTA: request a quote / free consultation"
+impl_files = []
+
 # Prosperity Club — pixel-rebuild target (#112 / #118).
 # Same site, separate backend namespace via prosperity- prefix.
 [backends.prosperity-view-about]

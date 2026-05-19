@@ -6217,19 +6217,13 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   box-shadow: 0 0 0 2px var(--loom-color-accent);
   position: relative;
 }
-.loom-pricing-tier-featured::before {
-  content: "Popular";
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-end: var(--loom-space-4);
-  transform: translateY(-50%);
-  padding: 0.15em 0.6em;
-  background: var(--loom-color-accent);
-  color: var(--loom-color-on-accent, white);
-  border-radius: var(--loom-radius-pill, 999px);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
+/* Legacy `.loom-pricing-tier-featured::before { content: "Popular" }`
+ * removed: hardcoded English label in CSS was a localization bug AND
+ * a substrate-de-consumer-shaping violation (no opt-out, no per-tier
+ * configuration). Authors who want a badge now set
+ * `PricingTier.badge: Some("Most popular")` (or any locale-appropriate
+ * label) and the renderer emits a `.loom-pricing__badge` span the
+ * tier-card CSS positions identically. */
 .loom-pricing-price {
   display: inline-flex;
   align-items: baseline;
@@ -6288,6 +6282,42 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   border-radius: 50%;
   overflow: hidden;
 }
+/* Editorial: pull-quote-style typography, no card chrome. */
+.loom-testimonial.deco-editorial {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  border-left: 2px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 60%, transparent);
+  padding-left: 1.5rem;
+  max-width: 50rem;
+  margin-inline: auto;
+}
+.loom-testimonial.deco-editorial .loom-testimonial__body {
+  font: italic 600 clamp(1.25rem, 2.2vw, 1.65rem)/1.4 var(--loom-font-display);
+  letter-spacing: -0.015em;
+}
+.loom-testimonial.deco-editorial .loom-testimonial__author {
+  margin-top: 1rem;
+  font-size: 0.92rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent);
+}
+/* Minimal: quote + attribution line. */
+.loom-testimonial.deco-minimal {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  max-width: 42rem;
+}
+.loom-testimonial.deco-minimal .loom-testimonial__body {
+  font-style: normal;
+  font-size: 1rem;
+  margin: 0 0 0.25rem;
+}
+.loom-testimonial.deco-minimal .loom-testimonial__author {
+  font-size: 0.85rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent);
+}
+
 .loom-testimonial-avatar > img {
   inline-size: 100%;
   block-size: 100%;
@@ -7928,10 +7958,34 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-promo-strip { display: flex; gap: 1rem; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-radius: 12px; background: linear-gradient(135deg, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 10%, var(--loom-color-surface, var(--loom-bg))), color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 10%, var(--loom-color-surface, var(--loom-bg)))); margin: 1.5rem 0; }
 .loom-award-badges__list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; }
 .loom-award-badges__item { padding: 0.5rem 1rem; border-radius: 999px; border: 1px solid var(--loom-color-border, var(--loom-border)); font-weight: 600; font-size: 0.92rem; }
-.loom-newsletter-signup { padding: 2.5rem; border-radius: 16px; background: linear-gradient(135deg, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 8%, var(--loom-color-surface, var(--loom-bg))), color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 8%, var(--loom-color-surface, var(--loom-bg)))); text-align: center; }
-.loom-newsletter-signup__heading { margin: 0 0 0.5rem; font: 800 1.5rem/1.2 var(--loom-font-display); letter-spacing: -0.022em; }
-.loom-newsletter-signup__form { display: flex; gap: 0.5rem; max-width: 28rem; margin: 1.25rem auto 0; }
-.loom-newsletter-signup__form input { flex: 1; padding: 0.75rem 1rem; border-radius: 999px; border: 1px solid var(--loom-color-border, var(--loom-border)); background: var(--loom-color-surface, var(--loom-bg)); }
+/* Newsletter signup — substrate default is editorial. The
+ * gradient-card "Join our mailing list" trope is opt-in via
+ * `.loom-newsletter-signup--carded` on the outer element.
+ * Substrate-de-consumer-shaping PRIORITY 6: the default shape
+ * was a centered gradient-card with pill-rounded inputs (the
+ * textbook mailing-list trope). Default is now flush-left,
+ * no chrome, no gradient — typography only.
+ */
+.loom-newsletter-signup {
+  padding: 1.5rem 0;
+  max-width: 42rem;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+}
+.loom-newsletter-signup__heading { margin: 0 0 0.5rem; font: 700 1.4rem/1.2 var(--loom-font-display); letter-spacing: -0.02em; }
+.loom-newsletter-signup__form { display: flex; gap: 0.5rem; max-width: 32rem; margin: 1.25rem 0 0; }
+.loom-newsletter-signup__form input { flex: 1; padding: 0.6rem 0.85rem; border-radius: 4px; border: 1px solid var(--loom-color-border, var(--loom-border)); background: var(--loom-color-surface, var(--loom-bg)); }
+/* Opt-in carded variant — restores the legacy trope shape. */
+.loom-newsletter-signup.loom-newsletter-signup--carded {
+  padding: 2.5rem;
+  border: 0;
+  border-radius: 16px;
+  text-align: center;
+  background: linear-gradient(135deg,
+    color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 8%, var(--loom-color-surface, var(--loom-bg))),
+    color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 8%, var(--loom-color-surface, var(--loom-bg))));
+}
+.loom-newsletter-signup.loom-newsletter-signup--carded .loom-newsletter-signup__form { margin: 1.25rem auto 0; }
+.loom-newsletter-signup.loom-newsletter-signup--carded .loom-newsletter-signup__form input { border-radius: 999px; padding: 0.75rem 1rem; }
 .loom-contact-strip { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1.5rem 0; justify-content: center; }
 .loom-contact-strip__item { padding: 0.6rem 1.1rem; border-radius: 999px; border: 1px solid var(--loom-color-border, var(--loom-border)); text-decoration: none; color: var(--loom-color-ink, var(--loom-fg)); }
 .loom-contact-strip__item:hover { background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 8%, transparent); }

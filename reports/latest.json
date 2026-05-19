@@ -309,12 +309,6 @@
     },
     {
       "phase": "perf_budget",
-      "path": "index.html",
-      "message": "21.6K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
       "path": "platform.html",
       "message": "21.9K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
@@ -334,7 +328,7 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "324K CSS > 64.0K budget — split into per-route bundles",
+      "message": "326K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
@@ -442,6 +436,12 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[cta-encrypted-inquiry] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[cta-github] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
@@ -467,6 +467,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-pricing] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-quote] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -622,12 +628,6 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-contact] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
       "message": "[view-contact] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
@@ -647,6 +647,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-docs] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-field-notes] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -719,6 +725,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-pricing] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-services] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -814,7 +826,31 @@
     {
       "phase": "unbuilt_route",
       "path": "index.html",
-      "message": "href=\"/start.html\" → static/start.html does not exist",
+      "message": "href=\"/services.html\" → static/services.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/contact.html\" → static/contact.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/encrypted-inquiry.html\" → static/encrypted-inquiry.html does not exist",
+      "severity": "warn"
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/quote.html\" → static/quote.html does not exist",
       "severity": "warn"
     },
     {
@@ -909,9 +945,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 151,
-  "duration_ms": 29,
-  "prev_hash": "1013094ac73ff29d5023d2dd5bb39f5df48b9c70c0c0f31d6a059e38bb85af84",
-  "chain_length": 98,
-  "started": "2026-05-19T22:12:25.294447769Z"
+  "warn_count": 157,
+  "duration_ms": 13,
+  "prev_hash": "2db38c4646872ccb5440135452903c0952de2fb97fc1f27504b4fa9503352622",
+  "chain_length": 103,
+  "started": "2026-05-19T22:23:33.158790392Z"
 }
