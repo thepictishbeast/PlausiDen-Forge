@@ -33,6 +33,7 @@ pub mod dynamic_runtime;
 pub mod external_assets;
 pub mod html_semantic;
 pub mod html_walk;
+pub mod hunted_tier;
 pub mod id_strategy;
 pub mod iso_8601;
 pub mod jurisdiction_compliance;

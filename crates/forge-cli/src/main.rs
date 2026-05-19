@@ -52,6 +52,7 @@ use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
 use forge_phases::motion_respects_reduced::MotionRespectsReducedPhase;
 use forge_phases::network_target_enforcement::NetworkTargetEnforcementPhase;
+use forge_phases::hunted_tier::HuntedTierPhase;
 use forge_phases::noscript_strict::NoscriptStrictPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
@@ -887,6 +888,14 @@ fn run() -> Result<ExitCode> {
         // noscript-mode page-shell rendering. For LibreJS /
         // Tor-strict / hunted-tier (#124) builds.
         Box::new(NoscriptStrictPhase),
+        // phase_hunted_tier — max-paranoid security profile gate.
+        // When forge.toml [security] tier = "hunted", enforces
+        // that noscript_strict is also on AND scans rendered HTML
+        // for client-state markers (localStorage / cookie /
+        // canvas-fingerprint / etc.). The hunted tier is a meta-
+        // policy; its zero-JS / zero-tracker / zero-client-state
+        // guarantees come from the prerequisite phases.
+        Box::new(HuntedTierPhase),
         // phase_reader_safety — Tor-mode reader-side checks
         // (no inline script / no @font-face / no recaptcha /
         // cookie+localStorage warnings / etc). Auto-fires when
