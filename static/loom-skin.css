@@ -4283,6 +4283,41 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   color: var(--loom-color-ink);
   max-inline-size: 65ch;
 }
+/* Editorial paragraph decorations.
+ *
+ * Pure visual nudges authored via the typed ParagraphDecoration
+ * enum on CmsSection::Paragraph. Always class-additive over
+ * loom-prose so the text stays inside the readability box.
+ */
+.loom-paragraph--lead {
+  font-size: clamp(1.1rem, 1.4vw, 1.3rem);
+  line-height: 1.55;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--loom-color-ink) 92%, transparent);
+  max-inline-size: 60ch;
+}
+.loom-paragraph--dropcap::first-letter {
+  font-family: var(--loom-font-display);
+  font-weight: 700;
+  font-size: clamp(2.8em, 5vw, 4em);
+  float: inline-start;
+  line-height: 0.85;
+  padding-inline-end: 0.12em;
+  padding-block-start: 0.05em;
+  color: var(--loom-color-primary);
+  /* Bind the cap to the same baseline as the body so the wrap
+   * looks intentional, not orphaned. */
+  shape-outside: margin-box;
+}
+.loom-paragraph--aside {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: color-mix(in oklab, var(--loom-color-ink) 72%, transparent);
+  border-inline-start: 3px solid color-mix(in oklab, var(--loom-color-primary) 55%, transparent);
+  padding-inline-start: 1rem;
+  margin-block: 1.5rem;
+  max-inline-size: 58ch;
+}
 .loom-prose > * + * { margin-block-start: 1em; }
 .loom-prose > h1,
 .loom-prose > h2,

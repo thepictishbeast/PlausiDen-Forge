@@ -304,7 +304,7 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "303K CSS > 64.0K budget — split into per-route bundles",
+      "message": "305K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn"
     },
     {
@@ -772,8 +772,8 @@
   ],
   "strict_count": 0,
   "warn_count": 128,
-  "duration_ms": 20,
-  "prev_hash": "a204cfef5ad04ab453119ea41d5a57c638eab347036953a3f76a6c4e3e69bce5",
-  "chain_length": 65,
-  "started": "2026-05-19T13:00:39.53299725Z"
+  "duration_ms": 37,
+  "prev_hash": "5468ecca292a4858ae7f8fe553da1427006d5fb9ed81df5f9e267ad0b75cb1da",
+  "chain_length": 68,
+  "started": "2026-05-19T13:20:59.536725062Z"
 }

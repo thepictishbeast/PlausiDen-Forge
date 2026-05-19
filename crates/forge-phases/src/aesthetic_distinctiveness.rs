@@ -94,12 +94,19 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
 
     check_sparse_page(sections, &path_disp, findings, phase);
     check_scaffold_only(sections, &path_disp, findings, phase);
+    check_corporate_jargon(sections, &path_disp, findings, phase);
 
     for (index, section) in sections.iter().enumerate() {
         let kind = section.get("kind").and_then(|k| k.as_str()).unwrap_or("");
         let where_at = format!("{path_disp}#section-{index}-{kind}");
         match kind {
-            "image_hero" => check_centered_single_word_hero(section, &where_at, findings, phase),
+            "image_hero" => {
+                check_centered_single_word_hero(section, &where_at, findings, phase);
+                check_vague_eyebrow(section, &where_at, findings, phase);
+            }
+            "split_hero" | "call_to_action" => {
+                check_vague_eyebrow(section, &where_at, findings, phase);
+            }
             "feature_spotlight" => {
                 check_monotonous_feature_grid(section, &where_at, findings, phase);
             }
@@ -110,6 +117,7 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
     }
 
     check_fake_testimonials(sections, &path_disp, findings, phase);
+    check_placeholder_email(sections, &path_disp, findings, phase);
 }
 
 fn check_sparse_page(
@@ -290,6 +298,209 @@ fn check_numbers_that_compose(
     }
 }
 
+/// SaaS-marketing jargon that almost always reads as filler. Drawn
+/// from corpora of agency / SaaS / consultancy landings. Extend over
+/// time as new clichés crystallize.
+const JARGON_PHRASES: &[&str] = &[
+    "best-in-class",
+    "best of breed",
+    "best-of-breed",
+    "cutting-edge",
+    "cutting edge",
+    "next-generation",
+    "next generation",
+    "next-gen",
+    "industry-leading",
+    "industry leading",
+    "world-class",
+    "world class",
+    "game-changer",
+    "game-changing",
+    "synergy",
+    "synergies",
+    "leverage our",
+    "robust solution",
+    "frictionless",
+    "seamless integration",
+    "thought leader",
+    "thought leadership",
+    "mission-critical",
+    "value-add",
+    "value add",
+    "low-hanging fruit",
+    "move the needle",
+    "circle back",
+    "ecosystem of",
+    "holistic approach",
+    "deep dive",
+    "ai-powered",
+    "ai powered",
+    "ai-driven",
+    "ai driven",
+    "blockchain-powered",
+    "future-proof",
+    "future proof",
+    "paradigm shift",
+    "core competency",
+    "value proposition",
+    "scalable solution",
+    "turnkey solution",
+];
+
+/// Eyebrow text that adds zero information — "Beta", "New", "Latest",
+/// etc. without further context. Cheap signal that gets reused
+/// because it costs nothing to type.
+const VAGUE_EYEBROW_LITERALS: &[&str] = &[
+    "beta", "new", "alpha", "latest", "introducing", "coming soon",
+    "now available", "announcement", "tba", "tbd",
+];
+
+fn check_corporate_jargon(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    let mut hits: Vec<String> = Vec::new();
+    collect_text(sections, &mut |t| {
+        let lower = t.to_lowercase();
+        for phrase in JARGON_PHRASES {
+            if lower.contains(phrase) {
+                hits.push((*phrase).to_owned());
+            }
+        }
+    });
+    if hits.is_empty() {
+        return;
+    }
+    hits.sort();
+    hits.dedup();
+    findings.push(Finding::warn(
+        phase,
+        path.to_owned(),
+        format!(
+            "corporate_jargon: page text contains SaaS-cliché phrase(s) [{}] — these read as filler; substitute a concrete claim that names a real thing",
+            hits.join(", ")
+        ),
+    ));
+}
+
+fn check_vague_eyebrow(
+    section: &Value,
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    let eyebrow = section.get("eyebrow").and_then(|e| e.as_str()).unwrap_or("");
+    let trimmed = eyebrow.trim().to_lowercase();
+    if trimmed.is_empty() {
+        return;
+    }
+    for vague in VAGUE_EYEBROW_LITERALS {
+        if trimmed == *vague {
+            findings.push(Finding::warn(
+                phase,
+                path.to_owned(),
+                format!(
+                    "vague_eyebrow: eyebrow \"{eyebrow}\" carries no information beyond a status label; pair with a version, primitive count, or named release to add density"
+                ),
+            ));
+            return;
+        }
+    }
+}
+
+fn check_placeholder_email(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    // Form-input placeholders anywhere in the section tree are
+    // legitimate UX affordances (auth_card.methods[].placeholder,
+    // newsletter_signup.placeholder, form fields nested in
+    // composites, etc.). Walk the whole tree and collect every
+    // value-of-a-"placeholder"-key. A match against one of those
+    // strings is the UX affordance, not slop.
+    let needles = [
+        "you@yourcompany.com",
+        "name@example.com",
+        "user@example.com",
+        "your@email.com",
+    ];
+    let mut legit: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    fn collect_placeholders(v: &Value, out: &mut std::collections::BTreeSet<String>) {
+        match v {
+            Value::Object(obj) => {
+                for (k, val) in obj {
+                    if k == "placeholder" {
+                        if let Some(s) = val.as_str() {
+                            out.insert(s.to_lowercase());
+                        }
+                    }
+                    collect_placeholders(val, out);
+                }
+            }
+            Value::Array(arr) => {
+                for item in arr {
+                    collect_placeholders(item, out);
+                }
+            }
+            _ => {}
+        }
+    }
+    for section in sections {
+        collect_placeholders(section, &mut legit);
+    }
+    let mut hits: Vec<String> = Vec::new();
+    collect_text(sections, &mut |t| {
+        let lower = t.to_lowercase();
+        for needle in &needles {
+            if lower.contains(needle) && !legit.iter().any(|p| p.contains(needle)) {
+                hits.push((*needle).to_owned());
+            }
+        }
+    });
+    if hits.is_empty() {
+        return;
+    }
+    hits.sort();
+    hits.dedup();
+    findings.push(Finding::warn(
+        phase,
+        path.to_owned(),
+        format!(
+            "placeholder_email: non-input copy contains generic email placeholder [{}] — these read as scaffolding; replace with a specific example or remove",
+            hits.join(", ")
+        ),
+    ));
+}
+
+/// Walk every string-valued field across the JSON tree of the
+/// given sections and call `visit` with each. Used by detectors
+/// that look at full-page text rather than per-section structure.
+fn collect_text<F: FnMut(&str)>(sections: &[Value], visit: &mut F) {
+    fn walk<F: FnMut(&str)>(v: &Value, visit: &mut F) {
+        match v {
+            Value::String(s) => visit(s),
+            Value::Array(arr) => {
+                for item in arr {
+                    walk(item, visit);
+                }
+            }
+            Value::Object(obj) => {
+                for (_, val) in obj {
+                    walk(val, visit);
+                }
+            }
+            _ => {}
+        }
+    }
+    for s in sections {
+        walk(s, visit);
+    }
+}
+
 fn check_fake_testimonials(
     sections: &[Value],
     path: &str,
@@ -433,5 +644,84 @@ mod tests {
         let mut findings = vec![];
         check_numbers_that_compose(&section, "test", &mut findings, "aesthetic_distinctiveness");
         assert!(findings.iter().any(|f| f.message.contains("numbers_that_compose")));
+    }
+
+    #[test]
+    fn corporate_jargon_warns_on_known_phrases() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Our best-in-class platform delivers a seamless integration."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("corporate_jargon"));
+        assert!(msg.contains("best-in-class"));
+        assert!(msg.contains("seamless integration"));
+    }
+
+    #[test]
+    fn corporate_jargon_does_not_warn_on_clean_prose() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Typed contracts. Audited at every commit. Reproducible builds."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn vague_eyebrow_warns() {
+        let section = json!({"kind": "image_hero", "eyebrow": "Beta", "title": "Hello world"});
+        let mut findings = vec![];
+        check_vague_eyebrow(&section, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.iter().any(|f| f.message.contains("vague_eyebrow")));
+    }
+
+    #[test]
+    fn substantive_eyebrow_does_not_warn() {
+        let section = json!({
+            "kind": "image_hero",
+            "eyebrow": "Forge 0.18 · 125 Loom primitives",
+            "title": "Hello world"
+        });
+        let mut findings = vec![];
+        check_vague_eyebrow(&section, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn placeholder_email_warns_in_body_text() {
+        // The hit is in `text`, NOT in `placeholder` — flagged.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Sign up at you@yourcompany.com for updates."}),
+        ];
+        let mut findings = vec![];
+        check_placeholder_email(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.iter().any(|f| f.message.contains("placeholder_email")));
+    }
+
+    #[test]
+    fn placeholder_email_skips_legit_input_placeholder() {
+        // The hit IS the input placeholder — legitimate UX, not flagged.
+        let sections = vec![
+            json!({"kind": "newsletter_signup", "placeholder": "you@yourcompany.com"}),
+        ];
+        let mut findings = vec![];
+        check_placeholder_email(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn collect_text_walks_nested_json() {
+        let sections = vec![
+            json!({"kind": "x", "items": [{"key": "deep", "value": "synergy"}]}),
+        ];
+        let mut hits = 0;
+        collect_text(&sections, &mut |t| {
+            if t.contains("synergy") {
+                hits += 1;
+            }
+        });
+        assert_eq!(hits, 1);
     }
 }
