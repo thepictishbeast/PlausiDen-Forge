@@ -95,6 +95,11 @@
       "visual_right": true
     },
     {
+      "kind": "figure",
+      "caption": "Closed-enum CmsSection variants compose the substrate. No template language.",
+      "asset_slug": "photos/stock-6"
+    },
+    {
       "kind": "heading",
       "text": "Reference",
       "level": 2

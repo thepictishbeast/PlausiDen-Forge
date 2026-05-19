@@ -93,6 +93,11 @@
       ]
     },
     {
+      "kind": "figure",
+      "caption": "Six axes. Every PlausiDen decision scores on all of them.",
+      "asset_slug": "photos/stock-31"
+    },
+    {
       "kind": "pull_quote",
       "body": "We weren't trying to make AI go away. We were trying to make AI accountable. The Critic trait is the seam where 'the model said so' becomes 'these specific rules fired with these specific weights.'",
       "attribution": "PlausiDen architecture team"

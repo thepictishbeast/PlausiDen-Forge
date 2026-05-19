@@ -98,6 +98,11 @@
       ]
     },
     {
+      "kind": "figure",
+      "caption": "The Forge build pipeline — typed contracts at every seam.",
+      "asset_slug": "photos/stock-4"
+    },
+    {
       "kind": "heading",
       "text": "Built on standards",
       "level": 2

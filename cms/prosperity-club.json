@@ -43,6 +43,12 @@
       "text": "Prosperity Club exists to teach people the discipline of managing the money they have — not chasing the money they don't. Read the columns. Watch the master classes. Ask the questions you've never asked an insurance agent in person."
     },
     {
+      "kind": "figure",
+      "caption": "Personal finance is not a spreadsheet exercise; it is a daily discipline.",
+      "credit": "stock photo",
+      "asset_slug": "photos/stock-1"
+    },
+    {
       "kind": "heading",
       "text": "Where to start",
       "level": 2
@@ -71,6 +77,11 @@
       "kind": "pull_quote",
       "body": "If you only learn one thing here: cash flow is the foundation. Everything else is decoration on a house you don't own yet.",
       "attribution": "Deborah Armstrong"
+    },
+    {
+      "kind": "figure",
+      "caption": "Discretionary income is where most household budgets quietly leak.",
+      "asset_slug": "photos/stock-2"
     },
     {
       "kind": "heading",

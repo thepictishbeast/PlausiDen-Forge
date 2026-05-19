@@ -310,13 +310,13 @@
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "20.7K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.0K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "platform.html",
-      "message": "20.7K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.1K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -880,19 +880,19 @@
     {
       "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/platform.json",
-      "message": "image_desert: page has 14 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "message": "image_desert: page has 15 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
       "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/prosperity-club.json",
-      "message": "image_desert: page has 17 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "message": "image_desert: page has 19 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
       "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/docs.json",
-      "message": "image_desert: page has 12 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "message": "image_desert: page has 13 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
@@ -904,19 +904,19 @@
     {
       "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/why.json",
-      "message": "image_desert: page has 13 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "message": "image_desert: page has 14 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
       "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/blog.json",
-      "message": "image_desert: page has 9 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "message": "image_desert: page has 10 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
       "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/about.json",
-      "message": "image_desert: page has 10 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "message": "image_desert: page has 11 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
     },
     {
@@ -934,8 +934,8 @@
   ],
   "strict_count": 0,
   "warn_count": 155,
-  "duration_ms": 39,
-  "prev_hash": "f4dfd0c77a6268fc2cd8ce1c71bc75c2f7ef67f1354345c3e71b8c59ca91b3fa",
-  "chain_length": 94,
-  "started": "2026-05-19T21:41:40.250848046Z"
+  "duration_ms": 19,
+  "prev_hash": "0dbb79b7019fe8ce5648e5cdf838317c3d9a6557ac143f760d3f02156fb34161",
+  "chain_length": 95,
+  "started": "2026-05-19T22:02:33.189561416Z"
 }

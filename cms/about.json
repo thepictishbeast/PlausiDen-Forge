@@ -99,6 +99,11 @@
       "attribution": "the shape of an outcome the platform is engineered to produce"
     },
     {
+      "kind": "figure",
+      "caption": "Discipline over velocity — the part of the road map that doesn't ship a feature.",
+      "asset_slug": "photos/stock-3"
+    },
+    {
       "kind": "heading",
       "text": "What we won't compromise on",
       "level": 2

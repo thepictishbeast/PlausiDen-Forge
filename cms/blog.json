@@ -69,6 +69,11 @@
       "text": "Six most recent — chronological, not algorithmic. Subscribe via the form below or via RSS at /blog.rss."
     },
     {
+      "kind": "figure",
+      "caption": "Build notes — what we tried, what didn't work, what shipped.",
+      "asset_slug": "photos/stock-5"
+    },
+    {
       "kind": "heading",
       "text": "Six most recent",
       "level": 2
