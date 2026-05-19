@@ -310,7 +310,7 @@
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "21.8K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.7K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -322,7 +322,7 @@
     {
       "phase": "perf_budget",
       "path": "signin.html",
-      "message": "21.7K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.8K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -819,12 +819,6 @@
     },
     {
       "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/contact.html\" → static/contact.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
       "path": "platform.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
@@ -903,6 +897,12 @@
     },
     {
       "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/signin.json",
+      "message": "image_desert: page has 10 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "severity": "warn"
+    },
+    {
+      "phase": "aesthetic_distinctiveness",
       "path": "/home/paul/projects/PlausiDen-Forge/cms/why.json",
       "message": "image_desert: page has 13 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
       "severity": "warn"
@@ -934,8 +934,8 @@
   ],
   "strict_count": 0,
   "warn_count": 155,
-  "duration_ms": 18,
-  "prev_hash": "a261c3f04309ab61674b5e2f9bcaa2496f59f4dfb5cb4c0886bb39c7563089f6",
-  "chain_length": 93,
-  "started": "2026-05-19T21:40:33.609059217Z"
+  "duration_ms": 39,
+  "prev_hash": "f4dfd0c77a6268fc2cd8ce1c71bc75c2f7ef67f1354345c3e71b8c59ca91b3fa",
+  "chain_length": 94,
+  "started": "2026-05-19T21:41:40.250848046Z"
 }

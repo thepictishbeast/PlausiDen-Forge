@@ -123,38 +123,43 @@
       ]
     },
     {
-      "kind": "pricing",
-      "heading": "One price model. Three commitment levels.",
-      "lede": "Bring your own LLM provider. We never see your prompts.",
-      "tiers": [
+      "kind": "heading",
+      "text": "One price model. Three commitment levels.",
+      "level": 2
+    },
+    {
+      "kind": "paragraph",
+      "text": "Bring your own LLM provider. We never see your prompts. Charge is by compute, never by seat or by page-view."
+    },
+    {
+      "kind": "comparison",
+      "columns": ["", "Solo", "Team", "Enterprise"],
+      "rows": [
         {
-          "name": "Solo",
-          "price": "$0",
-          "period": "/mo",
-          "tagline": "Free forever, one developer.",
-          "features": ["Unlimited builds", "All 142 primitives", "All 14 themes", "Multi-network deploy"],
-          "cta": {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"},
-          "highlighted": false
+          "label": "Price",
+          "values": ["", "$0 /mo", "$0+ /seat (first 3 free)", "Custom"]
         },
         {
-          "name": "Team",
-          "price": "$0+",
-          "period": "/seat/mo",
-          "tagline": "First three seats free.",
-          "features": ["Everything in Solo", "Bring-your-own LLM", "Per-tenant LFI corpus", "Forge-LFI feature flag"],
-          "cta": {"label": "Get started", "href": "/start.html", "data_backend": "cta-start"},
-          "highlighted": false
+          "label": "Audience",
+          "values": ["", "One developer", "Small / mid team", "Compliance shops"]
         },
         {
-          "name": "Enterprise",
-          "price": "Custom",
-          "period": "",
-          "tagline": "For compliance shops.",
-          "features": ["99.97% SLA", "SOC 2 II artifacts", "Dedicated audit channel", "Custom DeployAdapter"],
-          "cta": {"label": "Contact", "href": "/contact.html", "data_backend": "cta-contact"},
-          "highlighted": false
+          "label": "Substrate access",
+          "values": ["", "Every primitive, every theme", "Same + per-tenant LFI corpus", "Same + private NeuPSL library"]
+        },
+        {
+          "label": "Support",
+          "values": ["", "Community", "Email", "Same-day + dedicated audit channel"]
+        },
+        {
+          "label": "Compliance",
+          "values": ["", "—", "—", "99.97% SLA · SOC 2 II · custom DeployAdapter"]
         }
       ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "See /pricing for the full capability matrix."
     },
     {
       "kind": "call_to_action",
