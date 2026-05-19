@@ -6502,14 +6502,7 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   letter-spacing: -0.035em;
   line-height: 1.02;
   font-size: clamp(2.5rem, 7vw, 5.5rem);
-  background: linear-gradient(
-    135deg,
-    var(--loom-color-ink, var(--loom-fg)) 0%,
-    color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 80%, var(--loom-color-ink, var(--loom-fg))) 60%,
-    var(--loom-color-accent-2, var(--loom-accent-2)) 100%
-  );
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
+  color: var(--loom-color-ink);
   max-width: 22ch;
 }
 .loom-image-hero__lede {
@@ -6526,12 +6519,12 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   content: ""; position: absolute; inset: 0; z-index: -1;
   background:
     radial-gradient(60rem 38rem at 88% 0%,
-      color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 22%, transparent) 0%, transparent 55%),
+      color-mix(in oklab, var(--loom-color-accent) 55%, transparent) 0%, transparent 55%),
     radial-gradient(54rem 36rem at 0% 30%,
-      color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 22%, transparent) 0%, transparent 55%),
+      color-mix(in oklab, var(--loom-color-primary) 55%, transparent) 0%, transparent 55%),
     radial-gradient(46rem 32rem at 50% 110%,
-      color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 14%, transparent) 0%, transparent 60%),
-    var(--loom-color-surface, var(--loom-bg));
+      color-mix(in oklab, var(--loom-color-accent-glow) 40%, transparent) 0%, transparent 60%),
+    var(--loom-color-bg-canvas);
 }
 .loom-image-hero.bg-stripes::before,
 .loom-cta-band.bg-stripes::before {
