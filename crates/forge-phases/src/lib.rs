@@ -43,6 +43,7 @@ pub mod loom_lint;
 pub mod loom_sync;
 pub mod motion;
 pub mod motion_respects_reduced;
+pub mod noscript_strict;
 pub mod network_target_enforcement;
 pub mod path_consistency;
 pub mod perf_budget;

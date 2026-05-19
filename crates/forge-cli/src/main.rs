@@ -52,6 +52,7 @@ use forge_phases::loom_sync::LoomSyncPhase;
 use forge_phases::motion::MotionPhase;
 use forge_phases::motion_respects_reduced::MotionRespectsReducedPhase;
 use forge_phases::network_target_enforcement::NetworkTargetEnforcementPhase;
+use forge_phases::noscript_strict::NoscriptStrictPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
@@ -880,6 +881,12 @@ fn run() -> Result<ExitCode> {
         // must not contain clearnet-URL references. Silent skip
         // for clearnet-only or no-[networks] sites.
         Box::new(NetworkTargetEnforcementPhase),
+        // phase_noscript_strict — enforce zero-JS rendered HTML
+        // when forge.toml [noscript_strict] enabled = true OR
+        // LOOM_NOSCRIPT_MODE=1 in the env. Pairs with Loom's
+        // noscript-mode page-shell rendering. For LibreJS /
+        // Tor-strict / hunted-tier (#124) builds.
+        Box::new(NoscriptStrictPhase),
         // phase_reader_safety — Tor-mode reader-side checks
         // (no inline script / no @font-face / no recaptcha /
         // cookie+localStorage warnings / etc). Auto-fires when
