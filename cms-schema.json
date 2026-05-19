@@ -2,6 +2,387 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "definitions": {
+    "AccordionItem": {
+      "additionalProperties": false,
+      "description": "One accordion item.",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "title"
+      ],
+      "type": "object"
+    },
+    "AlertTone": {
+      "description": "Alert tone (used by Alert, Toast, AnnouncementBar, AsideNote).",
+      "enum": [
+        "info",
+        "success",
+        "warning",
+        "danger",
+        "neutral"
+      ],
+      "type": "string"
+    },
+    "AuthMethodChoice": {
+      "description": "One option inside an [`CmsSection::AuthCard`].",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Continue with passkey (WebAuthn discoverable credential).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "passkey"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Continue with platform-WebAuthn (TouchID / FaceID / Hello).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "webauthn_platform"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Continue with roaming-WebAuthn (YubiKey / Solo / Titan).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "webauthn_roaming"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Continue with an OAuth provider.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "social"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Button label.",
+              "type": "string"
+            },
+            "provider": {
+              "description": "Provider slug (\"github\", \"google\", \"apple\", \"microsoft\").",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "provider"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Sign in with email magic-link.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "magic_link"
+              ],
+              "type": "string"
+            },
+            "placeholder": {
+              "description": "Email-input placeholder.",
+              "type": "string"
+            },
+            "submit_label": {
+              "description": "Submit-button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "placeholder",
+            "submit_label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Sign in with SMS OTP.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "sms_otp"
+              ],
+              "type": "string"
+            },
+            "placeholder": {
+              "description": "Phone-input placeholder.",
+              "type": "string"
+            },
+            "submit_label": {
+              "description": "Submit-button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "placeholder",
+            "submit_label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Sign in with classic password.",
+          "properties": {
+            "email_placeholder": {
+              "description": "Email-input placeholder.",
+              "type": "string"
+            },
+            "forgot_label": {
+              "description": "Optional forgot-password link.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "password"
+              ],
+              "type": "string"
+            },
+            "password_placeholder": {
+              "description": "Password-input placeholder.",
+              "type": "string"
+            },
+            "submit_label": {
+              "description": "Submit-button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "email_placeholder",
+            "kind",
+            "password_placeholder",
+            "submit_label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Sign in with SSO single-sign-on link.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "sso"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Button label.",
+              "type": "string"
+            },
+            "placeholder": {
+              "description": "Domain hint placeholder (\"yourcompany.com\").",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "placeholder"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "\"Continue as guest\" anonymous-but-receipt-bearing option.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "anonymous"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Visual divider between method groups (\"or\").",
+          "properties": {
+            "kind": {
+              "enum": [
+                "divider"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Divider label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "BadgeItem": {
+      "additionalProperties": false,
+      "description": "One badge.",
+      "properties": {
+        "icon_slug": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "type": "object"
+    },
+    "BreadcrumbItem": {
+      "additionalProperties": false,
+      "description": "One breadcrumb segment.",
+      "properties": {
+        "data_backend": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_backend",
+        "href",
+        "label"
+      ],
+      "type": "object"
+    },
+    "ButtonVariant": {
+      "description": "Button variant.",
+      "enum": [
+        "primary",
+        "secondary",
+        "ghost",
+        "danger"
+      ],
+      "type": "string"
+    },
+    "ChatMessage": {
+      "additionalProperties": false,
+      "description": "One chat message.",
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "mine": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "at",
+        "author",
+        "body",
+        "mine"
+      ],
+      "type": "object"
+    },
+    "ChromeKind": {
+      "description": "Page-shell chrome kind. Picks the header + body-backdrop shape. Each variant is a complete chrome aesthetic, not a modifier on the same shell. Operators pick per-page via `CmsPage::chrome`; new sites typically pick `FloatingPill`, legacy sites stay on `PageShell` for backward compat.",
+      "oneOf": [
+        {
+          "description": "Sticky-blur top bar with brand-left / nav-right and an auto-h1 underneath. Three-radial-gradient body backdrop tinted by the active theme's accents. The default for backward compatibility.",
+          "enum": [
+            "page_shell"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Floating capsule: brand + nav links + action CTAs in a glass-morphism pill anchored at the top of the viewport, centered horizontally. Body backdrop is a single soft halo above the hero + a flat surface below.",
+          "enum": [
+            "floating_pill"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "No header at all. The first section carries every chrome element itself. Used for full-bleed landing pages.",
+          "enum": [
+            "minimal"
+          ],
+          "type": "string"
+        }
+      ]
+    },
     "CmsAvatar": {
       "description": "Wire form of [`ComposerAvatar`].",
       "oneOf": [
@@ -356,6 +737,111 @@
           "type": "string"
         }
       ]
+    },
+    "CmsFooter": {
+      "additionalProperties": false,
+      "description": "Typed page footer.",
+      "properties": {
+        "colophon": {
+          "description": "Optional copyright / colophon line at the very bottom.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "columns": {
+          "default": [],
+          "description": "Footer link columns. Common shape: 3-5 columns, each with a heading and a vertical list of links.",
+          "items": {
+            "$ref": "#/definitions/CmsFooterColumn"
+          },
+          "type": "array"
+        },
+        "contact": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CmsFooterContact"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional contact-info block (phone / email / address / jurisdiction). Renders as a separate column on the right."
+        },
+        "legal_links": {
+          "default": [],
+          "description": "Bottom-row legal links (Privacy, Terms, Imprint, etc.). Rendered as inline-flex under the columns.",
+          "items": {
+            "$ref": "#/definitions/CmsNavLink"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "CmsFooterColumn": {
+      "additionalProperties": false,
+      "description": "One footer link column.",
+      "properties": {
+        "heading": {
+          "description": "Column heading (rendered as small uppercase label).",
+          "type": "string"
+        },
+        "links": {
+          "description": "Vertical link list.",
+          "items": {
+            "$ref": "#/definitions/CmsNavLink"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "heading",
+        "links"
+      ],
+      "type": "object"
+    },
+    "CmsFooterContact": {
+      "additionalProperties": false,
+      "description": "Contact-info block for the footer.",
+      "properties": {
+        "address": {
+          "description": "Physical address (free-form text; no link).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "email": {
+          "description": "Email address (renderer wraps in mailto:).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "heading": {
+          "description": "Optional column heading (defaults to \"Contact\" if absent).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jurisdiction": {
+          "description": "Jurisdiction line (e.g. \"Massachusetts, USA\").",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "phone": {
+          "description": "Phone number (any format; renderer wraps in tel: link if the string starts with a digit or `+`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
     },
     "CmsFormField": {
       "description": "Typed form field. Closed enum — adding a variant requires a renderer arm + test.",
@@ -1253,8 +1739,17 @@
         },
         {
           "additionalProperties": false,
-          "description": "A paragraph of body text. Maud auto-escapes on render.",
+          "description": "A paragraph of body text. Maud auto-escapes on render.\n\n`decoration` is an optional editorial nudge that bumps the paragraph out of \"default body\" into one of three named editorial shapes (lead / drop_cap / aside). Pure visual — the text content is unchanged.",
           "properties": {
+            "decoration": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ParagraphDecoration"
+                }
+              ],
+              "default": "body",
+              "description": "Editorial treatment (default = Body)."
+            },
             "kind": {
               "enum": [
                 "paragraph"
@@ -1289,6 +1784,14 @@
                 }
               ],
               "description": "Typed heading level. JSON: integer 2..=6 (anything else fails parse with `deny_unknown_fields`-style strictness)."
+            },
+            "polish": {
+              "default": [],
+              "description": "Bounded per-element typographic adjustments. Each listed token emits a `loom-polish--X` class on the heading element. Idempotent — duplicates collapse. See [`PolishToken`] for the closed enum of one-step adjustments.",
+              "items": {
+                "$ref": "#/definitions/PolishToken"
+              },
+              "type": "array"
             },
             "text": {
               "description": "Heading text.",
@@ -1434,6 +1937,4022 @@
             "kind"
           ],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Full-bleed image/gradient hero. Larger + more visually ambitious than [`CmsSection::Hero`]; spans the viewport width breaking out of the standard content max-width. Use for top-of-page landing sections that need atmosphere.",
+          "properties": {
+            "after_cta": {
+              "default": [],
+              "description": "Typed slot — sections that render BELOW the CTA. Use for trust-signal logos, disclaimer copy, secondary CTA chains, fine-print legal.",
+              "items": {
+                "$ref": "#/definitions/CmsSection"
+              },
+              "type": "array"
+            },
+            "background": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroBackground"
+                }
+              ],
+              "default": {
+                "kind": "gradient_mesh"
+              },
+              "description": "Backdrop kind — gradient-mesh / solid / pattern."
+            },
+            "before_headline": {
+              "default": [],
+              "description": "Typed slot — sections that render ABOVE the title. Use for trust signals, badges, version chips, announcement banners, additional eyebrow content. Each section in the slot renders in order. Closes #105 (slot-based composition).",
+              "items": {
+                "$ref": "#/definitions/CmsSection"
+              },
+              "type": "array"
+            },
+            "cta": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional primary CTA."
+            },
+            "eyebrow": {
+              "description": "Optional eyebrow chip above the title.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "height": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroHeight"
+                }
+              ],
+              "default": "comfortable",
+              "description": "Visual height ramp. Affects min-height + padding."
+            },
+            "kind": {
+              "enum": [
+                "image_hero"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede paragraph below the title.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Display title.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Text + visual side-by-side hero. Text occupies one column, a typed visual (code snippet, single stat, or photo asset slug from `loom-assets`) occupies the other.",
+          "properties": {
+            "cta": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional primary CTA."
+            },
+            "eyebrow": {
+              "description": "Optional eyebrow chip.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "split_hero"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Display title.",
+              "type": "string"
+            },
+            "visual": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/SplitVisual"
+                }
+              ],
+              "description": "Side visual."
+            },
+            "visual_right": {
+              "default": true,
+              "description": "True → visual on the right (default), false → left.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "title",
+            "visual"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Multi-column feature listing. Each item carries an icon (slug from `loom-assets`), a heading, a body, and an optional learn-more link. `columns` clamps to 1..=4.",
+          "properties": {
+            "columns": {
+              "default": 3,
+              "description": "Column count (1..=4). Mobile collapses to 1 regardless.",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "decoration": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/FeatureSpotlightDecoration"
+                }
+              ],
+              "default": "decorated",
+              "description": "Visual treatment. `Decorated` (default, kept for backward compatibility) is the SaaS-card shape with rounded chrome, gradient icon tile, hover lift + shadow. `Editorial` strips card chrome down to typography + top accent rule. `Minimal` is a tight grid with no decoration.\n\nSubstrate-de-consumer-shaping: callers asking for dense editorial composition opt out of the trope chrome without inventing a parallel primitive."
+            },
+            "heading": {
+              "description": "Optional section heading above the grid.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "description": "Items, displayed in column-grid order.",
+              "items": {
+                "$ref": "#/definitions/SpotlightItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "feature_spotlight"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional section lede.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Row of large animated numbers with labels. Used for \"by the numbers\" / \"stats that matter\" social-proof bands.",
+          "properties": {
+            "heading": {
+              "description": "Optional section heading above the row.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "description": "Stats, displayed in row order.",
+              "items": {
+                "$ref": "#/definitions/StatItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "stat_band"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Numbered process steps. Visual: tall vertical timeline on mobile, horizontal row on desktop.",
+          "properties": {
+            "heading": {
+              "description": "Optional section heading.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "description": "Step items in order. The renderer numbers them 1..=N automatically.",
+              "items": {
+                "$ref": "#/definitions/StepItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "steps"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Typed pricing tier display. One band of side-by-side tier cards with the optional \"highlighted\" tier visually distinguished.",
+          "properties": {
+            "heading": {
+              "description": "Optional section heading.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "pricing"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tiers": {
+              "description": "Tier cards, left-to-right.",
+              "items": {
+                "$ref": "#/definitions/PricingTier"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "tiers"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Accordion of question / answer pairs. Each item is expandable; only one expanded at a time when `single_expand` is true.",
+          "properties": {
+            "heading": {
+              "description": "Optional section heading.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "description": "FAQ items.",
+              "items": {
+                "$ref": "#/definitions/FaqItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "faq"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "single_expand": {
+              "default": false,
+              "description": "Auto-collapse other open items when one is opened.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Horizontally-scrolling band of short text or brand names. Used as a continuous-motion social-proof rail.",
+          "properties": {
+            "direction": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/MarqueeDirection"
+                }
+              ],
+              "default": "left",
+              "description": "Scroll direction."
+            },
+            "items": {
+              "description": "Items to scroll. Duplicated automatically for seamless looping.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "marquee"
+              ],
+              "type": "string"
+            },
+            "speed": {
+              "default": 5,
+              "description": "Scroll speed (1..=10; higher = faster).",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Full-width call-to-action band. Sits at the bottom of marketing pages just above the footer.",
+          "properties": {
+            "background": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroBackground"
+                }
+              ],
+              "default": {
+                "kind": "gradient_mesh"
+              },
+              "description": "Backdrop kind."
+            },
+            "cta": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                }
+              ],
+              "description": "Primary CTA."
+            },
+            "eyebrow": {
+              "description": "Optional eyebrow chip.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "call_to_action"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Display title.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cta",
+            "kind",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Editorial pull-quote. Large display-italic body, optional attribution underneath. Distinct from `Quote` which is a testimonial-card shape.",
+          "properties": {
+            "attribution": {
+              "description": "Optional attribution (e.g. \"Jane Doe, CTO @ Acme\").",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "body": {
+              "description": "Body of the quote.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "pull_quote"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Editorial epigraph — an opening quote, poem fragment, or motto placed BEFORE the article's first paragraph. Distinct from [`CmsSection::PullQuote`] (which interrupts mid-flow) and from [`CmsSection::Quote`] (which is a generic quotation card). Sets the rhetorical tone for the piece.",
+          "properties": {
+            "attribution": {
+              "description": "Optional source attribution (e.g. \"Rilke, Duino Elegies\").",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "body": {
+              "description": "Body of the epigraph (auto-escaped).",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "epigraph"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Editorial sidenote — text that floats to the side at wide viewports and renders inline as a small offset block at narrow ones. Common in long-form essays (literary press, academic publication, deep technical doc). Distinct from Paragraph + Aside-decoration: marginalia is positioned relative to the body text, not styled in line.\n\n`position` controls which side it floats to at wide viewports. At narrow viewports both render as a small inline block, regardless of side.",
+          "properties": {
+            "body": {
+              "description": "Sidenote body (plain text, auto-escaped).",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "marginalia"
+              ],
+              "type": "string"
+            },
+            "position": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/MarginaliaPosition"
+                }
+              ],
+              "default": "right",
+              "description": "Wide-viewport float side."
+            }
+          },
+          "required": [
+            "body",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Account-summary card — typed surface for a logged-in user's at-a-glance state. Renders avatar + display name + plan + member-since. Read-only; editing flows through `ProfileEdit`. Server-rendered.",
+          "properties": {
+            "avatar": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsAvatar"
+                }
+              ],
+              "default": {
+                "kind": "none"
+              },
+              "description": "Avatar — typed enum (None / Initials / Image)."
+            },
+            "display_name": {
+              "description": "Visible display name.",
+              "type": "string"
+            },
+            "handle": {
+              "description": "Optional secondary line under the name (e.g. handle).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "account_summary"
+              ],
+              "type": "string"
+            },
+            "member_since": {
+              "description": "Member-since string (RFC 3339 date or human form).",
+              "type": "string"
+            },
+            "plan": {
+              "description": "Plan / tier label (e.g. \"Solo\", \"Team\").",
+              "type": "string"
+            }
+          },
+          "required": [
+            "display_name",
+            "kind",
+            "member_since",
+            "plan"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Profile-edit form — typed surface for the logged-in user to update their identity-facing fields. Distinct from `SettingsPanel` (which is preferences); ProfileEdit is \"who you are.\" Server-rendered; posts back to caller's endpoint.",
+          "properties": {
+            "action": {
+              "description": "Where the form POSTs.",
+              "type": "string"
+            },
+            "bio": {
+              "default": "",
+              "description": "Pre-filled bio (multi-line).",
+              "type": "string"
+            },
+            "display_name": {
+              "default": "",
+              "description": "Pre-filled display name.",
+              "type": "string"
+            },
+            "handle": {
+              "default": "",
+              "description": "Pre-filled handle / username.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "profile_edit"
+              ],
+              "type": "string"
+            },
+            "language": {
+              "default": "",
+              "description": "Pre-filled language preference slug.",
+              "type": "string"
+            },
+            "pronouns": {
+              "default": "",
+              "description": "Pre-filled pronouns string.",
+              "type": "string"
+            },
+            "submit_label": {
+              "default": "Update profile",
+              "description": "Submit-button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Terms-of-Service / Privacy-Policy / similar legal-doc page. Typed structure: title, last-updated, table-of- contents (auto-derived from sections), then a flat list of named sections with anchored headings + plain-language summary boxes.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "legal_doc"
+              ],
+              "type": "string"
+            },
+            "last_updated": {
+              "description": "Last-updated date string (RFC 3339 preferred).",
+              "type": "string"
+            },
+            "plain_language_summary": {
+              "description": "Optional plain-language tl;dr above the table of contents.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sections_list": {
+              "description": "Document sections in display order.",
+              "items": {
+                "$ref": "#/definitions/LegalSection"
+              },
+              "type": "array"
+            },
+            "title": {
+              "description": "Document title (e.g. \"Terms of Service\", \"Privacy Policy\").",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "last_updated",
+            "sections_list",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Settings / preferences panel — a typed surface for the logged-in user's site preferences. Renders as a labeled definition-list with controls (toggles / text / danger buttons), categorised. Server-side-rendered so it survives LOOM_NOSCRIPT_MODE; the form posts back to a tenant- provided endpoint (the renderer doesn't bind a handler).",
+          "properties": {
+            "action": {
+              "description": "Where the form POSTs on submit. Caller-side endpoint; the renderer just emits `action=`.",
+              "type": "string"
+            },
+            "categories": {
+              "description": "Categorised groups of controls.",
+              "items": {
+                "$ref": "#/definitions/SettingsCategory"
+              },
+              "type": "array"
+            },
+            "heading": {
+              "description": "Optional section heading rendered above the panel.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "settings_panel"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Optional lede paragraph below the heading.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "submit_label": {
+              "default": "Save changes",
+              "description": "Submit-button label. Defaults to \"Save changes\" if omitted at the JSON layer.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "categories",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Bounded-width content container.",
+          "properties": {
+            "children_html": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "container"
+              ],
+              "type": "string"
+            },
+            "max_width": {
+              "$ref": "#/definitions/ContainerWidth"
+            }
+          },
+          "required": [
+            "children_html",
+            "kind",
+            "max_width"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Visual section break.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "divider"
+              ],
+              "type": "string"
+            },
+            "style": {
+              "$ref": "#/definitions/DividerStyle"
+            }
+          },
+          "required": [
+            "kind",
+            "style"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Vertical whitespace token slot.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "spacer"
+              ],
+              "type": "string"
+            },
+            "size": {
+              "$ref": "#/definitions/SpaceSize"
+            }
+          },
+          "required": [
+            "kind",
+            "size"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "N-column free-form layout (2/3/4 cols on desktop).",
+          "properties": {
+            "columns": {
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "columns"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "columns",
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Vertical flex container.",
+          "properties": {
+            "gap": {
+              "$ref": "#/definitions/SpaceSize"
+            },
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "stack"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "gap",
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Horizontal wrap-flex cluster (chips, tag-rows).",
+          "properties": {
+            "gap": {
+              "$ref": "#/definitions/SpaceSize"
+            },
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "cluster"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "gap",
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Typed grid container with col count.",
+          "properties": {
+            "columns": {
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "grid_layout"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "columns",
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Tabbed content group.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/TabItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "tabs"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Accordion of named sections.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/AccordionItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "accordion_group"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Reveal-on-scroll wrapper with typed motion.",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "reveal"
+              ],
+              "type": "string"
+            },
+            "motion": {
+              "$ref": "#/definitions/RevealMotion"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "motion"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Long-form article wrapper (sets max-width + reading type).",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "article"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "h3-class subheading inside an article.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "sub_heading"
+              ],
+              "type": "string"
+            },
+            "level": {
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "level",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Large opening paragraph — sets the article's tone.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "lede"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Second-tier subhead beneath the lede. Newspapers use this to extend the headline-and-lede pair with one more editorial beat before the body. Distinct from [`CmsSection::Lede`] (sets the tone) and from [`CmsSection::SubHeading`] (sections the body).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "sublede"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Editorial kicker — short uppercase label above a headline. Newspaper / magazine convention: \"OPINION\", \"LIVE\", \"BREAKING\", \"Q&A\", \"REVIEW\". Distinct from the eyebrow chip on a hero (which is a hero-internal slot); this is a standalone editorial label.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "kicker"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Byline — typed author / role / dateline / reading-time unit. Authors currently emit this as 3-4 separate Paragraphs; the typed unit lets the renderer position them together and lets the LFI Critic verify a piece has a coherent attribution block.",
+          "properties": {
+            "author": {
+              "description": "Author's display name (required).",
+              "type": "string"
+            },
+            "dateline": {
+              "description": "Publication or last-updated dateline (ISO 8601 or human-readable; the renderer treats it as free text).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "byline"
+              ],
+              "type": "string"
+            },
+            "reading_time": {
+              "description": "Reading-time hint (e.g. \"5 min read\").",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "role": {
+              "description": "Author's role / title (e.g. \"Staff writer\").",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "author",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "End-of-document footnote. Renders as a numbered entry at the bottom of a long-form piece. Distinct from [`CmsSection::Footnote`] (which is inline / mid-flow); use `Endnote` when the author wants all annotations grouped.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "endnote"
+              ],
+              "type": "string"
+            },
+            "number": {
+              "description": "Endnote number (matches an in-body reference).",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "text": {
+              "description": "Endnote text.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "number",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Initial-letter drop-cap paragraph.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "drop_cap"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Renderer-supplied \"fact about Loom\" — a typed slot that expands to the current value at render time so cms/*.json authors never hand-write counts that go stale.\n\nExample: cms author writes `{\"kind\": \"loom_fact\", \"which\": \"primitive_count\", \"shape\": \"inline\"}` and the renderer emits the current count (e.g. `170`). When new primitives ship, every cms page using this slot updates automatically.\n\nCloses the \"hand-authored 132 vs 170 vs 166\" staleness pattern that hit `cms/{about,blog,docs,index,platform, pricing,why}.json` earlier this loop.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "loom_fact"
+              ],
+              "type": "string"
+            },
+            "shape": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LoomFactShape"
+                }
+              ],
+              "default": "inline",
+              "description": "How to wrap the value. `Inline` for `{count}` flow; `Sentence` for `\"170 typed primitives ship today.\"`"
+            },
+            "which": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/LoomFactKind"
+                }
+              ],
+              "description": "Which fact to inject."
+            }
+          },
+          "required": [
+            "kind",
+            "which"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Figure with caption + optional credit line.",
+          "properties": {
+            "asset_slug": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "caption": {
+              "type": "string"
+            },
+            "credit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "figure"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "caption",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Image caption text (used outside a figure).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "caption"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Numbered footnote.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "footnote"
+              ],
+              "type": "string"
+            },
+            "number": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "number",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Marginal aside note.",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "aside_note"
+              ],
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/definitions/AlertTone"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Definition list (dl/dt/dd).",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/DefListItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "def_list"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Glossary — sorted definition list with anchored terms.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/DefListItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "glossary"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Auto-derived table of contents marker.",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "toc_block"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Mermaid-shaped diagram (typed source).",
+          "properties": {
+            "alt": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "diagram"
+              ],
+              "type": "string"
+            },
+            "notation": {
+              "$ref": "#/definitions/DiagramKind"
+            },
+            "source": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "notation",
+            "source"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Math block (LaTeX-shape source string).",
+          "properties": {
+            "display": {
+              "type": "boolean"
+            },
+            "kind": {
+              "enum": [
+                "math_block"
+              ],
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "display",
+            "kind",
+            "source"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Citation block (academic-style).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "citation"
+              ],
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "source",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Pull-out single big stat inline in editorial.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "pull_stat"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Testimonial card with avatar + role.",
+          "properties": {
+            "attribution": {
+              "description": "Speaker name.",
+              "type": "string"
+            },
+            "avatar_slug": {
+              "description": "Optional avatar asset slug under `/assets/`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "body": {
+              "description": "Quoted body.",
+              "type": "string"
+            },
+            "decoration": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/TestimonialDecoration"
+                }
+              ],
+              "default": "decorated",
+              "description": "Visual treatment. `Decorated` (default, back-compat) is the legacy avatar+quote card; `Editorial` drops the card chrome and renders as pull-quote-style typography; `Minimal` is just the quote + attribution line, no card, no avatar.\n\nPRIORITY 6 audit — `.loom-testimonial` had textbook \"fake testimonial card with avatars\" trope CSS (rounded chrome + circular avatar). Variant-aware opt-out lets sites use the primitive without committing to that shape."
+            },
+            "kind": {
+              "enum": [
+                "testimonial"
+              ],
+              "type": "string"
+            },
+            "role": {
+              "description": "Optional speaker role / company.",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "attribution",
+            "body",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Richer logo cloud with grayscale + hover-color treatment.",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "logo_cloud"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Side-by-side feature/spec comparison.",
+          "properties": {
+            "columns": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "comparison"
+              ],
+              "type": "string"
+            },
+            "rows": {
+              "items": {
+                "$ref": "#/definitions/ComparisonRow"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "columns",
+            "kind",
+            "rows"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Vertical milestone timeline.",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/definitions/TimelineItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "timeline"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Public-facing product roadmap (now/next/later).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "roadmap"
+              ],
+              "type": "string"
+            },
+            "later": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "next": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "now": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "later",
+            "next",
+            "now"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Case-study card with quote + metrics.",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "data_backend": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "headline": {
+              "type": "string"
+            },
+            "href": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "case_study"
+              ],
+              "type": "string"
+            },
+            "metrics": {
+              "items": {
+                "$ref": "#/definitions/StatItem"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "body",
+            "headline",
+            "kind",
+            "metrics"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Top-of-viewport announcement bar.",
+          "properties": {
+            "cta": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "enum": [
+                "announcement_bar"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/definitions/AlertTone"
+            }
+          },
+          "required": [
+            "kind",
+            "text",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Cookie notice band.",
+          "properties": {
+            "accept_label": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "cookie_notice"
+              ],
+              "type": "string"
+            },
+            "reject_label": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "accept_label",
+            "kind",
+            "reject_label",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Mid-page promo strip with CTA.",
+          "properties": {
+            "cta": {
+              "$ref": "#/definitions/HeroCta"
+            },
+            "kind": {
+              "enum": [
+                "promo_strip"
+              ],
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "cta",
+            "kind",
+            "text"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Row of award badges.",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "award_badges"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Email-signup capture row.",
+          "properties": {
+            "heading": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "newsletter_signup"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "placeholder": {
+              "type": "string"
+            },
+            "submit_label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "heading",
+            "kind",
+            "placeholder",
+            "submit_label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Compact contact strip with channels.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/ContactChannel"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "contact_strip"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Photo grid gallery.",
+          "properties": {
+            "columns": {
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "items": {
+              "items": {
+                "$ref": "#/definitions/GalleryImage"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "image_grid"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "columns",
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Group of figures arranged horizontally.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/GalleryImage"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "figure_group"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "HTML5 video embed (typed source allowlist).",
+          "properties": {
+            "alt": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "video_embed"
+              ],
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            },
+            "poster": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "src": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "mime",
+            "src"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "HTML5 audio embed.",
+          "properties": {
+            "alt": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "audio_embed"
+              ],
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            },
+            "src": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "mime",
+            "src"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Auto-rotating image slideshow.",
+          "properties": {
+            "interval_ms": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "items": {
+              "items": {
+                "$ref": "#/definitions/GalleryImage"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "slideshow"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "interval_ms",
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Before/after slider comparison.",
+          "properties": {
+            "after_alt": {
+              "type": "string"
+            },
+            "after_slug": {
+              "type": "string"
+            },
+            "before_alt": {
+              "type": "string"
+            },
+            "before_slug": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "before_after"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "after_alt",
+            "after_slug",
+            "before_alt",
+            "before_slug",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Lightbox trigger row (click to enlarge).",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/GalleryImage"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "lightbox"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Irregular mosaic grid.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/GalleryImage"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "mosaic_grid"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Row of icon-slug references.",
+          "properties": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "icon_row"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Grid of badges (icon + label).",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/BadgeItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "badge_grid"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Product card.",
+          "properties": {
+            "data_backend": {
+              "type": "string"
+            },
+            "href": {
+              "type": "string"
+            },
+            "image_alt": {
+              "type": "string"
+            },
+            "image_slug": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "product_card"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "string"
+            },
+            "rating": {
+              "format": "float",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "data_backend",
+            "href",
+            "image_alt",
+            "image_slug",
+            "kind",
+            "name",
+            "price"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Product grid (collection of ProductCard payloads).",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/definitions/ProductItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "product_grid"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Inline price tag.",
+          "properties": {
+            "amount": {
+              "type": "string"
+            },
+            "currency": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "price_tag"
+              ],
+              "type": "string"
+            },
+            "was": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "amount",
+            "currency",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Add-to-cart button.",
+          "properties": {
+            "data_backend": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "add_to_cart"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "sku": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data_backend",
+            "kind",
+            "label",
+            "sku"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Slide-in cart drawer trigger.",
+          "properties": {
+            "count": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "kind": {
+              "enum": [
+                "cart_drawer"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "count",
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Wishlist heart toggle.",
+          "properties": {
+            "count": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "kind": {
+              "enum": [
+                "wishlist"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "count",
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Product image gallery.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/GalleryImage"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "product_gallery"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Product spec list.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/DefListItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "product_spec"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "0..=5 star rating with optional count.",
+          "properties": {
+            "count": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "review_stars"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "format": "float",
+              "type": "number"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Single review card.",
+          "properties": {
+            "author": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "date": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "review_card"
+              ],
+              "type": "string"
+            },
+            "rating": {
+              "format": "float",
+              "type": "number"
+            }
+          },
+          "required": [
+            "author",
+            "body",
+            "kind",
+            "rating"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Single avatar.",
+          "properties": {
+            "avatar": {
+              "$ref": "#/definitions/CmsAvatar"
+            },
+            "kind": {
+              "enum": [
+                "avatar"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "avatar",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Overlapping avatar stack.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/CmsAvatar"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "avatar_stack"
+              ],
+              "type": "string"
+            },
+            "more": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Chat bubble.",
+          "properties": {
+            "author": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "chat_bubble"
+              ],
+              "type": "string"
+            },
+            "mine": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "author",
+            "body",
+            "kind",
+            "mine"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Threaded chat.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/ChatMessage"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "chat_thread"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Like/love/etc reaction row.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/ReactionItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "reaction_row"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "@username inline mention.",
+          "properties": {
+            "data_backend": {
+              "type": "string"
+            },
+            "href": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "mention_inline"
+              ],
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data_backend",
+            "href",
+            "kind",
+            "username"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "data_backend": {
+              "type": "string"
+            },
+            "href": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "hashtag_inline"
+              ],
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data_backend",
+            "href",
+            "kind",
+            "tag"
+          ],
+          "title": "tag inline hashtag.",
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Row of share buttons.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "share_row"
+              ],
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "title",
+            "url"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Follow button with count.",
+          "properties": {
+            "count": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "data_backend": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "follow_button"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "count",
+            "data_backend",
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Profile card.",
+          "properties": {
+            "avatar": {
+              "$ref": "#/definitions/CmsAvatar"
+            },
+            "bio": {
+              "type": "string"
+            },
+            "follow": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/FollowAction"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "handle": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "profile_card"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "avatar",
+            "bio",
+            "handle",
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Single labeled input.",
+          "properties": {
+            "input_type": {
+              "$ref": "#/definitions/FormInputKind"
+            },
+            "kind": {
+              "enum": [
+                "form_input"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "placeholder": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "input_type",
+            "kind",
+            "label",
+            "name",
+            "required"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Labeled select.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "form_select"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "options": {
+              "items": {
+                "$ref": "#/definitions/SelectOption"
+              },
+              "type": "array"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "name",
+            "options",
+            "required"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Switch toggle.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "form_toggle"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "on": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "name",
+            "on"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Range slider.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "form_slider"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "max": {
+              "format": "int32",
+              "type": "integer"
+            },
+            "min": {
+              "format": "int32",
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "max",
+            "min",
+            "name",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Date picker.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "form_date"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "required": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "name",
+            "required"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "File upload dropzone.",
+          "properties": {
+            "accept": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "form_file"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "accept",
+            "kind",
+            "label",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Search input with submit.",
+          "properties": {
+            "data_backend": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "form_search"
+              ],
+              "type": "string"
+            },
+            "placeholder": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data_backend",
+            "kind",
+            "placeholder"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Color picker.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "form_color"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "name",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Long-form textarea.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "form_textarea"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "placeholder": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "rows": {
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "name",
+            "rows"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Submit button.",
+          "properties": {
+            "data_backend": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "form_submit"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "variant": {
+              "$ref": "#/definitions/ButtonVariant"
+            }
+          },
+          "required": [
+            "data_backend",
+            "kind",
+            "label",
+            "variant"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Breadcrumb trail.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/BreadcrumbItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "breadcrumb"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Numbered pagination.",
+          "properties": {
+            "base_href": {
+              "type": "string"
+            },
+            "current": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "data_backend": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "pagination"
+              ],
+              "type": "string"
+            },
+            "total": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "base_href",
+            "current",
+            "data_backend",
+            "kind",
+            "total"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Tab nav (links, not in-page tabs).",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/NavTabItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "nav_tabs"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Vertical sidebar nav.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/NavTabItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "vertical_nav"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Mega-menu rich dropdown.",
+          "properties": {
+            "columns": {
+              "items": {
+                "$ref": "#/definitions/MegaMenuColumn"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "mega_menu"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "columns",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Floating back-to-top button.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "back_to_top"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Jump-to-anchor list.",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/NavTabItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "anchor_list"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Language picker.",
+          "properties": {
+            "current": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "lang_switch"
+              ],
+              "type": "string"
+            },
+            "options": {
+              "items": {
+                "$ref": "#/definitions/LangOption"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "current",
+            "kind",
+            "options"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Tonal alert box.",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "dismissible": {
+              "type": "boolean"
+            },
+            "kind": {
+              "enum": [
+                "alert"
+              ],
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/definitions/AlertTone"
+            }
+          },
+          "required": [
+            "body",
+            "dismissible",
+            "kind",
+            "title",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Transient toast (visible target for live regions).",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "toast"
+              ],
+              "type": "string"
+            },
+            "tone": {
+              "$ref": "#/definitions/AlertTone"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "tone"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Modal dialog placeholder (rendered as a typed section).",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "modal"
+              ],
+              "type": "string"
+            },
+            "primary": {
+              "$ref": "#/definitions/HeroCta"
+            },
+            "secondary": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "primary",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Side drawer.",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "drawer"
+              ],
+              "type": "string"
+            },
+            "side": {
+              "$ref": "#/definitions/DrawerSide"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "side",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Tooltip target slot.",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "tooltip"
+              ],
+              "type": "string"
+            },
+            "trigger": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "trigger"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Progress bar.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "progress_bar"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "value": {
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Loading skeleton group.",
+          "properties": {
+            "height": {
+              "$ref": "#/definitions/SpaceSize"
+            },
+            "kind": {
+              "enum": [
+                "skeleton"
+              ],
+              "type": "string"
+            },
+            "rows": {
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "height",
+            "kind",
+            "rows"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Empty-state placeholder.",
+          "properties": {
+            "body": {
+              "type": "string"
+            },
+            "cta": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "kind": {
+              "enum": [
+                "empty_state"
+              ],
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Game tile thumbnail.",
+          "properties": {
+            "data_backend": {
+              "type": "string"
+            },
+            "genre": {
+              "type": "string"
+            },
+            "href": {
+              "type": "string"
+            },
+            "image_slug": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "game_tile"
+              ],
+              "type": "string"
+            },
+            "players_online": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data_backend",
+            "genre",
+            "href",
+            "image_slug",
+            "kind",
+            "players_online",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Game grid.",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/definitions/GameTileItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "game_grid"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Thread list row.",
+          "properties": {
+            "author": {
+              "type": "string"
+            },
+            "data_backend": {
+              "type": "string"
+            },
+            "href": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "thread_row"
+              ],
+              "type": "string"
+            },
+            "last_reply": {
+              "type": "string"
+            },
+            "replies": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "title": {
+              "type": "string"
+            },
+            "views": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "author",
+            "data_backend",
+            "href",
+            "kind",
+            "last_reply",
+            "replies",
+            "title",
+            "views"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "List of thread rows.",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/definitions/ThreadRowItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "thread_list"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Video card with thumbnail + meta.",
+          "properties": {
+            "channel": {
+              "type": "string"
+            },
+            "data_backend": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "string"
+            },
+            "href": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "video_card"
+              ],
+              "type": "string"
+            },
+            "thumbnail_slug": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "views": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "channel",
+            "data_backend",
+            "duration",
+            "href",
+            "kind",
+            "thumbnail_slug",
+            "title",
+            "views"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Grid of video cards.",
+          "properties": {
+            "heading": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "items": {
+                "$ref": "#/definitions/VideoCardItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "video_grid_section"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Comment thread (post + nested replies).",
+          "properties": {
+            "items": {
+              "items": {
+                "$ref": "#/definitions/CommentItem"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "enum": [
+                "comment_thread"
+              ],
+              "type": "string"
+            },
+            "post_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "items",
+            "kind",
+            "post_id"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Social-feed post card.",
+          "properties": {
+            "author": {
+              "type": "string"
+            },
+            "avatar": {
+              "$ref": "#/definitions/CmsAvatar"
+            },
+            "body": {
+              "type": "string"
+            },
+            "comments": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "handle": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "feed_post"
+              ],
+              "type": "string"
+            },
+            "posted_at": {
+              "type": "string"
+            },
+            "reactions": {
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "author",
+            "avatar",
+            "body",
+            "comments",
+            "handle",
+            "kind",
+            "posted_at",
+            "reactions"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Typed sign-in / sign-up card. Holds an ordered list of authentication method choices the renderer expands into passkey buttons / social-auth rows / password fields / magic-link inputs.",
+          "properties": {
+            "footer": {
+              "description": "Optional footer text (terms / privacy disclaimer).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "auth_card"
+              ],
+              "type": "string"
+            },
+            "methods": {
+              "description": "Ordered method options.",
+              "items": {
+                "$ref": "#/definitions/AuthMethodChoice"
+              },
+              "type": "array"
+            },
+            "tagline": {
+              "description": "Optional tagline under the title.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Display title (\"Sign in\", \"Welcome back\", etc.).",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "methods",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Second-factor prompt: OTP / WebAuthn / backup-code.",
+          "properties": {
+            "factor": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/MfaFactorKind"
+                }
+              ],
+              "description": "Factor kind shown to the user."
+            },
+            "instructions": {
+              "description": "Operator-facing instructions (\"Enter the 6-digit code from your authenticator app\").",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "mfa_prompt"
+              ],
+              "type": "string"
+            },
+            "otp_length": {
+              "default": 6,
+              "description": "Expected code length for OTP factors (6 for TOTP, 8 for backup codes).",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "submit_label": {
+              "description": "Submit-button label.",
+              "type": "string"
+            },
+            "switch_label": {
+              "description": "Optional \"use a different factor\" link.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Title (\"Enter your code\").",
+              "type": "string"
+            }
+          },
+          "required": [
+            "factor",
+            "instructions",
+            "kind",
+            "submit_label",
+            "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "The embeddable Crucible captcha challenge widget.",
+          "properties": {
+            "attribution_hint": {
+              "description": "Attribution-policy hint for the user about how their response may be used.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "challenge_kind": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CrucibleKind"
+                }
+              ],
+              "description": "Challenge kind (mirrors crucible-core::ChallengeKind)."
+            },
+            "difficulty": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CrucibleDifficulty"
+                }
+              ],
+              "default": "easy",
+              "description": "Difficulty hint (Easy / Medium / Hard / Adversarial)."
+            },
+            "kind": {
+              "enum": [
+                "crucible_widget"
+              ],
+              "type": "string"
+            },
+            "option_count": {
+              "default": 9,
+              "description": "Number of option slots the widget should render (e.g. 9 for a 3x3 image-classify grid).",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "prompt": {
+              "description": "Operator-facing prompt (\"Select all photos with a bird\", \"Which of these sentences mean the same thing?\").",
+              "type": "string"
+            },
+            "submit_label": {
+              "description": "Submit button label.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "challenge_kind",
+            "kind",
+            "prompt",
+            "submit_label"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Stepper for multi-step auth flows (sign-up → verify email → add MFA → complete profile).",
+          "properties": {
+            "current": {
+              "description": "Zero-indexed current step.",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            },
+            "kind": {
+              "enum": [
+                "auth_flow_stepper"
+              ],
+              "type": "string"
+            },
+            "steps": {
+              "description": "Step labels in order.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "current",
+            "kind",
+            "steps"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Compact \"signed in as / sign out\" footer.",
+          "properties": {
+            "avatar": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CmsAvatar"
+                }
+              ],
+              "description": "Avatar."
+            },
+            "display_name": {
+              "description": "Display name.",
+              "type": "string"
+            },
+            "handle": {
+              "description": "Handle or email.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "signed_in_card"
+              ],
+              "type": "string"
+            },
+            "sign_out": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                }
+              ],
+              "description": "Sign-out CTA."
+            }
+          },
+          "required": [
+            "avatar",
+            "display_name",
+            "handle",
+            "kind",
+            "sign_out"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Password-reset request form.",
+          "properties": {
+            "description": {
+              "description": "Description.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "password_reset"
+              ],
+              "type": "string"
+            },
+            "placeholder": {
+              "description": "Email-input placeholder.",
+              "type": "string"
+            },
+            "submit_label": {
+              "description": "Submit-button label.",
+              "type": "string"
+            },
+            "title": {
+              "description": "Title.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "description",
+            "kind",
+            "placeholder",
+            "submit_label",
+            "title"
+          ],
+          "type": "object"
         }
       ]
     },
@@ -1456,6 +5975,381 @@
       ],
       "type": "object"
     },
+    "CommentItem": {
+      "additionalProperties": false,
+      "description": "One comment in a thread.",
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "depth": {
+          "format": "uint8",
+          "minimum": 0.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "at",
+        "author",
+        "body",
+        "depth"
+      ],
+      "type": "object"
+    },
+    "ComparisonRow": {
+      "additionalProperties": false,
+      "description": "One comparison row.",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "values": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "label",
+        "values"
+      ],
+      "type": "object"
+    },
+    "ContactChannel": {
+      "additionalProperties": false,
+      "description": "One contact channel.",
+      "properties": {
+        "data_backend": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_backend",
+        "href",
+        "kind",
+        "label"
+      ],
+      "type": "object"
+    },
+    "ContainerWidth": {
+      "description": "Container max-width token.",
+      "enum": [
+        "narrow",
+        "comfortable",
+        "wide",
+        "full"
+      ],
+      "type": "string"
+    },
+    "ContentWidth": {
+      "description": "Content-width preference for `main#content`. Wires through to a `data-content-width=\"X\"` attribute on `<body>` that skin.css matches with `main#content { max-inline-size: ... }`.",
+      "oneOf": [
+        {
+          "description": "42rem — editorial-press measure (~70 characters).",
+          "enum": [
+            "narrow"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "64rem — default. Generous body + side-margin gutters.",
+          "enum": [
+            "comfortable"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "90rem — dense-grid / app-shell pages.",
+          "enum": [
+            "wide"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "No max — full-bleed content.",
+          "enum": [
+            "full"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CrucibleDifficulty": {
+      "description": "Crucible difficulty mirror.",
+      "oneOf": [
+        {
+          "description": "Easy.",
+          "enum": [
+            "easy"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Medium.",
+          "enum": [
+            "medium"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Hard.",
+          "enum": [
+            "hard"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Adversarial.",
+          "enum": [
+            "adversarial"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CrucibleKind": {
+      "description": "Crucible challenge kind mirror (kept independent from crucible-core to avoid creating a Loom-→-Crucible dep).",
+      "oneOf": [
+        {
+          "description": "Multi-image classification.",
+          "enum": [
+            "image_classify"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Semantic-similarity selection.",
+          "enum": [
+            "semantic_similarity"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Audio-transcribe with noise.",
+          "enum": [
+            "audio_transcribe"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Arithmetic.",
+          "enum": [
+            "math_arithmetic"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Drawing reconstruction.",
+          "enum": [
+            "drawing_reconstruct"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Prompt-injection detection.",
+          "enum": [
+            "prompt_injection_detect"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "DefListItem": {
+      "additionalProperties": false,
+      "description": "One definition list entry.",
+      "properties": {
+        "definition": {
+          "type": "string"
+        },
+        "term": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "definition",
+        "term"
+      ],
+      "type": "object"
+    },
+    "DiagramKind": {
+      "description": "Diagram source kind.",
+      "enum": [
+        "mermaid",
+        "plantuml",
+        "ascii"
+      ],
+      "type": "string"
+    },
+    "DividerStyle": {
+      "description": "Divider style.",
+      "enum": [
+        "line",
+        "dots",
+        "zig_zag",
+        "sparkle"
+      ],
+      "type": "string"
+    },
+    "DrawerSide": {
+      "description": "Drawer side.",
+      "enum": [
+        "right",
+        "left"
+      ],
+      "type": "string"
+    },
+    "FaqItem": {
+      "additionalProperties": false,
+      "description": "One FAQ item.",
+      "properties": {
+        "answer": {
+          "description": "Answer body — may contain multiple paragraphs.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "question": {
+          "description": "Question text.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "answer",
+        "question"
+      ],
+      "type": "object"
+    },
+    "FeatureSpotlightDecoration": {
+      "description": "Visual treatment for [`CmsSection::FeatureSpotlight`].\n\nThe default `Decorated` is the legacy SaaS-card shape (rounded chrome + gradient icon tile + hover lift + shadow). The `Editorial` and `Minimal` variants strip the trope chrome for callers that want dense, non-card composition.",
+      "oneOf": [
+        {
+          "description": "SaaS-card shape: rounded chrome, gradient icon tile, hover lift + shadow. Default (kept for back-compat).",
+          "enum": [
+            "decorated"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Strip card chrome. Typography only, no icon tile, no shadow. Top accent rule per item.",
+          "enum": [
+            "editorial"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Tight grid, no decoration. Title + body, no icon, no border.",
+          "enum": [
+            "minimal"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "FollowAction": {
+      "additionalProperties": false,
+      "description": "Follow action.",
+      "properties": {
+        "data_backend": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_backend",
+        "label"
+      ],
+      "type": "object"
+    },
+    "FormInputKind": {
+      "description": "Form-input kind.",
+      "enum": [
+        "text",
+        "email",
+        "password",
+        "tel",
+        "url",
+        "number",
+        "search"
+      ],
+      "type": "string"
+    },
+    "GalleryImage": {
+      "additionalProperties": false,
+      "description": "One gallery image.",
+      "properties": {
+        "alt": {
+          "type": "string"
+        },
+        "asset_slug": {
+          "type": "string"
+        },
+        "caption": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "alt",
+        "asset_slug"
+      ],
+      "type": "object"
+    },
+    "GameTileItem": {
+      "additionalProperties": false,
+      "description": "One game tile.",
+      "properties": {
+        "data_backend": {
+          "type": "string"
+        },
+        "genre": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "image_slug": {
+          "type": "string"
+        },
+        "players_online": {
+          "format": "uint32",
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_backend",
+        "genre",
+        "href",
+        "image_slug",
+        "players_online",
+        "title"
+      ],
+      "type": "object"
+    },
     "HeadingLevel": {
       "description": "Heading level (h2-h6). h1 is reserved for the page-shell.",
       "enum": [
@@ -1466,6 +6360,115 @@
         6
       ],
       "type": "integer"
+    },
+    "HeroBackground": {
+      "description": "Backdrop kind for hero-class sections.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "Animated three-radial gradient mesh in the accent palette. The default — works in every theme without configuration.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "gradient_mesh"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Solid color. `token` references a loom color token slug (e.g. `\"loom-color-surface\"`).",
+          "properties": {
+            "kind": {
+              "enum": [
+                "solid"
+              ],
+              "type": "string"
+            },
+            "token": {
+              "description": "Loom color token slug.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "token"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Diagonal-stripe pattern in the accent color.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "stripes"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Subtle dot-grid pattern.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "dots"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Photographic background. `src` is a same-origin asset path (e.g. `\"/assets/hero-bg.jpg\"`). `alt` is the SEO/a11y description; even though the image is rendered as a CSS `background-image`, the alt text ships as `<meta>` / aria-attributes on the section.\n\nUsed by sites that lead with a real photograph (people, product, location) rather than a gradient halo. `overlay` controls the dark/light scrim on top of the photo so the title stays legible: `none` / `light` / `dark`.",
+          "properties": {
+            "alt": {
+              "description": "SEO / accessibility description.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "photo"
+              ],
+              "type": "string"
+            },
+            "overlay": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/PhotoOverlay"
+                }
+              ],
+              "default": "dark",
+              "description": "Overlay tint (defaults to `dark`)."
+            },
+            "src": {
+              "description": "Same-origin path to the image asset.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "src"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "HeroCta": {
       "additionalProperties": false,
@@ -1490,6 +6493,1041 @@
         "label"
       ],
       "type": "object"
+    },
+    "HeroHeight": {
+      "description": "Visual-height ramp for hero sections.",
+      "oneOf": [
+        {
+          "description": "Comfortable default — about 60vh on desktop.",
+          "enum": [
+            "comfortable"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Compact — about 40vh, fits secondary pages.",
+          "enum": [
+            "compact"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Tall — about 80vh, only for top-of-funnel landings.",
+          "enum": [
+            "tall"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "LangOption": {
+      "additionalProperties": false,
+      "description": "One language option.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "data_backend": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "data_backend",
+        "href",
+        "label"
+      ],
+      "type": "object"
+    },
+    "LegalSection": {
+      "additionalProperties": false,
+      "description": "One section of a [`CmsSection::LegalDoc`]. Each section gets a stable kebab-case anchor (derived from `heading`) so the auto-generated table of contents can link to it.",
+      "properties": {
+        "body": {
+          "description": "Body paragraphs (plain text, auto-escaped). Each entry renders as a `<p>` in order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "heading": {
+          "description": "Section heading text.",
+          "type": "string"
+        },
+        "plain_language": {
+          "description": "Optional plain-language summary callout box inside this section.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "body",
+        "heading"
+      ],
+      "type": "object"
+    },
+    "LoomFactKind": {
+      "description": "Which Loom fact to inject via [`CmsSection::LoomFact`]. Closed enum so authors can't ask for a fact the renderer doesn't know.",
+      "oneOf": [
+        {
+          "description": "Total count of `CmsSection` variants (Loom's \"primitive count\").",
+          "enum": [
+            "primitive_count"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Total count of named themes shipped (light, dark, dark-amoled, auto, warm, ocean, forest, violet, rose, sepia, press, hc-dark, hc-light, and any future named theme).",
+          "enum": [
+            "theme_count"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Forge audit-phase count. Renderer reports the value Loom believes Forge ships; if Forge's count diverges, bump the constant.",
+          "enum": [
+            "forge_audit_phase_count"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Multi-network DeployAdapter count (Tor / I2P / Lokinet / IPFS / Gemini / Clearnet).",
+          "enum": [
+            "deploy_network_count"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "LoomFactShape": {
+      "description": "How a [`CmsSection::LoomFact`] renders.",
+      "oneOf": [
+        {
+          "description": "Just the numeric value, no markup. For inline use inside existing prose: `\"At {{loom_fact}} typed primitives...\"` — but since Loom doesn't do template strings, `Inline` here means rendering as a `<span>` so callers can place it in a Paragraph slot.",
+          "enum": [
+            "inline"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "A complete short sentence: `\"170 typed Loom primitives ship today.\"`",
+          "enum": [
+            "sentence"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "MarginaliaPosition": {
+      "description": "Wide-viewport float side for [`CmsSection::Marginalia`].",
+      "oneOf": [
+        {
+          "description": "Float to the right of the body text (start of inline-axis in RTL locales). Default — least visually-disruptive because it occupies the gutter on the reading-direction side.",
+          "enum": [
+            "right"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Float to the left of the body text.",
+          "enum": [
+            "left"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "MarqueeDirection": {
+      "description": "Marquee scroll direction.",
+      "oneOf": [
+        {
+          "description": "Scroll right-to-left.",
+          "enum": [
+            "left"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Scroll left-to-right.",
+          "enum": [
+            "right"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "MegaMenuColumn": {
+      "additionalProperties": false,
+      "description": "One mega-menu column.",
+      "properties": {
+        "heading": {
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/definitions/NavTabItem"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "heading",
+        "items"
+      ],
+      "type": "object"
+    },
+    "MfaFactorKind": {
+      "description": "Second-factor kind shown in [`CmsSection::MfaPrompt`].",
+      "oneOf": [
+        {
+          "description": "Time-based OTP from an authenticator app.",
+          "enum": [
+            "totp"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "WebAuthn second factor.",
+          "enum": [
+            "webauthn"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "SMS-delivered OTP.",
+          "enum": [
+            "sms_otp"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Email-delivered OTP.",
+          "enum": [
+            "email_otp"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Printable backup codes.",
+          "enum": [
+            "backup_code"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "NavTabItem": {
+      "additionalProperties": false,
+      "description": "One nav tab.",
+      "properties": {
+        "current": {
+          "default": false,
+          "type": "boolean"
+        },
+        "data_backend": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_backend",
+        "href",
+        "label"
+      ],
+      "type": "object"
+    },
+    "ParagraphDecoration": {
+      "description": "Editorial treatment for a [`CmsSection::Paragraph`].\n\nAll variants render `<p>` — the difference is class-keyed CSS:\n\n* `Body` (default) — standard body text. No extra class. * `Lead` — larger leading paragraph (the lede after a hero). Renders with `class=\"loom-paragraph--lead\"`. * `DropCap` — first letter rendered as a multi-line drop cap. Renders with `class=\"loom-paragraph--dropcap\"`. * `Aside` — visually offset commentary; left-rule, slightly muted color. Renders with `class=\"loom-paragraph--aside\"`.\n\nPure decoration. Text content is unaffected.",
+      "oneOf": [
+        {
+          "description": "Default body text. No extra class.",
+          "enum": [
+            "body"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Larger lead paragraph (post-hero introduction).",
+          "enum": [
+            "lead"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "First letter rendered as a multi-line drop cap.",
+          "enum": [
+            "drop_cap"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Visually offset commentary — left rule + muted color.",
+          "enum": [
+            "aside"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "PhotoOverlay": {
+      "description": "Overlay tint applied on top of [`HeroBackground::Photo`] so the title remains legible.",
+      "oneOf": [
+        {
+          "description": "No overlay — image renders raw.",
+          "enum": [
+            "none"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Light overlay (for dark photos / dark-text titles).",
+          "enum": [
+            "light"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Dark overlay (for bright photos / light-text titles). Default.",
+          "enum": [
+            "dark"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "PolishToken": {
+      "description": "T36: typed heading level for `CmsSection::Heading`.\n\n`<h1>` is reserved for the page-shell template (every page has exactly one); section headings live at h2..=h6. The variants here mirror the HTML tag set 1:1 — there is no `H1` variant because emitting a second h1 from CMS content would break landmark semantics.\n\nJSON wire format: integer `2..=6`. `serde` round-trips through `u8`; out-of-range values fail `Deserialize` at the boundary with a clear error, never landing as runtime drift.\n\nWhy typed instead of `u8`: * **Compile-time guarantee** — `HeadingLevel::H7` doesn't compile. Runtime clamps + `data-cms-warn` markers no longer needed; the level is always valid by construction. * **Exhaustive match** — every consumer matches on the enum and the compiler refuses to forget a variant. * **Type-state doctrine** — moves a runtime invariant into the type system, where AVP-2's \"no boolean blindness\" rule belongs. Heading level encoded over the wire as a raw u8 (2..=6) — the `serde(into / try_from)` pair lets derive produce the same wire shape as the prior hand-rolled impls (rejected by the composition Per-element bounded typographic adjustment. Each variant nudges one default in one direction. Substrate guarantees each adjustment is exactly ONE step from default — no compounding, no unbounded styling. Authors who want stronger emphasis pick a different primitive (e.g. PullQuote for dramatic body text, ImageHero for marketing title weight).\n\nMaps to a `loom-polish--<kebab>` class on the rendered element. CSS rules are caller-side; substrate ships sensible defaults via skin.css.\n\nPer `feedback_consumer_shaped_substrate`: polish tokens let authors express \"this specific element deserves a bit more weight\" without unbounded CSS — a structural compromise that keeps the substrate's variation policy bounded.",
+      "oneOf": [
+        {
+          "description": "Tighter letter-spacing.",
+          "enum": [
+            "tighter"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Looser letter-spacing.",
+          "enum": [
+            "looser"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Taller line-height.",
+          "enum": [
+            "taller"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Shorter line-height.",
+          "enum": [
+            "shorter"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Bolder font-weight.",
+          "enum": [
+            "bolder"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Lighter font-weight.",
+          "enum": [
+            "lighter"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Larger font-size.",
+          "enum": [
+            "larger"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Smaller font-size.",
+          "enum": [
+            "smaller"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "More-saturated color.",
+          "enum": [
+            "more-saturated"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Less-saturated (muted) color.",
+          "enum": [
+            "less-saturated"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "PricingTier": {
+      "additionalProperties": false,
+      "description": "One pricing tier in a [`CmsSection::Pricing`] section.",
+      "properties": {
+        "badge": {
+          "description": "Optional badge label displayed on the tier card (e.g. \"Most popular\", \"Best value\", \"Compliance-ready\"). `None` → no badge; the hardcoded English \"Popular\" CSS fallback is gone (substrate-de-consumer-shaping + localization fix).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cta": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/HeroCta"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Optional CTA."
+        },
+        "features": {
+          "description": "Feature bullet list.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "highlighted": {
+          "default": false,
+          "description": "True → tier is visually highlighted (typically the middle \"recommended\" tier).",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Tier name (\"Solo\", \"Team\", \"Enterprise\").",
+          "type": "string"
+        },
+        "period": {
+          "default": "",
+          "description": "Period qualifier (\"/mo\", \"/seat/mo\", \"annual\", empty).",
+          "type": "string"
+        },
+        "price": {
+          "description": "Price string (\"$0\", \"$29\", \"Custom\").",
+          "type": "string"
+        },
+        "tagline": {
+          "description": "Optional short tagline.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "features",
+        "name",
+        "price"
+      ],
+      "type": "object"
+    },
+    "ProductItem": {
+      "additionalProperties": false,
+      "description": "One product card.",
+      "properties": {
+        "data_backend": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "image_alt": {
+          "type": "string"
+        },
+        "image_slug": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "rating": {
+          "format": "float",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "data_backend",
+        "href",
+        "image_alt",
+        "image_slug",
+        "name",
+        "price"
+      ],
+      "type": "object"
+    },
+    "ReactionItem": {
+      "additionalProperties": false,
+      "description": "One reaction.",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "emoji": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "count",
+        "emoji"
+      ],
+      "type": "object"
+    },
+    "RevealMotion": {
+      "description": "Reveal-motion variant.",
+      "enum": [
+        "fade_up",
+        "fade_in",
+        "scale_in",
+        "slide_left",
+        "slide_right"
+      ],
+      "type": "string"
+    },
+    "SelectOption": {
+      "additionalProperties": false,
+      "description": "One select option.",
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "SettingsCategory": {
+      "additionalProperties": false,
+      "description": "One named category in a [`CmsSection::SettingsPanel`].",
+      "properties": {
+        "items": {
+          "description": "Items in this category.",
+          "items": {
+            "$ref": "#/definitions/SettingsItem"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Category heading (e.g. \"Account\", \"Privacy\", \"Danger zone\").",
+          "type": "string"
+        }
+      },
+      "required": [
+        "items",
+        "name"
+      ],
+      "type": "object"
+    },
+    "SettingsControl": {
+      "description": "Typed control for a [`SettingsItem`]. Closed enum; adding a variant is a deliberate surface change.",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "On/off checkbox.",
+          "properties": {
+            "default_on": {
+              "default": false,
+              "description": "Whether the toggle ships as `checked`.",
+              "type": "boolean"
+            },
+            "kind": {
+              "enum": [
+                "toggle"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Single-line text input.",
+          "properties": {
+            "default_value": {
+              "default": "",
+              "description": "Pre-filled value.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "text"
+              ],
+              "type": "string"
+            },
+            "max_length": {
+              "description": "Optional max length.",
+              "format": "uint32",
+              "minimum": 0.0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "placeholder": {
+              "default": "",
+              "description": "Placeholder shown when empty.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Multi-line textarea.",
+          "properties": {
+            "default_value": {
+              "default": "",
+              "description": "Pre-filled value.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "textarea"
+              ],
+              "type": "string"
+            },
+            "rows": {
+              "default": 4,
+              "description": "Rows attribute.",
+              "format": "uint8",
+              "minimum": 0.0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Destructive action button. Renders separately from the main form submit — its own POST endpoint + a confirm prompt at the form level.",
+          "properties": {
+            "action": {
+              "description": "Where the danger action POSTs. Distinct from the panel's main `action`.",
+              "type": "string"
+            },
+            "button_label": {
+              "description": "Button label (e.g. \"Delete account\").",
+              "type": "string"
+            },
+            "confirm_text": {
+              "description": "Confirm-prompt text — rendered as the form's `aria-describedby` content + as a visual disclaimer.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "danger_button"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "action",
+            "button_label",
+            "confirm_text",
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "SettingsItem": {
+      "additionalProperties": false,
+      "description": "One item in a [`SettingsCategory`]. Each item pairs a label with a control. Controls are typed via `SettingsControl`.",
+      "properties": {
+        "control": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/SettingsControl"
+            }
+          ],
+          "description": "The typed control."
+        },
+        "hint": {
+          "description": "Optional muted hint shown below the label.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "Visible label rendered as the `<dt>` for the row.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Form-input name attribute — keys the value in the submitted form.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "control",
+        "label",
+        "name"
+      ],
+      "type": "object"
+    },
+    "SpaceSize": {
+      "description": "Vertical-spacing token.",
+      "enum": [
+        "tight",
+        "comfortable",
+        "loose",
+        "generous"
+      ],
+      "type": "string"
+    },
+    "SplitVisual": {
+      "description": "The visual half of a [`CmsSection::SplitHero`].",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "description": "A code snippet, rendered as a styled `<pre>` panel.",
+          "properties": {
+            "body": {
+              "description": "Body.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "code_snippet"
+              ],
+              "type": "string"
+            },
+            "lang": {
+              "default": "",
+              "description": "Language hint.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "body",
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A single big stat with label.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "stat_block"
+              ],
+              "type": "string"
+            },
+            "label": {
+              "description": "Label underneath.",
+              "type": "string"
+            },
+            "value": {
+              "description": "The number (\"2.4M\", \"99.97%\", \"12x\").",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "label",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Reference to a `loom-assets` photo / illustration slug.",
+          "properties": {
+            "alt": {
+              "description": "Alt text for accessibility.",
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "asset_slug"
+              ],
+              "type": "string"
+            },
+            "slug": {
+              "description": "Slug from the asset registry.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "alt",
+            "kind",
+            "slug"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "SpotlightItem": {
+      "additionalProperties": false,
+      "description": "One feature spotlight item.",
+      "properties": {
+        "body": {
+          "description": "Feature body paragraph.",
+          "type": "string"
+        },
+        "data_backend": {
+          "description": "Backend slug paired with href.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "href": {
+          "description": "Optional \"learn more\" link.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon_slug": {
+          "description": "Optional loom-assets icon slug (e.g. `icon-arrow-right`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "title": {
+          "description": "Feature heading.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "title"
+      ],
+      "type": "object"
+    },
+    "StatItem": {
+      "additionalProperties": false,
+      "description": "One stat in a [`CmsSection::StatBand`].",
+      "properties": {
+        "hint": {
+          "description": "Optional muted hint below the label.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "label": {
+          "description": "Label underneath.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Value — displayed as the large headline.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "value"
+      ],
+      "type": "object"
+    },
+    "StepItem": {
+      "additionalProperties": false,
+      "description": "One step in a [`CmsSection::Steps`] section.",
+      "properties": {
+        "body": {
+          "description": "Body paragraph.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Step heading (renderer auto-prefixes the step number).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "title"
+      ],
+      "type": "object"
+    },
+    "TabItem": {
+      "additionalProperties": false,
+      "description": "One tab in a Tabs section.",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "label"
+      ],
+      "type": "object"
+    },
+    "TestimonialDecoration": {
+      "description": "Visual treatment for [`CmsSection::Testimonial`].\n\n`Decorated` (default) is the legacy avatar+quote card. `Editorial` drops card chrome for pull-quote typography. `Minimal` is just the quote + attribution line.",
+      "oneOf": [
+        {
+          "description": "Legacy avatar+quote card. Back-compat default.",
+          "enum": [
+            "decorated"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Pull-quote-style typography, no card.",
+          "enum": [
+            "editorial"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Quote + attribution only. No card, no avatar.",
+          "enum": [
+            "minimal"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "ThreadRowItem": {
+      "additionalProperties": false,
+      "description": "One thread row.",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "data_backend": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "last_reply": {
+          "type": "string"
+        },
+        "replies": {
+          "format": "uint32",
+          "minimum": 0.0,
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "views": {
+          "format": "uint32",
+          "minimum": 0.0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "author",
+        "data_backend",
+        "href",
+        "last_reply",
+        "replies",
+        "title",
+        "views"
+      ],
+      "type": "object"
+    },
+    "TimelineItem": {
+      "additionalProperties": false,
+      "description": "One timeline milestone.",
+      "properties": {
+        "body": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "when": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "body",
+        "title",
+        "when"
+      ],
+      "type": "object"
+    },
+    "VideoCardItem": {
+      "additionalProperties": false,
+      "description": "One video card.",
+      "properties": {
+        "channel": {
+          "type": "string"
+        },
+        "data_backend": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "href": {
+          "type": "string"
+        },
+        "thumbnail_slug": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "views": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "channel",
+        "data_backend",
+        "duration",
+        "href",
+        "thumbnail_slug",
+        "title",
+        "views"
+      ],
+      "type": "object"
     }
   },
   "description": "A single CMS-managed page. The smallest unit the bridge knows how to render in isolation.",
@@ -1508,9 +7546,55 @@
         "null"
       ]
     },
+    "chrome": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ChromeKind"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Page-shell chrome style. Picks the header / body-backdrop shape. Default = `PageShell` (legacy SkillShots-style sticky bar). Other variants: - `FloatingPill` — modern floating capsule centered on top of the viewport with glass-morphism backdrop. Drops the cream three-radial-gradient body backdrop. - `Minimal` — no header at all; first section carries all chrome."
+    },
+    "content_width": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/ContentWidth"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Maximum inline-size of `main#content`. Closes the hard-coded `max-width: 64rem` page-shell default flagged in docs/SUBSTRATE_DE_CONSUMER_SHAPING_AUDIT.md. Default `Comfortable` matches the previous hard-coded value; `Narrow` is editorial-press measure; `Wide` is for dense-grid content; `Full` removes the cap entirely."
+    },
     "description": {
       "description": "`<meta name=\"description\">` text. Required for SEO.",
       "type": "string"
+    },
+    "dev_devtools": {
+      "default": false,
+      "description": "When true, page-shell emits a relaxed CSP (drops Trusted Types, allows 'unsafe-inline' styles) and injects a localStorage-gated loader script that pulls `/eruda.min.js` on demand. Off by default; turn on via the per-page JSON flag or via Forge's `FORGE_DEV_DEVTOOLS` env var (which forge-phases/render.rs reads and patches onto every page in a build).\n\nSECURITY: only enable on dev hosts. Prod pages must keep the strict CSP. The page renders identically with or without devtools — the only delta is CSP + a tiny loader script that does nothing unless the visitor sets `localStorage[\"loom_eruda\"] = \"on\"`. So even if a dev page ships to a stranger by mistake, they see no devtools (and no script load) without that opt-in.",
+      "type": "boolean"
+    },
+    "footer": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CmsFooter"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Optional typed footer. When `None`, the page-shell emits an empty `<footer class=\"loom-page-footer\"></footer>` (back-compat). When `Some`, the renderer expands a typed multi-column footer with optional contact info and legal links."
+    },
+    "nav_actions": {
+      "default": [],
+      "description": "Action CTAs rendered in the header (e.g. \"Sign in\", \"Get started\"). Distinct from `nav_links` — these are buttons, not page-to-page links.",
+      "items": {
+        "$ref": "#/definitions/HeroCta"
+      },
+      "type": "array"
     },
     "nav_links": {
       "default": [],
@@ -1530,6 +7614,27 @@
         "$ref": "#/definitions/CmsSection"
       },
       "type": "array"
+    },
+    "site_origin": {
+      "description": "Optional fully-qualified site origin (e.g. `\"https://dev.plausiden.com\"`). When set, the renderer prefixes `og:url` and `og:image` with this origin so social-card crawlers see fully-qualified URLs (the OG spec requires absolute URLs). When `None`, the renderer emits the relative path — works for most crawlers but not all.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "social_image": {
+      "description": "Optional social-card preview image path (e.g. `\"/assets/photos/stock-80.jpg\"`). When set, the renderer emits `og:image` and `twitter:image` meta tags. When the page also has `site_origin` set, the path is prefixed to produce a fully-qualified URL.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "theme": {
+      "description": "Theme name. Routed through page_shell_themed's `data-theme` attribute. Closed allowlist: `light`, `dark`, `auto`, `warm`, `ocean`, `forest`, `violet`, `rose`. Operators pick per-page (or set once in the site's index.json to inherit).",
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "title": {
       "description": "`<title>` text. Required.",
