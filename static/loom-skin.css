@@ -6544,6 +6544,49 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
     var(--loom-color-surface, var(--loom-bg));
 }
 
+/* Photo background: an <img> child sized to cover the hero +
+ * an overlay scrim via ::after so the title stays legible.
+ * CSP-strict-safe (no inline styles, no url() in CSS for the
+ * dynamic src).
+ */
+.loom-image-hero.bg-photo {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.loom-image-hero__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: -2;
+}
+.loom-image-hero.bg-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.loom-image-hero__photo.ov-dark ~ .loom-image-hero__inner,
+.loom-image-hero.bg-photo:has(.ov-dark)::after {
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--loom-color-bg-canvas) 55%, transparent) 0%,
+    color-mix(in oklab, var(--loom-color-bg-canvas) 75%, transparent) 100%
+  );
+}
+.loom-image-hero.bg-photo:has(.ov-light)::after {
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--loom-color-surface) 55%, transparent) 0%,
+    color-mix(in oklab, var(--loom-color-surface) 75%, transparent) 100%
+  );
+}
+.loom-image-hero.bg-photo:has(.ov-none)::after {
+  background: transparent;
+}
+
 /* ============================================================
  * SplitHero — text + visual side-by-side
  * ============================================================ */

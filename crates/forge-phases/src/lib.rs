@@ -18,6 +18,7 @@
 #![deny(missing_docs)]
 
 pub mod a11y_landmarks;
+pub mod aesthetic_distinctiveness;
 pub mod annotation_review;
 pub mod asset_optimization;
 pub mod backend_coverage;

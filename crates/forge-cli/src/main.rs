@@ -30,6 +30,7 @@ use forge_core::pipeline::{
 };
 use forge_core::{BuildCtx, BuildError, BuildMode, BuildReport, Finding, Phase, Severity};
 use forge_phases::a11y_landmarks::A11yLandmarksPhase;
+use forge_phases::aesthetic_distinctiveness::AestheticDistinctivenessPhase;
 use forge_phases::annotation_review::AnnotationReviewPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
 use forge_phases::backend_coverage::BackendCoveragePhase;
@@ -906,6 +907,15 @@ fn run() -> Result<ExitCode> {
         // operator-flagged signals layer on top. Silent skip if
         // [review] session_dir is unconfigured or absent.
         Box::new(AnnotationReviewPhase),
+        // phase_aesthetic_distinctiveness — scans cms/*.json for
+        // SaaS-marketing slop patterns (centered single-word heroes,
+        // monotonous feature grids, fake testimonials, green-check
+        // pricing, "Numbers that"-style stat bands, sparse pages,
+        // scaffold-only compositions). Warn-by-default; promotes
+        // to strict via `[aesthetic_distinctiveness] strict = true`.
+        // Substrate-distinctiveness gate that closes the "looks
+        // like every other landing" feedback loop.
+        Box::new(AestheticDistinctivenessPhase),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
         // infra issues surface earlier; runtime-only regressions
         // (placeholder text in DOM, ARIA drift, axe runtime) get
