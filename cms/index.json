@@ -137,6 +137,11 @@
       "text": "Bring your own LLM provider. We never see your prompts. Charge is by compute, never by seat or by page-view."
     },
     {
+      "kind": "figure",
+      "caption": "Three commitment levels. One price model.",
+      "asset_slug": "photos/stock-11"
+    },
+    {
       "kind": "comparison",
       "columns": ["", "Solo", "Team", "Enterprise"],
       "rows": [

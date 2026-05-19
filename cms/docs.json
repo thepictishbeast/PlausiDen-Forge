@@ -109,6 +109,11 @@
       "text": "The complete documentation lives in the source tree."
     },
     {
+      "kind": "figure",
+      "caption": "Schema-truth, not template-string substitution.",
+      "asset_slug": "photos/stock-9"
+    },
+    {
       "kind": "def_list",
       "items": [
         {

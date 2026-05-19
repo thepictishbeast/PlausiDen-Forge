@@ -55,7 +55,10 @@
         "data_backend": "cta-docs"
       },
       "background": {
-        "kind": "gradient_mesh"
+        "kind": "photo",
+        "src": "/assets/photos/stock-33.jpg",
+        "alt": "Wide editorial photograph evoking infrastructure + scale",
+        "overlay": "dark"
       },
       "height": "comfortable"
     },
@@ -67,6 +70,11 @@
     {
       "kind": "lede",
       "text": "Six tools. Use one. Or all six. Every tool can be swapped, rewired, or replaced because the contract between them is typed, not configured."
+    },
+    {
+      "kind": "figure",
+      "caption": "The six tools in PlausiDen — composable, not glued.",
+      "asset_slug": "photos/stock-8"
     },
     {
       "kind": "def_list",

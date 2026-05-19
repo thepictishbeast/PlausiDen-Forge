@@ -29,7 +29,12 @@
         "href": "/prosperity-contact.html",
         "data_backend": "prosperity-cta-contact"
       },
-      "background": {"kind": "gradient_mesh"},
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-31.jpg",
+        "alt": "Wide editorial photograph evoking quiet financial deliberation",
+        "overlay": "dark"
+      },
       "height": "comfortable"
     },
     {

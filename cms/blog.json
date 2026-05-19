@@ -83,6 +83,11 @@
       "text": "Each post traces a real architectural decision — what we tried, what didn't work, what shipped."
     },
     {
+      "kind": "figure",
+      "caption": "Every commit traces an architectural decision.",
+      "asset_slug": "photos/stock-12"
+    },
+    {
       "kind": "def_list",
       "items": [
         {

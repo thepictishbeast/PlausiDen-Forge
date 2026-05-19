@@ -50,7 +50,10 @@
       "title": "An independent platform shop.",
       "lede": "Built by a small team that thinks software should be auditable, accessible, and reproducible — by default, not as a checkbox.",
       "background": {
-        "kind": "gradient_mesh"
+        "kind": "photo",
+        "src": "/assets/photos/stock-32.jpg",
+        "alt": "Wide editorial photograph evoking craft + deliberation",
+        "overlay": "dark"
       },
       "height": "comfortable"
     },
@@ -66,6 +69,11 @@
     {
       "kind": "paragraph",
       "text": "We do not believe in roadmaps that promise a feature in eighteen months. We believe in shipping small, audited, reproducible changes — and in letting the audit chain speak for itself when a customer asks what changed between two builds. The chain hash is the proof; the screenshot diff is the corroboration."
+    },
+    {
+      "kind": "figure",
+      "caption": "Reproducible builds — same input, same hash, forever.",
+      "asset_slug": "photos/stock-7"
     },
     {
       "kind": "kv_pair",
