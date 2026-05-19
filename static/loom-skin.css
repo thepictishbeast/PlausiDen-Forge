@@ -8506,7 +8506,11 @@ body[data-chrome="floating-pill"]::after {
   border-radius: 999px;
   font: 500 0.92rem/1 var(--loom-font-display, var(--loom-font-stack));
   letter-spacing: -0.005em;
-  min-height: 36px;
+  /* min-height 44px = WCAG 2.5.5 AAA + Apple HIG + Material Design
+   * recommended tap-target size. Lowered from 36px (previous
+   * value would trigger Crawler `tap.below-recommended` warn on
+   * every page). */
+  min-height: 44px;
   display: inline-flex; align-items: center;
   transition:
     color var(--loom-motion-fast, 140ms) var(--loom-ease-out, ease),
@@ -8526,12 +8530,16 @@ body[data-chrome="floating-pill"]::after {
   flex: 0 0 auto;
 }
 .loom-floating-pill__action {
-  padding: 0.45rem 0.95rem !important;
-  min-height: 36px !important;
+  padding: 0.55rem 1rem !important;
+  /* 44px = WCAG 2.5.5 AAA tap-target floor (Apple HIG + Material
+   * Design agree). Was 36px — failed AAA + triggered Crawler
+   * tap_targets.below-recommended warn. */
+  min-height: 44px !important;
   font-size: 0.88rem !important;
 }
 .loom-floating-pill .loom-theme-toggle {
-  width: 36px; height: 36px;
+  /* 44x44 = tap-target floor; was 36x36. */
+  width: 44px; height: 44px;
   border-radius: 999px;
   border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
   background: transparent;
