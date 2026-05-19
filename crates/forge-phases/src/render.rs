@@ -126,7 +126,7 @@ impl Phase for RenderPhase {
                     });
                 }
             };
-            let page: loom_cms_render::CmsPage = match serde_json::from_str(&raw) {
+            let mut page: loom_cms_render::CmsPage = match serde_json::from_str(&raw) {
                 Ok(p) => p,
                 Err(e) => {
                     // Schema drift — fail closed at the boundary.
@@ -172,6 +172,14 @@ impl Phase for RenderPhase {
                     "light" | "dark" | "auto" | "warm" | "ocean" | "forest" | "violet" | "rose"
                 )
             });
+            // FORGE_DEV_DEVTOOLS=1 flips the CmsPage dev_devtools flag
+            // on every page in the build. Loom's page_shell_themed
+            // then drops the strict CSP and inlines the
+            // localStorage-gated Eruda loader. Strictly dev-only —
+            // never set this env on the prod build path.
+            if std::env::var("FORGE_DEV_DEVTOOLS").is_ok() {
+                page.dev_devtools = true;
+            }
             let body_markup = loom_cms_render::render_page(&page).into_string();
             let html = loom_cms_render::page_shell_themed(
                 &page,
