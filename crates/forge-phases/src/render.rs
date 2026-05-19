@@ -169,7 +169,19 @@ impl Phase for RenderPhase {
             let theme_ref = theme_owned.as_deref().filter(|t| {
                 matches!(
                     *t,
-                    "light" | "dark" | "auto" | "warm" | "ocean" | "forest" | "violet" | "rose"
+                    "light"
+                        | "dark"
+                        | "dark-amoled"
+                        | "auto"
+                        | "warm"
+                        | "ocean"
+                        | "forest"
+                        | "violet"
+                        | "rose"
+                        | "sepia"
+                        | "press"
+                        | "hc-dark"
+                        | "hc-light"
                 )
             });
             // FORGE_DEV_DEVTOOLS=1 flips the CmsPage dev_devtools flag
