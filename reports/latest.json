@@ -69,6 +69,18 @@
     },
     {
       "phase": "tokens",
+      "path": "field-notes.html",
+      "message": "raw px values: 14px 44px 9999px 999px",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
+      "path": "field-notes.html",
+      "message": "raw hex color in HTML",
+      "severity": "warn"
+    },
+    {
+      "phase": "tokens",
       "path": "index.html",
       "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
@@ -262,6 +274,24 @@
     {
       "phase": "seo",
       "path": "encrypted-inquiry.html",
+      "message": "no JSON-LD structured data",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "field-notes.html",
+      "message": "missing Open Graph tags (og:title/description/type/url/image)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "field-notes.html",
+      "message": "missing Twitter Card tags",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "field-notes.html",
       "message": "no JSON-LD structured data",
       "severity": "warn"
     },
@@ -478,6 +508,12 @@
     {
       "phase": "sri",
       "path": "encrypted-inquiry.html",
+      "message": "link → loom-skin.css has no integrity attribute",
+      "severity": "warn"
+    },
+    {
+      "phase": "sri",
+      "path": "field-notes.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
@@ -939,38 +975,14 @@
     },
     {
       "phase": "unbuilt_route",
-      "path": "about.html",
-      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
       "path": "blog.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
     },
     {
       "phase": "unbuilt_route",
-      "path": "contact.html",
-      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
       "path": "docs.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "encrypted-inquiry.html",
-      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "index.html",
-      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
       "severity": "warn"
     },
     {
@@ -1023,18 +1035,6 @@
     },
     {
       "phase": "unbuilt_route",
-      "path": "quote.html",
-      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "services.html",
-      "message": "href=\"/field-notes.html\" → static/field-notes.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
       "path": "signin.html",
       "message": "href=\"/start.html\" → static/start.html does not exist",
       "severity": "warn"
@@ -1046,30 +1046,6 @@
       "severity": "warn"
     },
     {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/docs.json",
-      "message": "image_desert: page has 15 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/signin.json",
-      "message": "image_desert: page has 10 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/why.json",
-      "message": "image_desert: page has 16 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/pricing.json",
-      "message": "image_desert: page has 11 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
-      "severity": "warn"
-    },
-    {
       "phase": "crawl",
       "path": "127.0.0.1:8123",
       "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
@@ -1077,9 +1053,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 179,
-  "duration_ms": 18,
-  "prev_hash": "e00495b35c7584eb4450a48062df0821912842c6b6f23afcbee12c4efbca7698",
-  "chain_length": 109,
-  "started": "2026-05-19T22:29:25.970974145Z"
+  "warn_count": 175,
+  "duration_ms": 33,
+  "prev_hash": "8705b2a5dc3418f310a931083f6300dd97343504327452bbb2b5798044007e93",
+  "chain_length": 110,
+  "started": "2026-05-19T22:30:58.898909117Z"
 }
