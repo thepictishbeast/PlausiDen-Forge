@@ -1016,7 +1016,7 @@ checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 [[package]]
 name = "loom-cms-render"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#cc45b74fce4af8dd8e3aaf2414d65b77b7bbe0ab"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#0c6b40cb453fe694ccc51534f2f1abb5d9c4c2f2"
 dependencies = [
  "base64",
  "loom-components",
@@ -1031,7 +1031,7 @@ dependencies = [
 [[package]]
 name = "loom-components"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#cc45b74fce4af8dd8e3aaf2414d65b77b7bbe0ab"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#0c6b40cb453fe694ccc51534f2f1abb5d9c4c2f2"
 dependencies = [
  "loom-icons",
  "loom-tokens",
@@ -1042,12 +1042,12 @@ dependencies = [
 [[package]]
 name = "loom-icons"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#cc45b74fce4af8dd8e3aaf2414d65b77b7bbe0ab"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#0c6b40cb453fe694ccc51534f2f1abb5d9c4c2f2"
 
 [[package]]
 name = "loom-lint"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#cc45b74fce4af8dd8e3aaf2414d65b77b7bbe0ab"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#0c6b40cb453fe694ccc51534f2f1abb5d9c4c2f2"
 dependencies = [
  "anyhow",
  "regex",
@@ -1058,7 +1058,7 @@ dependencies = [
 [[package]]
 name = "loom-tokens"
 version = "0.1.0"
-source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#cc45b74fce4af8dd8e3aaf2414d65b77b7bbe0ab"
+source = "git+https://github.com/thepictishbeast/PlausiDen-Loom.git?branch=main#0c6b40cb453fe694ccc51534f2f1abb5d9c4c2f2"
 dependencies = [
  "serde",
  "serde_json",
@@ -2100,7 +2100,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
