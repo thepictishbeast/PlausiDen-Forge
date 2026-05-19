@@ -258,10 +258,70 @@ pub fn project_to_rust(manifest: &PlatformManifest) -> String {
         ));
         out.push_str("    },\n");
     }
-    out.push_str("];\n");
+    out.push_str("];\n\n");
+
+    out.push_str(LOOKUP_HELPERS);
 
     out
 }
+
+/// Generic lookup helpers projected into every consumer crate.
+///
+/// All functions are O(N) linear scans — the typical manifest has
+/// <100 entries so a scan is faster than the constants needed for
+/// a perfect-hash table.
+const LOOKUP_HELPERS: &str = r#"
+/// Find a capability record by ID. Returns `None` when no record
+/// matches. O(N) linear scan over `ALL_CAPABILITIES`.
+#[must_use]
+pub fn find_capability_by_id(id: &str) -> Option<&'static CapabilityRecord> {
+    ALL_CAPABILITIES.iter().find(|c| c.id == id)
+}
+
+/// Find a phase record by ID. Returns `None` when no record matches.
+#[must_use]
+pub fn find_phase_by_id(id: &str) -> Option<&'static PhaseRecord> {
+    ALL_PHASES.iter().find(|p| p.id == id)
+}
+
+/// Find a backend record by ID. Returns `None` when no record matches.
+#[must_use]
+pub fn find_backend_by_id(id: &str) -> Option<&'static BackendRecord> {
+    ALL_BACKENDS.iter().find(|b| b.id == id)
+}
+
+/// Iterator over every phase record whose `implements` field equals
+/// the given capability ID. Empty when the capability has no phases.
+pub fn phases_for_capability<'a>(
+    capability_id: &'a str,
+) -> impl Iterator<Item = &'static PhaseRecord> + 'a {
+    ALL_PHASES.iter().filter(move |p| p.implements == capability_id)
+}
+
+/// Iterator over every backend record whose `implements` field equals
+/// the given capability ID. Empty when the capability has no backends.
+pub fn backends_for_capability<'a>(
+    capability_id: &'a str,
+) -> impl Iterator<Item = &'static BackendRecord> + 'a {
+    ALL_BACKENDS.iter().filter(move |b| b.implements == capability_id)
+}
+
+/// True iff a capability with the given ID exists.
+#[must_use]
+pub fn capability_exists(id: &str) -> bool {
+    find_capability_by_id(id).is_some()
+}
+
+/// True iff a backend with the given (method, route) pair exists in
+/// the manifest. Useful for codegen of route tables — answer
+/// "is this route declared?" without building a HashMap.
+#[must_use]
+pub fn backend_with_route(method: &str, route: &str) -> Option<&'static BackendRecord> {
+    ALL_BACKENDS
+        .iter()
+        .find(|b| b.method == method && b.route == route)
+}
+"#;
 
 fn severity_slug(s: manifest_core::DefaultSeverity) -> &'static str {
     match s {
@@ -381,6 +441,30 @@ mod tests {
         assert!(src.contains("ALL_CAPABILITIES: &[CapabilityRecord] = &[\n];"));
         assert!(src.contains("ALL_PHASES: &[PhaseRecord] = &[\n];"));
         assert!(src.contains("ALL_BACKENDS: &[BackendRecord] = &[\n];"));
+    }
+
+    #[test]
+    fn project_emits_lookup_helpers() {
+        let m = sample_manifest();
+        let src = project_to_rust(&m);
+        assert!(src.contains("pub fn find_capability_by_id"));
+        assert!(src.contains("pub fn find_phase_by_id"));
+        assert!(src.contains("pub fn find_backend_by_id"));
+        assert!(src.contains("pub fn phases_for_capability"));
+        assert!(src.contains("pub fn backends_for_capability"));
+        assert!(src.contains("pub fn capability_exists"));
+        assert!(src.contains("pub fn backend_with_route"));
+    }
+
+    #[test]
+    fn empty_manifest_still_emits_lookup_helpers() {
+        let m = PlatformManifest {
+            platform: "p".into(),
+            ..Default::default()
+        };
+        let src = project_to_rust(&m);
+        assert!(src.contains("find_capability_by_id"));
+        assert!(src.contains("backend_with_route"));
     }
 
     #[test]
