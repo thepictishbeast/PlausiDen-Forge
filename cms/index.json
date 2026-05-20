@@ -138,6 +138,23 @@
       "text": "Prosperity Club helps uncover the why of expenses and identifies what actions you can take to reduce them without changing your lifestyle. Budgets do not resolve financial spending or obligation — attaching dollar amounts to each expense is not how to reduce expenses. Tracking expenses uncovers the underlying reasons why you are spending on certain things."
     },
     {
+      "kind": "kv_pair",
+      "heading": "How we help.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Better decisions",
+          "value": "Make better money-related decisions.",
+          "hint": "Our prosperity educators teach strategies that reduce liabilities and increase discretionary income — so you stop saying \"I will never make enough money to pay my bills.\""
+        },
+        {
+          "key": "Cash on hand",
+          "value": "Keep most of what you earn.",
+          "hint": "Have enough money to pay for the necessities, build an emergency fund, invest, and enjoy life. Keeping most of your income is the most important step to being prosperous and planning for retirement."
+        }
+      ]
+    },
+    {
       "kind": "pull_quote",
       "body": "The rich don't avoid taxes by cheating. They avoid taxes by understanding the rules better than everyone else. The rules are public. The tax code is published.",
       "attribution": "Deborah Armstrong, Prosperity Club",
