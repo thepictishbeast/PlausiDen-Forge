@@ -71,6 +71,15 @@ impl Phase for RenderPhase {
             return Ok(Vec::new());
         }
 
+        // Issue #8 fix (2026-05-20): read + parse forge.toml ONCE
+        // per render call, then pull every field out of the cached
+        // value. The previous code called `forge_toml_render_write_canonical`
+        // once and `forge_toml_theme` PER PAGE — `1 + N` disk reads
+        // and `1 + N` TOML parses for N pages, instead of one of
+        // each. The helper functions are retained for unit-test
+        // ergonomics but the live render path now skips them.
+        let forge_toml = parse_forge_toml(&ctx.root);
+
         // T70c (2026-05-14): per-site opt-in to write rendered HTML
         // directly to <static_dir>/<slug>.html instead of the
         // sibling <static_dir>/_render/<slug>.html. The default
@@ -88,7 +97,7 @@ impl Phase for RenderPhase {
         // dev server actually serves) stayed stale. With
         // write_canonical=true, `forge build` rebuilds the served
         // pages in one step.
-        let write_canonical = forge_toml_render_write_canonical(&ctx.root);
+        let write_canonical = extract_render_write_canonical(forge_toml.as_ref());
         let out_dir = if write_canonical {
             ctx.static_dir.clone()
         } else {
@@ -155,7 +164,7 @@ impl Phase for RenderPhase {
             //
             // Closed allow-list ("light"|"dark") at every layer.
             let env_theme = std::env::var("FORGE_THEME").ok();
-            let toml_theme = forge_toml_theme(&ctx.root);
+            let toml_theme = extract_render_theme(forge_toml.as_ref());
             // Per-page theme on CmsPage wins over env / forge.toml.
             // Falls back to LOOM_THEME env, then forge.toml [theme].
             // The allowlist is wider than light/dark — page_shell_themed
@@ -313,16 +322,21 @@ fn slug_from_filename(path: &Path) -> Option<String> {
 // `loom_cms_render::escape_html_text`. Keeps the a11y / dual-
 // theme contract co-located with the renderer that owns it.
 
-/// T37 v3.b: read `[render] theme = "..."` from `<root>/forge.toml`.
-/// Returns `Some("light"|"dark")` on a valid entry; `None` for any
-/// other case (file missing, parse error, missing section, unknown
-/// theme value). Closed allow-list — anything other than the two
-/// canonical values is treated as absent.
-fn forge_toml_theme(root: &Path) -> Option<String> {
+/// Read + parse `<root>/forge.toml` once. Returns `None` if the
+/// file is absent or malformed. Issue #8 fix: callers extract
+/// every field they need from this single parsed value rather
+/// than re-reading the file per-field.
+fn parse_forge_toml(root: &Path) -> Option<toml::Value> {
     let path = root.join("forge.toml");
     let content = std::fs::read_to_string(&path).ok()?;
-    let parsed: toml::Value = content.parse().ok()?;
-    let theme = parsed
+    content.parse::<toml::Value>().ok()
+}
+
+/// Extract `[render] theme = "..."` from an already-parsed
+/// forge.toml value. Closed allow-list — anything other than
+/// `light` / `dark` is treated as absent.
+fn extract_render_theme(toml: Option<&toml::Value>) -> Option<String> {
+    let theme = toml?
         .get("render")
         .and_then(|r| r.get("theme"))
         .and_then(|t| t.as_str())?;
@@ -330,6 +344,31 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
         "light" | "dark" => Some(theme.to_owned()),
         _ => None,
     }
+}
+
+/// Extract `[render] write_canonical = true` from an already-
+/// parsed forge.toml value. Anything other than literal `true`
+/// (missing key, missing section, non-bool value) returns false.
+fn extract_render_write_canonical(toml: Option<&toml::Value>) -> bool {
+    toml.and_then(|t| t.get("render"))
+        .and_then(|r| r.get("write_canonical"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+/// T37 v3.b: read `[render] theme = "..."` from `<root>/forge.toml`.
+/// Returns `Some("light"|"dark")` on a valid entry; `None` for any
+/// other case (file missing, parse error, missing section, unknown
+/// theme value). Closed allow-list — anything other than the two
+/// canonical values is treated as absent.
+///
+/// Retained for unit-test ergonomics. The live render path uses
+/// [`parse_forge_toml`] + [`extract_render_theme`] to share one
+/// parse across all field extractions. `#[cfg(test)]`-gated so
+/// release builds don't carry the wrapper.
+#[cfg(test)]
+fn forge_toml_theme(root: &Path) -> Option<String> {
+    extract_render_theme(parse_forge_toml(root).as_ref())
 }
 
 /// T70c (2026-05-14): read `[render] write_canonical = true` from
@@ -340,19 +379,13 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
 /// Defence in depth: a typo'd or deliberately-malformed
 /// forge.toml falls back to the safe default (write to
 /// `_render/`, leave `static/` alone).
+/// Retained for unit-test ergonomics. The live render path uses
+/// [`parse_forge_toml`] + [`extract_render_write_canonical`] to
+/// share one parse across all field extractions. `#[cfg(test)]`-
+/// gated so release builds don't carry the wrapper.
+#[cfg(test)]
 fn forge_toml_render_write_canonical(root: &Path) -> bool {
-    let path = root.join("forge.toml");
-    let Ok(content) = std::fs::read_to_string(&path) else {
-        return false;
-    };
-    let Ok(parsed) = content.parse::<toml::Value>() else {
-        return false;
-    };
-    parsed
-        .get("render")
-        .and_then(|r| r.get("write_canonical"))
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
+    extract_render_write_canonical(parse_forge_toml(root).as_ref())
 }
 
 /// Atomic write: tmp file + rename. POSIX guarantees rename is
