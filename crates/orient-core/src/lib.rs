@@ -47,9 +47,15 @@
 
 use serde::{Deserialize, Serialize};
 
+pub mod compliance;
 pub mod objective;
+pub mod risk;
+pub mod sovereignty;
 
+pub use compliance::Compliance;
 pub use objective::Objective;
+pub use risk::Risk;
+pub use sovereignty::Sovereignty;
 
 // Marker modules for the remaining 10 axes (object is implicit in
 // Rust type identity; the substrate doesn't need a separate enum).
@@ -88,22 +94,6 @@ pub mod domain {}
 /// lifecycle.
 pub mod lifecycle {}
 
-/// Placeholder for the Compliance orientation (`#191`).
-///
-/// Compliance enumerates the regulatory regimes an entity must
-/// conform to — `gdpr`, `ccpa`, `hipaa`, `pci-dss-4`,
-/// `soc2-type-ii`, `iso-27001`, `iso-25010`, `iso-40500`,
-/// `wcag-2.1-aa`, `wcag-2.2-aaa`, `dora`, `cra`.
-pub mod compliance {}
-
-/// Placeholder for the Risk orientation (`#193`).
-///
-/// Risk encodes the AVP-2 tier ladder — `tier-1-trivial` through
-/// `tier-10-economic`. Per `[[avp2-tiers]]`: every substrate
-/// entity declares its risk tier; substrate refuses to ship below
-/// the minimum tier for its capability class.
-pub mod risk {}
-
 /// Placeholder for the Resource orientation (`#194`).
 ///
 /// Resource enumerates cost/budget envelopes — `cpu-cheap`,
@@ -119,15 +109,6 @@ pub mod resource {}
 /// `wcag-2.2-aaa` — plus capability multi-values
 /// (`screen-reader-first`, `keyboard-first`, etc.).
 pub mod accessibility {}
-
-/// Placeholder for the Sovereignty orientation (`#192`).
-///
-/// Sovereignty encodes the PSA differentiator (privacy / security
-/// / anonymity) — `anonymous`, `pseudonymous`, `identified`,
-/// `private`, `local-only`, `ephemeral`, `tor-compatible`,
-/// `offline-capable`, `pq-secure`, `cleartext-forbidden`,
-/// `zero-knowledge`. The PlausiDen differentiator.
-pub mod sovereignty {}
 
 /// Placeholder for the Temporal orientation (`#195`).
 ///
@@ -167,16 +148,17 @@ pub struct OrientationProjection {
     /// Entity's evolution stage. Typed in task `#195`.
     pub lifecycle: Option<String>,
     /// Regulatory regimes the entity must conform to. Multi-valued.
-    /// Typed in task `#191`.
-    pub compliance: Option<Vec<String>>,
-    /// AVP-2 risk tier. Typed in task `#193`.
-    pub risk: Option<String>,
+    /// Typed enum per [`Compliance`] (task #191).
+    pub compliance: Option<Vec<Compliance>>,
+    /// AVP-2 risk tier. Typed enum per [`Risk`] (task #193).
+    pub risk: Option<Risk>,
     /// Cost/budget envelopes. Multi-valued. Typed in task `#194`.
     pub resource: Option<Vec<String>>,
     /// A11y posture. Typed in task `#195`.
     pub accessibility: Option<String>,
-    /// PSA posture. Multi-valued. Typed in task `#192`.
-    pub sovereignty: Option<Vec<String>>,
+    /// PSA posture. Multi-valued. Typed enum per [`Sovereignty`]
+    /// (task #192).
+    pub sovereignty: Option<Vec<Sovereignty>>,
     /// Time-binding behaviors. Multi-valued. Typed in task `#195`.
     pub temporal: Option<Vec<String>>,
 }
@@ -259,6 +241,52 @@ mod tests {
         assert_eq!(p.object.as_deref(), Some("Loom.Primitive.Hero"));
         assert_eq!(p.objective, Some(Objective::DisplayContent));
         assert_eq!(p.lifecycle.as_deref(), Some("stable"));
+        // Typed orientations from this iteration.
+        assert_eq!(p.compliance, Some(vec![Compliance::Wcag21Aa]));
+        assert_eq!(p.risk, Some(Risk::Tier4Property));
+        assert_eq!(p.sovereignty, Some(vec![Sovereignty::Private]));
+    }
+
+    #[test]
+    fn projection_with_multiple_typed_orientations() {
+        // A payment form: pci-dss-4 + cleartext-forbidden +
+        // tier-6-mutation minimum.
+        let p = OrientationProjection {
+            objective: Some(Objective::EnablePayment),
+            compliance: Some(vec![Compliance::PciDss4, Compliance::Gdpr]),
+            risk: Some(Risk::Tier6Mutation),
+            sovereignty: Some(vec![Sovereignty::CleartextForbidden, Sovereignty::Private]),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&p).expect("serialize");
+        let back: OrientationProjection = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.objective, Some(Objective::EnablePayment));
+        assert_eq!(
+            back.compliance,
+            Some(vec![Compliance::PciDss4, Compliance::Gdpr])
+        );
+        assert_eq!(back.risk, Some(Risk::Tier6Mutation));
+    }
+
+    #[test]
+    fn projection_rejects_unknown_compliance_value() {
+        let json = r#"{"compliance":["made-up-regime"]}"#;
+        let r: Result<OrientationProjection, _> = serde_json::from_str(json);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn projection_rejects_unknown_sovereignty_value() {
+        let json = r#"{"sovereignty":["super-anonymous"]}"#;
+        let r: Result<OrientationProjection, _> = serde_json::from_str(json);
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn projection_rejects_unknown_risk_tier() {
+        let json = r#"{"risk":"tier-11-superhuman"}"#;
+        let r: Result<OrientationProjection, _> = serde_json::from_str(json);
+        assert!(r.is_err());
     }
 
     #[test]
