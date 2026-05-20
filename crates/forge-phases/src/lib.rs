@@ -23,6 +23,7 @@ pub mod annotation_review;
 pub mod density_audit;
 pub mod disclosure_audit;
 pub mod composition_lineage;
+pub mod content_substance;
 pub mod differentiation_budget;
 pub mod editorial_purity_gate;
 pub mod forbidden_patterns;

@@ -43,6 +43,7 @@ use forge_phases::dns_hygiene_lint::DnsHygieneLintPhase;
 use forge_phases::dynamic_runtime::DynamicRuntimePhase;
 use forge_phases::editorial_purity_gate::EditorialPurityGatePhase;
 use forge_phases::composition_lineage::CompositionLineagePhase;
+use forge_phases::content_substance::ContentSubstancePhase;
 use forge_phases::differentiation_budget::DifferentiationBudgetPhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::forbidden_patterns::ForbiddenPatternsPhase;
@@ -1489,6 +1490,7 @@ fn run() -> Result<ExitCode> {
         // variation + identity conformance guarantees per
         // docs/VARIATION_GUARANTEES.md.
         Box::new(EditorialPurityGatePhase::default()),
+        Box::new(ContentSubstancePhase::default()),
         Box::new(SiteIdentityConformancePhase::default()),
         Box::new(IdentityCoherencePhase::default()),
         Box::new(ThemeVariationRequiredPhase::default()),

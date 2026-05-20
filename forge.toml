@@ -75,6 +75,10 @@ write_canonical = true
 [editorial_purity]
 enforce = true
 
+[content_substance]
+enforce = true
+strict = false  # warn-only initially; promote to strict after cms substance pass
+
 [pattern_entropy]
 enforce = true
 min_entropy = 0.55
