@@ -722,6 +722,141 @@ pub fn verify_manifest(m: &TraitManifest) -> Vec<MissingTrait> {
     missing
 }
 
+/// A trait implication rule per `TRAIT_DAG.md`: declaring `from`
+/// implies declaring `to` (the substrate expands the implication
+/// at audit time). Used by the Forge `trait_implications` phase
+/// to refuse manifests that declare `from` without `to`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Implication {
+    /// The trait that triggers the implication when declared.
+    pub from: Trait,
+    /// The trait the substrate considers implicitly declared.
+    pub to: Trait,
+}
+
+/// The canonical implication rules per `TRAIT_DAG.md`:
+/// "Implication arrows mean: declaring Local automatically declares
+/// Private. The manifest expands implications at parse time."
+///
+/// Closes part of `#169 [trait-v4]`. Used by the
+/// `trait_implications` phase to refuse manifests that violate the
+/// implication structure.
+#[must_use]
+pub fn canonical_implications() -> &'static [Implication] {
+    &[
+        // Sovereignty cluster.
+        Implication { from: Trait::Local, to: Trait::Private },
+        Implication { from: Trait::EphemeralByDefault, to: Trait::Private },
+        // Theming cluster.
+        Implication { from: Trait::DarkModeFirst, to: Trait::ThemeAware },
+        Implication { from: Trait::AmoledOptimized, to: Trait::DarkModeFirst },
+        // (AmoledOptimized → DarkModeFirst → ThemeAware transitively.)
+        // Reliability cluster.
+        Implication { from: Trait::FuzzTested, to: Trait::PropertyTested },
+        // Discipline cluster.
+        Implication { from: Trait::NoSiteSpecific, to: Trait::SubstrateNative },
+        // Interaction cluster — the cascade enforced by entity-class
+        // default sets is also expressible as implications for
+        // primitives that opt into Interactive without going through
+        // the full LoomInteractivePrimitive entity_class.
+        Implication { from: Trait::Interactive, to: Trait::Focusable },
+        Implication { from: Trait::Focusable, to: Trait::KeyboardOperable },
+        Implication { from: Trait::KeyboardOperable, to: Trait::ScreenReaderAccessible },
+    ]
+}
+
+/// Mutually-exclusive trait pairs — declaring both is a doctrine
+/// violation. Used by `verify_implications` to refuse contradictory
+/// manifests.
+#[must_use]
+pub fn mutual_exclusions() -> &'static [(Trait, Trait)] {
+    &[
+        // Visibility & Lifecycle: a primitive can be ClientOnly OR
+        // ServerOnly, never both.
+        (Trait::ClientOnly, Trait::ServerOnly),
+    ]
+}
+
+/// An implication-rule violation surfaced by `verify_implications`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ImplicationViolation {
+    /// The entity declares `trigger` but is missing `implied`.
+    /// The substrate refuses to expand the implication
+    /// automatically — declaration is positive per
+    /// `[[deterministic-first-lfi-optional]]`.
+    MissingImpliedTrait {
+        /// Entity slug (e.g. "Loom.Primitive.Hero").
+        entity_id: String,
+        /// The trait that triggered the implication.
+        trigger: Trait,
+        /// The trait that should have been declared but wasn't.
+        implied: Trait,
+    },
+    /// The entity declares both members of a mutually-exclusive
+    /// pair. One must be removed.
+    MutuallyExclusiveBoth {
+        /// Entity slug.
+        entity_id: String,
+        /// First trait in the conflicting pair.
+        first: Trait,
+        /// Second trait in the conflicting pair.
+        second: Trait,
+    },
+}
+
+impl ImplicationViolation {
+    /// Entity_id for batched audit grouping.
+    #[must_use]
+    pub fn entity_id(&self) -> &str {
+        match self {
+            Self::MissingImpliedTrait { entity_id, .. } => entity_id,
+            Self::MutuallyExclusiveBoth { entity_id, .. } => entity_id,
+        }
+    }
+}
+
+/// Verify a single projection against the canonical implication
+/// rules + mutual-exclusion pairs. Returns the violation list;
+/// empty Vec = clean.
+///
+/// Closes part of `#169 [trait-v4]`.
+#[must_use]
+pub fn verify_implications(p: &TraitProjection) -> Vec<ImplicationViolation> {
+    let mut violations = Vec::new();
+    // Forward implication check.
+    for imp in canonical_implications() {
+        if p.traits.contains(imp.from) && !p.traits.contains(imp.to) {
+            violations.push(ImplicationViolation::MissingImpliedTrait {
+                entity_id: p.entity_id.clone(),
+                trigger: imp.from,
+                implied: imp.to,
+            });
+        }
+    }
+    // Mutual-exclusion check.
+    for (a, b) in mutual_exclusions() {
+        if p.traits.contains(*a) && p.traits.contains(*b) {
+            violations.push(ImplicationViolation::MutuallyExclusiveBoth {
+                entity_id: p.entity_id.clone(),
+                first: *a,
+                second: *b,
+            });
+        }
+    }
+    violations
+}
+
+/// Audit the whole manifest against implication rules + mutual
+/// exclusions. Returns the flat list of violations.
+#[must_use]
+pub fn verify_manifest_implications(m: &TraitManifest) -> Vec<ImplicationViolation> {
+    let mut out = Vec::new();
+    for p in &m.projections {
+        out.extend(verify_implications(p));
+    }
+    out
+}
+
 /// A set of traits an entity declares. Wraps `Vec<Trait>` with
 /// helpers for subset / superset queries used by Forge audit
 /// phases ("does this primitive satisfy the Loom Visible defaults?").
@@ -1172,5 +1307,191 @@ mod tests {
         let json = r#"{"schema_version":"1.0.0","made_up":"x"}"#;
         let r: Result<TraitManifest, _> = serde_json::from_str(json);
         assert!(r.is_err());
+    }
+
+    // -----------------------------------------------------------------
+    // Implication rules + mutual exclusions — task #169
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn canonical_implications_no_self_arrows() {
+        // Implications should be A → B with A ≠ B.
+        for imp in canonical_implications() {
+            assert_ne!(imp.from, imp.to, "self-implication: {imp:?}");
+        }
+    }
+
+    #[test]
+    fn canonical_implications_unique() {
+        let mut seen = std::collections::HashSet::new();
+        for imp in canonical_implications() {
+            assert!(seen.insert((imp.from, imp.to)), "duplicate implication: {imp:?}");
+        }
+    }
+
+    #[test]
+    fn mutual_exclusions_no_self_pairs() {
+        for (a, b) in mutual_exclusions() {
+            assert_ne!(a, b);
+        }
+    }
+
+    #[test]
+    fn verify_implications_clean_when_no_triggers_declared() {
+        let p = TraitProjection {
+            entity_id: "Loom.Primitive.Hero".into(),
+            entity_class: EntityClass::LoomVisiblePrimitive,
+            traits: TraitSet::from_slice(&[
+                Trait::MobileFriendly,
+                Trait::RtlAware,
+                Trait::ReducedMotionAware,
+                Trait::ThemeAware,
+                Trait::NoSiteSpecific,
+                Trait::SubstrateNative,  // satisfies the NoSiteSpecific implication
+                Trait::Manifested,
+                Trait::Versioned,
+                Trait::DoctrineCited,
+            ]),
+        };
+        let v = verify_implications(&p);
+        assert!(v.is_empty(), "expected clean, got: {v:?}");
+    }
+
+    #[test]
+    fn verify_implications_catches_local_without_private() {
+        let p = TraitProjection {
+            entity_id: "Loom.Primitive.LocalCache".into(),
+            entity_class: EntityClass::LoomVisiblePrimitive,
+            traits: TraitSet::from_slice(&[Trait::Local]),
+        };
+        let v = verify_implications(&p);
+        assert!(v.iter().any(|x| matches!(
+            x,
+            ImplicationViolation::MissingImpliedTrait {
+                trigger: Trait::Local,
+                implied: Trait::Private,
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn verify_implications_catches_amoled_without_dark_mode_first() {
+        let p = TraitProjection {
+            entity_id: "Loom.Primitive.PicoStyled".into(),
+            entity_class: EntityClass::LoomVisiblePrimitive,
+            traits: TraitSet::from_slice(&[Trait::AmoledOptimized]),
+        };
+        let v = verify_implications(&p);
+        assert!(v.iter().any(|x| matches!(
+            x,
+            ImplicationViolation::MissingImpliedTrait {
+                trigger: Trait::AmoledOptimized,
+                implied: Trait::DarkModeFirst,
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn verify_implications_catches_fuzz_without_property() {
+        let p = TraitProjection {
+            entity_id: "Forge.Phase.Test".into(),
+            entity_class: EntityClass::ForgePhase,
+            traits: TraitSet::from_slice(&[Trait::FuzzTested]),
+        };
+        let v = verify_implications(&p);
+        assert!(v.iter().any(|x| matches!(
+            x,
+            ImplicationViolation::MissingImpliedTrait {
+                trigger: Trait::FuzzTested,
+                implied: Trait::PropertyTested,
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn verify_implications_catches_interactive_cascade() {
+        // Interactive → Focusable → KeyboardOperable → SR-accessible
+        // chain; if Interactive is declared without Focusable, we
+        // flag the first missing link.
+        let p = TraitProjection {
+            entity_id: "Loom.Primitive.SloppyForm".into(),
+            entity_class: EntityClass::LoomInteractivePrimitive,
+            traits: TraitSet::from_slice(&[Trait::Interactive]),
+        };
+        let v = verify_implications(&p);
+        assert!(v.iter().any(|x| matches!(
+            x,
+            ImplicationViolation::MissingImpliedTrait {
+                trigger: Trait::Interactive,
+                implied: Trait::Focusable,
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn verify_implications_catches_mutually_exclusive_client_and_server() {
+        let p = TraitProjection {
+            entity_id: "Loom.Primitive.Contradictory".into(),
+            entity_class: EntityClass::LoomVisiblePrimitive,
+            traits: TraitSet::from_slice(&[Trait::ClientOnly, Trait::ServerOnly]),
+        };
+        let v = verify_implications(&p);
+        assert!(v.iter().any(|x| matches!(
+            x,
+            ImplicationViolation::MutuallyExclusiveBoth {
+                first: Trait::ClientOnly,
+                second: Trait::ServerOnly,
+                ..
+            }
+        )));
+    }
+
+    #[test]
+    fn verify_manifest_implications_aggregates() {
+        let m = TraitManifest {
+            schema_version: "1.0.0".into(),
+            projections: vec![
+                TraitProjection {
+                    entity_id: "Clean".into(),
+                    entity_class: EntityClass::CmsSection,
+                    traits: TraitSet::from_slice(&[
+                        Trait::NoSiteSpecific,
+                        Trait::SubstrateNative,
+                        Trait::Manifested,
+                        Trait::Versioned,
+                    ]),
+                },
+                TraitProjection {
+                    entity_id: "Sloppy".into(),
+                    entity_class: EntityClass::CmsSection,
+                    // NoSiteSpecific but missing SubstrateNative.
+                    traits: TraitSet::from_slice(&[
+                        Trait::NoSiteSpecific,
+                        Trait::Manifested,
+                        Trait::Versioned,
+                    ]),
+                },
+            ],
+        };
+        let v = verify_manifest_implications(&m);
+        assert_eq!(v.len(), 1);
+        assert_eq!(v[0].entity_id(), "Sloppy");
+    }
+
+    #[test]
+    fn implication_violation_serializes() {
+        let v = ImplicationViolation::MissingImpliedTrait {
+            entity_id: "X".into(),
+            trigger: Trait::Local,
+            implied: Trait::Private,
+        };
+        let json = serde_json::to_string(&v).expect("serialize");
+        assert!(json.contains("MissingImpliedTrait"));
+        assert!(json.contains("local"));
+        assert!(json.contains("private"));
     }
 }
