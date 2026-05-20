@@ -63,6 +63,7 @@ use forge_phases::noscript_strict::NoscriptStrictPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::pattern_entropy::PatternEntropyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
+use forge_phases::primitive_exhaustion::PrimitiveExhaustionPhase;
 use forge_phases::reseeding_cadence::ReseedingCadencePhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::print_stylesheet::PrintStylesheetPhase;
@@ -1400,6 +1401,7 @@ fn run() -> Result<ExitCode> {
         Box::new(CompositionLineagePhase::default()),
         Box::new(ForbiddenPatternsPhase::default()),
         Box::new(PatternEntropyPhase::default()),
+        Box::new(PrimitiveExhaustionPhase::default()),
         Box::new(DifferentiationBudgetPhase::default()),
         Box::new(ReseedingCadencePhase::default()),
         Box::new(UniquenessGatePhase::default()),

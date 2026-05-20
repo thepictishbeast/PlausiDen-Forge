@@ -29,6 +29,7 @@ pub mod forbidden_patterns;
 pub mod identity_coherence;
 pub mod mood_lock;
 pub mod pattern_entropy;
+pub mod primitive_exhaustion;
 pub mod reseeding_cadence;
 pub mod site_identity_conformance;
 pub mod substrate_self_audit;
