@@ -4,7 +4,7 @@
   "description": "Deborah Armstrong on insurance, investing, social class, and the strategies the wealthy use to keep more of what they earn. Free articles + a 5-week Investing Masterclass.",
   "brand": "Prosperity Club",
   "chrome": "page_shell",
-  "theme": "light",
+  "theme": "warm",
   "nav_actions": [
     {"label": "Join Free", "href": "/membership/", "data_backend": "cta-join-free"}
   ],
