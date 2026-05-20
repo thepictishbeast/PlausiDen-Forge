@@ -644,6 +644,36 @@ enum ConfigAction {
 
 #[derive(Subcommand, Debug)]
 enum DoctrineAction {
+    /// Surface the doctrine rules applicable to a specific path
+    /// (crate, file, directory). Walks every loaded rule and
+    /// matches its `applies_to` entries against the path.
+    ///
+    /// Matching is substring-based on tokens like crate names
+    /// (`forge-cli`, `loom-cms-render`, `forge-phases`) and the
+    /// reserved tokens "all crates" / "every Loom primitive" /
+    /// "every HTTP service endpoint" etc. The match is generous on
+    /// purpose: callers should see candidates over guarantees.
+    ///
+    /// Exit codes:
+    ///   0 — at least one matching rule
+    ///   1 — database loaded, no rules apply
+    ///   2 — fatal (doctrine dir / parse error)
+    For {
+        /// Path to assess applicability for (file or directory).
+        /// Crate name detection: the parent directory chain is
+        /// scanned for known *-core / loom-* / forge-* crate names.
+        path: PathBuf,
+        /// Path to AVP-Doctrine root.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// Print only rule ids + names (terse), suitable for
+        /// embedding in per-directory AGENTS.md sections.
+        #[arg(long, default_value_t = false)]
+        terse: bool,
+        /// JSON output.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// Scan the workspace for `// DOCTRINE-EXCEPTION: rule-XXX —
     /// <reason>, see ADR-YYY` inline tags. Each exception names
     /// the rule it bypasses + the justification + an ADR or issue
@@ -5295,6 +5325,18 @@ fn run_assets_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
 
 fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result<ExitCode> {
     match action {
+        DoctrineAction::For {
+            path,
+            doctrine_dir,
+            terse,
+            json,
+        } => run_doctrine_for(
+            path,
+            doctrine_dir.as_deref(),
+            *terse,
+            *json,
+            forge_root,
+        ),
         DoctrineAction::Exceptions {
             doctrine_dir,
             source_dir,
@@ -6009,6 +6051,144 @@ fn normalize_exception_reference(s: &str) -> Option<String> {
     None
 }
 
+// ----------------------------------------------------------------
+// `forge doctrine for <path>` — task #181.
+//
+// Surfaces every rule whose `applies_to` mentions a token relevant
+// to <path>. Used to populate per-directory AGENTS.md sections
+// without restating rules (per docs-007 same-commit discipline).
+// ----------------------------------------------------------------
+
+fn run_doctrine_for(
+    path: &std::path::Path,
+    doctrine_dir: Option<&std::path::Path>,
+    terse: bool,
+    json: bool,
+    forge_root: &std::path::Path,
+) -> Result<ExitCode> {
+    let dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+    let db = match doctrine_core::load_from_dir(&dir) {
+        Ok(d) => d,
+        Err(e) => {
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status":"fatal",
+                        "stage":"load_database",
+                        "error":e.to_string(),
+                    })
+                );
+            } else {
+                eprintln!("forge doctrine for: failed to load doctrine — {e}");
+            }
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    let needles = path_context_needles(path);
+    let mut matches: Vec<&doctrine_core::Rule> = Vec::new();
+    for rule in db.all() {
+        if applies_to_matches(&rule.applies_to, &needles) {
+            matches.push(rule);
+        }
+    }
+    // Stable sort by id for deterministic output.
+    matches.sort_by(|a, b| a.id.cmp(&b.id));
+
+    if json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": if matches.is_empty() { "empty" } else { "ok" },
+                "path": path.display().to_string(),
+                "needles": needles,
+                "matched": matches.len(),
+                "rules": matches.iter().map(|r| serde_json::json!({
+                    "id": r.id,
+                    "name": r.name,
+                    "domain": r.domain,
+                    "severity": r.severity,
+                })).collect::<Vec<_>>(),
+            })
+        );
+    } else if terse {
+        for r in &matches {
+            println!("- `{}` — {}", r.id, r.name);
+        }
+        if matches.is_empty() {
+            println!("(no rules match)");
+        }
+    } else {
+        println!(
+            "forge doctrine for: {} rules apply to {}",
+            matches.len(),
+            path.display()
+        );
+        println!("  context tokens: {}", needles.join(", "));
+        for r in &matches {
+            println!(
+                "  {} — {}  [{}/{}]",
+                r.id,
+                r.name,
+                severity_label(r.severity),
+                lifecycle_label(r.lifecycle)
+            );
+        }
+    }
+
+    if matches.is_empty() {
+        Ok(ExitCode::from(1))
+    } else {
+        Ok(ExitCode::SUCCESS)
+    }
+}
+
+/// Derive substrate context tokens from a filesystem path.
+///
+/// Returns a deduplicated lowercase set used as needles against rule
+/// `applies_to` entries. Tokens include:
+///   * every directory component (so `crates/forge-phases/src/foo.rs`
+///     contributes `crates`, `forge-phases`, `src`, etc.)
+///   * the leaf filename
+///   * the special class tokens "all crates" / "every crate" when
+///     the path is the workspace root
+fn path_context_needles(path: &std::path::Path) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for comp in path.components() {
+        if let std::path::Component::Normal(name) = comp {
+            if let Some(s) = name.to_str() {
+                out.push(s.to_lowercase());
+            }
+        }
+    }
+    // Always include the "all crates" universal tokens so workspace-
+    // wide rules show up regardless of input path.
+    out.push("all crates".to_string());
+    out.push("every crate".to_string());
+    out.sort();
+    out.dedup();
+    out
+}
+
+/// Lowercase substring match: a rule's `applies_to` entry hits a needle
+/// if any needle is found within that entry's lowercase form.
+fn applies_to_matches(applies_to: &[String], needles: &[String]) -> bool {
+    for entry in applies_to {
+        let lower = entry.to_lowercase();
+        for needle in needles {
+            // Skip 1-character needles to avoid spurious matches.
+            if needle.len() < 2 {
+                continue;
+            }
+            if lower.contains(needle) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 /// Strict rule-id pattern: kebab-case word(s) + `-NNN` numeric
 /// suffix. Examples: `prim-001`, `a11y-003`, `sec-010`, `build-008`.
 /// Rejects: doc placeholders like `rule-X`, escape-quoted forms
@@ -6118,6 +6298,35 @@ mod doctrine_check_tests {
     fn rejects_bad_rule_id_shape() {
         let line = format!("// {}: rule-X — nope", EX_MARKER);
         assert!(parse_doctrine_exception(&line).is_none());
+    }
+
+    #[test]
+    fn path_context_needles_extract_crate_names() {
+        let needles = path_context_needles(std::path::Path::new(
+            "/home/u/proj/Forge/crates/forge-phases/src/csp.rs",
+        ));
+        assert!(needles.iter().any(|n| n == "forge-phases"));
+        assert!(needles.iter().any(|n| n == "src"));
+        assert!(needles.iter().any(|n| n == "csp.rs"));
+        // Always-on universal tokens.
+        assert!(needles.iter().any(|n| n == "all crates"));
+    }
+
+    #[test]
+    fn applies_to_matches_substring() {
+        let applies_to = vec!["forge-phases (every module)".to_string()];
+        let needles = vec!["forge-phases".to_string()];
+        assert!(applies_to_matches(&applies_to, &needles));
+        let no_match = vec!["loom-cms-render".to_string()];
+        assert!(!applies_to_matches(&applies_to, &no_match));
+    }
+
+    #[test]
+    fn applies_to_matches_ignores_single_char_needles() {
+        let applies_to = vec!["x".to_string()];
+        let needles = vec!["x".to_string(), "all crates".to_string()];
+        // The single-char needle is ignored; "all crates" doesn't match "x".
+        assert!(!applies_to_matches(&applies_to, &needles));
     }
 
     #[test]
