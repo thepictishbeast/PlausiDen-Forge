@@ -368,12 +368,43 @@ fn escape_string_literal(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
+    use std::sync::Mutex;
 
     use super::*;
     use manifest_core::{
         Capability, CapabilityId, DefaultSeverity, DocRef, HandlerRef, Ownership, PhaseDescriptor,
         PlatformManifest, TestRef, UiRef,
     };
+
+    // Process-global OUT_DIR env mutation cannot be safely parallelized.
+    // cargo test runs tests on multiple threads; one test's set_var
+    // races with another's, leading to file-not-found when the writer
+    // resolves a stale value. Serialize every test that mutates
+    // OUT_DIR through this mutex with an RAII guard.
+    static OUT_DIR_LOCK: Mutex<()> = Mutex::new(());
+
+    /// RAII guard for OUT_DIR env mutation in tests.
+    struct OutDirGuard {
+        _lock: std::sync::MutexGuard<'static, ()>,
+        prior: Option<std::ffi::OsString>,
+    }
+
+    impl OutDirGuard {
+        fn lock() -> Self {
+            let lock = OUT_DIR_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+            let prior = std::env::var_os("OUT_DIR");
+            Self { _lock: lock, prior }
+        }
+    }
+
+    impl Drop for OutDirGuard {
+        fn drop(&mut self) {
+            match &self.prior {
+                Some(v) => std::env::set_var("OUT_DIR", v),
+                None => std::env::remove_var("OUT_DIR"),
+            }
+        }
+    }
 
     fn sample_manifest() -> PlatformManifest {
         PlatformManifest {
@@ -477,6 +508,7 @@ mod tests {
 
     #[test]
     fn generate_from_file_writes_to_out_dir() {
+        let _g = OutDirGuard::lock();
         let tmp = tempfile::tempdir().unwrap();
         let manifest_path = tmp.path().join("manifest.toml");
         std::fs::write(
@@ -498,6 +530,7 @@ schema-version = "1"
 
     #[test]
     fn generate_from_file_reports_missing_file() {
+        let _g = OutDirGuard::lock();
         let out_dir = tempfile::tempdir().unwrap();
         std::env::set_var("OUT_DIR", out_dir.path());
         let err = generate_from_file("/nonexistent/manifest.toml").unwrap_err();

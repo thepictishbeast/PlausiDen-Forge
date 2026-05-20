@@ -73,11 +73,11 @@ impl Phase for RenderPhase {
 
         // Issue #8 fix (2026-05-20): read + parse forge.toml ONCE
         // per render call, then pull every field out of the cached
-        // value. The previous code called `forge_toml_render_write_canonical`
-        // once and `forge_toml_theme` PER PAGE — `1 + N` disk reads
-        // and `1 + N` TOML parses for N pages, instead of one of
-        // each. The helper functions are retained for unit-test
-        // ergonomics but the live render path now skips them.
+        // value. The previous code did `1 + N` disk reads and `1 + N`
+        // TOML parses for N pages via per-field wrapper helpers,
+        // instead of one of each. We now share the parsed value
+        // across `extract_render_write_canonical`, `extract_theme`,
+        // and any further extractors that land.
         let forge_toml = parse_forge_toml(&ctx.root);
 
         // T70c (2026-05-14): per-site opt-in to write rendered HTML
@@ -377,17 +377,6 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
 /// other than the literal boolean `true`).
 ///
 /// Defence in depth: a typo'd or deliberately-malformed
-/// forge.toml falls back to the safe default (write to
-/// `_render/`, leave `static/` alone).
-/// Retained for unit-test ergonomics. The live render path uses
-/// [`parse_forge_toml`] + [`extract_render_write_canonical`] to
-/// share one parse across all field extractions. `#[cfg(test)]`-
-/// gated so release builds don't carry the wrapper.
-#[cfg(test)]
-fn forge_toml_render_write_canonical(root: &Path) -> bool {
-    extract_render_write_canonical(parse_forge_toml(root).as_ref())
-}
-
 /// Atomic write: tmp file + rename. POSIX guarantees rename is
 /// atomic on the same filesystem.
 fn atomic_write(dest: &Path, bytes: &[u8]) -> std::io::Result<()> {
