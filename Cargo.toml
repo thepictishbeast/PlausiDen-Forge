@@ -117,6 +117,11 @@ members = [
     # exposes query API. Used by `forge doctrine query`, the
     # doctrine-check PR gate, and the Forge findings-cite-rules wiring.
     "crates/doctrine-core",
+    # orient-core (task #190): typed projection of the 12 PlausiDen
+    # N-orientations per AVP-Doctrine N_ORIENTATION_SUBSTRATE.md.
+    # Objective fully typed; remaining 10 orientations (compliance,
+    # sovereignty, risk, resource, etc.) land per #191-#195.
+    "crates/orient-core",
     # T64: manifest-attest — consolidated signing layer for every
     # PlausiDen artifact. Ed25519 today; ML-DSA hybrid lands in #65.
     "crates/manifest-attest",

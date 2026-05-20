@@ -1,0 +1,17 @@
+[package]
+name = "orient-core"
+version = "0.1.0"
+publish = false  # workspace-internal; never published to crates.io
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "orient-core — typed projection of the 12 PlausiDen N-orientations (object / objective / outcome / audience / domain / lifecycle / compliance / risk / resource / accessibility / sovereignty / temporal). Implements the design from PlausiDen-AVP-Doctrine/N_ORIENTATION_SUBSTRATE.md. Closed enums, serde-deserializable, queryable via manifest projection."
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde_json = { workspace = true }
