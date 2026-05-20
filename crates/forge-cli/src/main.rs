@@ -1179,10 +1179,12 @@ fn run_phases_through_pipeline(
         })
         .map_err(|e| anyhow::anyhow!("pipeline audit: {e}"))?;
 
+    let audited = pipeline
+        .audited()
+        .map_err(|e| anyhow::anyhow!("pipeline audited: {e}"))?;
     println!(
         "\n== pipeline summary ==\n  audit phases run:  {}\n  clean phases:      {}",
-        pipeline.audited().phases_run,
-        pipeline.audited().clean_phases,
+        audited.phases_run, audited.clean_phases,
     );
     let (report, _) = pipeline
         .into_report(|_, _| Ok(()))

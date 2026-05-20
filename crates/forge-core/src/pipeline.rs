@@ -302,11 +302,19 @@ impl Pipeline<Initial> {
 
 impl Pipeline<Discovered> {
     /// Borrow the discovered artifacts.
-    pub fn discovered(&self) -> &DiscoveredArtifacts {
-        // SAFETY: invariant of the Discovered marker.
-        self.discovered
-            .as_ref()
-            .expect("Discovered marker invariant: discovered.is_some()")
+    ///
+    /// Issue #8 fix (2026-05-20): returns `Result<&T, BuildError>`
+    /// rather than `&T` with an internal `expect()`. The Option
+    /// is statically guaranteed `Some` by the `Discovered` marker,
+    /// but a `Result` lets callers compose without panic risk in
+    /// AVP-2-strict contexts. The error variant should be
+    /// unreachable at runtime; if it ever fires, the pipeline
+    /// state-machine has been corrupted upstream.
+    pub fn discovered(&self) -> Result<&DiscoveredArtifacts, BuildError> {
+        self.discovered.as_ref().ok_or_else(|| BuildError::Other {
+            phase: "pipeline".into(),
+            message: "Discovered marker invariant violated: discovered.is_none()".into(),
+        })
     }
 
     /// Run the parse stage.
@@ -340,16 +348,21 @@ impl Pipeline<Discovered> {
 // ----------------------------------------------------------------
 
 impl Pipeline<Parsed> {
-    /// Borrow the parsed artifacts.
-    pub fn parsed(&self) -> &ParsedArtifacts {
-        self.parsed
-            .as_ref()
-            .expect("Parsed marker invariant: parsed.is_some()")
+    /// Borrow the parsed artifacts. See issue #8 fix note on
+    /// `Pipeline<Discovered>::discovered`.
+    pub fn parsed(&self) -> Result<&ParsedArtifacts, BuildError> {
+        self.parsed.as_ref().ok_or_else(|| BuildError::Other {
+            phase: "pipeline".into(),
+            message: "Parsed marker invariant violated: parsed.is_none()".into(),
+        })
     }
 
     /// Borrow the discovered artifacts (still available).
-    pub fn discovered(&self) -> &DiscoveredArtifacts {
-        self.discovered.as_ref().expect("Discovered carry-forward")
+    pub fn discovered(&self) -> Result<&DiscoveredArtifacts, BuildError> {
+        self.discovered.as_ref().ok_or_else(|| BuildError::Other {
+            phase: "pipeline".into(),
+            message: "Discovered carry-forward violated at Parsed stage".into(),
+        })
     }
 
     /// Run the render stage.
@@ -388,21 +401,29 @@ impl Pipeline<Parsed> {
 // ----------------------------------------------------------------
 
 impl Pipeline<Rendered> {
-    /// Borrow the rendered artifacts.
-    pub fn rendered(&self) -> &RenderedArtifacts {
-        self.rendered
-            .as_ref()
-            .expect("Rendered marker invariant: rendered.is_some()")
+    /// Borrow the rendered artifacts. See issue #8 fix note on
+    /// `Pipeline<Discovered>::discovered`.
+    pub fn rendered(&self) -> Result<&RenderedArtifacts, BuildError> {
+        self.rendered.as_ref().ok_or_else(|| BuildError::Other {
+            phase: "pipeline".into(),
+            message: "Rendered marker invariant violated: rendered.is_none()".into(),
+        })
     }
 
     /// Borrow the parsed artifacts (still available).
-    pub fn parsed(&self) -> &ParsedArtifacts {
-        self.parsed.as_ref().expect("Parsed carry-forward")
+    pub fn parsed(&self) -> Result<&ParsedArtifacts, BuildError> {
+        self.parsed.as_ref().ok_or_else(|| BuildError::Other {
+            phase: "pipeline".into(),
+            message: "Parsed carry-forward violated at Rendered stage".into(),
+        })
     }
 
     /// Borrow the discovered artifacts (still available).
-    pub fn discovered(&self) -> &DiscoveredArtifacts {
-        self.discovered.as_ref().expect("Discovered carry-forward")
+    pub fn discovered(&self) -> Result<&DiscoveredArtifacts, BuildError> {
+        self.discovered.as_ref().ok_or_else(|| BuildError::Other {
+            phase: "pipeline".into(),
+            message: "Discovered carry-forward violated at Rendered stage".into(),
+        })
     }
 
     /// Run the audit stage. Audit phases consume the rendered
@@ -442,11 +463,13 @@ impl Pipeline<Rendered> {
 // ----------------------------------------------------------------
 
 impl Pipeline<Audited> {
-    /// Borrow the audited artifacts.
-    pub fn audited(&self) -> &AuditedArtifacts {
-        self.audited
-            .as_ref()
-            .expect("Audited marker invariant: audited.is_some()")
+    /// Borrow the audited artifacts. See issue #8 fix note on
+    /// `Pipeline<Discovered>::discovered`.
+    pub fn audited(&self) -> Result<&AuditedArtifacts, BuildError> {
+        self.audited.as_ref().ok_or_else(|| BuildError::Other {
+            phase: "pipeline".into(),
+            message: "Audited marker invariant violated: audited.is_none()".into(),
+        })
     }
 
     /// View the accumulated findings without consuming the
@@ -699,7 +722,7 @@ mod tests {
                 }))
             })
             .unwrap();
-        assert_eq!(pipeline.audited().clean_phases, 1);
+        assert_eq!(pipeline.audited().expect("audited present").clean_phases, 1);
     }
 
     #[test]
@@ -798,7 +821,7 @@ mod tests {
                 Ok(StageOutput::clean(RenderedArtifacts::default()))
             })
             .unwrap();
-        assert_eq!(p.parsed().parse_payload, payload);
+        assert_eq!(p.parsed().expect("parsed present").parse_payload, payload);
     }
 
     #[test]
@@ -827,8 +850,8 @@ mod tests {
             .unwrap();
         // Rendered stage still has access to discovered + parsed
         // via the Pipeline accessors.
-        assert_eq!(p.discovered().cms_pages.len(), 1);
-        assert_eq!(p.parsed().page_count, 1);
+        assert_eq!(p.discovered().expect("discovered present").cms_pages.len(), 1);
+        assert_eq!(p.parsed().expect("parsed present").page_count, 1);
     }
 
     #[test]
