@@ -380,6 +380,50 @@ const JARGON_PHRASES: &[&str] = &[
     "the most advanced",
     "unparalleled",
     "best-of-class",
+    // 2026-05-20 expansion: AI-generated-copy tells. Phrases that
+    // appear disproportionately often in LLM-generated marketing
+    // copy. Human marketers use these too — but at much lower
+    // frequency. Hitting one signals "consider whether the operator
+    // read what they shipped"; hitting three or more is a strong
+    // signal the page was bulk-generated without curation.
+    "in today's fast-paced",
+    "in today's fast paced",
+    "in today's digital age",
+    "in the digital age",
+    "in the modern era",
+    "harness the power of",
+    "delve into",
+    "delves into",
+    "navigate the complexities",
+    "navigating the complexities",
+    "stand the test of time",
+    "stands the test of time",
+    "at the forefront of",
+    "the perfect blend of",
+    "blend seamlessly",
+    "a treasure trove of",
+    "a wealth of information",
+    "embark on a journey",
+    "embark on this journey",
+    "without further ado",
+    "let's dive in",
+    "let's dive into",
+    "dive deep into",
+    "in a nutshell",
+    "needless to say",
+    "the rise of",
+    "in conclusion,",
+    "in summary,",
+    // 2026-05-20 expansion: "transform" + "journey" + "ecosystem"
+    // bingo board — words that compose into marketing fog more
+    // often than they describe anything specific.
+    "transformative journey",
+    "your journey",
+    "comprehensive ecosystem",
+    "robust ecosystem",
+    "thriving ecosystem",
+    "vibrant ecosystem",
+    "engage with our",
 ];
 
 /// Eyebrow text that adds zero information — "Beta", "New", "Latest",
