@@ -74,6 +74,38 @@ pub struct InteractiveDump {
     pub transition_property_distribution: BTreeMap<String, u32>,
 }
 
+impl HoverTreatmentEntry {
+    /// Construct a HoverTreatmentEntry. Public constructor
+    /// because the struct is `#[non_exhaustive]`.
+    #[must_use]
+    pub fn new(treatment: HoverTreatment, occurrence_count: u32) -> Self {
+        Self {
+            treatment,
+            occurrence_count,
+        }
+    }
+}
+
+impl InteractiveResult {
+    /// Construct an InteractiveResult.
+    #[must_use]
+    pub fn new(
+        hover_treatments: Vec<HoverTreatmentEntry>,
+        form_field_kinds: std::collections::BTreeMap<String, u32>,
+        has_focus_visible_styles: bool,
+        transition_property_distribution: std::collections::BTreeMap<String, u32>,
+        has_hover_states: bool,
+    ) -> Self {
+        Self {
+            hover_treatments,
+            form_field_kinds,
+            has_focus_visible_styles,
+            transition_property_distribution,
+            has_hover_states,
+        }
+    }
+}
+
 /// Aggregate interactive result.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]

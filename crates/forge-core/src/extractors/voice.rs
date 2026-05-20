@@ -64,6 +64,38 @@ pub struct VoiceDump {
     pub pages: Vec<PageText>,
 }
 
+impl VoiceResult {
+    /// Construct a VoiceResult. Public constructor because the
+    /// struct is `#[non_exhaustive]`.
+    #[must_use]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        total_sentences: u64,
+        total_words: u64,
+        total_chars: u64,
+        avg_sentence_words: f64,
+        p50_sentence_words: u32,
+        p95_sentence_words: u32,
+        vocab_richness: f64,
+        jargon_hits: u64,
+        jargon_density_ppm: u64,
+        suggested_tier: impl Into<String>,
+    ) -> Self {
+        Self {
+            total_sentences,
+            total_words,
+            total_chars,
+            avg_sentence_words,
+            p50_sentence_words,
+            p95_sentence_words,
+            vocab_richness,
+            jargon_hits,
+            jargon_density_ppm,
+            suggested_tier: suggested_tier.into(),
+        }
+    }
+}
+
 /// Voice extraction result.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]

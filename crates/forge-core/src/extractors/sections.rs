@@ -106,6 +106,23 @@ pub struct CandidateSection {
     pub has_svg: bool,
 }
 
+impl PatternClassification {
+    /// Construct a PatternClassification. Public constructor
+    /// because the struct is `#[non_exhaustive]`.
+    #[must_use]
+    pub fn new(
+        guessed_kind: impl Into<String>,
+        confidence: u8,
+        feature_signature: impl Into<String>,
+    ) -> Self {
+        Self {
+            guessed_kind: guessed_kind.into(),
+            confidence,
+            feature_signature: feature_signature.into(),
+        }
+    }
+}
+
 /// One classification result per candidate.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]

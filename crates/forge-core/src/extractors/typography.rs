@@ -33,6 +33,36 @@ use serde::{Deserialize, Serialize};
 
 use crate::extractors::{ComputedStylesDump, ExtractorError, StylesSpec};
 
+impl FontFamilyEntry {
+    /// Construct a font-family entry. Public constructor because
+    /// the struct is `#[non_exhaustive]`.
+    #[must_use]
+    pub fn new(stack: impl Into<String>, occurrence_count: u32) -> Self {
+        Self {
+            stack: stack.into(),
+            occurrence_count,
+        }
+    }
+}
+
+impl TypographyResult {
+    /// Construct a TypographyResult.
+    #[must_use]
+    pub fn new(
+        font_families: Vec<FontFamilyEntry>,
+        size_distribution_px: std::collections::BTreeMap<u32, u32>,
+        weight_set: Vec<u32>,
+        leading_ratio_avg: f64,
+    ) -> Self {
+        Self {
+            font_families,
+            size_distribution_px,
+            weight_set,
+            leading_ratio_avg,
+        }
+    }
+}
+
 /// One font-family entry in the ranked output.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]

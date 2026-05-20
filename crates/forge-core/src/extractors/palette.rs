@@ -59,6 +59,27 @@ const COLOR_PROPERTIES: &[&str] = &[
     "text-decoration-color",
 ];
 
+impl PaletteEntry {
+    /// Construct a palette entry. Public constructor needed for
+    /// external crates because the struct is `#[non_exhaustive]`.
+    #[must_use]
+    pub fn new(
+        hex: impl Into<String>,
+        rgb: [u8; 3],
+        occurrence_count: u32,
+        contrast_class: ContrastClass,
+        source_properties: Vec<String>,
+    ) -> Self {
+        Self {
+            hex: hex.into(),
+            rgb,
+            occurrence_count,
+            contrast_class,
+            source_properties,
+        }
+    }
+}
+
 /// One palette entry.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
