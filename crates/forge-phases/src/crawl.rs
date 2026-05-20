@@ -166,6 +166,21 @@ impl CrawlFinding {
                          runtime audit skipped (set CRAWLER_DIR env to override)"
                     ),
                 )
+                .why(
+                    "the crawl phase runs the live audit against the freshly built static/ \
+                     tree; without a Crawler checkout there's no runtime evidence the page \
+                     actually paints + behaves correctly under a real browser",
+                )
+                .fix(
+                    "set CRAWLER_DIR=/path/to/PlausiDen-Crawler in the build environment, OR \
+                     check out PlausiDen-Crawler as a sibling of PlausiDen-Forge (the default \
+                     probe location)",
+                )
+                .avoid(
+                    "don't paper over the missing audit by raising warns to allowed — runtime \
+                     evidence is the only check that catches FOUC, contrast-at-paint, layout \
+                     thrash, web-vitals regressions",
+                )
             }
             Self::JourneyMissing { path } => Finding::warn(
                 PHASE,
@@ -174,12 +189,40 @@ impl CrawlFinding {
                     "journey file not at {} — runtime audit skipped",
                     path.display()
                 ),
+            )
+            .why(
+                "the crawler drives the static/ tree through a typed journey (goto / wait / \
+                 screenshot / diff steps); without the journey JSON the runtime audit has \
+                 nothing to execute",
+            )
+            .fix(
+                "add a journey JSON at the expected path or override CRAWLER_JOURNEY env — \
+                 see PlausiDen-Crawler/journeys/ for the schema",
+            )
+            .avoid(
+                "don't hand-edit prior run artifacts to fake a journey run; the crawler emits \
+                 typed diff.json bytes and forge parses with serde, so synthetic state will \
+                 fail the deserialize path",
             ),
             Self::DevServerDown => Finding::warn(
                 PHASE,
                 "127.0.0.1:8123",
                 "dev server not responding — start it (e.g. `python3 -m http.server 8123 \
                  --directory static`) and re-run; runtime audit skipped",
+            )
+            .why(
+                "crawl probes the dev server via raw TCP connect to 127.0.0.1:8123 before \
+                 invoking the crawler — prevents the cascade-of-fake-regressions when the \
+                 server is silently down (every axis reports failure for the wrong reason)",
+            )
+            .fix(
+                "start a static file server at 127.0.0.1:8123 pointing at static/ (e.g. \
+                 `python3 -m http.server 8123 --directory static`, or any equivalent that \
+                 serves the freshly rendered tree), then re-run forge build",
+            )
+            .avoid(
+                "don't bind the dev server to a different port without updating the probe — \
+                 crawl is hard-pinned to 8123 because the journey URLs hard-code it",
             ),
             Self::OpaqueFailure { exit_code } => Finding::strict(
                 PHASE,
@@ -188,6 +231,19 @@ impl CrawlFinding {
                     "crawler reported FAIL (exit {exit_code}) but no per-axis breakdown \
                      parsed — inspect PlausiDen-Crawler/runs/ for details"
                 ),
+            )
+            .why(
+                "the crawler exited non-zero but diff.json couldn't be parsed into the typed \
+                 per-axis breakdown — strict because we can't tell which axes regressed, so \
+                 every shipped change risks an undetected runtime defect",
+            )
+            .fix(
+                "inspect PlausiDen-Crawler/runs/<latest>/diff.json for parse errors; if the \
+                 crawler's schema drifted, update CrawlerDiff in crawl.rs to match",
+            )
+            .avoid(
+                "don't suppress this finding to unblock the build — opacity here is the \
+                 actual defect, not the strict severity",
             ),
             Self::CrawlerErrored {
                 exit_code,
@@ -199,6 +255,21 @@ impl CrawlFinding {
                     "crawler errored (exit {exit_code}) — runtime audit could not \
                      complete: {stderr_excerpt}"
                 ),
+            )
+            .why(
+                "the crawler bin itself errored before producing audit output — usually \
+                 means chromium failed to launch, a dependency is missing, or the journey \
+                 schema is malformed",
+            )
+            .fix(
+                "run the crawler standalone with the same args forge passes (CRAWLER_DIR + \
+                 journey path) to reproduce; check PlausiDen-Crawler/TOOLS.md for runtime \
+                 prereqs",
+            )
+            .avoid(
+                "don't ignore the stderr_excerpt — the first line of crawler stderr almost \
+                 always names the root cause (missing libpangocairo, port already in use, \
+                 etc.)",
             ),
             Self::AxisRegression { axis, new_strict } => Finding::strict(
                 PHASE,
@@ -207,6 +278,21 @@ impl CrawlFinding {
                     "runtime regression on {} (+{new_strict} new strict)",
                     axis.as_str()
                 ),
+            )
+            .why(
+                "the runtime audit found new strict findings on this axis vs the prior \
+                 baseline — the change set under build introduces a regression real readers \
+                 will see",
+            )
+            .fix(
+                "inspect PlausiDen-Crawler/runs/<latest>/ for the per-axis report; the \
+                 substrate-correct response is to fix the regression OR document a baseline \
+                 update if the change is intentional",
+            )
+            .avoid(
+                "don't rebaseline by overwriting the prior run — there is a typed baseline \
+                 update path in the crawler; using rm to silence a regression destroys the \
+                 audit trail",
             ),
         }
     }
@@ -539,6 +625,42 @@ mod tests {
     fn dev_server_down_finding_is_warn() {
         let f = CrawlFinding::DevServerDown.as_finding();
         assert_eq!(f.severity, Severity::Warn);
+    }
+
+    #[test]
+    fn every_crawl_finding_variant_carries_advocacy() {
+        use std::path::PathBuf;
+        let variants = [
+            CrawlFinding::CrawlerMissing {
+                searched: vec![PathBuf::from("/a"), PathBuf::from("/b")],
+            },
+            CrawlFinding::JourneyMissing {
+                path: PathBuf::from("/x/journey.json"),
+            },
+            CrawlFinding::DevServerDown,
+            CrawlFinding::OpaqueFailure { exit_code: 1 },
+            CrawlFinding::CrawlerErrored {
+                exit_code: 2,
+                stderr_excerpt: "boom".into(),
+            },
+            CrawlFinding::AxisRegression {
+                axis: AxisName::classify("placeholderText"),
+                new_strict: 1,
+            },
+        ];
+        for v in variants {
+            let label = format!("{v:?}");
+            let f = v.as_finding();
+            assert!(!f.advocacy.why.is_empty(), "{label} missing .why()");
+            assert!(
+                !f.advocacy.substrate_fix.is_empty(),
+                "{label} missing .fix()"
+            );
+            assert!(
+                f.advocacy.anti_pattern.is_some(),
+                "{label} missing .avoid()"
+            );
+        }
     }
 
     #[test]
