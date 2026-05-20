@@ -348,6 +348,149 @@ pub trait Phase: Send + Sync {
     /// surface I/O errors via `BuildError::Io` (an `Err` return)
     /// rather than emit zero findings.
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError>;
+
+    /// Declare which engine version range this phase supports.
+    ///
+    /// Per `[[backward-compat-version-discipline]]` doctrine + AVP-
+    /// Doctrine `VERSION_DISCIPLINE.md` § Pin-by-default: every
+    /// substrate component declares its supported engine range so
+    /// operators know whether a phase is safe to run against their
+    /// pinned `forge.toml` `[platform].forge_version`.
+    ///
+    /// Returns a version-range expression as a `&'static str`.
+    /// Format: `">=X.Y.Z[,<A.B.C]"` (subset of `cargo` version
+    /// requirements; comma-separated `>=` / `<` / `=` predicates).
+    ///
+    /// Default: `">=0.1.0,<2.0.0"` — compatible with every 0.x and
+    /// 1.x engine. Phases that depend on engine-specific surfaces
+    /// (new API in 1.5+, removed in 2.x) override to narrow the
+    /// range.
+    ///
+    /// Closes task #143 (backcompat-v7).
+    fn supported_engines(&self) -> &'static str {
+        ">=0.1.0,<2.0.0"
+    }
+}
+
+/// Parse a comma-separated cargo-style version-range expression
+/// into a vector of `(predicate, version_string)` pairs.
+///
+/// Accepts predicates `>=`, `<`, `=`, `<=`, `>`. Returns `None` if
+/// any predicate is malformed or any version string fails the
+/// `MAJOR.MINOR.PATCH` semver-2.0.0 check (per
+/// `crates/forge-phases/src/semver_enforcement.rs` parser).
+///
+/// Companion to `Phase::supported_engines`. Used by `forge orient`
+/// / pipeline gates to decide whether a phase is compatible with
+/// the current engine version.
+#[must_use]
+pub fn parse_version_range(range: &str) -> Option<Vec<(VersionPredicate, String)>> {
+    let mut out = Vec::new();
+    for part in range.split(',') {
+        let part = part.trim();
+        if part.is_empty() {
+            continue;
+        }
+        let (pred, ver_str) = if let Some(rest) = part.strip_prefix(">=") {
+            (VersionPredicate::AtLeast, rest.trim())
+        } else if let Some(rest) = part.strip_prefix("<=") {
+            (VersionPredicate::AtMost, rest.trim())
+        } else if let Some(rest) = part.strip_prefix("<") {
+            (VersionPredicate::LessThan, rest.trim())
+        } else if let Some(rest) = part.strip_prefix(">") {
+            (VersionPredicate::GreaterThan, rest.trim())
+        } else if let Some(rest) = part.strip_prefix('=') {
+            (VersionPredicate::Equal, rest.trim())
+        } else {
+            return None;
+        };
+        if !is_canonical_semver(ver_str) {
+            return None;
+        }
+        out.push((pred, ver_str.to_owned()));
+    }
+    Some(out)
+}
+
+/// Comparison predicates supported in a `Phase::supported_engines`
+/// range expression. See [`parse_version_range`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VersionPredicate {
+    /// `>=`
+    AtLeast,
+    /// `<=`
+    AtMost,
+    /// `>`
+    GreaterThan,
+    /// `<`
+    LessThan,
+    /// `=`
+    Equal,
+}
+
+/// `MAJOR.MINOR.PATCH` (with optional `-pre` / `+build`) semver
+/// 2.0.0 acceptance check. Companion to
+/// `forge-phases::semver_enforcement::parse_semver` — same shape,
+/// re-implemented here so forge-core doesn't depend on
+/// forge-phases.
+fn is_canonical_semver(s: &str) -> bool {
+    let core = s.split('-').next().unwrap_or(s);
+    let core = core.split('+').next().unwrap_or(core);
+    let parts: Vec<&str> = core.split('.').collect();
+    if parts.len() != 3 {
+        return false;
+    }
+    parts
+        .iter()
+        .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+}
+
+/// Compare two canonical `MAJOR.MINOR.PATCH` semver strings.
+/// Pre-release / build metadata are ignored for ordering — the
+/// pre-release ordering rules of semver 2.0.0 are out of scope
+/// for the substrate's engine-range check (engines don't ship
+/// pre-releases). Returns `None` if either input fails the
+/// canonical-form check.
+#[must_use]
+pub fn semver_cmp(a: &str, b: &str) -> Option<std::cmp::Ordering> {
+    if !is_canonical_semver(a) || !is_canonical_semver(b) {
+        return None;
+    }
+    let a_core = a.split('-').next().unwrap_or(a).split('+').next().unwrap_or(a);
+    let b_core = b.split('-').next().unwrap_or(b).split('+').next().unwrap_or(b);
+    let a_parts: Vec<u64> = a_core.split('.').filter_map(|p| p.parse().ok()).collect();
+    let b_parts: Vec<u64> = b_core.split('.').filter_map(|p| p.parse().ok()).collect();
+    Some(a_parts.cmp(&b_parts))
+}
+
+/// True if `target_version` satisfies the comma-separated
+/// `range` (e.g. `">=0.1.0,<2.0.0"`). Returns `None` if either
+/// is malformed (caller decides whether to treat that as
+/// fail-closed or fail-open per `[[deterministic-first-lfi-optional]]`).
+///
+/// Closes task #143 (backcompat-v7): `forge orient` + the pipeline
+/// runner call this to decide whether to surface a compatibility
+/// warning at session start.
+#[must_use]
+pub fn engine_satisfies(target_version: &str, range: &str) -> Option<bool> {
+    if !is_canonical_semver(target_version) {
+        return None;
+    }
+    let predicates = parse_version_range(range)?;
+    for (pred, ver) in &predicates {
+        let order = semver_cmp(target_version, ver)?;
+        let ok = match pred {
+            VersionPredicate::AtLeast => order != std::cmp::Ordering::Less,
+            VersionPredicate::AtMost => order != std::cmp::Ordering::Greater,
+            VersionPredicate::GreaterThan => order == std::cmp::Ordering::Greater,
+            VersionPredicate::LessThan => order == std::cmp::Ordering::Less,
+            VersionPredicate::Equal => order == std::cmp::Ordering::Equal,
+        };
+        if !ok {
+            return Some(false);
+        }
+    }
+    Some(true)
 }
 
 /// The errors a phase can return upward.
@@ -515,6 +658,122 @@ mod tests {
         r.push(Finding::strict("p", "path", "msg"));
         assert!(!r.passed(BuildMode::Poc));
         assert!(!r.passed(BuildMode::Production));
+    }
+
+    // -----------------------------------------------------------------
+    // Engine version-range tests — task #143
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn parse_version_range_canonical() {
+        let r = parse_version_range(">=0.1.0,<2.0.0").expect("parse");
+        assert_eq!(r.len(), 2);
+        assert_eq!(r[0].0, VersionPredicate::AtLeast);
+        assert_eq!(r[0].1, "0.1.0");
+        assert_eq!(r[1].0, VersionPredicate::LessThan);
+        assert_eq!(r[1].1, "2.0.0");
+    }
+
+    #[test]
+    fn parse_version_range_rejects_malformed() {
+        // Floating pointer is not semver — reject.
+        assert!(parse_version_range(">=latest").is_none());
+        // Unknown predicate.
+        assert!(parse_version_range("~=1.0.0").is_none());
+        // Missing predicate.
+        assert!(parse_version_range("0.1.0").is_none());
+        // Non-canonical semver.
+        assert!(parse_version_range(">=1.0").is_none());
+        assert!(parse_version_range(">=v1.0.0").is_none());
+    }
+
+    #[test]
+    fn engine_satisfies_in_range() {
+        assert_eq!(engine_satisfies("1.0.0", ">=0.1.0,<2.0.0"), Some(true));
+        assert_eq!(engine_satisfies("0.1.0", ">=0.1.0,<2.0.0"), Some(true));
+        assert_eq!(engine_satisfies("1.99.99", ">=0.1.0,<2.0.0"), Some(true));
+    }
+
+    #[test]
+    fn engine_satisfies_out_of_range() {
+        assert_eq!(engine_satisfies("2.0.0", ">=0.1.0,<2.0.0"), Some(false));
+        assert_eq!(engine_satisfies("0.0.9", ">=0.1.0,<2.0.0"), Some(false));
+        assert_eq!(engine_satisfies("3.5.1", ">=0.1.0,<2.0.0"), Some(false));
+    }
+
+    #[test]
+    fn engine_satisfies_returns_none_on_invalid_inputs() {
+        // Invalid target version.
+        assert!(engine_satisfies("latest", ">=0.1.0,<2.0.0").is_none());
+        // Invalid range.
+        assert!(engine_satisfies("1.0.0", "~=1.0.0").is_none());
+    }
+
+    #[test]
+    fn semver_cmp_canonical() {
+        use std::cmp::Ordering;
+        assert_eq!(semver_cmp("1.0.0", "1.0.0"), Some(Ordering::Equal));
+        assert_eq!(semver_cmp("1.0.0", "0.9.9"), Some(Ordering::Greater));
+        assert_eq!(semver_cmp("0.9.9", "1.0.0"), Some(Ordering::Less));
+        assert_eq!(semver_cmp("1.10.0", "1.9.0"), Some(Ordering::Greater));
+        // Numeric, not lexicographic.
+        assert_eq!(semver_cmp("2.0.0", "10.0.0"), Some(Ordering::Less));
+    }
+
+    #[test]
+    fn default_supported_engines_is_load_bearing_v0_and_v1() {
+        // A phase with the default impl should report the canonical
+        // engine range. The default returns ">=0.1.0,<2.0.0" — assert
+        // it's a contract callers can rely on without instantiating
+        // every phase.
+        struct DummyPhase;
+        impl Phase for DummyPhase {
+            fn name(&self) -> &'static str {
+                "dummy"
+            }
+            fn run(&self, _ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
+                Ok(vec![])
+            }
+        }
+        assert_eq!(DummyPhase.supported_engines(), ">=0.1.0,<2.0.0");
+        assert_eq!(
+            engine_satisfies("1.0.0", DummyPhase.supported_engines()),
+            Some(true)
+        );
+        assert_eq!(
+            engine_satisfies("2.0.0", DummyPhase.supported_engines()),
+            Some(false)
+        );
+    }
+
+    #[test]
+    fn phase_can_narrow_supported_engines() {
+        // A phase that only supports 1.x can override the default.
+        struct OnlyV1;
+        impl Phase for OnlyV1 {
+            fn name(&self) -> &'static str {
+                "v1_only"
+            }
+            fn run(&self, _ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
+                Ok(vec![])
+            }
+            fn supported_engines(&self) -> &'static str {
+                ">=1.0.0,<2.0.0"
+            }
+        }
+        let phase = OnlyV1;
+        assert_eq!(
+            engine_satisfies("0.9.9", phase.supported_engines()),
+            Some(false)
+        );
+        assert_eq!(
+            engine_satisfies("1.0.0", phase.supported_engines()),
+            Some(true)
+        );
+        assert_eq!(
+            engine_satisfies("2.0.0", phase.supported_engines()),
+            Some(false)
+        );
     }
 
     // -----------------------------------------------------------------
