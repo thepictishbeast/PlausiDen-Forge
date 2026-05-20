@@ -1,0 +1,158 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "PlausiDen — Comprehensive IT for the Modern Enterprise",
+  "description": "Comprehensive IT for the modern enterprise — cybersecurity, AI automation, cloud infrastructure, software development. Built for teams that take confidentiality seriously.",
+  "brand": "PlausiDen",
+  "chrome": "page_shell",
+  "theme": "light",
+  "nav_actions": [
+    {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+  ],
+  "path": "/plausiden.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Company",
+        "links": [
+          {"label": "About",          "href": "/about/",          "data_backend": "view-about"},
+          {"label": "Careers",        "href": "/careers/",        "data_backend": "view-blog"},
+          {"label": "Engineering",    "href": "/engineering/",    "data_backend": "view-docs"}
+        ]
+      },
+      {
+        "heading": "Solutions",
+        "links": [
+          {"label": "IT Operations",       "href": "/it-operations/",       "data_backend": "view-platform"},
+          {"label": "Cyber Security",      "href": "/cyber-security/",      "data_backend": "view-platform"},
+          {"label": "Artificial Intelligence", "href": "/ai/",              "data_backend": "view-platform"},
+          {"label": "Automation & IoT",    "href": "/automation-iot/",      "data_backend": "view-platform"},
+          {"label": "Software",            "href": "/software/",            "data_backend": "view-platform"},
+          {"label": "Hardware",            "href": "/hardware/",            "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Contact",
+        "links": [
+          {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "PlausiDen",
+      "phone": "Modern enterprise IT",
+      "email": "hello@plausiden.com",
+      "address": "Confidentiality-first delivery",
+      "jurisdiction": "USA"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 PlausiDen LLC. All rights reserved."
+  },
+  "nav_links": [
+    {"label": "Solutions",   "href": "/solutions/",   "data_backend": "view-platform"},
+    {"label": "Engineering", "href": "/engineering/", "data_backend": "view-docs"},
+    {"label": "About",       "href": "/about/",       "data_backend": "view-about"},
+    {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "PlausiDen LLC",
+      "title": "Comprehensive IT for the Modern Enterprise",
+      "lede": "PlausiDen LLC delivers general yet specific technology solutions. From cyber security to AI automation, we power your digital transformation.",
+      "cta": {
+        "label": "Free consultation",
+        "href": "/plausiden-contact/",
+        "data_backend": "cta-contact"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating enterprise IT infrastructure.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "We provide end-to-end solutions that cover every aspect of your technology stack. Confidentiality-first delivery for teams that need to ship securely."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Everything Your Business Needs.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "IT Operations",
+          "value": "Robust infrastructure management.",
+          "hint": "Operational excellence: capacity planning, incident response, change management, and observability across hybrid + multi-cloud topologies."
+        },
+        {
+          "key": "Cyber Security",
+          "value": "Advanced threat protection + compliance.",
+          "hint": "Default-deny posture, hardware-anchored identity, audit trails, and compliance scaffolding (SOC 2, HIPAA, NIST) folded into the same engineering substrate that runs your apps."
+        },
+        {
+          "key": "Artificial Intelligence",
+          "value": "Intelligent systems + predictive analytics.",
+          "hint": "Specialist models for forecasting, anomaly detection, and document understanding — deployed on your infrastructure with confidentiality preserved end-to-end."
+        },
+        {
+          "key": "Automation & IoT",
+          "value": "Operational efficiency at industrial scale.",
+          "hint": "Production-line telemetry, edge inference, and supply-chain integration — Rust + WASM substrate where latency + reliability are load-bearing."
+        },
+        {
+          "key": "Software",
+          "value": "Custom development tailored to your stack.",
+          "hint": "Rust-first engineering with formal verification on the load-bearing primitives. Same discipline that ships PlausiDen-Forge, Loom, and the SacredVote integrity infrastructure."
+        },
+        {
+          "key": "Hardware",
+          "value": "Enterprise-grade procurement + deployment.",
+          "hint": "From edge devices to rack-scale: vetted supply chain, hardware-anchored identity at provisioning, lifecycle management with attestation receipts."
+        }
+      ]
+    },
+    {
+      "kind": "pull_quote",
+      "body": "In a complex digital landscape, you need a partner who understands the big picture while obsessing over the details. We bridge the gap between technical complexity and business value.",
+      "attribution": "PlausiDen engineering principle",
+      "emphasis": "display"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Why industry leaders choose PlausiDen."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "What you get.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Strategy",
+          "value": "Customized strategies, not cookie-cutter solutions.",
+          "hint": "Every engagement starts with the actual constraints — regulatory, technical, organizational — and produces an implementation tied to those constraints, not a vendor checklist."
+        },
+        {
+          "key": "Expertise",
+          "value": "Deep expertise across hardware + software.",
+          "hint": "The substrate is one engineering team, end to end. The same people who design the cryptographic protocols deploy the production systems and respond to the incidents."
+        }
+      ]
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Free consultation",
+      "title": "Ready to elevate your IT strategy?",
+      "lede": "Contact us today for a free consultation and discover how we can optimize your operations.",
+      "cta": {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+    }
+  ]
+}
