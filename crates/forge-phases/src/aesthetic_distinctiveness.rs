@@ -123,6 +123,7 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
     check_image_desert(sections, &path_disp, findings, phase);
     check_short_paragraph_dominance(sections, &path_disp, findings, phase);
     check_adjacent_section_repetition(sections, &path_disp, findings, phase);
+    check_emoji_in_body(sections, &path_disp, findings, phase);
 }
 
 fn check_sparse_page(
@@ -950,6 +951,80 @@ fn check_adjacent_section_repetition(
     ));
 }
 
+/// `emoji_in_body` — detect emoji glyphs in CMS body text.
+///
+/// Per the substrate's editorial-first directive (no decorative
+/// chrome in editorial composition), emoji in CMS body text are a
+/// marketing-flavor signal: they substitute for typography +
+/// language. Editorial body should carry meaning in words, not
+/// glyphs. The check flags any emoji codepoint anywhere in the
+/// page's string-valued JSON fields.
+///
+/// Detection scans Unicode codepoint ranges:
+/// * U+1F300 through U+1FAFF — Misc Symbols and Pictographs +
+///   Emoticons + Transport + Misc Symbols-and-Arrows + extended
+///   Symbols-and-Pictographs + Chess + Supplemental Arrows-C +
+///   Supplemental Symbols-and-Pictographs.
+/// * U+2600 through U+27BF — Misc Symbols + Dingbats (covers
+///   ☀ ★ ✓ ✗ ✨ etc. when used as emoji).
+/// * U+FE0F — variation selector-16 (forces emoji presentation).
+/// * U+1F1E6 through U+1F1FF — Regional indicator symbols (flags).
+///
+/// Out of scope: ASCII characters that LOOK like emojis (`<3`,
+/// `:)`) — these are character-set neutral text emoticons; no
+/// substrate enforcement.
+///
+/// Severity: warn. Some sites legitimately ship with emoji content
+/// (i18n hint, accessibility shortcut, deliberate editorial choice).
+/// Flag draws the operator's attention without blocking the build.
+fn check_emoji_in_body(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    fn is_emoji_codepoint(c: char) -> bool {
+        let cp = c as u32;
+        // Main emoji ranges.
+        (0x1F300..=0x1FAFF).contains(&cp)
+            // Misc Symbols + Dingbats.
+            || (0x2600..=0x27BF).contains(&cp)
+            // Regional indicator (flags).
+            || (0x1F1E6..=0x1F1FF).contains(&cp)
+            // Variation selector-16 (emoji presentation).
+            || cp == 0xFE0F
+    }
+
+    let mut total_emoji = 0usize;
+    let mut sample_strings: Vec<String> = Vec::new();
+    collect_text(sections, &mut |t| {
+        let count = t.chars().filter(|c| is_emoji_codepoint(*c)).count();
+        if count > 0 {
+            total_emoji += count;
+            if sample_strings.len() < 3 {
+                let truncated: String = t.chars().take(80).collect();
+                sample_strings.push(truncated);
+            }
+        }
+    });
+    if total_emoji == 0 {
+        return;
+    }
+    findings.push(Finding::warn(
+        phase,
+        path.to_owned(),
+        format!(
+            "emoji_in_body: {} emoji glyph(s) found across page text. Editorial composition prefers meaning carried in words/typography over decorative glyphs. Sample text: [{}]. If emoji is deliberate (i18n hint, deliberate editorial choice), suppress this finding via the operator workflow.",
+            total_emoji,
+            sample_strings
+                .iter()
+                .map(|s| format!("\"{}\"", s.replace('"', "\\\"")))
+                .collect::<Vec<_>>()
+                .join(", "),
+        ),
+    ));
+}
+
 /// Walk every string-valued field across the JSON tree of the
 /// given sections and call `visit` with each. Used by detectors
 /// that look at full-page text rather than per-section structure.
@@ -1488,5 +1563,115 @@ mod tests {
         let mut findings = vec![];
         check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
         assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn emoji_in_body_warns_on_pictograph_emoji() {
+        // Single 🚀 in a paragraph body — main-range emoji.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Launching 🚀 our new tier."}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        let msg = &findings[0].message;
+        assert!(msg.contains("emoji_in_body"));
+        assert!(msg.contains("1 emoji"));
+        assert!(msg.contains("🚀"));
+    }
+
+    #[test]
+    fn emoji_in_body_warns_on_dingbat_range() {
+        // Dingbat ✨ — U+2728. Common decorative bullet.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Subscribe ✨ today"}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains("1 emoji"));
+    }
+
+    #[test]
+    fn emoji_in_body_counts_multiple_glyphs() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "🔥🔥🔥 Hot deal"}),
+            json!({"kind": "heading", "text": "✓ done"}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains("4 emoji"));
+    }
+
+    #[test]
+    fn emoji_in_body_silent_on_clean_prose() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Substrate ships editorial composition. No decorative chrome."}),
+            json!({"kind": "heading", "text": "Plain typography only."}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn emoji_in_body_silent_on_ascii_emoticons() {
+        // <3 and :) are character-set neutral text — NOT flagged.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Love it <3 So good :)"}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn emoji_in_body_detects_flag_codepoints() {
+        // Regional indicator pair 🇺🇸 (U+1F1FA + U+1F1F8) renders as US flag.
+        // Two regional-indicator chars + zero composing scalars.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Welcome 🇺🇸 friends"}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        // 2 regional indicator codepoints make one visual flag.
+        assert!(findings[0].message.contains("2 emoji"));
+    }
+
+    #[test]
+    fn emoji_in_body_surfaces_sample_text() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Get started 🚀 with PlausiDen today"}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings[0]
+            .message
+            .contains(r#""Get started 🚀 with PlausiDen today""#));
+    }
+
+    #[test]
+    fn emoji_in_body_caps_sample_text_at_three() {
+        // 5 different paragraphs with emojis — sample list caps at 3.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "🎉 one"}),
+            json!({"kind": "paragraph", "text": "🎊 two"}),
+            json!({"kind": "paragraph", "text": "🚀 three"}),
+            json!({"kind": "paragraph", "text": "💯 four"}),
+            json!({"kind": "paragraph", "text": "🔥 five"}),
+        ];
+        let mut findings = vec![];
+        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        // First 3 paragraphs surface in the sample; last 2 don't.
+        assert!(msg.contains("🎉"));
+        assert!(msg.contains("🎊"));
+        assert!(msg.contains("🚀"));
+        assert!(!msg.contains("💯"));
+        assert!(!msg.contains("🔥"));
+        // Total count is 5.
+        assert!(msg.contains("5 emoji"));
     }
 }
