@@ -139,7 +139,8 @@ mod tests {
             let slug = s.slug();
             assert!(!slug.is_empty(), "{s:?} empty slug");
             assert!(
-                slug.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'),
+                slug.chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'),
                 "{s:?} slug {slug:?} not snake_case"
             );
         }

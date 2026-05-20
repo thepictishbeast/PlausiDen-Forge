@@ -226,8 +226,12 @@ traits = [
         let findings = TraitImplicationsPhase.run(&ctx_in(tmp.path())).unwrap();
         assert_eq!(findings.len(), 2);
         let messages: Vec<&str> = findings.iter().map(|f| f.message.as_str()).collect();
-        assert!(messages.iter().any(|m| m.contains("amoled-optimized") && m.contains("dark-mode-first")));
-        assert!(messages.iter().any(|m| m.contains("fuzz-tested") && m.contains("property-tested")));
+        assert!(messages
+            .iter()
+            .any(|m| m.contains("amoled-optimized") && m.contains("dark-mode-first")));
+        assert!(messages
+            .iter()
+            .any(|m| m.contains("fuzz-tested") && m.contains("property-tested")));
     }
 
     #[test]

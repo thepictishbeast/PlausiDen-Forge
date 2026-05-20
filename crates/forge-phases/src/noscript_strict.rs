@@ -99,7 +99,11 @@ fn read_noscript_strict_from_toml(root: &std::path::Path) -> bool {
             continue;
         }
         if let Some(rest) = line.strip_prefix("enabled") {
-            let v = rest.trim_start().trim_start_matches('=').trim().to_lowercase();
+            let v = rest
+                .trim_start()
+                .trim_start_matches('=')
+                .trim()
+                .to_lowercase();
             return v == "true" || v == "1" || v == "\"true\"";
         }
     }
@@ -208,10 +212,8 @@ mod tests {
 
     #[test]
     fn toml_reader_returns_true_when_enabled() {
-        let dir = std::env::temp_dir().join(format!(
-            "forge-noscript-strict-test-{}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("forge-noscript-strict-test-{}", std::process::id()));
         let _ = fs::create_dir_all(&dir);
         let toml_path = dir.join("forge.toml");
         fs::write(&toml_path, "[noscript_strict]\nenabled = true\n").unwrap();

@@ -8,9 +8,7 @@
 use std::collections::BTreeMap;
 use std::fs;
 
-use forge_core::extractors::interactive::{
-    HoverTreatment, HoverTreatmentEntry, InteractiveResult,
-};
+use forge_core::extractors::interactive::{HoverTreatment, HoverTreatmentEntry, InteractiveResult};
 use forge_core::extractors::motion::MotionResult;
 use forge_core::extractors::palette::{ContrastClass, PaletteEntry};
 use forge_core::extractors::sections::PatternClassification;
@@ -25,7 +23,13 @@ use forge_core::synthesis::synthesize;
 fn editorial_signals_for_prosperity() -> ExtractedSignals {
     let mut s = ExtractedSignals::default();
     s.palette = vec![
-        PaletteEntry::new("#15140f", [21, 20, 15], 200, ContrastClass::Dark, vec!["color".into()]),
+        PaletteEntry::new(
+            "#15140f",
+            [21, 20, 15],
+            200,
+            ContrastClass::Dark,
+            vec!["color".into()],
+        ),
         PaletteEntry::new(
             "#f6f5f0",
             [246, 245, 240],
@@ -85,10 +89,7 @@ fn arc_single_reference_round_trip_emits_clean_cms() {
     assert_eq!(spec.pages["index"][3].kind, "kv_pair");
     assert_eq!(spec.pages["index"][4].kind, "call_to_action");
 
-    let dir = std::env::temp_dir().join(format!(
-        "forge-arc-e2e-{}",
-        std::process::id()
-    ));
+    let dir = std::env::temp_dir().join(format!("forge-arc-e2e-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     let written = synthesize(&spec, &dir).unwrap();
     assert_eq!(written.len(), 1);
@@ -153,10 +154,7 @@ fn arc_multi_reference_composition_round_trip() {
     assert!(spec.pages.contains_key("index"));
     assert!(spec.pages.contains_key("docs"));
 
-    let dir = std::env::temp_dir().join(format!(
-        "forge-arc-multi-{}",
-        std::process::id()
-    ));
+    let dir = std::env::temp_dir().join(format!("forge-arc-multi-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     let written = synthesize(&spec, &dir).unwrap();
     assert_eq!(written.len(), 2);
@@ -183,21 +181,8 @@ fn arc_constructors_cover_every_extractor_result_type() {
         1.4,
     );
     let _spacing = SpacingResult::new(16, 32, 760, BTreeMap::new());
-    let _motion = MotionResult::new(
-        vec![],
-        BTreeMap::new(),
-        false,
-        false,
-        4,
-        1,
-        false,
-        false,
-    );
-    let _structural = StructuralResult::new(
-        NavShape::new(3, true, false),
-        BTreeMap::new(),
-        2.5,
-    );
+    let _motion = MotionResult::new(vec![], BTreeMap::new(), false, false, 4, 1, false, false);
+    let _structural = StructuralResult::new(NavShape::new(3, true, false), BTreeMap::new(), 2.5);
     let _voice = VoiceResult::new(10, 100, 500, 10.0, 8, 18, 0.4, 1, 10000, "casual");
     let _interactive = InteractiveResult::new(
         vec![HoverTreatmentEntry::new(HoverTreatment::ColorShift, 1)],
@@ -217,10 +202,7 @@ fn arc_emits_zero_sections_for_empty_signals_passes_through() {
     let spec = map_to_spec("empty", "", &signals);
     assert!(spec.pages.is_empty());
 
-    let dir = std::env::temp_dir().join(format!(
-        "forge-arc-empty-{}",
-        std::process::id()
-    ));
+    let dir = std::env::temp_dir().join(format!("forge-arc-empty-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     let written = synthesize(&spec, &dir).unwrap();
     assert!(written.is_empty());

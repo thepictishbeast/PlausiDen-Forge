@@ -144,10 +144,7 @@ pub fn classify_page(value: &Value) -> DensityTier {
     let mut total_chars: usize = 0;
     let mut body_section_count: usize = 0;
     for section in sections {
-        let kind = section
-            .get("kind")
-            .and_then(|k| k.as_str())
-            .unwrap_or("");
+        let kind = section.get("kind").and_then(|k| k.as_str()).unwrap_or("");
         // Skip pure-decorative variants — they don't contribute
         // visible character density.
         if matches!(kind, "spacer" | "divider" | "container") {
@@ -276,7 +273,10 @@ impl Phase for DensityAuditPhase {
                 })
             });
             let (effective, override_note) = match overridden {
-                Some((tier, pattern)) => (tier, format!(" (tenant-corpus override matched pattern `{pattern}`)")),
+                Some((tier, pattern)) => (
+                    tier,
+                    format!(" (tenant-corpus override matched pattern `{pattern}`)"),
+                ),
                 None => (empirical, String::new()),
             };
             let distance = (effective.ordinal() - target.ordinal()).abs();

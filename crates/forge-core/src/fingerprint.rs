@@ -330,9 +330,7 @@ pub fn density_tier_for(section_count: u32, total_chars: u32) -> &'static str {
 /// SiteFingerprint. Single source of truth used by both
 /// `forge_phases::uniqueness_gate` (the gate phase) and
 /// `forge-cli`'s `fingerprint compute` subcommand.
-pub fn build_from_cms_dir(
-    cms_dir: &std::path::Path,
-) -> Result<SiteFingerprint, std::io::Error> {
+pub fn build_from_cms_dir(cms_dir: &std::path::Path) -> Result<SiteFingerprint, std::io::Error> {
     use std::fs;
     let mut paths: Vec<std::path::PathBuf> = Vec::new();
     for entry in fs::read_dir(cms_dir)? {
@@ -395,8 +393,7 @@ pub fn build_from_cms_dir(
                     }
                 }
                 if let Some(items) = section.get("items").and_then(|v| v.as_array()) {
-                    list_item_count =
-                        list_item_count.saturating_add(items.len() as u32);
+                    list_item_count = list_item_count.saturating_add(items.len() as u32);
                 }
                 if kind.starts_with("heading") || kind == "section_heading" {
                     if let Some(level) = section.get("level").and_then(|v| v.as_str()) {
@@ -552,11 +549,15 @@ impl SiteFingerprint {
         // Primitive multiset difference.
         let mut self_primitives: BTreeMap<(String, String, String), u32> = BTreeMap::new();
         for p in &self.primitives {
-            *self_primitives.entry((p.kind.clone(), p.variant.clone(), p.page.clone())).or_insert(0) += 1;
+            *self_primitives
+                .entry((p.kind.clone(), p.variant.clone(), p.page.clone()))
+                .or_insert(0) += 1;
         }
         let mut other_primitives: BTreeMap<(String, String, String), u32> = BTreeMap::new();
         for p in &other.primitives {
-            *other_primitives.entry((p.kind.clone(), p.variant.clone(), p.page.clone())).or_insert(0) += 1;
+            *other_primitives
+                .entry((p.kind.clone(), p.variant.clone(), p.page.clone()))
+                .or_insert(0) += 1;
         }
         for (k, n_self) in &self_primitives {
             let n_other = other_primitives.get(k).copied().unwrap_or(0);
@@ -570,7 +571,8 @@ impl SiteFingerprint {
         // Token override symmetric difference.
         let self_tokens: std::collections::BTreeSet<_> = self.token_overrides.iter().collect();
         let other_tokens: std::collections::BTreeSet<_> = other.token_overrides.iter().collect();
-        distance = distance.saturating_add(self_tokens.symmetric_difference(&other_tokens).count() as u32);
+        distance =
+            distance.saturating_add(self_tokens.symmetric_difference(&other_tokens).count() as u32);
         // Silhouette per-page mismatches.
         let all_pages: std::collections::BTreeSet<&String> = self
             .silhouettes
@@ -580,10 +582,18 @@ impl SiteFingerprint {
         for page in &all_pages {
             match (self.silhouettes.get(*page), other.silhouettes.get(*page)) {
                 (Some(a), Some(b)) => {
-                    if a.total_chars_bucket != b.total_chars_bucket { distance = distance.saturating_add(1); }
-                    if a.paragraph_count != b.paragraph_count { distance = distance.saturating_add(1); }
-                    if a.list_item_count != b.list_item_count { distance = distance.saturating_add(1); }
-                    if a.heading_hierarchy != b.heading_hierarchy { distance = distance.saturating_add(1); }
+                    if a.total_chars_bucket != b.total_chars_bucket {
+                        distance = distance.saturating_add(1);
+                    }
+                    if a.paragraph_count != b.paragraph_count {
+                        distance = distance.saturating_add(1);
+                    }
+                    if a.list_item_count != b.list_item_count {
+                        distance = distance.saturating_add(1);
+                    }
+                    if a.heading_hierarchy != b.heading_hierarchy {
+                        distance = distance.saturating_add(1);
+                    }
                 }
                 _ => {
                     // Page exists in one but not other → big drift.
@@ -592,25 +602,30 @@ impl SiteFingerprint {
             }
         }
         // Rhythm per-page mismatches.
-        let all_rhythm_pages: std::collections::BTreeSet<&String> = self
-            .rhythms
-            .keys()
-            .chain(other.rhythms.keys())
-            .collect();
+        let all_rhythm_pages: std::collections::BTreeSet<&String> =
+            self.rhythms.keys().chain(other.rhythms.keys()).collect();
         for page in &all_rhythm_pages {
             match (self.rhythms.get(*page), other.rhythms.get(*page)) {
                 (Some(a), Some(b)) => {
-                    if a.section_count != b.section_count { distance = distance.saturating_add(1); }
-                    if a.density_tier != b.density_tier { distance = distance.saturating_add(1); }
+                    if a.section_count != b.section_count {
+                        distance = distance.saturating_add(1);
+                    }
+                    if a.density_tier != b.density_tier {
+                        distance = distance.saturating_add(1);
+                    }
                 }
                 _ => distance = distance.saturating_add(2),
             }
         }
         // Asset distribution.
-        distance = distance.saturating_add(self.assets.image_count.abs_diff(other.assets.image_count));
-        distance = distance.saturating_add(self.assets.video_count.abs_diff(other.assets.video_count));
+        distance =
+            distance.saturating_add(self.assets.image_count.abs_diff(other.assets.image_count));
+        distance =
+            distance.saturating_add(self.assets.video_count.abs_diff(other.assets.video_count));
         distance = distance.saturating_add(
-            self.assets.interactive_count.abs_diff(other.assets.interactive_count),
+            self.assets
+                .interactive_count
+                .abs_diff(other.assets.interactive_count),
         );
         distance
     }
@@ -690,7 +705,9 @@ mod tests {
         let fp = minimal_fp();
         let hex = fp.commitment_hex();
         assert_eq!(hex.len(), 64);
-        assert!(hex.chars().all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())));
+        assert!(hex
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && (c.is_ascii_digit() || c.is_ascii_lowercase())));
     }
 
     #[test]

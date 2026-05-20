@@ -194,9 +194,7 @@ fn detect_animations(dump: &ComputedStylesDump) -> bool {
     let Some(values) = dump.property_values.get("animation-name") else {
         return false;
     };
-    values
-        .keys()
-        .any(|k| !matches!(k.trim(), "none" | "" ))
+    values.keys().any(|k| !matches!(k.trim(), "none" | ""))
 }
 
 fn extract_border_radius_mode(dump: &ComputedStylesDump) -> u32 {
@@ -249,9 +247,7 @@ fn detect_filters(dump: &ComputedStylesDump) -> bool {
     let Some(values) = dump.property_values.get("filter") else {
         return false;
     };
-    values
-        .keys()
-        .any(|k| !matches!(k.trim(), "none" | ""))
+    values.keys().any(|k| !matches!(k.trim(), "none" | ""))
 }
 
 fn normalize_curve(raw: &str) -> String {
@@ -264,7 +260,11 @@ fn normalize_curve(raw: &str) -> String {
 fn parse_duration_ms(raw: &str) -> Option<u32> {
     let trimmed = raw.trim();
     if let Some(body) = trimmed.strip_suffix("ms") {
-        return body.trim().parse::<f64>().ok().map(|f| f.round().max(0.0) as u32);
+        return body
+            .trim()
+            .parse::<f64>()
+            .ok()
+            .map(|f| f.round().max(0.0) as u32);
     }
     if let Some(body) = trimmed.strip_suffix('s') {
         return body
@@ -279,7 +279,10 @@ fn parse_duration_ms(raw: &str) -> Option<u32> {
 fn parse_px(raw: &str) -> Option<u32> {
     let trimmed = raw.trim();
     let body = trimmed.strip_suffix("px")?;
-    body.trim().parse::<f64>().ok().map(|f| f.round().max(0.0) as u32)
+    body.trim()
+        .parse::<f64>()
+        .ok()
+        .map(|f| f.round().max(0.0) as u32)
 }
 
 #[cfg(test)]
@@ -306,7 +309,11 @@ mod tests {
     fn extract_curves_sorts_by_occurrence() {
         let dump = dump_with(&[(
             "transition-timing-function",
-            &[("ease-in-out", 5), ("cubic-bezier(0.4, 0, 0.2, 1)", 12), ("linear", 3)],
+            &[
+                ("ease-in-out", 5),
+                ("cubic-bezier(0.4, 0, 0.2, 1)", 12),
+                ("linear", 3),
+            ],
         )]);
         let r = extract(&dump);
         assert_eq!(r.transition_curves.len(), 3);
@@ -382,7 +389,11 @@ mod tests {
     fn distinct_box_shadows_excludes_none() {
         let dump = dump_with(&[(
             "box-shadow",
-            &[("0 1px 2px rgba(0,0,0,0.1)", 5), ("none", 100), ("0 4px 8px rgba(0,0,0,0.2)", 3)],
+            &[
+                ("0 1px 2px rgba(0,0,0,0.1)", 5),
+                ("none", 100),
+                ("0 4px 8px rgba(0,0,0,0.2)", 3),
+            ],
         )]);
         let r = extract(&dump);
         assert_eq!(r.distinct_box_shadows, 2);
@@ -454,10 +465,7 @@ mod tests {
     #[test]
     fn extract_from_path_round_trips_dump() {
         let dump = dump_with(&[("transition-duration", &[("200ms", 1)])]);
-        let path = std::env::temp_dir().join(format!(
-            "forge-motion-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-motion-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&dump).unwrap()).unwrap();
         let r = extract_from_path(&path).unwrap();
         assert_eq!(r.transition_durations_ms.get(&200).copied(), Some(1));

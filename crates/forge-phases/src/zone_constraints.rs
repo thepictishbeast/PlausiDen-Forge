@@ -125,7 +125,14 @@ impl Phase for ZoneConstraintsPhase {
             };
 
             let path_disp = path.display().to_string();
-            check_page(&path_disp, ct_slug, &value, quota, &mut findings, self.name());
+            check_page(
+                &path_disp,
+                ct_slug,
+                &value,
+                quota,
+                &mut findings,
+                self.name(),
+            );
         }
 
         Ok(findings)
@@ -295,10 +302,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-zone-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-zone-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -396,7 +400,9 @@ require = ["heading"]
         );
         let findings = ZoneConstraintsPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("requires `paragraph` but the page has none")),
+            findings.iter().any(|f| f
+                .message
+                .contains("requires `paragraph` but the page has none")),
             "expected missing-paragraph finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -419,7 +425,9 @@ require = ["heading"]
         );
         let findings = ZoneConstraintsPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("forbids `pricing`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("forbids `pricing`")),
             "expected forbidden-pricing finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -439,7 +447,9 @@ require = ["heading"]
         );
         let findings = ZoneConstraintsPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("requires at least 5 sections")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("requires at least 5 sections")),
             "expected min-sections finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -460,7 +470,9 @@ require = ["heading"]
         );
         let findings = ZoneConstraintsPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("allows at most 30 sections")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("allows at most 30 sections")),
             "expected max-sections finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -514,8 +526,10 @@ require = ["heading"]
             "expected homepage hero_editorial finding"
         );
         assert!(
-            findings.iter().any(|f| f.path.contains("article.json")
-                && f.message.contains("requires `paragraph`")),
+            findings
+                .iter()
+                .any(|f| f.path.contains("article.json")
+                    && f.message.contains("requires `paragraph`")),
             "expected article paragraph finding"
         );
         let _ = fs::remove_dir_all(&root);

@@ -323,7 +323,10 @@ mod tests {
         assert_eq!(r.hover_treatments.len(), 3);
         assert_eq!(r.hover_treatments[0].treatment, HoverTreatment::ColorShift);
         assert_eq!(r.hover_treatments[0].occurrence_count, 8);
-        assert_eq!(r.hover_treatments[1].treatment, HoverTreatment::BackgroundShift);
+        assert_eq!(
+            r.hover_treatments[1].treatment,
+            HoverTreatment::BackgroundShift
+        );
         assert_eq!(r.hover_treatments[1].occurrence_count, 5);
         assert_eq!(r.hover_treatments[2].treatment, HoverTreatment::Transform);
         assert_eq!(r.hover_treatments[2].occurrence_count, 2);
@@ -362,7 +365,10 @@ mod tests {
         dump.transition_property_distribution
             .insert("background-color".to_owned(), 3);
         let r = extract(&dump);
-        assert_eq!(r.transition_property_distribution.get("color").copied(), Some(5));
+        assert_eq!(
+            r.transition_property_distribution.get("color").copied(),
+            Some(5)
+        );
         assert_eq!(
             r.transition_property_distribution
                 .get("background-color")
@@ -375,12 +381,8 @@ mod tests {
     fn extract_from_path_round_trips_dump() {
         let mut dump = InteractiveDump::default();
         dump.spec = InteractiveSpec::V1;
-        dump.hover_pairs
-            .push(pair("color", "black", "purple"));
-        let path = std::env::temp_dir().join(format!(
-            "forge-interactive-{}",
-            std::process::id()
-        ));
+        dump.hover_pairs.push(pair("color", "black", "purple"));
+        let path = std::env::temp_dir().join(format!("forge-interactive-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&dump).unwrap()).unwrap();
         let r = extract_from_path(&path).unwrap();
         assert_eq!(r.hover_treatments.len(), 1);

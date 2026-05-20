@@ -41,8 +41,11 @@ impl Phase for TraitConsistencyPhase {
         } else if json_path.is_file() {
             load_json(&json_path)?
         } else {
-            tracing::debug!("trait_consistency: no manifest at {} or {}; skip",
-                toml_path.display(), json_path.display());
+            tracing::debug!(
+                "trait_consistency: no manifest at {} or {}; skip",
+                toml_path.display(),
+                json_path.display()
+            );
             return Ok(vec![]);
         };
 
@@ -220,6 +223,9 @@ traits = ["no-site-specific", "manifested", "versioned"]
         let findings = TraitConsistencyPhase.run(&ctx_in(tmp.path())).unwrap();
         // If TOML was preferred + parsed clean, we get 0 findings.
         // (Behavior contract: when both present, TOML wins.)
-        assert!(findings.is_empty(), "expected TOML preference; got JSON findings");
+        assert!(
+            findings.is_empty(),
+            "expected TOML preference; got JSON findings"
+        );
     }
 }

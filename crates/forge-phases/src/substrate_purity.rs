@@ -108,9 +108,9 @@ fn walk_static_for_hand_authored(
             // output, so don't flag.
             "html" => continue,
             // Asset files (images, fonts, video) are content and OK.
-            "png" | "jpg" | "jpeg" | "gif" | "svg" | "webp" | "avif" | "ico"
-            | "woff" | "woff2" | "ttf" | "otf" | "mp4" | "webm" | "mp3" | "ogg"
-            | "pdf" | "json" | "xml" | "txt" | "map" => continue,
+            "png" | "jpg" | "jpeg" | "gif" | "svg" | "webp" | "avif" | "ico" | "woff" | "woff2"
+            | "ttf" | "otf" | "mp4" | "webm" | "mp3" | "ogg" | "pdf" | "json" | "xml" | "txt"
+            | "map" => continue,
             // CSS / JS / WASM go through the allowlist.
             "css" | "js" | "mjs" | "wasm" | "br" | "gz" => {
                 if !allowlist.contains(name) {
@@ -193,7 +193,11 @@ mod tests {
         let phase = SubstratePurityPhase;
         let ctx = make_ctx(&static_dir);
         let findings = phase.run(&ctx).expect("runs");
-        assert_eq!(findings.len(), 1, "expected one finding, got: {findings:#?}");
+        assert_eq!(
+            findings.len(),
+            1,
+            "expected one finding, got: {findings:#?}"
+        );
         let f = &findings[0];
         assert_eq!(f.phase, "substrate_purity");
         assert!(f.message.contains("custom.css"));

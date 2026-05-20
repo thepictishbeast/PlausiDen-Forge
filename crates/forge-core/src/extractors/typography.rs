@@ -156,10 +156,7 @@ fn extract_weights(dump: &ComputedStylesDump) -> Vec<u32> {
     let Some(values) = dump.property_values.get("font-weight") else {
         return Vec::new();
     };
-    let mut set: Vec<u32> = values
-        .keys()
-        .filter_map(|raw| parse_weight(raw))
-        .collect();
+    let mut set: Vec<u32> = values.keys().filter_map(|raw| parse_weight(raw)).collect();
     set.sort_unstable();
     set.dedup();
     set
@@ -230,13 +227,18 @@ fn parse_px(raw: &str) -> Option<u32> {
     // routed to parse_unitless_ratio. Computed-style dumps from
     // Crawler always include the unit on font-size + line-height.
     let body = trimmed.strip_suffix("px")?;
-    body.trim().parse::<f64>().ok().map(|f| f.round().max(0.0) as u32)
+    body.trim()
+        .parse::<f64>()
+        .ok()
+        .map(|f| f.round().max(0.0) as u32)
 }
 
 fn parse_unitless_ratio(raw: &str) -> Option<f64> {
     let trimmed = raw.trim();
     // Reject if it has a unit.
-    if trimmed.ends_with("px") || trimmed.ends_with('%') || trimmed.ends_with("em")
+    if trimmed.ends_with("px")
+        || trimmed.ends_with('%')
+        || trimmed.ends_with("em")
         || trimmed.ends_with("rem")
     {
         return None;
@@ -318,7 +320,13 @@ mod tests {
     fn extract_weights_dedupes_and_sorts() {
         let dump = dump_with(&[(
             "font-weight",
-            &[("400", 50), ("normal", 10), ("700", 5), ("600", 3), ("bold", 2)],
+            &[
+                ("400", 50),
+                ("normal", 10),
+                ("700", 5),
+                ("600", 3),
+                ("bold", 2),
+            ],
         )]);
         let r = extract(&dump);
         // normal=400, bold=700; expected unique sorted [400, 600, 700].
@@ -367,10 +375,7 @@ mod tests {
     #[test]
     fn extract_from_path_round_trips_dump() {
         let dump = dump_with(&[("font-family", &[("Inter", 3)])]);
-        let path = std::env::temp_dir().join(format!(
-            "forge-typography-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-typography-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&dump).unwrap()).unwrap();
         let r = extract_from_path(&path).unwrap();
         assert_eq!(r.font_families.len(), 1);

@@ -134,10 +134,7 @@ fn check_class(
                      browser has to wait for before paint — the budget is the reader-side \
                      latency floor, not an internal lint",
                 )
-                .fix(format!(
-                    "{label} over budget at {}: {hint}",
-                    iec(sz)
-                ))
+                .fix(format!("{label} over budget at {}: {hint}", iec(sz)))
                 .avoid(
                     "don't raise the budget to silence the warn — every active substrate \
                      uses the same defaults so over-budget assets are a real regression, not \
@@ -176,10 +173,8 @@ mod tests {
     #[test]
     fn perf_budget_findings_carry_advocacy() {
         use std::fs;
-        let tmp = std::env::temp_dir().join(format!(
-            "forge-perf-budget-advocacy-{}",
-            std::process::id()
-        ));
+        let tmp =
+            std::env::temp_dir().join(format!("forge-perf-budget-advocacy-{}", std::process::id()));
         let _ = fs::remove_dir_all(&tmp);
         fs::create_dir_all(tmp.join("static")).unwrap();
         // Write a JS file 20K — well above the 8K JS budget.

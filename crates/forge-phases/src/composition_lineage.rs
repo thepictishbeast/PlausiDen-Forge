@@ -145,7 +145,10 @@ impl LineageConfig {
     }
 
     fn budget_for(&self, kind: &str) -> usize {
-        self.per_kind.get(kind).copied().unwrap_or(self.default_budget)
+        self.per_kind
+            .get(kind)
+            .copied()
+            .unwrap_or(self.default_budget)
     }
 }
 
@@ -209,10 +212,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-lineage-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-lineage-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -286,8 +286,10 @@ mod tests {
         );
         let findings = CompositionLineagePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("`hero_editorial`")
-                && f.message.contains("5 distinct variants")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("`hero_editorial`")
+                    && f.message.contains("5 distinct variants")),
             "expected hero_editorial variant-explosion finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -313,7 +315,10 @@ mod tests {
             ]}"#,
         );
         let findings = CompositionLineagePhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "within-budget should pass; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "within-budget should pass; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -346,7 +351,10 @@ kv_pair = 6
             ]}"#,
         );
         let findings = CompositionLineagePhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "per-kind budget should let this pass; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "per-kind budget should let this pass; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -360,9 +368,6 @@ kv_pair = 6
             variant_signature(&serde_json::json!({"columns": 3})),
             "columns=3"
         );
-        assert_eq!(
-            variant_signature(&serde_json::json!({})),
-            ""
-        );
+        assert_eq!(variant_signature(&serde_json::json!({})), "");
     }
 }

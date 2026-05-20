@@ -57,7 +57,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use forge_core::fingerprint::SiteFingerprint;
-use forge_core::fingerprint_registry::{find_near_duplicates, find_by_hash};
+use forge_core::fingerprint_registry::{find_by_hash, find_near_duplicates};
 use forge_core::site_identity::SiteIdentity;
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 #[cfg(test)]
@@ -297,10 +297,7 @@ mod tests {
     use std::fs;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-uniq-gate-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-uniq-gate-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).expect("create cms");
         p
@@ -466,9 +463,7 @@ tenant_id = "my-tenant"
         };
         let findings = UniquenessGatePhase.run(&ctx).unwrap();
         assert!(
-            !findings
-                .iter()
-                .any(|f| f.message.contains("collision")),
+            !findings.iter().any(|f| f.message.contains("collision")),
             "self-rebuild should not collide; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);

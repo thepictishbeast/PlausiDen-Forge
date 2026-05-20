@@ -228,7 +228,8 @@ fn scan_doctrine_version(root: &Path) -> String {
     // Look for a sibling PlausiDen-AVP-Doctrine repo with a
     // VERSION file. Best-effort; empty when unavailable.
     let candidates = [
-        root.parent().map(|p| p.join("PlausiDen-AVP-Doctrine/VERSION")),
+        root.parent()
+            .map(|p| p.join("PlausiDen-AVP-Doctrine/VERSION")),
         Some(root.join("../PlausiDen-AVP-Doctrine/VERSION")),
     ];
     for candidate in candidates.iter().flatten() {
@@ -287,10 +288,7 @@ mod tests {
         let root = temp_root("empty");
         let state = SubstrateState::snapshot(&root);
         assert!(state.active_gates.is_empty());
-        assert_eq!(
-            state.available_but_inactive_gates.len(),
-            KNOWN_GATES.len()
-        );
+        assert_eq!(state.available_but_inactive_gates.len(), KNOWN_GATES.len());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -370,10 +368,14 @@ name = "amoled"
         fs::write(root.join("corpora/page_types.json"), "{}").unwrap();
         fs::write(root.join("corpora/skills.json"), "{}").unwrap();
         let state = SubstrateState::snapshot(&root);
-        assert!(state.enabled_corpora.contains(&"page_types.json".to_owned()));
+        assert!(state
+            .enabled_corpora
+            .contains(&"page_types.json".to_owned()));
         assert!(state.enabled_corpora.contains(&"skills.json".to_owned()));
         assert!(state.missing_corpora.contains(&"mcp_tools.json".to_owned()));
-        assert!(state.missing_corpora.contains(&"reference_baseline.json".to_owned()));
+        assert!(state
+            .missing_corpora
+            .contains(&"reference_baseline.json".to_owned()));
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -390,7 +392,9 @@ name = "amoled"
         .unwrap();
         let state = SubstrateState::snapshot(&root);
         assert_eq!(state.pending_deprecations.len(), 2);
-        assert!(state.pending_deprecations.contains(&"primitive.legacy_card".to_owned()));
+        assert!(state
+            .pending_deprecations
+            .contains(&"primitive.legacy_card".to_owned()));
         let _ = fs::remove_dir_all(&root);
     }
 

@@ -246,7 +246,8 @@ Respond ONLY with a JSON object matching this schema:
   {"kind": "reject", "violations": [{"rule": "slug", "strength": 0.7, "explanation": "..."}, ...]}
   {"kind": "refine", "targeted_regeneration_guidance": "...", "violated_rules": [...]}
 
-No prose. No markdown fences. JSON only."#.into()
+No prose. No markdown fences. JSON only."#
+            .into()
     }
 }
 

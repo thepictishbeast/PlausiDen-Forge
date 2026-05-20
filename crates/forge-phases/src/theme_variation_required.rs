@@ -138,7 +138,10 @@ impl Phase for ThemeVariationRequiredPhase {
                         "add `[[site_identity.theme_variant]] name = \"amoled\" required = true` (or any other dark-family variant)",
                     ));
                 }
-                if matches!(policy.minimum, MinimumThemeSet::LightPlusAmoled) && amoled_dark.is_none() && have_dark {
+                if matches!(policy.minimum, MinimumThemeSet::LightPlusAmoled)
+                    && amoled_dark.is_none()
+                    && have_dark
+                {
                     findings.push(
                         Finding::strict(
                             "theme_variation_required",
@@ -269,10 +272,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-theme-req-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-theme-req-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(&p).unwrap();
         p
@@ -326,7 +326,9 @@ site_id = "x"
         .unwrap();
         let findings = ThemeVariationRequiredPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("no [[site_identity.theme_variant]] entries are present")),
+            findings.iter().any(|f| f
+                .message
+                .contains("no [[site_identity.theme_variant]] entries are present")),
             "expected missing-variants finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -349,7 +351,9 @@ required = true
         .unwrap();
         let findings = ThemeVariationRequiredPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("`dark`-family variant")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("`dark`-family variant")),
             "expected dark-missing finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -375,7 +379,10 @@ required = true
         )
         .unwrap();
         let findings = ThemeVariationRequiredPhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "complete light+amoled should pass; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "complete light+amoled should pass; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -400,7 +407,9 @@ required = true
         .unwrap();
         let findings = ThemeVariationRequiredPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("recommends the dark variant be named `amoled`")),
+            findings.iter().any(|f| f
+                .message
+                .contains("recommends the dark variant be named `amoled`")),
             "expected amoled-naming warn; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -430,7 +439,9 @@ required = true
         .unwrap();
         let findings = ThemeVariationRequiredPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("requires an AMOLED dark variant")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("requires an AMOLED dark variant")),
             "expected amoled-required strict; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);

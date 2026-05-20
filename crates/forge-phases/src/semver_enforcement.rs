@@ -89,7 +89,9 @@ fn parse_semver(s: &str) -> bool {
     if parts.len() != 3 {
         return false;
     }
-    parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+    parts
+        .iter()
+        .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
 }
 
 /// Check `forge.toml` for the `[platform]` version block.
@@ -352,8 +354,9 @@ forge_version = "latest"
         .unwrap();
         let mut findings = Vec::new();
         check_forge_toml(&p, &mut findings);
-        assert!(findings.iter().any(|f| f.message.contains("\"latest\"")
-            && f.severity == forge_core::Severity::Strict));
+        assert!(findings.iter().any(
+            |f| f.message.contains("\"latest\"") && f.severity == forge_core::Severity::Strict
+        ));
     }
 
     #[test]

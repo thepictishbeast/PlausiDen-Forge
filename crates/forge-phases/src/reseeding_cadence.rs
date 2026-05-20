@@ -67,8 +67,8 @@ impl Phase for ReseedingCadencePhase {
         if !reports_dir.is_dir() {
             return Ok(findings);
         }
-        let entries = recent_provenance_entries(&reports_dir, cfg.threshold)
-            .map_err(|e| BuildError::Io {
+        let entries =
+            recent_provenance_entries(&reports_dir, cfg.threshold).map_err(|e| BuildError::Io {
                 context: format!("read provenance in {}", reports_dir.display()),
                 source: e,
             })?;
@@ -80,7 +80,11 @@ impl Phase for ReseedingCadencePhase {
             .iter()
             .all(|e| &e.fingerprint_commitment_hex == first);
         if all_same {
-            let short = if first.len() >= 16 { &first[..16] } else { first };
+            let short = if first.len() >= 16 {
+                &first[..16]
+            } else {
+                first
+            };
             let finding = if cfg.strict {
                 Finding::strict(
                     self.name(),
@@ -155,10 +159,7 @@ fn recent_provenance_entries(
     for entry in fs::read_dir(reports_dir)? {
         let entry = entry?;
         let p = entry.path();
-        let name = p
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or_default();
+        let name = p.file_name().and_then(|s| s.to_str()).unwrap_or_default();
         if name.starts_with("provenance-") && name.ends_with(".json") {
             paths.push(p);
         }
@@ -183,10 +184,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-reseeding-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-reseeding-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("reports")).unwrap();
         p
@@ -313,7 +311,9 @@ mod tests {
         let findings = ReseedingCadencePhase.run(&ctx_for(&root)).unwrap();
         assert!(!findings.is_empty());
         assert!(
-            findings.iter().all(|f| f.severity == forge_core::Severity::Strict),
+            findings
+                .iter()
+                .all(|f| f.severity == forge_core::Severity::Strict),
             "expected strict; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);

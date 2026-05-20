@@ -128,7 +128,11 @@ fn audit_file(path: &Path, findings: &mut Vec<Finding>, phase: &'static str) {
 
     let has_test_module = body.contains("#[cfg(test)]") && body.contains("mod tests");
     let has_pub_phase_or_type = body.contains("pub struct ") || body.contains("pub enum ");
-    if has_pub_phase_or_type && !has_test_module && !path.ends_with("lib.rs") && !path.ends_with("main.rs") {
+    if has_pub_phase_or_type
+        && !has_test_module
+        && !path.ends_with("lib.rs")
+        && !path.ends_with("main.rs")
+    {
         findings.push(
             Finding::warn(
                 phase,
@@ -176,7 +180,10 @@ fn audit_file(path: &Path, findings: &mut Vec<Finding>, phase: &'static str) {
         }
 
         // Outside tests. Check for unwrap/expect.
-        if (line.contains(".unwrap()") || line.contains(".expect(")) && !line.contains("//") && !line.contains("///") {
+        if (line.contains(".unwrap()") || line.contains(".expect("))
+            && !line.contains("//")
+            && !line.contains("///")
+        {
             // Heuristic: skip lines that are entirely a comment.
             let line_no_lead = line.trim_start();
             if line_no_lead.starts_with("//") || line_no_lead.starts_with("///") {
@@ -212,9 +219,7 @@ fn audit_file(path: &Path, findings: &mut Vec<Finding>, phase: &'static str) {
             let trimmed = next_line.trim();
             if let Some(rest) = trimmed.strip_prefix("pub struct ") {
                 let name_end = rest
-                    .find(|c: char| {
-                        c == '<' || c == '{' || c == '(' || c == ' ' || c == ';'
-                    })
+                    .find(|c: char| c == '<' || c == '{' || c == '(' || c == ' ' || c == ';')
                     .unwrap_or(rest.len());
                 decl_name = Some(&rest[..name_end]);
                 break;
@@ -247,8 +252,9 @@ fn audit_file(path: &Path, findings: &mut Vec<Finding>, phase: &'static str) {
         let needle_impl_close = format!("impl {name}{{");
         let constructor_needle = "pub fn new(";
         let has_constructor = body.lines().enumerate().any(|(li, l)| {
-            let is_impl_line =
-                l.starts_with(&needle_impl_open) || l.contains(&needle_impl_brace) || l.contains(&needle_impl_close);
+            let is_impl_line = l.starts_with(&needle_impl_open)
+                || l.contains(&needle_impl_brace)
+                || l.contains(&needle_impl_close);
             if !is_impl_line {
                 return false;
             }
@@ -280,10 +286,8 @@ mod tests {
     use super::*;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-self-audit-{name}-{}",
-            std::process::id()
-        ));
+        let p =
+            std::env::temp_dir().join(format!("forge-self-audit-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("src")).unwrap();
         p
@@ -323,14 +327,12 @@ mod tests {
             "[substrate_self_audit]\nenforce = true\nsource_dir = \"src\"\n",
         )
         .unwrap();
-        write_src(
-            &root,
-            "foo.rs",
-            "pub struct Foo { pub x: i32 }\n",
-        );
+        write_src(&root, "foo.rs", "pub struct Foo { pub x: i32 }\n");
         let findings = SubstrateSelfAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("no `#[cfg(test)] mod tests` block")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("no `#[cfg(test)] mod tests` block")),
             "expected missing-tests finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -358,7 +360,9 @@ mod tests {
         );
         let findings = SubstrateSelfAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            !findings.iter().any(|f| f.message.contains("no `#[cfg(test)] mod tests` block")),
+            !findings
+                .iter()
+                .any(|f| f.message.contains("no `#[cfg(test)] mod tests` block")),
             "shouldn't flag missing tests when present; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -393,7 +397,9 @@ mod tests {
         );
         let findings = SubstrateSelfAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("non-test `.unwrap()`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("non-test `.unwrap()`")),
             "expected unwrap finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -424,7 +430,9 @@ mod tests {
         );
         let findings = SubstrateSelfAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            !findings.iter().any(|f| f.message.contains("non-test `.unwrap()`")),
+            !findings
+                .iter()
+                .any(|f| f.message.contains("non-test `.unwrap()`")),
             "shouldn't flag unwrap inside test module; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -456,7 +464,9 @@ mod tests {
         );
         let findings = SubstrateSelfAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("no `pub fn new(` constructor")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("no `pub fn new(` constructor")),
             "expected missing-constructor finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -493,7 +503,9 @@ mod tests {
         );
         let findings = SubstrateSelfAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            !findings.iter().any(|f| f.message.contains("no `pub fn new(` constructor")),
+            !findings
+                .iter()
+                .any(|f| f.message.contains("no `pub fn new(` constructor")),
             "shouldn't flag when new() is present; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -522,7 +534,9 @@ mod tests {
         );
         let findings = SubstrateSelfAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            !findings.iter().any(|f| f.message.contains("no `pub fn new(` constructor")),
+            !findings
+                .iter()
+                .any(|f| f.message.contains("no `pub fn new(` constructor")),
             "unit struct shouldn't need constructor; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);

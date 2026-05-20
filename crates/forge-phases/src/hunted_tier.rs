@@ -85,7 +85,12 @@ impl Phase for HuntedTierPhase {
         let tenant = TenantCorpus::load(&ctx.root);
         let tenant_extra_markers: Vec<&str> = tenant
             .as_ref()
-            .map(|t| t.extra_body_leak_markers.iter().map(String::as_str).collect())
+            .map(|t| {
+                t.extra_body_leak_markers
+                    .iter()
+                    .map(String::as_str)
+                    .collect()
+            })
             .unwrap_or_default();
         // Body-text scan for client-state API references.
         let static_dir = &ctx.static_dir;
@@ -239,7 +244,10 @@ mod tests {
     #[test]
     fn noscript_strict_bool_reader() {
         let dir = temp_dir("nostrict");
-        let _ = fs::write(dir.join("forge.toml"), "[noscript_strict]\nenabled = true\n");
+        let _ = fs::write(
+            dir.join("forge.toml"),
+            "[noscript_strict]\nenabled = true\n",
+        );
         assert!(read_noscript_strict_enabled(&dir));
         let _ = fs::remove_file(dir.join("forge.toml"));
         let _ = fs::remove_dir(&dir);
@@ -287,8 +295,10 @@ extra_body_leak_markers = ["indexedDB.open"]
         );
         let findings = run_phase_in(&dir);
         assert!(
-            findings.iter().any(|f| f.message.contains("(tenant-corpus)")
-                && f.message.contains("indexedDB.open")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("(tenant-corpus)")
+                    && f.message.contains("indexedDB.open")),
             "expected tenant-corpus finding for indexedDB.open: {:?}",
             findings.iter().map(|f| &f.message).collect::<Vec<_>>()
         );
@@ -311,20 +321,21 @@ enabled = true
 [tenant_corpus]
 extra_body_leak_markers = ["indexedDB.open"]
 "#,
-            &[(
-                "foo.html",
-                "<p>localStorage.foo</p><p>indexedDB.open()</p>",
-            )],
+            &[("foo.html", "<p>localStorage.foo</p><p>indexedDB.open()</p>")],
         );
         let findings = run_phase_in(&dir);
         // 1 baseline (localStorage.) + 1 tenant (indexedDB.open) = 2
         let baseline_hits = findings
             .iter()
-            .filter(|f| f.message.contains("localStorage.") && !f.message.contains("(tenant-corpus)"))
+            .filter(|f| {
+                f.message.contains("localStorage.") && !f.message.contains("(tenant-corpus)")
+            })
             .count();
         let tenant_hits = findings
             .iter()
-            .filter(|f| f.message.contains("(tenant-corpus)") && f.message.contains("indexedDB.open"))
+            .filter(|f| {
+                f.message.contains("(tenant-corpus)") && f.message.contains("indexedDB.open")
+            })
             .count();
         assert_eq!(baseline_hits, 1, "baseline localStorage hit expected once");
         assert_eq!(tenant_hits, 1, "tenant indexedDB.open hit expected once");
@@ -349,7 +360,9 @@ enabled = true
         );
         let findings = run_phase_in(&dir);
         assert!(
-            !findings.iter().any(|f| f.message.contains("indexedDB.open")),
+            !findings
+                .iter()
+                .any(|f| f.message.contains("indexedDB.open")),
             "indexedDB.open isn't in baseline markers; without tenant extension, no finding"
         );
         let _ = fs::remove_dir_all(&dir);

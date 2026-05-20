@@ -278,10 +278,7 @@ mod tests {
     use std::env;
 
     fn temp_root(name: &str) -> std::path::PathBuf {
-        let p = env::temp_dir().join(format!(
-            "forge-provenance-{name}-{}",
-            std::process::id()
-        ));
+        let p = env::temp_dir().join(format!("forge-provenance-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&p);
         std::fs::create_dir_all(&p).unwrap();
         p
@@ -320,14 +317,7 @@ foo = 1
 "#,
         )
         .unwrap();
-        let p = Provenance::compute(
-            &root,
-            "fp_hex",
-            "ts",
-            "x",
-            "",
-        )
-        .unwrap();
+        let p = Provenance::compute(&root, "fp_hex", "ts", "x", "").unwrap();
         assert!(!p.identity_hash.is_empty());
         assert_eq!(p.identity_hash.len(), 64);
         let _ = std::fs::remove_dir_all(&root);

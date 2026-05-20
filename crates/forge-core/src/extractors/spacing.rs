@@ -191,7 +191,10 @@ fn percentile_from_distribution(dist: &BTreeMap<u32, u32>, p: f64) -> u32 {
 fn parse_px(raw: &str) -> Option<u32> {
     let trimmed = raw.trim();
     let body = trimmed.strip_suffix("px")?;
-    body.trim().parse::<f64>().ok().map(|f| f.round().max(0.0) as u32)
+    body.trim()
+        .parse::<f64>()
+        .ok()
+        .map(|f| f.round().max(0.0) as u32)
 }
 
 #[cfg(test)]
@@ -263,10 +266,7 @@ mod tests {
 
     #[test]
     fn extract_content_max_width_picks_mode() {
-        let dump = dump_with(&[(
-            "max-width",
-            &[("768px", 3), ("1280px", 10), ("960px", 5)],
-        )]);
+        let dump = dump_with(&[("max-width", &[("768px", 3), ("1280px", 10), ("960px", 5)])]);
         let r = extract(&dump);
         assert_eq!(r.content_max_width_px, 1280);
     }
@@ -339,10 +339,7 @@ mod tests {
     #[test]
     fn extract_from_path_round_trips_dump() {
         let dump = dump_with(&[("margin-top", &[("16px", 5)])]);
-        let path = std::env::temp_dir().join(format!(
-            "forge-spacing-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-spacing-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&dump).unwrap()).unwrap();
         let r = extract_from_path(&path).unwrap();
         assert_eq!(r.rhythm_unit_px, 16);

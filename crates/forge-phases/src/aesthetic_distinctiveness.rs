@@ -212,10 +212,10 @@ fn check_scaffold_only(
         match k {
             "image_hero" | "split_hero" | "hero" => has_hero = true,
             "call_to_action" => has_cta = true,
-            "paragraph" | "heading" | "pull_quote" | "kv_pair" | "comparison" | "code"
-            | "faq" | "steps" | "feature_spotlight" | "alert" | "roadmap" | "logo_cloud"
-            | "timeline" | "stat_band" | "marquee" | "auth_card" | "mfa_prompt"
-            | "crucible_widget" | "form" | "composer" | "card_feed" => {
+            "paragraph" | "heading" | "pull_quote" | "kv_pair" | "comparison" | "code" | "faq"
+            | "steps" | "feature_spotlight" | "alert" | "roadmap" | "logo_cloud" | "timeline"
+            | "stat_band" | "marquee" | "auth_card" | "mfa_prompt" | "crucible_widget" | "form"
+            | "composer" | "card_feed" => {
                 has_editorial = true;
             }
             _ => {}
@@ -263,10 +263,7 @@ fn check_monotonous_feature_grid(
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
-    let columns = section
-        .get("columns")
-        .and_then(|c| c.as_u64())
-        .unwrap_or(3);
+    let columns = section.get("columns").and_then(|c| c.as_u64()).unwrap_or(3);
     if columns < 3 {
         return;
     }
@@ -278,10 +275,7 @@ fn check_monotonous_feature_grid(
     }
     let mut slug_set = std::collections::BTreeSet::new();
     for item in items {
-        let slug = item
-            .get("icon_slug")
-            .and_then(|s| s.as_str())
-            .unwrap_or("");
+        let slug = item.get("icon_slug").and_then(|s| s.as_str()).unwrap_or("");
         slug_set.insert(slug);
     }
     if slug_set.len() <= 1 {
@@ -477,8 +471,16 @@ const JARGON_PHRASES: &[&str] = &[
 /// etc. without further context. Cheap signal that gets reused
 /// because it costs nothing to type.
 const VAGUE_EYEBROW_LITERALS: &[&str] = &[
-    "beta", "new", "alpha", "latest", "introducing", "coming soon",
-    "now available", "announcement", "tba", "tbd",
+    "beta",
+    "new",
+    "alpha",
+    "latest",
+    "introducing",
+    "coming soon",
+    "now available",
+    "announcement",
+    "tba",
+    "tbd",
 ];
 
 /// Classify a slop phrase into a category so the finding message
@@ -501,9 +503,7 @@ fn classify_jargon(phrase: &str) -> &'static str {
     if phrase.starts_with("the future of") {
         return "future-of";
     }
-    if phrase.starts_with("ai-") || phrase.starts_with("ai ")
-        || phrase == "blockchain-powered"
-    {
+    if phrase.starts_with("ai-") || phrase.starts_with("ai ") || phrase == "blockchain-powered" {
         return "ai-buzzword";
     }
     let amplifier = matches!(
@@ -595,7 +595,10 @@ fn check_corporate_jargon(
     let mut by_cat: std::collections::BTreeMap<&'static str, Vec<String>> =
         std::collections::BTreeMap::new();
     for h in &hits {
-        by_cat.entry(classify_jargon(h)).or_default().push(h.clone());
+        by_cat
+            .entry(classify_jargon(h))
+            .or_default()
+            .push(h.clone());
     }
     let cat_summary: Vec<String> = by_cat
         .iter()
@@ -620,7 +623,10 @@ fn check_vague_eyebrow(
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
-    let eyebrow = section.get("eyebrow").and_then(|e| e.as_str()).unwrap_or("");
+    let eyebrow = section
+        .get("eyebrow")
+        .and_then(|e| e.as_str())
+        .unwrap_or("");
     let trimmed = eyebrow.trim().to_lowercase();
     if trimmed.is_empty() {
         return;
@@ -1042,10 +1048,7 @@ fn check_adjacent_section_repetition(
     if runs.is_empty() {
         return;
     }
-    let summary: Vec<String> = runs
-        .iter()
-        .map(|(k, n)| format!("{k}×{n}"))
-        .collect();
+    let summary: Vec<String> = runs.iter().map(|(k, n)| format!("{k}×{n}")).collect();
     findings.push(Finding::warn(
         phase,
         path.to_owned(),
@@ -1250,10 +1253,7 @@ fn check_fake_testimonials(
     }
     for t in &testimonials {
         let role = t.get("role").and_then(|r| r.as_str()).unwrap_or("");
-        let attribution = t
-            .get("attribution")
-            .and_then(|a| a.as_str())
-            .unwrap_or("");
+        let attribution = t.get("attribution").and_then(|a| a.as_str()).unwrap_or("");
         let role_lower = role.to_lowercase();
         if role_lower.contains("fictional")
             || role_lower.contains("placeholder")
@@ -1284,7 +1284,14 @@ mod tests {
             ]
         });
         let mut findings = vec![];
-        check_page(Path::new("test.json"), &page, &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.iter().any(|f| f.message.contains("sparse_page")));
     }
 
@@ -1298,7 +1305,14 @@ mod tests {
             ]
         });
         let mut findings = vec![];
-        check_page(Path::new("test.json"), &page, &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.iter().any(|f| f.message.contains("scaffold_only")));
     }
 
@@ -1306,8 +1320,15 @@ mod tests {
     fn single_word_hero_warns() {
         let section = json!({"kind": "image_hero", "title": "Welcome."});
         let mut findings = vec![];
-        check_centered_single_word_hero(&section, "test", &mut findings, "aesthetic_distinctiveness");
-        assert!(findings.iter().any(|f| f.message.contains("centered_single_word_hero")));
+        check_centered_single_word_hero(
+            &section,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("centered_single_word_hero")));
     }
 
     #[test]
@@ -1319,7 +1340,12 @@ mod tests {
             "lede": "Typed contracts at every boundary."
         });
         let mut findings = vec![];
-        check_centered_single_word_hero(&section, "test", &mut findings, "aesthetic_distinctiveness");
+        check_centered_single_word_hero(
+            &section,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1336,7 +1362,9 @@ mod tests {
         });
         let mut findings = vec![];
         check_monotonous_feature_grid(&section, "test", &mut findings, "aesthetic_distinctiveness");
-        assert!(findings.iter().any(|f| f.message.contains("monotonous_feature_grid")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("monotonous_feature_grid")));
     }
 
     #[test]
@@ -1366,7 +1394,9 @@ mod tests {
         });
         let mut findings = vec![];
         check_most_popular_badge(&section, "test", &mut findings, "aesthetic_distinctiveness");
-        assert!(findings.iter().any(|f| f.message.contains("most_popular_badge")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("most_popular_badge")));
     }
 
     #[test]
@@ -1377,7 +1407,9 @@ mod tests {
         });
         let mut findings = vec![];
         check_numbers_that_compose(&section, "test", &mut findings, "aesthetic_distinctiveness");
-        assert!(findings.iter().any(|f| f.message.contains("numbers_that_compose")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("numbers_that_compose")));
     }
 
     #[test]
@@ -1474,7 +1506,14 @@ mod tests {
             json!({"kind": "paragraph", "text": "Our best-in-class platform delivers a seamless integration."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("corporate_jargon"));
         assert!(msg.contains("best-in-class"));
@@ -1491,7 +1530,14 @@ mod tests {
             json!({"kind": "paragraph", "text": "Supercharge your workflow and unleash your team's potential."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("amplifier:"));
         assert!(msg.contains("supercharge"));
@@ -1500,11 +1546,16 @@ mod tests {
 
     #[test]
     fn corporate_jargon_categorizes_future_of_framings() {
-        let sections = vec![
-            json!({"kind": "heading", "text": "Welcome to the future of work."}),
-        ];
+        let sections = vec![json!({"kind": "heading", "text": "Welcome to the future of work."})];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("future-of:"));
         assert!(msg.contains("the future of work"));
@@ -1516,7 +1567,14 @@ mod tests {
             json!({"kind": "paragraph", "text": "An AI-powered platform for blockchain-powered teams."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("ai-buzzword:"));
         assert!(msg.contains("ai-powered"));
@@ -1529,7 +1587,14 @@ mod tests {
             json!({"kind": "paragraph", "text": "Our world-class engineering team is industry-leading."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("superlative:"));
         assert!(msg.contains("world-class"));
@@ -1544,7 +1609,14 @@ mod tests {
             json!({"kind": "paragraph", "text": "Let's circle back on the synergies after the deep dive."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("business-jargon:"));
         assert!(msg.contains("circle back"));
@@ -1560,8 +1632,19 @@ mod tests {
             json!({"kind": "paragraph", "text": "Supercharge your workflow with our world-class AI-powered platform."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
-        assert_eq!(findings.len(), 1, "should emit exactly one finding even with multi-category slop");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert_eq!(
+            findings.len(),
+            1,
+            "should emit exactly one finding even with multi-category slop"
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("amplifier:"));
         assert!(msg.contains("ai-buzzword:"));
@@ -1576,7 +1659,14 @@ mod tests {
             json!({"kind": "paragraph", "text": "Typed contracts. Audited at every commit. Reproducible builds."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1607,26 +1697,35 @@ mod tests {
             json!({"kind": "paragraph", "text": "Sign up at you@yourcompany.com for updates."}),
         ];
         let mut findings = vec![];
-        check_placeholder_email(&sections, "test", &mut findings, "aesthetic_distinctiveness");
-        assert!(findings.iter().any(|f| f.message.contains("placeholder_email")));
+        check_placeholder_email(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("placeholder_email")));
     }
 
     #[test]
     fn placeholder_email_skips_legit_input_placeholder() {
         // The hit IS the input placeholder — legitimate UX, not flagged.
-        let sections = vec![
-            json!({"kind": "newsletter_signup", "placeholder": "you@yourcompany.com"}),
-        ];
+        let sections =
+            vec![json!({"kind": "newsletter_signup", "placeholder": "you@yourcompany.com"})];
         let mut findings = vec![];
-        check_placeholder_email(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_placeholder_email(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
     #[test]
     fn collect_text_walks_nested_json() {
-        let sections = vec![
-            json!({"kind": "x", "items": [{"key": "deep", "value": "synergy"}]}),
-        ];
+        let sections = vec![json!({"kind": "x", "items": [{"key": "deep", "value": "synergy"}]})];
         let mut hits = 0;
         collect_text(&sections, &mut |t| {
             if t.contains("synergy") {
@@ -1648,7 +1747,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "It just works."}),
         ];
         let mut findings = vec![];
-        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_short_paragraph_dominance(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         let msg = &findings[0].message;
         assert!(msg.contains("short_paragraph_dominance"));
@@ -1667,7 +1771,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Index funds. Asset location. Rebalancing rules. The boring strategy compounds harder than the exciting one."}),
         ];
         let mut findings = vec![];
-        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_short_paragraph_dominance(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1682,7 +1791,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Sign up."}),
         ];
         let mut findings = vec![];
-        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_short_paragraph_dominance(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1697,7 +1811,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Buy it."}),
         ];
         let mut findings = vec![];
-        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_short_paragraph_dominance(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         assert!(findings[0].message.contains("5 paragraphs"));
     }
@@ -1712,7 +1831,12 @@ mod tests {
             json!({"kind": "kv_pair", "items": []}),
         ];
         let mut findings = vec![];
-        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_short_paragraph_dominance(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1728,7 +1852,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "one two three four five six seven eight nine ten eleven twelve"}),
         ];
         let mut findings = vec![];
-        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_short_paragraph_dominance(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1743,7 +1872,12 @@ mod tests {
             json!({"kind": "call_to_action", "title": "Go"}),
         ];
         let mut findings = vec![];
-        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_adjacent_section_repetition(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         let msg = &findings[0].message;
         assert!(msg.contains("adjacent_section_repetition"));
@@ -1760,7 +1894,12 @@ mod tests {
             json!({"kind": "call_to_action", "title": "Go"}),
         ];
         let mut findings = vec![];
-        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_adjacent_section_repetition(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1780,7 +1919,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Eighth."}),
         ];
         let mut findings = vec![];
-        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_adjacent_section_repetition(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1799,7 +1943,12 @@ mod tests {
             json!({"kind": "feature_spotlight", "items": []}),
         ];
         let mut findings = vec![];
-        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_adjacent_section_repetition(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("2 run"));
         assert!(msg.contains("pricing×3"));
@@ -1817,7 +1966,12 @@ mod tests {
             json!({"kind": "kv_pair", "items": []}),
         ];
         let mut findings = vec![];
-        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_adjacent_section_repetition(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         assert!(msg.contains("kv_pair×3"));
     }
@@ -1834,18 +1988,26 @@ mod tests {
             json!({"kind": "feature_spotlight", "items": []}),
         ];
         let mut findings = vec![];
-        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_adjacent_section_repetition(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
     #[test]
     fn emoji_in_body_warns_on_pictograph_emoji() {
         // Single 🚀 in a paragraph body — main-range emoji.
-        let sections = vec![
-            json!({"kind": "paragraph", "text": "Launching 🚀 our new tier."}),
-        ];
+        let sections = vec![json!({"kind": "paragraph", "text": "Launching 🚀 our new tier."})];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         let msg = &findings[0].message;
         assert!(msg.contains("emoji_in_body"));
@@ -1856,11 +2018,14 @@ mod tests {
     #[test]
     fn emoji_in_body_warns_on_dingbat_range() {
         // Dingbat ✨ — U+2728. Common decorative bullet.
-        let sections = vec![
-            json!({"kind": "paragraph", "text": "Subscribe ✨ today"}),
-        ];
+        let sections = vec![json!({"kind": "paragraph", "text": "Subscribe ✨ today"})];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         assert!(findings[0].message.contains("1 emoji"));
     }
@@ -1872,7 +2037,12 @@ mod tests {
             json!({"kind": "heading", "text": "✓ done"}),
         ];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         assert!(findings[0].message.contains("4 emoji"));
     }
@@ -1884,18 +2054,26 @@ mod tests {
             json!({"kind": "heading", "text": "Plain typography only."}),
         ];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
     #[test]
     fn emoji_in_body_silent_on_ascii_emoticons() {
         // <3 and :) are character-set neutral text — NOT flagged.
-        let sections = vec![
-            json!({"kind": "paragraph", "text": "Love it <3 So good :)"}),
-        ];
+        let sections = vec![json!({"kind": "paragraph", "text": "Love it <3 So good :)"})];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1903,11 +2081,14 @@ mod tests {
     fn emoji_in_body_detects_flag_codepoints() {
         // Regional indicator pair 🇺🇸 (U+1F1FA + U+1F1F8) renders as US flag.
         // Two regional-indicator chars + zero composing scalars.
-        let sections = vec![
-            json!({"kind": "paragraph", "text": "Welcome 🇺🇸 friends"}),
-        ];
+        let sections = vec![json!({"kind": "paragraph", "text": "Welcome 🇺🇸 friends"})];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         // 2 regional indicator codepoints make one visual flag.
         assert!(findings[0].message.contains("2 emoji"));
@@ -1915,11 +2096,15 @@ mod tests {
 
     #[test]
     fn emoji_in_body_surfaces_sample_text() {
-        let sections = vec![
-            json!({"kind": "paragraph", "text": "Get started 🚀 with PlausiDen today"}),
-        ];
+        let sections =
+            vec![json!({"kind": "paragraph", "text": "Get started 🚀 with PlausiDen today"})];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings[0]
             .message
             .contains(r#""Get started 🚀 with PlausiDen today""#));
@@ -1936,7 +2121,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "🔥 five"}),
         ];
         let mut findings = vec![];
-        check_emoji_in_body(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_emoji_in_body(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         // First 3 paragraphs surface in the sample; last 2 don't.
         assert!(msg.contains("🎉"));
@@ -1956,7 +2146,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "The substrate carries the page composition."}),
         ];
         let mut findings = vec![];
-        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_identical_section_text(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         let msg = &findings[0].message;
         assert!(msg.contains("identical_section_text"));
@@ -1973,7 +2168,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Yes."}),
         ];
         let mut findings = vec![];
-        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_identical_section_text(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -1986,7 +2186,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "editorial composition replaces saas marketing."}),
         ];
         let mut findings = vec![];
-        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_identical_section_text(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         assert!(findings[0].message.contains("2 occurrence"));
     }
@@ -1999,7 +2204,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Third unique paragraph closes with the call to action."}),
         ];
         let mut findings = vec![];
-        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_identical_section_text(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings.is_empty());
     }
 
@@ -2012,7 +2222,12 @@ mod tests {
             json!({"kind": "pull_quote", "body": "The same editorial pull quote shipped twice by mistake."}),
         ];
         let mut findings = vec![];
-        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_identical_section_text(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert_eq!(findings.len(), 1);
         assert!(findings[0].message.contains("2 occurrence"));
     }
@@ -2026,7 +2241,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Filler text that gets duplicated below."}),
         ];
         let mut findings = vec![];
-        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_identical_section_text(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         assert!(findings[0].message.contains("[1, 3]"));
     }
 
@@ -2039,7 +2259,12 @@ mod tests {
             json!({"kind": "paragraph", "text": "Second paragraph text that differs enough."}),
         ];
         let mut findings = vec![];
-        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_identical_section_text(
+            &sections,
+            "test",
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
         let msg = &findings[0].message;
         // Two distinct duplicated bodies — count surfaces.
         assert!(msg.contains("2 distinct body text"));

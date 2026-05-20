@@ -333,22 +333,14 @@ mod tests {
 
     #[test]
     fn auto_in_lfi_mode_uses_augmented() {
-        let auto = Auto::new(
-            DeterministicOriginality,
-            LfiOriginality,
-            AiMode::Lfi,
-        );
+        let auto = Auto::new(DeterministicOriginality, LfiOriginality, AiMode::Lfi);
         let r = auto.evaluate(&entry("a b c d a"));
         assert_eq!(r.engine, "lfi");
     }
 
     #[test]
     fn auto_in_off_mode_uses_baseline_fail_closed() {
-        let auto = Auto::new(
-            DeterministicOriginality,
-            LfiOriginality,
-            AiMode::Off,
-        );
+        let auto = Auto::new(DeterministicOriginality, LfiOriginality, AiMode::Off);
         let r = auto.evaluate(&entry("a b c d a"));
         // Off is alias for Deterministic — never invokes LFI even
         // though it's provided.

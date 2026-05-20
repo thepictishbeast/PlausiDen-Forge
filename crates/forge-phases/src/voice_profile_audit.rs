@@ -367,10 +367,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-voice-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-voice-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -423,7 +420,9 @@ tier = "plain"
         );
         let findings = VoiceProfileAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("p95 sentence length")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("p95 sentence length")),
             "expected p95 finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -450,7 +449,9 @@ tier = "plain"
         );
         let findings = VoiceProfileAuditPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("jargon density")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("jargon density")),
             "expected jargon finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -476,7 +477,10 @@ tier = "editorial"
             &serde_json::json!({"sections":[{"kind":"p","body":body}]}).to_string(),
         );
         let findings = VoiceProfileAuditPhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "editorial-clean content should pass; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "editorial-clean content should pass; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 

@@ -77,9 +77,17 @@ impl Phase for IdentityCoherencePhase {
 
         let mut push = |code: &str, message: String, why: &str, fix: &str| {
             let f = if strict {
-                Finding::strict("identity_coherence", ctx.root.join("forge.toml").display().to_string(), message)
+                Finding::strict(
+                    "identity_coherence",
+                    ctx.root.join("forge.toml").display().to_string(),
+                    message,
+                )
             } else {
-                Finding::warn("identity_coherence", ctx.root.join("forge.toml").display().to_string(), message)
+                Finding::warn(
+                    "identity_coherence",
+                    ctx.root.join("forge.toml").display().to_string(),
+                    message,
+                )
             };
             findings.push(f.citing([code]).why(why.to_owned()).fix(fix.to_owned()));
         };
@@ -141,9 +149,7 @@ impl Phase for IdentityCoherencePhase {
                     "histogram",
                     "bar_chart",
                 ];
-                let has_kinetic = identity
-                    .allowed_primitives
-                    .is_empty()
+                let has_kinetic = identity.allowed_primitives.is_empty()
                     || identity
                         .allowed_primitives
                         .iter()
@@ -257,7 +263,9 @@ tier = "technical"
         .unwrap();
         let findings = IdentityCoherencePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("voice.tier = `technical`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("voice.tier = `technical`")),
             "expected ident-201 finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -279,7 +287,9 @@ tier = "technical"
         .unwrap();
         let findings = IdentityCoherencePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            !findings.iter().any(|f| f.message.contains("voice.tier = `technical`")),
+            !findings
+                .iter()
+                .any(|f| f.message.contains("voice.tier = `technical`")),
             "should be silent when code allowed; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -300,7 +310,9 @@ tier = "plain"
         .unwrap();
         let findings = IdentityCoherencePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("voice.tier = `plain`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("voice.tier = `plain`")),
             "expected ident-202 finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -343,7 +355,9 @@ max_per_page_overrides = 2
         .unwrap();
         let findings = IdentityCoherencePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("density_preference = `dense`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("density_preference = `dense`")),
             "expected ident-205 finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -365,7 +379,9 @@ max_per_page_overrides = 10
         .unwrap();
         let findings = IdentityCoherencePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("density_preference = `sparse`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("density_preference = `sparse`")),
             "expected ident-206 finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -390,7 +406,12 @@ tier = "plain"
         let findings = IdentityCoherencePhase.run(&ctx_for(&root)).unwrap();
         assert!(!findings.is_empty());
         for f in &findings {
-            assert_eq!(f.severity, forge_core::Severity::Strict, "expected strict; got warn for: {}", f.message);
+            assert_eq!(
+                f.severity,
+                forge_core::Severity::Strict,
+                "expected strict; got warn for: {}",
+                f.message
+            );
         }
         let _ = fs::remove_dir_all(&root);
     }

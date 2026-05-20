@@ -204,7 +204,8 @@ mod tests {
             let slug = o.slug();
             assert!(!slug.is_empty(), "{o:?} has empty slug");
             assert!(
-                slug.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'),
+                slug.chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'),
                 "{o:?} slug {slug:?} is not snake_case"
             );
         }
@@ -250,7 +251,8 @@ mod tests {
         let json = serde_json::to_string(&Objective::EnablePayment).expect("serialize");
         assert_eq!(json, "\"enable_payment\"");
 
-        let json = serde_json::to_string(&Objective::CollectConsentWithLegalBasis).expect("serialize");
+        let json =
+            serde_json::to_string(&Objective::CollectConsentWithLegalBasis).expect("serialize");
         assert_eq!(json, "\"collect_consent_with_legal_basis\"");
     }
 

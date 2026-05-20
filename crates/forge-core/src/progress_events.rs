@@ -182,8 +182,7 @@ pub fn read_events(path: &Path) -> Result<Vec<ProgressEvent>, std::io::Error> {
 /// Most recent N events for a specific source, in append order.
 #[must_use]
 pub fn recent_for_source(events: &[ProgressEvent], source: &str, n: usize) -> Vec<ProgressEvent> {
-    let mut matches: Vec<&ProgressEvent> =
-        events.iter().filter(|e| e.source == source).collect();
+    let mut matches: Vec<&ProgressEvent> = events.iter().filter(|e| e.source == source).collect();
     let start = matches.len().saturating_sub(n);
     matches.drain(..start);
     matches.into_iter().cloned().collect()
@@ -255,10 +254,7 @@ mod tests {
 
     #[test]
     fn append_and_read_round_trip() {
-        let path = std::env::temp_dir().join(format!(
-            "forge-progress-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-progress-{}", std::process::id()));
         let _ = fs::remove_file(&path);
         append_event(
             &path,
@@ -267,8 +263,7 @@ mod tests {
         .unwrap();
         append_event(
             &path,
-            &sample_event("forge.build", "tokens", ProgressStatus::Completed)
-                .with_progress(100),
+            &sample_event("forge.build", "tokens", ProgressStatus::Completed).with_progress(100),
         )
         .unwrap();
         append_event(
@@ -288,7 +283,11 @@ mod tests {
         let mut events = Vec::new();
         for i in 0..7 {
             events.push(sample_event(
-                if i < 4 { "forge.build" } else { "crawler.capture" },
+                if i < 4 {
+                    "forge.build"
+                } else {
+                    "crawler.capture"
+                },
                 &format!("stage-{i}"),
                 ProgressStatus::Started,
             ));
@@ -322,10 +321,19 @@ mod tests {
             sample_event("b", "1", ProgressStatus::Started),
         ];
         let agg = aggregate_status_by_source(&events);
-        assert_eq!(agg.get("a").and_then(|m| m.get("started")).copied(), Some(1));
-        assert_eq!(agg.get("a").and_then(|m| m.get("completed")).copied(), Some(1));
+        assert_eq!(
+            agg.get("a").and_then(|m| m.get("started")).copied(),
+            Some(1)
+        );
+        assert_eq!(
+            agg.get("a").and_then(|m| m.get("completed")).copied(),
+            Some(1)
+        );
         assert_eq!(agg.get("a").and_then(|m| m.get("failed")).copied(), Some(1));
-        assert_eq!(agg.get("b").and_then(|m| m.get("started")).copied(), Some(1));
+        assert_eq!(
+            agg.get("b").and_then(|m| m.get("started")).copied(),
+            Some(1)
+        );
     }
 
     #[test]

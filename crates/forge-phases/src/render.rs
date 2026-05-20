@@ -172,11 +172,7 @@ impl Phase for RenderPhase {
             // The allowlist is wider than light/dark — page_shell_themed
             // re-validates against the closed enum, so we just need
             // some value to pass through.
-            let theme_owned = page
-                .theme
-                .clone()
-                .or(env_theme)
-                .or(toml_theme);
+            let theme_owned = page.theme.clone().or(env_theme).or(toml_theme);
             let theme_ref = theme_owned.as_deref().filter(|t| {
                 matches!(
                     *t,

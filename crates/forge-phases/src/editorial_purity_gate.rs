@@ -152,7 +152,11 @@ fn check_section(
         if exempt.iter().any(|e| e == kind) {
             return;
         }
-        findings.push(Finding::strict(phase, where_at.to_owned(), format!("editorial_purity_gate — `{kind}` — {detail}")));
+        findings.push(Finding::strict(
+            phase,
+            where_at.to_owned(),
+            format!("editorial_purity_gate — `{kind}` — {detail}"),
+        ));
     };
     match tag {
         "hero" => {
@@ -164,13 +168,17 @@ fn check_section(
             check_centered_single_line(section, where_at, exempt, findings, phase, "hero");
         }
         "hero_editorial" => {
-            check_centered_single_line(section, where_at, exempt, findings, phase, "hero_editorial");
+            check_centered_single_line(
+                section,
+                where_at,
+                exempt,
+                findings,
+                phase,
+                "hero_editorial",
+            );
         }
         "feature_spotlight" => {
-            let columns = section
-                .get("columns")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(0);
+            let columns = section.get("columns").and_then(|v| v.as_u64()).unwrap_or(0);
             let items_len = section
                 .get("items")
                 .and_then(|v| v.as_array())
@@ -194,9 +202,11 @@ fn check_section(
         "pricing" => {
             // Check tier-level highlighted flag.
             if let Some(tiers) = section.get("tiers").and_then(|v| v.as_array()) {
-                let any_highlighted = tiers
-                    .iter()
-                    .any(|t| t.get("highlighted").and_then(|v| v.as_bool()).unwrap_or(false));
+                let any_highlighted = tiers.iter().any(|t| {
+                    t.get("highlighted")
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(false)
+                });
                 if any_highlighted {
                     push(
                         "editorial-purity.pricing-most-popular",
@@ -228,7 +238,10 @@ fn check_section(
                 .get("reject_label")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            if reject.is_empty() || reject.eq_ignore_ascii_case("no") || reject.eq_ignore_ascii_case("dismiss") {
+            if reject.is_empty()
+                || reject.eq_ignore_ascii_case("no")
+                || reject.eq_ignore_ascii_case("dismiss")
+            {
                 push(
                     "editorial-purity.cookie-notice-cta",
                     format!("`CookieNotice` reject_label=`{reject}` — GDPR + ePrivacy compliance + editorial decency requires the reject button to be AS PROMINENT as accept. Use full label like 'Decline non-essential cookies'."),
@@ -273,13 +286,11 @@ fn check_section(
                 .get("background")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            let bg_is_gradient = bg.contains("gradient") || bg == "gradient_hero" || bg == "primary_gradient";
+            let bg_is_gradient =
+                bg.contains("gradient") || bg == "gradient_hero" || bg == "primary_gradient";
             // Section has a single `cta` or `secondary_cta` slot; the
             // anti-pattern is gradient bg + dual CTA + short title.
-            let title = section
-                .get("title")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let title = section.get("title").and_then(|v| v.as_str()).unwrap_or("");
             let has_secondary = section
                 .get("secondary_cta")
                 .map(|v| !v.is_null())
@@ -296,10 +307,7 @@ fn check_section(
         "announcement_bar" => {
             // The "🎉 New feature!" / "📢 Big news!" emoji-prefixed
             // announcement band is a SaaS attention-grab trope.
-            let text = section
-                .get("text")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
+            let text = section.get("text").and_then(|v| v.as_str()).unwrap_or("");
             if leads_with_emoji_or_announcement_glyph(text) {
                 push(
                     "editorial-purity.announcement-bar-emoji-prefix",
@@ -323,10 +331,7 @@ fn check_numbers_that_compose_heading(
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
-    let text = section
-        .get("text")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let text = section.get("text").and_then(|v| v.as_str()).unwrap_or("");
     let lower = text.to_lowercase();
     let trope_kind = "editorial-purity.numbers-that-compose-heading";
     if exempt.iter().any(|e| e == trope_kind) {
@@ -364,8 +369,19 @@ fn leads_with_emoji_or_announcement_glyph(text: &str) -> bool {
     // Common announcement / attention-grab emoji.
     matches!(
         c,
-        '🎉' | '📢' | '🚀' | '✨' | '⚡' | '🔥' | '🎊' | '📣'
-            | '💥' | '🌟' | '⭐' | '🆕' | '🎁' | '🎯'
+        '🎉' | '📢'
+            | '🚀'
+            | '✨'
+            | '⚡'
+            | '🔥'
+            | '🎊'
+            | '📣'
+            | '💥'
+            | '🌟'
+            | '⭐'
+            | '🆕'
+            | '🎁'
+            | '🎯'
     )
 }
 
@@ -380,10 +396,7 @@ fn check_centered_single_line(
     phase: &'static str,
     kind: &str,
 ) {
-    let title = section
-        .get("title")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let title = section.get("title").and_then(|v| v.as_str()).unwrap_or("");
     let lede = section.get("lede").and_then(|v| v.as_str()).unwrap_or("");
     let eyebrow = section
         .get("eyebrow")
@@ -518,7 +531,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("editorial-purity.saas-hero")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("editorial-purity.saas-hero")));
     }
 
     #[test]
@@ -532,8 +547,10 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("centered-single-line-hero")
-            && f.message.contains("Welcome.")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("centered-single-line-hero")
+                && f.message.contains("Welcome.")));
     }
 
     #[test]
@@ -550,7 +567,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("feature-spotlight-grid")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("feature-spotlight-grid")));
     }
 
     #[test]
@@ -566,7 +585,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("feature-spotlight-grid")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("feature-spotlight-grid")));
     }
 
     #[test]
@@ -579,7 +600,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("editorial-purity.stat-band")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("editorial-purity.stat-band")));
     }
 
     #[test]
@@ -594,7 +617,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("pricing-most-popular")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("pricing-most-popular")));
     }
 
     #[test]
@@ -609,7 +634,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("pricing-most-popular")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("pricing-most-popular")));
     }
 
     #[test]
@@ -623,7 +650,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("testimonial-card-avatar")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("testimonial-card-avatar")));
     }
 
     #[test]
@@ -637,7 +666,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("testimonial-card-avatar")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("testimonial-card-avatar")));
     }
 
     #[test]
@@ -653,7 +684,9 @@ mod tests {
             });
             let findings = run_check_enforced(page);
             assert!(
-                findings.iter().any(|f| f.message.contains("cookie-notice-cta")),
+                findings
+                    .iter()
+                    .any(|f| f.message.contains("cookie-notice-cta")),
                 "should fire on short reject_label=\"{short_reject}\""
             );
         }
@@ -670,7 +703,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("cookie-notice-cta")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("cookie-notice-cta")));
     }
 
     #[test]
@@ -685,7 +720,9 @@ mod tests {
         let findings = run_check_enforced(page);
         let kinds: Vec<&str> = findings.iter().map(|f| f.message.as_str()).collect();
         assert!(kinds.iter().any(|k| k.contains("saas-hero")));
-        assert!(kinds.iter().any(|k| k.contains("centered-single-line-hero")));
+        assert!(kinds
+            .iter()
+            .any(|k| k.contains("centered-single-line-hero")));
         assert!(kinds.iter().any(|k| k.contains("feature-spotlight-grid")));
         assert!(kinds.iter().any(|k| k.contains("stat-band")));
     }
@@ -722,7 +759,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("logo-wall-marquee")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("logo-wall-marquee")));
     }
 
     #[test]
@@ -738,7 +777,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("logo-wall-marquee")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("logo-wall-marquee")));
     }
 
     #[test]
@@ -771,7 +812,9 @@ mod tests {
             });
             let findings = run_check_enforced(page);
             assert!(
-                findings.iter().any(|f| f.message.contains("numbers-that-compose-heading")),
+                findings
+                    .iter()
+                    .any(|f| f.message.contains("numbers-that-compose-heading")),
                 "pattern {pattern} should fire"
             );
         }
@@ -787,7 +830,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("numbers-that-compose-heading")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("numbers-that-compose-heading")));
     }
 
     #[test]
@@ -802,7 +847,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("cta-band-gradient-dual")));
     }
 
     #[test]
@@ -817,7 +864,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("cta-band-gradient-dual")));
     }
 
     #[test]
@@ -834,7 +883,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("cta-band-gradient-dual")));
     }
 
     #[test]
@@ -851,7 +902,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("cta-band-gradient-dual")));
     }
 
     #[test]
@@ -866,7 +919,9 @@ mod tests {
             });
             let findings = run_check_enforced(page);
             assert!(
-                findings.iter().any(|f| f.message.contains("announcement-bar-emoji-prefix")),
+                findings
+                    .iter()
+                    .any(|f| f.message.contains("announcement-bar-emoji-prefix")),
                 "should fire on {emoji_prefix}"
             );
         }
@@ -882,7 +937,9 @@ mod tests {
             }]
         });
         let findings = run_check_enforced(page);
-        assert!(!findings.iter().any(|f| f.message.contains("announcement-bar-emoji-prefix")));
+        assert!(!findings
+            .iter()
+            .any(|f| f.message.contains("announcement-bar-emoji-prefix")));
     }
 
     #[test]

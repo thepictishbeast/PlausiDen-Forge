@@ -243,10 +243,8 @@ mod tests {
 
     #[test]
     fn append_and_read_round_trip() {
-        let path = std::env::temp_dir().join(format!(
-            "forge-skill-telemetry-{}",
-            std::process::id()
-        ));
+        let path =
+            std::env::temp_dir().join(format!("forge-skill-telemetry-{}", std::process::id()));
         let _ = fs::remove_file(&path);
         append_invocation(&path, &sample_invocation("a", SkillOutcome::Success)).unwrap();
         append_invocation(&path, &sample_invocation("b", SkillOutcome::Failure)).unwrap();
@@ -290,9 +288,18 @@ mod tests {
             sample_invocation("b", SkillOutcome::Skipped),
         ];
         let agg = aggregate_outcomes(&entries);
-        assert_eq!(agg.get("a").and_then(|m| m.get("success")).copied(), Some(2));
-        assert_eq!(agg.get("a").and_then(|m| m.get("failure")).copied(), Some(1));
-        assert_eq!(agg.get("b").and_then(|m| m.get("skipped")).copied(), Some(1));
+        assert_eq!(
+            agg.get("a").and_then(|m| m.get("success")).copied(),
+            Some(2)
+        );
+        assert_eq!(
+            agg.get("a").and_then(|m| m.get("failure")).copied(),
+            Some(1)
+        );
+        assert_eq!(
+            agg.get("b").and_then(|m| m.get("skipped")).copied(),
+            Some(1)
+        );
     }
 
     #[test]

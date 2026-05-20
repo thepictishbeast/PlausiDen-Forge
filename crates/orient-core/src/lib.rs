@@ -255,10 +255,7 @@ mod tests {
         assert_eq!(back.lifecycle, Some(Lifecycle::Stable));
         assert_eq!(back.risk, Some(Risk::Tier6Mutation));
         assert_eq!(back.accessibility, Some(Accessibility::Wcag22Aa));
-        assert_eq!(
-            back.domain,
-            Some(vec![Domain::Ecommerce, Domain::Finance])
-        );
+        assert_eq!(back.domain, Some(vec![Domain::Ecommerce, Domain::Finance]));
     }
 
     #[test]

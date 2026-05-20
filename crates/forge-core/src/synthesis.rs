@@ -109,11 +109,7 @@ impl SiteSpec {
 
     /// Add a page with its section sequence.
     #[must_use]
-    pub fn with_page(
-        mut self,
-        slug: impl Into<String>,
-        sections: Vec<SectionSpec>,
-    ) -> Self {
+    pub fn with_page(mut self, slug: impl Into<String>, sections: Vec<SectionSpec>) -> Self {
         self.pages.insert(slug.into(), sections);
         self
     }
@@ -254,7 +250,10 @@ fn build_page_json(
     let mut section_array = Vec::new();
     for sec in sections {
         let mut obj = serde_json::Map::new();
-        obj.insert("kind".to_owned(), serde_json::Value::String(sec.kind.clone()));
+        obj.insert(
+            "kind".to_owned(),
+            serde_json::Value::String(sec.kind.clone()),
+        );
         if !sec.variant.is_empty() {
             obj.insert(
                 "variant".to_owned(),
@@ -279,10 +278,7 @@ mod tests {
     use super::*;
 
     fn temp_out_dir(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-synthesis-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-synthesis-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         p
     }
@@ -295,8 +291,7 @@ mod tests {
             .with_density("comfortable")
             .with_page(
                 "index",
-                vec![SectionSpec::new("hero_editorial")
-                    .with_field("title", "Hello")],
+                vec![SectionSpec::new("hero_editorial").with_field("title", "Hello")],
             )
             .with_page(
                 "about",
@@ -371,8 +366,7 @@ mod tests {
     fn synthesize_creates_missing_output_directory() {
         let out_dir = temp_out_dir("create-dir");
         assert!(!out_dir.exists());
-        let spec = SiteSpec::new("s", "")
-            .with_page("i", vec![SectionSpec::new("paragraph")]);
+        let spec = SiteSpec::new("s", "").with_page("i", vec![SectionSpec::new("paragraph")]);
         synthesize(&spec, &out_dir).unwrap();
         assert!(out_dir.exists());
         assert!(out_dir.join("i.json").is_file());
@@ -390,8 +384,7 @@ mod tests {
 
     #[test]
     fn synthesize_omits_voice_when_empty() {
-        let spec = SiteSpec::new("s", "")
-            .with_page("i", vec![SectionSpec::new("paragraph")]);
+        let spec = SiteSpec::new("s", "").with_page("i", vec![SectionSpec::new("paragraph")]);
         let out_dir = temp_out_dir("no-voice");
         synthesize(&spec, &out_dir).unwrap();
         let body = fs::read_to_string(out_dir.join("i.json")).unwrap();

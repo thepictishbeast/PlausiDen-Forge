@@ -108,11 +108,7 @@ impl IdentityTransition {
     ) -> Self {
         let from = from_identity_hash.into();
         let to = to_identity_hash.into();
-        let axes_changed: Vec<String> = diff
-            .axes_changed
-            .iter()
-            .map(String::from)
-            .collect();
+        let axes_changed: Vec<String> = diff.axes_changed.iter().map(String::from).collect();
         let diff_summary = diff
             .axes_changed
             .iter()
@@ -220,25 +216,23 @@ impl IdentityDiff {
         }
         // Voice cascade.
         if axes.contains("voice.tier") {
-            let has_primitive_cascade = axes.contains("allowed_primitives")
-                || axes.contains("forbidden_primitives");
+            let has_primitive_cascade =
+                axes.contains("allowed_primitives") || axes.contains("forbidden_primitives");
             if !has_primitive_cascade {
                 return false;
             }
         }
         // Mood cascade.
         if axes.contains("mood.primary") {
-            let has_mood_cascade =
-                axes.iter().any(|a| a.starts_with("theme_variant"))
-                    || axes.contains("allowed_primitives");
+            let has_mood_cascade = axes.iter().any(|a| a.starts_with("theme_variant"))
+                || axes.contains("allowed_primitives");
             if !has_mood_cascade {
                 return false;
             }
         }
         // Density cascade.
         if axes.contains("density_preference") {
-            let has_density_cascade =
-                axes.iter().any(|a| a.starts_with("tokens"));
+            let has_density_cascade = axes.iter().any(|a| a.starts_with("tokens"));
             if !has_density_cascade {
                 return false;
             }
@@ -289,9 +283,7 @@ pub fn classify_diff(prev: &SiteIdentity, next: &SiteIdentity) -> IdentityDiff {
     if prev.theme_variant.len() != next.theme_variant.len() {
         axes.push("theme_variant".to_owned());
     }
-    IdentityDiff {
-        axes_changed: axes,
-    }
+    IdentityDiff { axes_changed: axes }
 }
 
 /// Errors `append_to_chain` can return.
@@ -477,14 +469,8 @@ mod tests {
     fn transition_verify_fails_on_tamper() {
         let key = generate_keypair();
         let vk = key.verifying_key();
-        let mut t = IdentityTransition::build(
-            "from",
-            "to",
-            "ts",
-            "site",
-            "",
-            IdentityDiff::default(),
-        );
+        let mut t =
+            IdentityTransition::build("from", "to", "ts", "site", "", IdentityDiff::default());
         t.sign(&key);
         t.to_identity_hash = "tampered".into();
         assert!(t.verify(&vk).is_err());
@@ -492,16 +478,24 @@ mod tests {
 
     #[test]
     fn chain_append_and_read_round_trip() {
-        let path = std::env::temp_dir().join(format!(
-            "forge-transition-test-{}",
-            std::process::id()
-        ));
+        let path =
+            std::env::temp_dir().join(format!("forge-transition-test-{}", std::process::id()));
         let _ = std::fs::remove_file(&path);
         let t1 = IdentityTransition::build(
-            "", "h1", "2026-05-20T12:00:00Z", "s", "", IdentityDiff::default(),
+            "",
+            "h1",
+            "2026-05-20T12:00:00Z",
+            "s",
+            "",
+            IdentityDiff::default(),
         );
         let t2 = IdentityTransition::build(
-            "h1", "h2", "2026-05-20T12:01:00Z", "s", "", IdentityDiff::default(),
+            "h1",
+            "h2",
+            "2026-05-20T12:01:00Z",
+            "s",
+            "",
+            IdentityDiff::default(),
         );
         append_to_chain(&path, &t1).unwrap();
         append_to_chain(&path, &t2).unwrap();
@@ -513,10 +507,8 @@ mod tests {
 
     #[test]
     fn append_to_chain_rejects_malformed_timestamp() {
-        let path = std::env::temp_dir().join(format!(
-            "forge-transition-bad-ts-{}",
-            std::process::id()
-        ));
+        let path =
+            std::env::temp_dir().join(format!("forge-transition-bad-ts-{}", std::process::id()));
         let _ = std::fs::remove_file(&path);
         for bad in [
             "",
@@ -527,9 +519,8 @@ mod tests {
             "2026-05-20T12:00:00.5Z",    // fractional
             "2026-05-20T12:00:00+00:00", // explicit offset
         ] {
-            let t = IdentityTransition::build(
-                "from", "to", bad, "site", "", IdentityDiff::default(),
-            );
+            let t =
+                IdentityTransition::build("from", "to", bad, "site", "", IdentityDiff::default());
             match append_to_chain(&path, &t) {
                 Err(ChainAppendError::BadTimestamp { provided }) => {
                     assert_eq!(provided, bad);
@@ -537,7 +528,10 @@ mod tests {
                 other => panic!("expected BadTimestamp for {bad:?}, got {other:?}"),
             }
         }
-        assert!(!path.exists(), "chain must never appear on disk on bad-timestamp rejection");
+        assert!(
+            !path.exists(),
+            "chain must never appear on disk on bad-timestamp rejection"
+        );
     }
 
     #[test]
@@ -545,12 +539,15 @@ mod tests {
         // tampered case uses "ts" placeholder — has_canonical_timestamp
         // must still report false so the gate would catch it before
         // persistence (the test below stays in-memory by design).
-        let t = IdentityTransition::build(
-            "from", "to", "ts", "site", "", IdentityDiff::default(),
-        );
+        let t = IdentityTransition::build("from", "to", "ts", "site", "", IdentityDiff::default());
         assert!(!t.has_canonical_timestamp());
         let t = IdentityTransition::build(
-            "from", "to", "2026-05-20T12:00:00Z", "site", "", IdentityDiff::default(),
+            "from",
+            "to",
+            "2026-05-20T12:00:00Z",
+            "site",
+            "",
+            IdentityDiff::default(),
         );
         assert!(t.has_canonical_timestamp());
     }

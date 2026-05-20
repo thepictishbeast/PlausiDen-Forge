@@ -153,7 +153,13 @@ impl Phase for PlaceholderValueAuditPhase {
                 continue;
             };
             let path_disp = path.display().to_string();
-            check_page(&path_disp, &value, &tenant_extras, &mut findings, self.name());
+            check_page(
+                &path_disp,
+                &value,
+                &tenant_extras,
+                &mut findings,
+                self.name(),
+            );
         }
         Ok(findings)
     }
@@ -315,7 +321,9 @@ mod tests {
             "email": "you@example.com",
         }));
         assert_eq!(findings.len(), 4);
-        assert!(findings.iter().all(|f| f.severity == forge_core::Severity::Strict));
+        assert!(findings
+            .iter()
+            .all(|f| f.severity == forge_core::Severity::Strict));
     }
 
     #[test]

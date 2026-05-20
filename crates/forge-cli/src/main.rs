@@ -35,56 +35,56 @@ use forge_phases::annotation_review::AnnotationReviewPhase;
 use forge_phases::asset_optimization::AssetOptimizationPhase;
 use forge_phases::backend_coverage::BackendCoveragePhase;
 use forge_phases::carbon_budget::CarbonBudgetPhase;
+use forge_phases::composition_lineage::CompositionLineagePhase;
+use forge_phases::content_substance::ContentSubstancePhase;
 use forge_phases::contrast::ContrastPhase;
 use forge_phases::crawl::CrawlPhase;
 use forge_phases::csp::CspPhase;
 use forge_phases::csp_devmode::CspDevmodePhase;
+use forge_phases::differentiation_budget::DifferentiationBudgetPhase;
 use forge_phases::dns_hygiene_lint::DnsHygieneLintPhase;
 use forge_phases::dynamic_runtime::DynamicRuntimePhase;
 use forge_phases::editorial_purity_gate::EditorialPurityGatePhase;
-use forge_phases::composition_lineage::CompositionLineagePhase;
-use forge_phases::content_substance::ContentSubstancePhase;
-use forge_phases::differentiation_budget::DifferentiationBudgetPhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::forbidden_patterns::ForbiddenPatternsPhase;
-use forge_phases::identity_coherence::IdentityCoherencePhase;
-use forge_phases::mood_lock::MoodLockPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
+use forge_phases::hunted_tier::HuntedTierPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
+use forge_phases::identity_coherence::IdentityCoherencePhase;
 use forge_phases::jurisdiction_compliance::JurisdictionCompliancePhase;
 use forge_phases::label_consistency::LabelConsistencyPhase;
 use forge_phases::link_check::LinkCheckPhase;
 use forge_phases::locale_html_lang::LocaleHtmlLangPhase;
 use forge_phases::loom_sync::LoomSyncPhase;
+use forge_phases::mood_lock::MoodLockPhase;
 use forge_phases::motion::MotionPhase;
 use forge_phases::motion_respects_reduced::MotionRespectsReducedPhase;
 use forge_phases::network_target_enforcement::NetworkTargetEnforcementPhase;
-use forge_phases::hunted_tier::HuntedTierPhase;
 use forge_phases::noscript_strict::NoscriptStrictPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::pattern_emergence::PatternEmergencePhase;
 use forge_phases::pattern_entropy::PatternEntropyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
-use forge_phases::primitive_exhaustion::PrimitiveExhaustionPhase;
-use forge_phases::reseeding_cadence::ReseedingCadencePhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
+use forge_phases::primitive_exhaustion::PrimitiveExhaustionPhase;
 use forge_phases::print_stylesheet::PrintStylesheetPhase;
 use forge_phases::reader_safety::ReaderSafetyPhase;
 use forge_phases::render::RenderPhase;
 use forge_phases::required_pages::RequiredPagesPhase;
+use forge_phases::reseeding_cadence::ReseedingCadencePhase;
 use forge_phases::self_check::SelfCheckPhase;
-use forge_phases::seo::SeoPhase;
 use forge_phases::semver_enforcement::SemverEnforcementPhase;
+use forge_phases::seo::SeoPhase;
 use forge_phases::site_identity_conformance::SiteIdentityConformancePhase;
 use forge_phases::sri::SriPhase;
-use forge_phases::theme_variation_required::ThemeVariationRequiredPhase;
 use forge_phases::structured_data::StructuredDataPhase;
 use forge_phases::substrate_purity::SubstratePurityPhase;
 use forge_phases::theme_consistency::ThemeConsistencyPhase;
+use forge_phases::theme_contrast::ThemeContrastPhase;
+use forge_phases::theme_variation_required::ThemeVariationRequiredPhase;
+use forge_phases::tokens::TokensPhase;
 use forge_phases::trait_consistency::TraitConsistencyPhase;
 use forge_phases::trait_implications::TraitImplicationsPhase;
-use forge_phases::theme_contrast::ThemeContrastPhase;
-use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
 use forge_phases::uniqueness_gate::UniquenessGatePhase;
 use forge_phases::validate_cms::ValidateCmsPhase;
@@ -1273,7 +1273,11 @@ fn run() -> Result<ExitCode> {
     // T55: subcommand router. `Build` is the default for backwards
     // compat with `forge` (no subcommand).
     match args.command.as_ref() {
-        Some(Cmd::Verify { chain, signatures, json }) => return run_verify(&root, *chain, *signatures, *json),
+        Some(Cmd::Verify {
+            chain,
+            signatures,
+            json,
+        }) => return run_verify(&root, *chain, *signatures, *json),
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Fingerprint { action }) => return run_fingerprint(&root, action),
         Some(Cmd::Identity { action }) => return run_identity(&root, action),
@@ -1301,12 +1305,7 @@ fn run() -> Result<ExitCode> {
             source_dir,
             json,
         }) => {
-            return run_bypasses(
-                register.as_deref(),
-                source_dir.as_deref(),
-                *json,
-                &root,
-            );
+            return run_bypasses(register.as_deref(), source_dir.as_deref(), *json, &root);
         }
         Some(Cmd::Watch {
             debounce_ms,
@@ -1864,7 +1863,10 @@ fn print_finding(f: &Finding) {
     if f.path.is_empty() {
         println!("  {}{}: {}{}", label, f.phase, f.message, rule_suffix);
     } else {
-        println!("  {}{}: {} — {}{}", label, f.phase, f.path, f.message, rule_suffix);
+        println!(
+            "  {}{}: {} — {}{}",
+            label, f.phase, f.path, f.message, rule_suffix
+        );
     }
     // Task #201: render Advocacy when populated. Indent under the
     // finding line for grep-ability. Skipped silently for un-retrofitted
@@ -2216,9 +2218,7 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
 fn run_authoring(root: &std::path::Path, action: &AuthoringAction) -> Result<ExitCode> {
     match action {
         AuthoringAction::Audit { cms_dir, json } => {
-            let dir = cms_dir
-                .clone()
-                .unwrap_or_else(|| root.join("cms"));
+            let dir = cms_dir.clone().unwrap_or_else(|| root.join("cms"));
             if !dir.is_dir() {
                 if *json {
                     println!(
@@ -2382,11 +2382,15 @@ fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<Exi
             let templates = library
                 .get("templates")
                 .and_then(|v| v.as_array())
-                .ok_or_else(|| anyhow::anyhow!("no templates array in {}", library_path.display()))?;
+                .ok_or_else(|| {
+                    anyhow::anyhow!("no templates array in {}", library_path.display())
+                })?;
             let template = templates
                 .iter()
                 .find(|t| t.get("slug").and_then(|v| v.as_str()) == Some(slug.as_str()))
-                .ok_or_else(|| anyhow::anyhow!("template slug `{slug}` not found in corpora/page_types.json"))?;
+                .ok_or_else(|| {
+                    anyhow::anyhow!("template slug `{slug}` not found in corpora/page_types.json")
+                })?;
             let voice = template
                 .get("tier")
                 .and_then(|v| v.as_str())
@@ -2424,10 +2428,13 @@ fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<Exi
             spec = spec.with_page(page_slug.clone(), sections);
             let rendered = serde_json::to_string_pretty(&spec)?;
             if let Some(path) = out {
-                let resolved = if path.is_absolute() { path.clone() } else { root.join(path) };
-                std::fs::write(&resolved, &rendered).with_context(|| {
-                    format!("write spec to {}", resolved.display())
-                })?;
+                let resolved = if path.is_absolute() {
+                    path.clone()
+                } else {
+                    root.join(path)
+                };
+                std::fs::write(&resolved, &rendered)
+                    .with_context(|| format!("write spec to {}", resolved.display()))?;
                 println!(
                     "forge synthesis scaffold: wrote {} (template `{slug}`, page `{page_slug}`, {} sections)",
                     resolved.display(),
@@ -2449,9 +2456,30 @@ fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<Exi
                 println!("forge synthesis preview:");
                 println!("  site_id:        {}", parsed.site_id);
                 println!("  tenant_id:      {}", parsed.tenant_id);
-                println!("  voice:          {}", if parsed.voice.is_empty() { "(unset)" } else { &parsed.voice });
-                println!("  mood:           {}", if parsed.mood.is_empty() { "(unset)" } else { &parsed.mood });
-                println!("  density:        {}", if parsed.density.is_empty() { "(unset)" } else { &parsed.density });
+                println!(
+                    "  voice:          {}",
+                    if parsed.voice.is_empty() {
+                        "(unset)"
+                    } else {
+                        &parsed.voice
+                    }
+                );
+                println!(
+                    "  mood:           {}",
+                    if parsed.mood.is_empty() {
+                        "(unset)"
+                    } else {
+                        &parsed.mood
+                    }
+                );
+                println!(
+                    "  density:        {}",
+                    if parsed.density.is_empty() {
+                        "(unset)"
+                    } else {
+                        &parsed.density
+                    }
+                );
                 println!("  pages declared: {}", parsed.pages.len());
                 for (slug, sections) in &parsed.pages {
                     println!("    {} ({} sections):", slug, sections.len());
@@ -2464,7 +2492,10 @@ fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<Exi
                     }
                 }
                 println!();
-                println!("Run `forge synthesis generate {} --out-dir <dir>` to write cms/*.json.", spec.display());
+                println!(
+                    "Run `forge synthesis generate {} --out-dir <dir>` to write cms/*.json.",
+                    spec.display()
+                );
             }
             Ok(ExitCode::SUCCESS)
         }
@@ -2523,7 +2554,11 @@ fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<Exi
                     })
                 );
             } else {
-                println!("forge synthesis generate: wrote {} files to {}", written.len(), resolved_out.display());
+                println!(
+                    "forge synthesis generate: wrote {} files to {}",
+                    written.len(),
+                    resolved_out.display()
+                );
                 for p in &written {
                     println!("  {}", p.display());
                 }
@@ -2537,8 +2572,7 @@ fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<Exi
 fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitCode> {
     match action {
         IdentityAction::Show { json } => {
-            let identity = forge_core::site_identity::SiteIdentity::load(root)
-                .unwrap_or_default();
+            let identity = forge_core::site_identity::SiteIdentity::load(root).unwrap_or_default();
             let provenance = forge_core::provenance::Provenance::compute(
                 root,
                 "(not-computed)",
@@ -2567,22 +2601,55 @@ fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitC
                 );
             } else {
                 println!("forge identity show:");
-                println!("  site_id:           {}", identity.site_id.as_deref().unwrap_or("(none)"));
-                println!("  tenant_id:         {}", identity.tenant_id.as_deref().unwrap_or("(none)"));
-                println!("  identity_hash:     {}", if provenance.identity_hash.is_empty() { "(no [site_identity] section)" } else { &provenance.identity_hash });
-                println!("  voice tier:        {}", identity.voice.tier.as_deref().unwrap_or("(unset)"));
-                println!("  mood primary:      {}", identity.mood.primary.as_deref().unwrap_or("(unset)"));
-                println!("  density:           {}", identity.density_preference.as_deref().unwrap_or("(unset)"));
+                println!(
+                    "  site_id:           {}",
+                    identity.site_id.as_deref().unwrap_or("(none)")
+                );
+                println!(
+                    "  tenant_id:         {}",
+                    identity.tenant_id.as_deref().unwrap_or("(none)")
+                );
+                println!(
+                    "  identity_hash:     {}",
+                    if provenance.identity_hash.is_empty() {
+                        "(no [site_identity] section)"
+                    } else {
+                        &provenance.identity_hash
+                    }
+                );
+                println!(
+                    "  voice tier:        {}",
+                    identity.voice.tier.as_deref().unwrap_or("(unset)")
+                );
+                println!(
+                    "  mood primary:      {}",
+                    identity.mood.primary.as_deref().unwrap_or("(unset)")
+                );
+                println!(
+                    "  density:           {}",
+                    identity.density_preference.as_deref().unwrap_or("(unset)")
+                );
                 println!(
                     "  theme variants:    {}",
                     if identity.theme_variant.is_empty() {
                         "(none)".to_owned()
                     } else {
-                        identity.theme_variant.iter().map(|t| t.name.as_str()).collect::<Vec<_>>().join(", ")
+                        identity
+                            .theme_variant
+                            .iter()
+                            .map(|t| t.name.as_str())
+                            .collect::<Vec<_>>()
+                            .join(", ")
                     }
                 );
-                println!("  allowed primitives:  {} entries", identity.allowed_primitives.len());
-                println!("  forbidden primitives: {} entries", identity.forbidden_primitives.len());
+                println!(
+                    "  allowed primitives:  {} entries",
+                    identity.allowed_primitives.len()
+                );
+                println!(
+                    "  forbidden primitives: {} entries",
+                    identity.forbidden_primitives.len()
+                );
             }
             Ok(ExitCode::SUCCESS)
         }
@@ -2594,9 +2661,9 @@ fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitC
                     .filter_map(|e| e.ok())
                     .map(|e| e.path())
                     .filter(|p| {
-                        p.file_name()
-                            .and_then(|n| n.to_str())
-                            .map_or(false, |n| n.starts_with("provenance-") && n.ends_with(".json"))
+                        p.file_name().and_then(|n| n.to_str()).map_or(false, |n| {
+                            n.starts_with("provenance-") && n.ends_with(".json")
+                        })
                     })
                     .collect()
             } else {
@@ -2606,7 +2673,8 @@ fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitC
             let mut entries = Vec::new();
             for f in &files {
                 if let Ok(body) = std::fs::read_to_string(f) {
-                    if let Ok(p) = serde_json::from_str::<forge_core::provenance::Provenance>(&body) {
+                    if let Ok(p) = serde_json::from_str::<forge_core::provenance::Provenance>(&body)
+                    {
                         entries.push((f.clone(), p));
                     }
                 }
@@ -2629,7 +2697,10 @@ fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitC
                     })
                 );
             } else {
-                println!("forge identity history: {} provenance entries", entries.len());
+                println!(
+                    "forge identity history: {} provenance entries",
+                    entries.len()
+                );
                 for (path, p) in &entries {
                     let short_hash = if p.identity_hash.len() >= 16 {
                         &p.identity_hash[..16]
@@ -2651,9 +2722,8 @@ fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitC
         IdentityAction::Verify { path, json } => {
             let body = std::fs::read_to_string(path)
                 .with_context(|| format!("read {}", path.display()))?;
-            let prov: forge_core::provenance::Provenance =
-                serde_json::from_str(&body)
-                    .with_context(|| format!("parse provenance from {}", path.display()))?;
+            let prov: forge_core::provenance::Provenance = serde_json::from_str(&body)
+                .with_context(|| format!("parse provenance from {}", path.display()))?;
             let pub_path = root.join("reports/attest-pubkey.b64");
             if !pub_path.is_file() {
                 let payload = serde_json::json!({
@@ -2679,7 +2749,10 @@ fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitC
                 if *json {
                     println!("{payload}");
                 } else {
-                    eprintln!("forge identity verify: bad pubkey at {}", pub_path.display());
+                    eprintln!(
+                        "forge identity verify: bad pubkey at {}",
+                        pub_path.display()
+                    );
                 }
                 return Ok(ExitCode::from(1));
             };
@@ -2755,7 +2828,10 @@ fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result
                 if *json {
                     println!("{payload}");
                 } else {
-                    eprintln!("forge fingerprint register: no cms/ at {}", cms_dir.display());
+                    eprintln!(
+                        "forge fingerprint register: no cms/ at {}",
+                        cms_dir.display()
+                    );
                 }
                 return Ok(ExitCode::from(1));
             }
@@ -2779,10 +2855,11 @@ fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result
             let key_body = std::fs::read_to_string(&key_path)
                 .with_context(|| format!("read {}", key_path.display()))?;
             let signing_key = forge_core::attest::signing_key_from_base64(key_body.trim())
-                .ok_or_else(|| anyhow::anyhow!("could not parse signing key from {}", key_path.display()))?;
+                .ok_or_else(|| {
+                    anyhow::anyhow!("could not parse signing key from {}", key_path.display())
+                })?;
 
-            let identity = forge_core::site_identity::SiteIdentity::load(root)
-                .unwrap_or_default();
+            let identity = forge_core::site_identity::SiteIdentity::load(root).unwrap_or_default();
             let resolved_site = site_id.clone().unwrap_or_else(|| {
                 identity.site_id.clone().unwrap_or_else(|| {
                     root.file_name()
@@ -2862,7 +2939,10 @@ fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result
                         })
                     );
                 } else {
-                    eprintln!("forge fingerprint compute: no cms/ directory at {}", cms_dir.display());
+                    eprintln!(
+                        "forge fingerprint compute: no cms/ directory at {}",
+                        cms_dir.display()
+                    );
                 }
                 return Ok(ExitCode::from(1));
             }
@@ -2967,10 +3047,8 @@ fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result
             } else {
                 None
             };
-            let result = forge_core::fingerprint_registry::verify_chain(
-                &registry,
-                verify_key.as_ref(),
-            );
+            let result =
+                forge_core::fingerprint_registry::verify_chain(&registry, verify_key.as_ref());
             let entries = forge_core::fingerprint_registry::read_all(&registry)
                 .map(|v| v.len())
                 .unwrap_or(0);
@@ -3064,7 +3142,11 @@ fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result
                 for e in &entries {
                     println!(
                         "  #{:04}  {}  site={}  tenant={}  {}",
-                        e.sequence, &e.hash[..16], e.site_id, e.tenant_id, e.timestamp
+                        e.sequence,
+                        &e.hash[..16],
+                        e.site_id,
+                        e.tenant_id,
+                        e.timestamp
                     );
                 }
             }
@@ -3385,7 +3467,11 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
             threshold,
         } => run_audit_mutants(root, *run, crate_name, *threshold, *json),
         AuditAction::InitHook { force } => cmd_audit_init_hook(root, *force),
-        AuditAction::Secrets { paths, explain, json } => {
+        AuditAction::Secrets {
+            paths,
+            explain,
+            json,
+        } => {
             let scan_targets: Vec<std::path::PathBuf> = if paths.is_empty() {
                 git_staged_paths(root)
             } else {
@@ -3609,7 +3695,11 @@ fn run_fix(root: &std::path::Path, apply: bool, json: bool) -> Result<ExitCode> 
         let _ = message;
     }
 
-    let latest_name = latest.file_name().unwrap_or_default().to_string_lossy().into_owned();
+    let latest_name = latest
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .into_owned();
 
     if planned.is_empty() {
         if json {
@@ -3624,9 +3714,7 @@ fn run_fix(root: &std::path::Path, apply: bool, json: bool) -> Result<ExitCode> 
                 })
             );
         } else {
-            println!(
-                "forge fix: no auto-fixable findings in {latest_name} — nothing to do."
-            );
+            println!("forge fix: no auto-fixable findings in {latest_name} — nothing to do.");
         }
         return Ok(ExitCode::SUCCESS);
     }
@@ -4007,7 +4095,9 @@ fn run_verify(
             // variant carries the at_index + expected/actual so
             // the operator can immediately bisect to the bad file.
             let idx = chain_error_index(&e);
-            let bad_path = idx.and_then(|i| entries.get(i)).map(|p| p.display().to_string());
+            let bad_path = idx
+                .and_then(|i| entries.get(i))
+                .map(|p| p.display().to_string());
             if json {
                 println!(
                     "{}",
@@ -4701,7 +4791,14 @@ mod attest_fingerprint_tests {
     #[test]
     fn fingerprint_succeeds_against_a_freshly_generated_key() {
         let td = TempDir::new().unwrap();
-        let init_code = run_attest(td.path(), &AttestAction::Init { force: false, json: false }).unwrap();
+        let init_code = run_attest(
+            td.path(),
+            &AttestAction::Init {
+                force: false,
+                json: false,
+            },
+        )
+        .unwrap();
         assert_eq!(init_code, ExitCode::SUCCESS);
         let fp_code = run_attest(td.path(), &AttestAction::Fingerprint { json: false }).unwrap();
         assert_eq!(fp_code, ExitCode::SUCCESS);
@@ -7062,13 +7159,7 @@ fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result
             doctrine_dir,
             terse,
             json,
-        } => run_doctrine_for(
-            path,
-            doctrine_dir.as_deref(),
-            *terse,
-            *json,
-            forge_root,
-        ),
+        } => run_doctrine_for(path, doctrine_dir.as_deref(), *terse, *json, forge_root),
         DoctrineAction::Exceptions {
             doctrine_dir,
             source_dir,
@@ -7213,10 +7304,7 @@ fn run_doctrine_deprecation_audit(
             citations.len()
         );
         for d in &deprecated_citations {
-            print!(
-                "  {}:{} cites `{}` (deprecated",
-                d.file, d.line, d.rule_id
-            );
+            print!("  {}:{} cites `{}` (deprecated", d.file, d.line, d.rule_id);
             if let Some(t) = d.deprecated_at {
                 print!(" at {t}");
             }
@@ -7450,7 +7538,13 @@ where
     let mut count = 0_usize;
     for r in rules {
         count += 1;
-        println!("{} — {}  [{}/{}]", r.id, r.name, severity_label(r.severity), lifecycle_label(r.lifecycle));
+        println!(
+            "{} — {}  [{}/{}]",
+            r.id,
+            r.name,
+            severity_label(r.severity),
+            lifecycle_label(r.lifecycle)
+        );
         println!("  domain    : {:?}", r.domain);
         println!("  statement : {}", r.statement.trim());
         // Rationale can be multi-paragraph; indent each line.
@@ -7474,7 +7568,13 @@ where
             println!("  refs      : {}", r.references.join(" | "));
         }
         if let Some(d) = &r.deprecated_at {
-            println!("  deprecated: {d}{}", r.replaced_by.as_deref().map(|s| format!(" → {s}")).unwrap_or_default());
+            println!(
+                "  deprecated: {d}{}",
+                r.replaced_by
+                    .as_deref()
+                    .map(|s| format!(" → {s}"))
+                    .unwrap_or_default()
+            );
         }
         println!();
     }
@@ -7639,7 +7739,9 @@ fn collect_citations(root: &std::path::Path) -> Vec<Citation> {
                 };
                 let payload = &after[..end];
                 for raw_id in payload.split(',') {
-                    let id = raw_id.trim().trim_matches(|c: char| c == '"' || c.is_whitespace());
+                    let id = raw_id
+                        .trim()
+                        .trim_matches(|c: char| c == '"' || c.is_whitespace());
                     if id.is_empty() {
                         continue;
                     }
@@ -7869,9 +7971,11 @@ fn parse_doctrine_exception(line: &str) -> Option<ParsedException> {
             // Reference might appear as a trailing parenthetical
             // "(ADR-017)" or after a different separator. Try a final
             // pass: scan for the first ADR-N / issue-N / GH-N token.
-            let ref_token = rest
-                .split_whitespace()
-                .find_map(|t| normalize_exception_reference(t.trim_matches(|c: char| c == '(' || c == ')' || c == '[' || c == ']')));
+            let ref_token = rest.split_whitespace().find_map(|t| {
+                normalize_exception_reference(
+                    t.trim_matches(|c: char| c == '(' || c == ')' || c == '[' || c == ']'),
+                )
+            });
             (rest.trim_end_matches(',').trim().to_string(), ref_token)
         }
     };
@@ -8173,9 +8277,7 @@ fn render_rule_markdown(r: &doctrine_core::Rule, buf: &mut String) {
     if let Some(deprecated) = &r.deprecated_at {
         buf.push_str(&format!(" · **Deprecated:** {deprecated}"));
         if let Some(replacement) = &r.replaced_by {
-            buf.push_str(&format!(
-                " → [`{replacement}`](#rule-{replacement})",
-            ));
+            buf.push_str(&format!(" → [`{replacement}`](#rule-{replacement})",));
         }
     }
     buf.push_str("\n\n");
@@ -8274,12 +8376,14 @@ fn run_doctrine_lifecycle(
     };
 
     let total = db.len();
-    let experimental: Vec<&doctrine_core::Rule> =
-        db.by_lifecycle(doctrine_core::Lifecycle::Experimental).collect();
+    let experimental: Vec<&doctrine_core::Rule> = db
+        .by_lifecycle(doctrine_core::Lifecycle::Experimental)
+        .collect();
     let stable: Vec<&doctrine_core::Rule> =
         db.by_lifecycle(doctrine_core::Lifecycle::Stable).collect();
-    let deprecated: Vec<&doctrine_core::Rule> =
-        db.by_lifecycle(doctrine_core::Lifecycle::Deprecated).collect();
+    let deprecated: Vec<&doctrine_core::Rule> = db
+        .by_lifecycle(doctrine_core::Lifecycle::Deprecated)
+        .collect();
 
     // Health flags (warnings, not blockers — parser already enforces
     // structural invariants).
@@ -8329,14 +8433,22 @@ fn run_doctrine_lifecycle(
     } else {
         println!("forge doctrine lifecycle audit");
         println!("  total rules:    {total}");
-        println!("  experimental:   {} (candidates for stable promotion)", experimental.len());
+        println!(
+            "  experimental:   {} (candidates for stable promotion)",
+            experimental.len()
+        );
         println!("  stable:         {} (binding doctrine)", stable.len());
         println!("  deprecated:     {} (being removed)", deprecated.len());
         if !experimental.is_empty() {
             println!();
             println!("Experimental rules awaiting promotion:");
             for r in &experimental {
-                println!("  - {} — {}  (domain: {})", r.id, r.name, domain_label(r.domain));
+                println!(
+                    "  - {} — {}  (domain: {})",
+                    r.id,
+                    r.name,
+                    domain_label(r.domain)
+                );
             }
         }
         if !deprecated.is_empty() {
@@ -8360,7 +8472,11 @@ fn run_doctrine_lifecycle(
             }
         }
         println!();
-        let pct_stable = if total > 0 { (stable.len() * 100) / total } else { 0 };
+        let pct_stable = if total > 0 {
+            (stable.len() * 100) / total
+        } else {
+            0
+        };
         println!(
             "Health: {}% stable. Experimental backlog: {}. Deprecated set: {}.",
             pct_stable,
@@ -8560,12 +8676,14 @@ fn run_bypasses(
             malformed.push((b, "empty approved_at"));
         }
         if b.backfill_issue.trim().is_empty() {
-            malformed.push((b, "empty backfill_issue — every bypass needs a backfill path"));
+            malformed.push((
+                b,
+                "empty backfill_issue — every bypass needs a backfill path",
+            ));
         }
     }
 
-    let violations =
-        !orphan_tags.is_empty() || !orphan_entries.is_empty() || !malformed.is_empty();
+    let violations = !orphan_tags.is_empty() || !orphan_entries.is_empty() || !malformed.is_empty();
 
     if json {
         println!(
@@ -8593,15 +8711,16 @@ fn run_bypasses(
             })
         );
     } else {
-        println!(
-            "forge bypasses: register at {}",
-            register_path.display()
-        );
+        println!("forge bypasses: register at {}", register_path.display());
         println!(
             "  {} register entries, {} code-side tags ({})",
             register.bypasses.len(),
             tags.len(),
-            if violations { "VIOLATIONS" } else { "consistent" }
+            if violations {
+                "VIOLATIONS"
+            } else {
+                "consistent"
+            }
         );
         if !orphan_tags.is_empty() {
             println!();
@@ -8739,7 +8858,11 @@ fn run_orient(
     println!("# forge orient — session brief\n");
     println!("Scope:       {}", scope_path.display());
     println!("Forge root:  {}", forge_root.display());
-    println!("Doctrine:    {} ({})\n", doctrine_dir.display(), doctrine_status);
+    println!(
+        "Doctrine:    {} ({})\n",
+        doctrine_dir.display(),
+        doctrine_status
+    );
 
     println!("## Rule 0 — substrate-only-path");
     println!("{}\n", ORIENT_RULE_ZERO);
@@ -8778,15 +8901,15 @@ fn run_orient(
         println!("  (no rules match this scope — try `forge doctrine query --domain <name>`)");
     } else {
         for r in &applicable_rules {
-            println!(
-                "  {} — {}  [{}/{}]",
-                r.id, r.name, r.severity, r.lifecycle
-            );
+            println!("  {} — {}  [{}/{}]", r.id, r.name, r.severity, r.lifecycle);
         }
     }
     println!();
 
-    println!("Next step: `forge doctrine for {} --terse` for citation-ready rule list.", scope_path.display());
+    println!(
+        "Next step: `forge doctrine for {} --terse` for citation-ready rule list.",
+        scope_path.display()
+    );
 
     Ok(ExitCode::SUCCESS)
 }
@@ -8851,11 +8974,11 @@ const ORIENT_ANTI_PATTERNS: &str = "\
 ✗ bash/grep before forge / loom / make / mcp — tool starvation";
 
 const ORIENT_SKILL_MAP: &[(&str, &str)] = &[
-    ("Add a Forge phase",       "add-forge-phase"),
-    ("Add a Loom primitive",    "add-loom-primitive"),
-    ("Author CMS content",      "author-cms-content"),
-    ("Reproduce a live site",   "pixel-reproduce-site"),
-    ("Extend doctrine rules",   "extend-doctrine-rules"),
+    ("Add a Forge phase", "add-forge-phase"),
+    ("Add a Loom primitive", "add-loom-primitive"),
+    ("Author CMS content", "author-cms-content"),
+    ("Reproduce a live site", "pixel-reproduce-site"),
+    ("Extend doctrine rules", "extend-doctrine-rules"),
 ];
 
 /// Walk `root` for `// SUBSTRATE-BYPASS(<id>): <reason>` tags in .rs
@@ -8929,7 +9052,10 @@ mod bypass_register_tests {
 
     #[test]
     fn parses_well_formed_tag() {
-        let line = format!("    // {}(ISSUE-1429): legacy endpoint pending rewrite", TAG);
+        let line = format!(
+            "    // {}(ISSUE-1429): legacy endpoint pending rewrite",
+            TAG
+        );
         let parsed = parse_bypass_tag(&line).expect("parses");
         assert_eq!(parsed.0, "ISSUE-1429");
         assert_eq!(parsed.1, "legacy endpoint pending rewrite");
@@ -9013,8 +9139,16 @@ mod doctrine_check_tests {
         std::fs::create_dir_all(&tmp).unwrap();
         let f = tmp.join("a.rs");
         let mut h = std::fs::File::create(&f).unwrap();
-        writeln!(h, "    let x = Finding::strict(\"p\", \"\", \"m\").citing([\"prim-001\"]);").unwrap();
-        writeln!(h, "    let y = Finding::warn(\"p\", \"\", \"m\").citing([\"sec-007\", \"a11y-001\"]);").unwrap();
+        writeln!(
+            h,
+            "    let x = Finding::strict(\"p\", \"\", \"m\").citing([\"prim-001\"]);"
+        )
+        .unwrap();
+        writeln!(
+            h,
+            "    let y = Finding::warn(\"p\", \"\", \"m\").citing([\"sec-007\", \"a11y-001\"]);"
+        )
+        .unwrap();
         let cites = collect_citations(&tmp);
         let ids: Vec<&str> = cites.iter().map(|c| c.rule_id.as_str()).collect();
         assert!(ids.contains(&"prim-001"));
@@ -9090,7 +9224,10 @@ mod doctrine_check_tests {
 
     #[test]
     fn normalize_reference_handles_hash_form() {
-        assert_eq!(normalize_exception_reference("#1234"), Some("#1234".to_string()));
+        assert_eq!(
+            normalize_exception_reference("#1234"),
+            Some("#1234".to_string())
+        );
         assert_eq!(
             normalize_exception_reference("adr-42"),
             Some("ADR-42".to_string())
@@ -9100,16 +9237,10 @@ mod doctrine_check_tests {
 
     #[test]
     fn ignores_files_outside_rs() {
-        let tmp = std::env::temp_dir().join(format!(
-            "doctrine-check-test-nonrs-{}",
-            std::process::id()
-        ));
+        let tmp =
+            std::env::temp_dir().join(format!("doctrine-check-test-nonrs-{}", std::process::id()));
         std::fs::create_dir_all(&tmp).unwrap();
-        std::fs::write(
-            tmp.join("x.toml"),
-            ".citing([\"prim-001\"])",
-        )
-        .unwrap();
+        std::fs::write(tmp.join("x.toml"), ".citing([\"prim-001\"])").unwrap();
         let cites = collect_citations(&tmp);
         assert_eq!(cites.len(), 0);
         std::fs::remove_dir_all(&tmp).ok();
@@ -9144,15 +9275,27 @@ mod doctrine_query_tests {
 
     #[test]
     fn parses_domain_aliases() {
-        assert!(matches!(parse_doctrine_domain("build"), Some(doctrine_core::Domain::Build)));
-        assert!(matches!(parse_doctrine_domain("PRIMITIVES"), Some(doctrine_core::Domain::Primitives)));
+        assert!(matches!(
+            parse_doctrine_domain("build"),
+            Some(doctrine_core::Domain::Build)
+        ));
+        assert!(matches!(
+            parse_doctrine_domain("PRIMITIVES"),
+            Some(doctrine_core::Domain::Primitives)
+        ));
         assert!(parse_doctrine_domain("bogus").is_none());
     }
 
     #[test]
     fn parses_severity_aliases() {
-        assert!(matches!(parse_doctrine_severity("strict"), Some(doctrine_core::Severity::Strict)));
-        assert!(matches!(parse_doctrine_severity("WARN"), Some(doctrine_core::Severity::Warn)));
+        assert!(matches!(
+            parse_doctrine_severity("strict"),
+            Some(doctrine_core::Severity::Strict)
+        ));
+        assert!(matches!(
+            parse_doctrine_severity("WARN"),
+            Some(doctrine_core::Severity::Warn)
+        ));
         assert!(parse_doctrine_severity("bogus").is_none());
     }
 }

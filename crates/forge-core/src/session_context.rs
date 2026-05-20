@@ -199,9 +199,9 @@ fn load_recent_provenance(root: &Path, limit: usize) -> Vec<Provenance> {
             .filter_map(|e| e.ok())
             .map(|e| e.path())
             .filter(|p| {
-                p.file_name()
-                    .and_then(|n| n.to_str())
-                    .map_or(false, |n| n.starts_with("provenance-") && n.ends_with(".json"))
+                p.file_name().and_then(|n| n.to_str()).map_or(false, |n| {
+                    n.starts_with("provenance-") && n.ends_with(".json")
+                })
             })
             .collect(),
         Err(_) => Vec::new(),
@@ -236,10 +236,7 @@ mod tests {
     use crate::skill_telemetry::{append_invocation, SkillInvocation, SkillOutcome};
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-session-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-session-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("reports")).unwrap();
         p
@@ -296,7 +293,9 @@ tenant_id = "t"
         let ctx = load(&root, &LoadOptions::new(3, 0));
         assert_eq!(ctx.recent_provenance.len(), 3);
         // Most recent (last after sort) should be the 4th file (index 4).
-        assert!(ctx.recent_provenance[2].fingerprint_commitment_hex.ends_with("4"));
+        assert!(ctx.recent_provenance[2]
+            .fingerprint_commitment_hex
+            .ends_with("4"));
         let _ = fs::remove_dir_all(&root);
     }
 

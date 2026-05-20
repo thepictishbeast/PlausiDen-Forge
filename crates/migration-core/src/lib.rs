@@ -459,7 +459,9 @@ mod tests {
         let mut entry = signed_entry("test-no-sig", ChangeCategory::AutoMigration);
         entry.signatures.clear();
         let errs = verify_entry(&entry);
-        assert!(errs.iter().any(|e| matches!(e, RegistryError::MissingSignature { .. })));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, RegistryError::MissingSignature { .. })));
     }
 
     #[test]
@@ -467,7 +469,9 @@ mod tests {
         let mut entry = signed_entry("test-no-impl", ChangeCategory::AutoMigration);
         entry.implementation = None;
         let errs = verify_entry(&entry);
-        assert!(errs.iter().any(|e| matches!(e, RegistryError::MissingImplementation { .. })));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, RegistryError::MissingImplementation { .. })));
     }
 
     #[test]
@@ -475,7 +479,9 @@ mod tests {
         let mut entry = signed_entry("test-no-pb", ChangeCategory::OperatorAction);
         entry.playbook = None;
         let errs = verify_entry(&entry);
-        assert!(errs.iter().any(|e| matches!(e, RegistryError::MissingPlaybook { .. })));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, RegistryError::MissingPlaybook { .. })));
     }
 
     #[test]
@@ -483,14 +489,18 @@ mod tests {
         let mut entry = signed_entry("test-bad-ver", ChangeCategory::AutoMigration);
         entry.to_version = "latest".into();
         let errs = verify_entry(&entry);
-        assert!(errs.iter().any(|e| matches!(e, RegistryError::InvalidToVersion { .. })));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, RegistryError::InvalidToVersion { .. })));
     }
 
     #[test]
     fn verify_entry_rejects_unnecessary_entry_for_invisible() {
         let entry = signed_entry("test-invis", ChangeCategory::Invisible);
         let errs = verify_entry(&entry);
-        assert!(errs.iter().any(|e| matches!(e, RegistryError::UnnecessaryEntry { .. })));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, RegistryError::UnnecessaryEntry { .. })));
     }
 
     #[test]
@@ -500,10 +510,7 @@ mod tests {
         bad.implementation = None;
         let reg = MigrationRegistry {
             schema_version: "1.0.0".into(),
-            migrations: vec![
-                signed_entry("good-1", ChangeCategory::AutoMigration),
-                bad,
-            ],
+            migrations: vec![signed_entry("good-1", ChangeCategory::AutoMigration), bad],
         };
         let errs = verify_registry(&reg);
         // good-1 clean; bad-entry has missing sig + missing impl.
@@ -520,7 +527,9 @@ mod tests {
             ],
         };
         let errs = verify_registry(&reg);
-        assert!(errs.iter().any(|e| matches!(e, RegistryError::DuplicateId { .. })));
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, RegistryError::DuplicateId { .. })));
     }
 
     #[test]

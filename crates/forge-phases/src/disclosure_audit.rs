@@ -100,12 +100,7 @@ impl Phase for DisclosureAuditPhase {
 }
 
 /// Walk a CmsPage value, find Disclaimer sections, validate.
-fn check_page(
-    path: &str,
-    page: &Value,
-    findings: &mut Vec<Finding>,
-    phase: &'static str,
-) {
+fn check_page(path: &str, page: &Value, findings: &mut Vec<Finding>, phase: &'static str) {
     let Some(sections) = page.get("sections").and_then(|s| s.as_array()) else {
         return;
     };
@@ -157,9 +152,7 @@ fn check_disclaimer(
     }
     // Sponsored / affiliate require source.
     if SOURCE_REQUIRED_KINDS.contains(&disclosure_kind) {
-        let source_present = source
-            .map(|s| !s.trim().is_empty())
-            .unwrap_or(false);
+        let source_present = source.map(|s| !s.trim().is_empty()).unwrap_or(false);
         if !source_present {
             findings.push(Finding::strict(
                 phase,
@@ -220,8 +213,10 @@ mod tests {
         let findings = run_check(page);
         assert_eq!(findings.len(), 1);
         assert_eq!(findings[0].severity, forge_core::Severity::Strict);
-        assert!(findings[0].message.contains("sponsor-without-source") ||
-                findings[0].message.contains("missing `source`"));
+        assert!(
+            findings[0].message.contains("sponsor-without-source")
+                || findings[0].message.contains("missing `source`")
+        );
     }
 
     #[test]
@@ -296,8 +291,9 @@ mod tests {
             }]
         });
         let findings = run_check(page);
-        assert!(findings.iter().any(|f| f.severity == forge_core::Severity::Strict
-            && f.message.contains("empty")));
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == forge_core::Severity::Strict && f.message.contains("empty")));
     }
 
     #[test]

@@ -108,11 +108,7 @@ pub struct BlendedSignals {
 /// result is then fed through `map_to_spec` to produce the final
 /// SiteSpec.
 #[must_use]
-pub fn compose_multi(
-    site_id: &str,
-    tenant_id: &str,
-    refs: &[WeightedReference],
-) -> SiteSpec {
+pub fn compose_multi(site_id: &str, tenant_id: &str, refs: &[WeightedReference]) -> SiteSpec {
     if refs.is_empty() {
         return SiteSpec::new(site_id, tenant_id);
     }
@@ -141,7 +137,11 @@ pub fn compose_multi(
 
 fn blend_signals(refs: &[WeightedReference]) -> BlendedSignals {
     let total_weight: f64 = refs.iter().map(|r| r.weight).sum();
-    let normalize = if total_weight > 0.0 { total_weight } else { 1.0 };
+    let normalize = if total_weight > 0.0 {
+        total_weight
+    } else {
+        1.0
+    };
 
     let mut palette_counts: BTreeMap<String, (PaletteEntry, f64)> = BTreeMap::new();
     let mut font_counts: BTreeMap<String, f64> = BTreeMap::new();
@@ -153,10 +153,8 @@ fn blend_signals(refs: &[WeightedReference]) -> BlendedSignals {
     let mut has_gradients = false;
     let mut has_filters = false;
     let mut total_box_shadows: u32 = 0;
-    let mut hover_counts: BTreeMap<
-        crate::extractors::interactive::HoverTreatment,
-        u32,
-    > = BTreeMap::new();
+    let mut hover_counts: BTreeMap<crate::extractors::interactive::HoverTreatment, u32> =
+        BTreeMap::new();
     let mut sections_by_page: BTreeMap<
         String,
         Vec<crate::extractors::sections::PatternClassification>,
@@ -175,26 +173,22 @@ fn blend_signals(refs: &[WeightedReference]) -> BlendedSignals {
             entry.1 += f64::from(p.occurrence_count) * w;
         }
         for f in &r.signals.typography.font_families {
-            *font_counts.entry(f.stack.clone()).or_insert(0.0) +=
-                f64::from(f.occurrence_count) * w;
+            *font_counts.entry(f.stack.clone()).or_insert(0.0) += f64::from(f.occurrence_count) * w;
         }
         if r.signals.spacing.rhythm_unit_px > 0 {
             rhythm_samples.push((r.signals.spacing.rhythm_unit_px, w));
         }
         if r.signals.spacing.content_max_width_px > 0 {
-            max_width_weighted +=
-                f64::from(r.signals.spacing.content_max_width_px) * w;
+            max_width_weighted += f64::from(r.signals.spacing.content_max_width_px) * w;
             max_width_total_weight += w;
         }
         has_animations |= r.signals.motion.has_animations;
         has_scroll_triggers |= r.signals.motion.has_scroll_triggers;
         has_gradients |= r.signals.motion.has_gradients;
         has_filters |= r.signals.motion.has_filters;
-        total_box_shadows = total_box_shadows
-            .saturating_add(r.signals.motion.distinct_box_shadows);
+        total_box_shadows = total_box_shadows.saturating_add(r.signals.motion.distinct_box_shadows);
         for entry in &r.signals.interactive.hover_treatments {
-            *hover_counts.entry(entry.treatment).or_insert(0) +=
-                entry.occurrence_count;
+            *hover_counts.entry(entry.treatment).or_insert(0) += entry.occurrence_count;
         }
         for (page, classifications) in &r.signals.sections_by_page {
             let slot = sections_by_page.entry(page.clone()).or_default();
@@ -286,9 +280,7 @@ fn weighted_median(samples: &[(u32, f64)]) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::extractors::interactive::{
-        HoverTreatment, HoverTreatmentEntry, InteractiveResult,
-    };
+    use crate::extractors::interactive::{HoverTreatment, HoverTreatmentEntry, InteractiveResult};
     use crate::extractors::sections::PatternClassification;
     use crate::extractors::typography::FontFamilyEntry;
 
@@ -315,8 +307,7 @@ mod tests {
     #[test]
     fn compose_uses_highest_weight_voice_tier() {
         let r1 = WeightedReference::new("a", signals_with_voice("plain")).with_weight(0.2);
-        let r2 =
-            WeightedReference::new("b", signals_with_voice("editorial")).with_weight(0.8);
+        let r2 = WeightedReference::new("b", signals_with_voice("editorial")).with_weight(0.8);
         let spec = compose_multi("s", "t", &[r1, r2]);
         assert_eq!(spec.voice, "editorial");
     }
@@ -475,7 +466,10 @@ mod tests {
         let b = blend_signals(&refs);
         // First ref's sections take the slot; later refs don't
         // overwrite (intentional — operator picks the primary).
-        assert_eq!(b.sections_by_page.get("index").unwrap()[0].guessed_kind, "hero_editorial");
+        assert_eq!(
+            b.sections_by_page.get("index").unwrap()[0].guessed_kind,
+            "hero_editorial"
+        );
     }
 
     #[test]

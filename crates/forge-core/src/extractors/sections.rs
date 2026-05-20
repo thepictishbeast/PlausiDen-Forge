@@ -493,10 +493,7 @@ mod tests {
                 ..cand()
             }],
         };
-        let path = std::env::temp_dir().join(format!(
-            "forge-sections-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-sections-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&dump).unwrap()).unwrap();
         let r = extract_from_path(&path).unwrap();
         assert_eq!(r.len(), 1);

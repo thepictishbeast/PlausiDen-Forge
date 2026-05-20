@@ -90,12 +90,7 @@ impl Phase for SourceListAuditPhase {
     }
 }
 
-fn check_page(
-    path: &str,
-    page: &Value,
-    findings: &mut Vec<Finding>,
-    phase: &'static str,
-) {
+fn check_page(path: &str, page: &Value, findings: &mut Vec<Finding>, phase: &'static str) {
     let Some(sections) = page.get("sections").and_then(|s| s.as_array()) else {
         return;
     };
@@ -183,7 +178,9 @@ fn looks_like_url(s: &str) -> bool {
         let scheme = &s[..scheme_end];
         let rest = &s[scheme_end + 3..];
         return !scheme.is_empty()
-            && scheme.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.')
+            && scheme
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '-' || c == '.')
             && !rest.is_empty();
     }
     // mailto:foo@bar.example is a legit URL despite no `://`.
@@ -250,8 +247,10 @@ mod tests {
             }]
         });
         let findings = run_check(page);
-        assert!(findings.iter().any(|f| f.severity == forge_core::Severity::Strict
-            && f.message.contains("title is empty")));
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == forge_core::Severity::Strict
+                && f.message.contains("title is empty")));
     }
 
     #[test]
@@ -271,8 +270,9 @@ mod tests {
             }]
         });
         let findings = run_check(page);
-        assert!(findings.iter().any(|f| f.severity == forge_core::Severity::Warn
-            && f.message.contains("author")));
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == forge_core::Severity::Warn && f.message.contains("author")));
     }
 
     #[test]
@@ -292,8 +292,11 @@ mod tests {
             }]
         });
         let findings = run_check(page);
-        assert!(findings.iter().any(|f| f.severity == forge_core::Severity::Strict
-            && f.message.contains("missing url") && f.message.contains("kind=\"web\"")));
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == forge_core::Severity::Strict
+                && f.message.contains("missing url")
+                && f.message.contains("kind=\"web\"")));
     }
 
     #[test]
@@ -315,8 +318,10 @@ mod tests {
             });
             let findings = run_check(page);
             assert!(
-                findings.iter().any(|f| f.severity == forge_core::Severity::Strict
-                    && f.message.contains("missing url")),
+                findings
+                    .iter()
+                    .any(|f| f.severity == forge_core::Severity::Strict
+                        && f.message.contains("missing url")),
                 "kind {kind} should require URL"
             );
         }
@@ -343,9 +348,7 @@ mod tests {
             });
             let findings = run_check(page);
             assert!(
-                !findings
-                    .iter()
-                    .any(|f| f.message.contains("missing url")),
+                !findings.iter().any(|f| f.message.contains("missing url")),
                 "kind {kind} should not require URL"
             );
         }
@@ -368,8 +371,10 @@ mod tests {
             }]
         });
         let findings = run_check(page);
-        assert!(findings.iter().any(|f| f.severity == forge_core::Severity::Strict
-            && f.message.contains("doesn't look like a URL")));
+        assert!(findings
+            .iter()
+            .any(|f| f.severity == forge_core::Severity::Strict
+                && f.message.contains("doesn't look like a URL")));
     }
 
     #[test]

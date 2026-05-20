@@ -242,7 +242,9 @@ pub enum DoctrineError {
     #[error("rule {0} replaced_by={1} but no such rule exists in the loaded set")]
     UnresolvedReplacedBy(String, String),
     /// A required triple field is empty.
-    #[error("rule {0} has empty {1} — the triple (statement + rationale + enforcement) is required")]
+    #[error(
+        "rule {0} has empty {1} — the triple (statement + rationale + enforcement) is required"
+    )]
     IncompleteTriple(String, &'static str),
 }
 
@@ -353,13 +355,22 @@ pub fn load_from_dir<P: AsRef<Path>>(root: P) -> Result<DoctrineDatabase, Doctri
             }
             // The triple is non-negotiable.
             if rule.statement.trim().is_empty() {
-                return Err(DoctrineError::IncompleteTriple(rule.id.clone(), "statement"));
+                return Err(DoctrineError::IncompleteTriple(
+                    rule.id.clone(),
+                    "statement",
+                ));
             }
             if rule.rationale.trim().is_empty() {
-                return Err(DoctrineError::IncompleteTriple(rule.id.clone(), "rationale"));
+                return Err(DoctrineError::IncompleteTriple(
+                    rule.id.clone(),
+                    "rationale",
+                ));
             }
             if rule.enforcement.is_empty() {
-                return Err(DoctrineError::IncompleteTriple(rule.id.clone(), "enforcement"));
+                return Err(DoctrineError::IncompleteTriple(
+                    rule.id.clone(),
+                    "enforcement",
+                ));
             }
             // Deprecated rules need a sunset date.
             if rule.lifecycle == Lifecycle::Deprecated && rule.deprecated_at.is_none() {
@@ -458,7 +469,10 @@ lifecycle     = "stable"
 "#;
         let tmp = tempfile_dir(&[("build.toml", toml_str)]);
         let err = load_from_dir(&tmp).unwrap_err();
-        assert!(matches!(err, DoctrineError::IncompleteTriple(_, "statement")));
+        assert!(matches!(
+            err,
+            DoctrineError::IncompleteTriple(_, "statement")
+        ));
     }
 
     #[test]

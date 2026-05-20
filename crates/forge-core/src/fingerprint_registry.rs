@@ -270,10 +270,7 @@ pub fn append(
         signature_b64,
     };
     let json_line = serde_json::to_string(&entry)?;
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)?;
+    let mut file = OpenOptions::new().create(true).append(true).open(path)?;
     file.write_all(json_line.as_bytes())?;
     file.write_all(b"\n")?;
     Ok(entry)
@@ -312,10 +309,7 @@ pub fn read_all(path: &Path) -> Result<Vec<FingerprintRegistryEntry>, RegistryEr
 ///    that public key.
 ///
 /// Returns Ok on success; first failure variant on any violation.
-pub fn verify_chain(
-    path: &Path,
-    verify_key: Option<&VerifyingKey>,
-) -> Result<(), RegistryError> {
+pub fn verify_chain(path: &Path, verify_key: Option<&VerifyingKey>) -> Result<(), RegistryError> {
     let entries = read_all(path)?;
     if entries.is_empty() {
         return Ok(());
@@ -458,10 +452,7 @@ mod tests {
     use std::env;
 
     fn temp_path(name: &str) -> std::path::PathBuf {
-        let p = env::temp_dir().join(format!(
-            "forge-registry-test-{name}-{}",
-            std::process::id()
-        ));
+        let p = env::temp_dir().join(format!("forge-registry-test-{name}-{}", std::process::id()));
         let _ = std::fs::remove_file(&p);
         p
     }
@@ -519,10 +510,10 @@ mod tests {
             "",
             "2026-05-20",
             "2026/05/20T12:00:00Z",
-            "2026-05-20T12:00:00",        // missing Z
-            "2026-05-20t12:00:00Z",       // lowercase t
-            "2026-05-20T12:00:00.5Z",     // fractional seconds
-            "2026-05-20T12:00:00+00:00",  // explicit offset
+            "2026-05-20T12:00:00",       // missing Z
+            "2026-05-20t12:00:00Z",      // lowercase t
+            "2026-05-20T12:00:00.5Z",    // fractional seconds
+            "2026-05-20T12:00:00+00:00", // explicit offset
         ] {
             let r = append(&path, "site-a", "t", sample_fp(1), bad, &key);
             match r {
@@ -542,9 +533,33 @@ mod tests {
     fn append_chains_subsequent_entries() {
         let path = temp_path("chain");
         let key = generate_keypair();
-        let e1 = append(&path, "site-a", "t", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
-        let e2 = append(&path, "site-b", "t", sample_fp(2), "2026-05-20T12:01:00Z", &key).unwrap();
-        let e3 = append(&path, "site-c", "t", sample_fp(3), "2026-05-20T12:02:00Z", &key).unwrap();
+        let e1 = append(
+            &path,
+            "site-a",
+            "t",
+            sample_fp(1),
+            "2026-05-20T12:00:00Z",
+            &key,
+        )
+        .unwrap();
+        let e2 = append(
+            &path,
+            "site-b",
+            "t",
+            sample_fp(2),
+            "2026-05-20T12:01:00Z",
+            &key,
+        )
+        .unwrap();
+        let e3 = append(
+            &path,
+            "site-c",
+            "t",
+            sample_fp(3),
+            "2026-05-20T12:02:00Z",
+            &key,
+        )
+        .unwrap();
         assert_eq!(e2.sequence, 1);
         assert_eq!(e3.sequence, 2);
         assert_eq!(e2.prev_hash.as_deref(), Some(e1.hash.as_str()));
@@ -576,8 +591,24 @@ mod tests {
     fn verify_chain_detects_tampered_entry() {
         let path = temp_path("verify-tampered");
         let key = generate_keypair();
-        append(&path, "site-a", "t", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
-        append(&path, "site-b", "t", sample_fp(2), "2026-05-20T12:01:00Z", &key).unwrap();
+        append(
+            &path,
+            "site-a",
+            "t",
+            sample_fp(1),
+            "2026-05-20T12:00:00Z",
+            &key,
+        )
+        .unwrap();
+        append(
+            &path,
+            "site-b",
+            "t",
+            sample_fp(2),
+            "2026-05-20T12:01:00Z",
+            &key,
+        )
+        .unwrap();
         // Tamper: rewrite the file with a modified entry-1 (preserve
         // hash but change a field, breaking the hash-bytes match).
         let mut entries = read_all(&path).unwrap();
@@ -595,7 +626,15 @@ mod tests {
     fn verify_chain_detects_bad_signature_when_key_supplied() {
         let path = temp_path("verify-bad-sig");
         let key = generate_keypair();
-        append(&path, "site-a", "t", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
+        append(
+            &path,
+            "site-a",
+            "t",
+            sample_fp(1),
+            "2026-05-20T12:00:00Z",
+            &key,
+        )
+        .unwrap();
         // Verify with a DIFFERENT public key — signatures shouldn't match.
         let other_key = generate_keypair();
         let result = verify_chain(&path, Some(&other_key.verifying_key()));
@@ -620,8 +659,20 @@ mod tests {
     fn find_by_hash_returns_none_for_unknown_hash() {
         let path = temp_path("find-by-hash-none");
         let key = generate_keypair();
-        append(&path, "site-a", "t", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
-        let found = find_by_hash(&path, "0000000000000000000000000000000000000000000000000000000000000000").unwrap();
+        append(
+            &path,
+            "site-a",
+            "t",
+            sample_fp(1),
+            "2026-05-20T12:00:00Z",
+            &key,
+        )
+        .unwrap();
+        let found = find_by_hash(
+            &path,
+            "0000000000000000000000000000000000000000000000000000000000000000",
+        )
+        .unwrap();
         assert!(found.is_none());
         let _ = std::fs::remove_file(&path);
     }
@@ -630,9 +681,33 @@ mod tests {
     fn find_near_duplicates_returns_entries_below_threshold() {
         let path = temp_path("near-dup");
         let key = generate_keypair();
-        append(&path, "site-1", "t", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
-        append(&path, "site-2", "t", sample_fp(2), "2026-05-20T12:01:00Z", &key).unwrap();
-        append(&path, "site-3", "t", sample_fp(99), "2026-05-20T12:02:00Z", &key).unwrap();
+        append(
+            &path,
+            "site-1",
+            "t",
+            sample_fp(1),
+            "2026-05-20T12:00:00Z",
+            &key,
+        )
+        .unwrap();
+        append(
+            &path,
+            "site-2",
+            "t",
+            sample_fp(2),
+            "2026-05-20T12:01:00Z",
+            &key,
+        )
+        .unwrap();
+        append(
+            &path,
+            "site-3",
+            "t",
+            sample_fp(99),
+            "2026-05-20T12:02:00Z",
+            &key,
+        )
+        .unwrap();
         let candidate = sample_fp(1);
         let matches = find_near_duplicates(&path, &candidate, 4).unwrap();
         // site-1 should be exact match (distance 0); site-2 should
@@ -648,9 +723,33 @@ mod tests {
     fn for_tenant_filters_by_tenant_id() {
         let path = temp_path("tenant-filter");
         let key = generate_keypair();
-        append(&path, "site-a", "tenant-1", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
-        append(&path, "site-b", "tenant-2", sample_fp(2), "2026-05-20T12:01:00Z", &key).unwrap();
-        append(&path, "site-c", "tenant-1", sample_fp(3), "2026-05-20T12:02:00Z", &key).unwrap();
+        append(
+            &path,
+            "site-a",
+            "tenant-1",
+            sample_fp(1),
+            "2026-05-20T12:00:00Z",
+            &key,
+        )
+        .unwrap();
+        append(
+            &path,
+            "site-b",
+            "tenant-2",
+            sample_fp(2),
+            "2026-05-20T12:01:00Z",
+            &key,
+        )
+        .unwrap();
+        append(
+            &path,
+            "site-c",
+            "tenant-1",
+            sample_fp(3),
+            "2026-05-20T12:02:00Z",
+            &key,
+        )
+        .unwrap();
         let t1 = for_tenant(&path, "tenant-1").unwrap();
         assert_eq!(t1.len(), 2);
         let t2 = for_tenant(&path, "tenant-2").unwrap();

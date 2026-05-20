@@ -306,10 +306,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-entropy-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-entropy-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -429,7 +426,10 @@ mod tests {
             ]}"#,
         );
         let findings = PatternEntropyPhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "even distribution should pass; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "even distribution should pass; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 

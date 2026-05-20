@@ -214,10 +214,7 @@ fn classify_path(path: &str) -> &'static str {
         return "legal";
     }
     // About / company.
-    if first_seg == "about"
-        || first_seg == "company"
-        || first_seg == "team"
-        || last_seg == "about"
+    if first_seg == "about" || first_seg == "company" || first_seg == "team" || last_seg == "about"
     {
         return "about";
     }
@@ -230,18 +227,12 @@ fn classify_path(path: &str) -> &'static str {
         return "contact";
     }
     // Changelog / releases.
-    if first_seg == "changelog"
-        || first_seg == "releases"
-        || first_seg == "release-notes"
-    {
+    if first_seg == "changelog" || first_seg == "releases" || first_seg == "release-notes" {
         return "changelog";
     }
     // Case studies / customers.
-    if first_seg == "customers"
-        || first_seg == "case-studies"
-        || first_seg == "stories"
-    {
-        return "case_study"
+    if first_seg == "customers" || first_seg == "case-studies" || first_seg == "stories" {
+        return "case_study";
     }
     // Search.
     if first_seg == "search" {
@@ -385,10 +376,7 @@ mod tests {
             has_footer_nav: false,
             pages: vec![page("/", 3)],
         };
-        let path = std::env::temp_dir().join(format!(
-            "forge-structural-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-structural-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&dump).unwrap()).unwrap();
         let r = extract_from_path(&path).unwrap();
         assert_eq!(r.nav_shape.item_count, 2);

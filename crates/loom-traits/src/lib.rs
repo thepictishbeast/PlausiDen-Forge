@@ -314,29 +314,60 @@ impl Trait {
     #[must_use]
     pub fn category(self) -> Category {
         match self {
-            Self::Renderable | Self::Visible | Self::ClientOnly | Self::ServerOnly
-                | Self::Cacheable | Self::Streamable => Category::VisibilityLifecycle,
-            Self::Interactive | Self::Focusable | Self::KeyboardOperable
-                | Self::MouseOperable | Self::TouchOperable => Category::Interaction,
-            Self::ScreenReaderAccessible | Self::ReducedMotionAware
-                | Self::HighContrastSupported | Self::ColorBlindSafe
-                | Self::LowVisionSupported => Category::Accessibility,
-            Self::MobileFriendly | Self::TabletFriendly | Self::DesktopFriendly
-                | Self::ContainerQueryAware | Self::OrientationAware => Category::Responsive,
-            Self::RtlAware | Self::LocaleAware | Self::NumberFormatAware
-                | Self::DateFormatAware => Category::Internationalization,
-            Self::ThemeAware | Self::ColorSchemePicked | Self::DarkModeFirst
-                | Self::AmoledOptimized => Category::Theming,
-            Self::CspCompatible | Self::SriVerified | Self::NonceAware
-                | Self::OriginIsolated | Self::NoEval => Category::Security,
-            Self::Anonymous | Self::Private | Self::Local | Self::EphemeralByDefault
-                | Self::TorCompatible | Self::OfflineCapable => Category::Sovereignty,
-            Self::CarbonBudgeted | Self::LcpSafe | Self::ClsStable
-                | Self::BundleSizeBounded | Self::LazyLoadable => Category::Performance,
-            Self::PropertyTested | Self::FuzzTested | Self::RegressionFixtured
-                | Self::FailsClosed => Category::Reliability,
-            Self::DoctrineCited | Self::SubstrateNative | Self::NoSiteSpecific
-                | Self::Manifested | Self::Versioned => Category::Discipline,
+            Self::Renderable
+            | Self::Visible
+            | Self::ClientOnly
+            | Self::ServerOnly
+            | Self::Cacheable
+            | Self::Streamable => Category::VisibilityLifecycle,
+            Self::Interactive
+            | Self::Focusable
+            | Self::KeyboardOperable
+            | Self::MouseOperable
+            | Self::TouchOperable => Category::Interaction,
+            Self::ScreenReaderAccessible
+            | Self::ReducedMotionAware
+            | Self::HighContrastSupported
+            | Self::ColorBlindSafe
+            | Self::LowVisionSupported => Category::Accessibility,
+            Self::MobileFriendly
+            | Self::TabletFriendly
+            | Self::DesktopFriendly
+            | Self::ContainerQueryAware
+            | Self::OrientationAware => Category::Responsive,
+            Self::RtlAware
+            | Self::LocaleAware
+            | Self::NumberFormatAware
+            | Self::DateFormatAware => Category::Internationalization,
+            Self::ThemeAware
+            | Self::ColorSchemePicked
+            | Self::DarkModeFirst
+            | Self::AmoledOptimized => Category::Theming,
+            Self::CspCompatible
+            | Self::SriVerified
+            | Self::NonceAware
+            | Self::OriginIsolated
+            | Self::NoEval => Category::Security,
+            Self::Anonymous
+            | Self::Private
+            | Self::Local
+            | Self::EphemeralByDefault
+            | Self::TorCompatible
+            | Self::OfflineCapable => Category::Sovereignty,
+            Self::CarbonBudgeted
+            | Self::LcpSafe
+            | Self::ClsStable
+            | Self::BundleSizeBounded
+            | Self::LazyLoadable => Category::Performance,
+            Self::PropertyTested
+            | Self::FuzzTested
+            | Self::RegressionFixtured
+            | Self::FailsClosed => Category::Reliability,
+            Self::DoctrineCited
+            | Self::SubstrateNative
+            | Self::NoSiteSpecific
+            | Self::Manifested
+            | Self::Versioned => Category::Discipline,
         }
     }
 
@@ -347,38 +378,70 @@ impl Trait {
     pub fn all() -> &'static [Self] {
         &[
             // Visibility & Lifecycle
-            Self::Renderable, Self::Visible, Self::ClientOnly, Self::ServerOnly,
-            Self::Cacheable, Self::Streamable,
+            Self::Renderable,
+            Self::Visible,
+            Self::ClientOnly,
+            Self::ServerOnly,
+            Self::Cacheable,
+            Self::Streamable,
             // Interaction
-            Self::Interactive, Self::Focusable, Self::KeyboardOperable,
-            Self::MouseOperable, Self::TouchOperable,
+            Self::Interactive,
+            Self::Focusable,
+            Self::KeyboardOperable,
+            Self::MouseOperable,
+            Self::TouchOperable,
             // Accessibility
-            Self::ScreenReaderAccessible, Self::ReducedMotionAware,
-            Self::HighContrastSupported, Self::ColorBlindSafe, Self::LowVisionSupported,
+            Self::ScreenReaderAccessible,
+            Self::ReducedMotionAware,
+            Self::HighContrastSupported,
+            Self::ColorBlindSafe,
+            Self::LowVisionSupported,
             // Responsive
-            Self::MobileFriendly, Self::TabletFriendly, Self::DesktopFriendly,
-            Self::ContainerQueryAware, Self::OrientationAware,
+            Self::MobileFriendly,
+            Self::TabletFriendly,
+            Self::DesktopFriendly,
+            Self::ContainerQueryAware,
+            Self::OrientationAware,
             // i18n
-            Self::RtlAware, Self::LocaleAware, Self::NumberFormatAware,
+            Self::RtlAware,
+            Self::LocaleAware,
+            Self::NumberFormatAware,
             Self::DateFormatAware,
             // Theming
-            Self::ThemeAware, Self::ColorSchemePicked, Self::DarkModeFirst,
+            Self::ThemeAware,
+            Self::ColorSchemePicked,
+            Self::DarkModeFirst,
             Self::AmoledOptimized,
             // Security
-            Self::CspCompatible, Self::SriVerified, Self::NonceAware,
-            Self::OriginIsolated, Self::NoEval,
+            Self::CspCompatible,
+            Self::SriVerified,
+            Self::NonceAware,
+            Self::OriginIsolated,
+            Self::NoEval,
             // Sovereignty
-            Self::Anonymous, Self::Private, Self::Local, Self::EphemeralByDefault,
-            Self::TorCompatible, Self::OfflineCapable,
+            Self::Anonymous,
+            Self::Private,
+            Self::Local,
+            Self::EphemeralByDefault,
+            Self::TorCompatible,
+            Self::OfflineCapable,
             // Performance
-            Self::CarbonBudgeted, Self::LcpSafe, Self::ClsStable,
-            Self::BundleSizeBounded, Self::LazyLoadable,
+            Self::CarbonBudgeted,
+            Self::LcpSafe,
+            Self::ClsStable,
+            Self::BundleSizeBounded,
+            Self::LazyLoadable,
             // Reliability
-            Self::PropertyTested, Self::FuzzTested, Self::RegressionFixtured,
+            Self::PropertyTested,
+            Self::FuzzTested,
+            Self::RegressionFixtured,
             Self::FailsClosed,
             // Discipline
-            Self::DoctrineCited, Self::SubstrateNative, Self::NoSiteSpecific,
-            Self::Manifested, Self::Versioned,
+            Self::DoctrineCited,
+            Self::SubstrateNative,
+            Self::NoSiteSpecific,
+            Self::Manifested,
+            Self::Versioned,
         ]
     }
 
@@ -570,9 +633,7 @@ pub fn render_markdown_catalog() -> String {
         "- [VERSION_DISCIPLINE.md](../../PlausiDen-AVP-Doctrine/VERSION_DISCIPLINE.md) — \
          trait lifecycle + additive change classification\n",
     );
-    out.push_str(
-        "- Source: `crates/loom-traits/src/lib.rs` — typed enum source of truth\n",
-    );
+    out.push_str("- Source: `crates/loom-traits/src/lib.rs` — typed enum source of truth\n");
 
     out
 }
@@ -620,11 +681,7 @@ impl EntityClass {
                 v.extend_from_slice(Trait::loom_interactive_defaults());
                 v
             }
-            Self::CmsSection => vec![
-                Trait::NoSiteSpecific,
-                Trait::Manifested,
-                Trait::Versioned,
-            ],
+            Self::CmsSection => vec![Trait::NoSiteSpecific, Trait::Manifested, Trait::Versioned],
             Self::ForgePhase => vec![
                 Trait::DoctrineCited,
                 Trait::PropertyTested,
@@ -745,23 +802,50 @@ pub struct Implication {
 pub fn canonical_implications() -> &'static [Implication] {
     &[
         // Sovereignty cluster.
-        Implication { from: Trait::Local, to: Trait::Private },
-        Implication { from: Trait::EphemeralByDefault, to: Trait::Private },
+        Implication {
+            from: Trait::Local,
+            to: Trait::Private,
+        },
+        Implication {
+            from: Trait::EphemeralByDefault,
+            to: Trait::Private,
+        },
         // Theming cluster.
-        Implication { from: Trait::DarkModeFirst, to: Trait::ThemeAware },
-        Implication { from: Trait::AmoledOptimized, to: Trait::DarkModeFirst },
+        Implication {
+            from: Trait::DarkModeFirst,
+            to: Trait::ThemeAware,
+        },
+        Implication {
+            from: Trait::AmoledOptimized,
+            to: Trait::DarkModeFirst,
+        },
         // (AmoledOptimized → DarkModeFirst → ThemeAware transitively.)
         // Reliability cluster.
-        Implication { from: Trait::FuzzTested, to: Trait::PropertyTested },
+        Implication {
+            from: Trait::FuzzTested,
+            to: Trait::PropertyTested,
+        },
         // Discipline cluster.
-        Implication { from: Trait::NoSiteSpecific, to: Trait::SubstrateNative },
+        Implication {
+            from: Trait::NoSiteSpecific,
+            to: Trait::SubstrateNative,
+        },
         // Interaction cluster — the cascade enforced by entity-class
         // default sets is also expressible as implications for
         // primitives that opt into Interactive without going through
         // the full LoomInteractivePrimitive entity_class.
-        Implication { from: Trait::Interactive, to: Trait::Focusable },
-        Implication { from: Trait::Focusable, to: Trait::KeyboardOperable },
-        Implication { from: Trait::KeyboardOperable, to: Trait::ScreenReaderAccessible },
+        Implication {
+            from: Trait::Interactive,
+            to: Trait::Focusable,
+        },
+        Implication {
+            from: Trait::Focusable,
+            to: Trait::KeyboardOperable,
+        },
+        Implication {
+            from: Trait::KeyboardOperable,
+            to: Trait::ScreenReaderAccessible,
+        },
     ]
 }
 
@@ -890,7 +974,11 @@ impl TraitSet {
     /// least one Responsive trait."
     #[must_use]
     pub fn in_category(&self, category: Category) -> Vec<Trait> {
-        self.0.iter().copied().filter(|t| t.category() == category).collect()
+        self.0
+            .iter()
+            .copied()
+            .filter(|t| t.category() == category)
+            .collect()
     }
 }
 
@@ -918,7 +1006,8 @@ mod tests {
             let slug = t.slug();
             assert!(!slug.is_empty());
             assert!(
-                slug.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'),
+                slug.chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'),
                 "{t:?} slug {slug:?} not kebab-case"
             );
         }
@@ -1018,7 +1107,9 @@ mod tests {
             Trait::Manifested,
             Trait::Versioned,
             Trait::DoctrineCited,
-        ].into_iter().collect();
+        ]
+        .into_iter()
+        .collect();
         let have: std::collections::HashSet<_> =
             Trait::loom_visible_defaults().iter().copied().collect();
         assert_eq!(want, have);
@@ -1051,11 +1142,11 @@ mod tests {
     #[test]
     fn trait_set_in_category_filters_correctly() {
         let set = TraitSet::from_slice(&[
-            Trait::MobileFriendly,    // Responsive
-            Trait::RtlAware,           // i18n
-            Trait::Anonymous,          // Sovereignty
-            Trait::Private,            // Sovereignty
-            Trait::ThemeAware,         // Theming
+            Trait::MobileFriendly, // Responsive
+            Trait::RtlAware,       // i18n
+            Trait::Anonymous,      // Sovereignty
+            Trait::Private,        // Sovereignty
+            Trait::ThemeAware,     // Theming
         ]);
         let sov = set.in_category(Category::Sovereignty);
         assert_eq!(sov.len(), 2);
@@ -1091,7 +1182,11 @@ mod tests {
     fn category_slugs_unique() {
         let mut seen = std::collections::HashSet::new();
         for c in Category::all() {
-            assert!(seen.insert(c.slug()), "duplicate category slug: {:?}", c.slug());
+            assert!(
+                seen.insert(c.slug()),
+                "duplicate category slug: {:?}",
+                c.slug()
+            );
         }
     }
 
@@ -1325,7 +1420,10 @@ mod tests {
     fn canonical_implications_unique() {
         let mut seen = std::collections::HashSet::new();
         for imp in canonical_implications() {
-            assert!(seen.insert((imp.from, imp.to)), "duplicate implication: {imp:?}");
+            assert!(
+                seen.insert((imp.from, imp.to)),
+                "duplicate implication: {imp:?}"
+            );
         }
     }
 
@@ -1347,7 +1445,7 @@ mod tests {
                 Trait::ReducedMotionAware,
                 Trait::ThemeAware,
                 Trait::NoSiteSpecific,
-                Trait::SubstrateNative,  // satisfies the NoSiteSpecific implication
+                Trait::SubstrateNative, // satisfies the NoSiteSpecific implication
                 Trait::Manifested,
                 Trait::Versioned,
                 Trait::DoctrineCited,

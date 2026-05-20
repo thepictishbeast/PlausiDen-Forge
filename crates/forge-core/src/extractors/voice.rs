@@ -192,7 +192,10 @@ pub fn extract(dump: &VoiceDump) -> VoiceResult {
             }
         }
         total_chars = total_chars.saturating_add(
-            page.body_text.chars().filter(|c| !c.is_whitespace()).count() as u64,
+            page.body_text
+                .chars()
+                .filter(|c| !c.is_whitespace())
+                .count() as u64,
         );
         let lower_body = page.body_text.to_lowercase();
         for phrase in JARGON_DICTIONARY {
@@ -210,8 +213,7 @@ pub fn extract(dump: &VoiceDump) -> VoiceResult {
     let avg_sentence_words = if total_sentences == 0 {
         0.0
     } else {
-        sentence_lengths.iter().map(|n| u64::from(*n)).sum::<u64>() as f64
-            / total_sentences as f64
+        sentence_lengths.iter().map(|n| u64::from(*n)).sum::<u64>() as f64 / total_sentences as f64
     };
     let p50_sentence_words = percentile(&sentence_lengths, 0.50);
     let p95_sentence_words = percentile(&sentence_lengths, 0.95);
@@ -226,11 +228,7 @@ pub fn extract(dump: &VoiceDump) -> VoiceResult {
         jargon_hits.saturating_mul(1_000_000) / total_words
     };
 
-    let suggested_tier = suggest_tier(
-        avg_sentence_words,
-        p95_sentence_words,
-        jargon_density_ppm,
-    );
+    let suggested_tier = suggest_tier(avg_sentence_words, p95_sentence_words, jargon_density_ppm);
 
     VoiceResult {
         total_sentences,
@@ -299,10 +297,7 @@ mod tests {
 
     #[test]
     fn extract_counts_sentences_and_words() {
-        let d = dump(&[
-            ("/a", "Short. Short. Short."),
-            ("/b", "Two words here."),
-        ]);
+        let d = dump(&[("/a", "Short. Short. Short."), ("/b", "Two words here.")]);
         let r = extract(&d);
         assert_eq!(r.total_sentences, 4);
         assert!(r.total_words >= 6);
@@ -386,10 +381,7 @@ mod tests {
     #[test]
     fn extract_from_path_round_trips_dump() {
         let d = dump(&[("/x", "Hello world.")]);
-        let path = std::env::temp_dir().join(format!(
-            "forge-voice-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-voice-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&d).unwrap()).unwrap();
         let r = extract_from_path(&path).unwrap();
         assert_eq!(r.total_sentences, 1);

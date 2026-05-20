@@ -92,9 +92,12 @@ impl Phase for DifferentiationBudgetPhase {
         if score < cfg.min_score {
             let breakdown = format!(
                 "entropy={:.0} × {:.2}, variants={:.0} × {:.2}, assets={:.0} × {:.2}",
-                signals.entropy_score, cfg.weight_entropy,
-                signals.variant_score, cfg.weight_variant_diversity,
-                signals.asset_score, cfg.weight_asset_spread,
+                signals.entropy_score,
+                cfg.weight_entropy,
+                signals.variant_score,
+                cfg.weight_variant_diversity,
+                signals.asset_score,
+                cfg.weight_asset_spread,
             );
             findings.push(
                 Finding::strict(
@@ -207,7 +210,10 @@ fn compute_signals(cms_dir: &Path, cfg: &BudgetConfig) -> Result<Signals, BuildE
                 };
                 *kind_counts.entry(kind.to_owned()).or_insert(0) += 1;
                 let variant = variant_signature(section);
-                variant_sets.entry(kind.to_owned()).or_default().insert(variant);
+                variant_sets
+                    .entry(kind.to_owned())
+                    .or_default()
+                    .insert(variant);
                 match asset_bin(kind) {
                     AssetBin::Image => asset_bins[0] += 1,
                     AssetBin::Video => asset_bins[1] += 1,
@@ -268,13 +274,13 @@ enum AssetBin {
 
 fn asset_bin(kind: &str) -> AssetBin {
     match kind {
-        "image" | "photo" | "gallery" | "image_grid" | "image_hero" | "hero_image" => AssetBin::Image,
-        "video" | "video_embed" | "video_section" => AssetBin::Video,
-        "form" | "interactive" | "code" | "code_block" | "code_playground"
-        | "terminal" | "embedded_widget" | "sparkline" | "histogram" | "bar_chart"
-        | "diverging_bar" | "boxplot" | "heatmap" | "marquee" | "motion_section" => {
-            AssetBin::Interactive
+        "image" | "photo" | "gallery" | "image_grid" | "image_hero" | "hero_image" => {
+            AssetBin::Image
         }
+        "video" | "video_embed" | "video_section" => AssetBin::Video,
+        "form" | "interactive" | "code" | "code_block" | "code_playground" | "terminal"
+        | "embedded_widget" | "sparkline" | "histogram" | "bar_chart" | "diverging_bar"
+        | "boxplot" | "heatmap" | "marquee" | "motion_section" => AssetBin::Interactive,
         _ => AssetBin::Text,
     }
 }
@@ -328,10 +334,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-budget-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-budget-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -393,7 +396,9 @@ mod tests {
         );
         let findings = DifferentiationBudgetPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("aggregate score")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("aggregate score")),
             "expected aggregate score finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -423,7 +428,10 @@ mod tests {
             ]}"#,
         );
         let findings = DifferentiationBudgetPhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "well-differentiated content should pass; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "well-differentiated content should pass; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 

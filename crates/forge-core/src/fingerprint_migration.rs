@@ -143,7 +143,9 @@ pub fn spec_distribution(
     let entries = fingerprint_registry::read_all(registry_path)?;
     let mut counts: BTreeMap<String, u64> = BTreeMap::new();
     for e in entries {
-        *counts.entry(e.fingerprint.spec.slug().to_owned()).or_insert(0) += 1;
+        *counts
+            .entry(e.fingerprint.spec.slug().to_owned())
+            .or_insert(0) += 1;
     }
     Ok(counts)
 }
@@ -159,10 +161,7 @@ mod tests {
 
     fn sample_fingerprint() -> SiteFingerprint {
         let mut sil = BTreeMap::new();
-        sil.insert(
-            "index".to_owned(),
-            ContentSilhouette::new(2, 3, 0, "h1,h2"),
-        );
+        sil.insert("index".to_owned(), ContentSilhouette::new(2, 3, 0, "h1,h2"));
         SiteFingerprint::new(
             FingerprintSpec::V1,
             vec![PrimitiveOccurrence::new("hero_editorial", "v=a", "index")],
@@ -202,10 +201,7 @@ mod tests {
 
     #[test]
     fn spec_distribution_counts_per_version() {
-        let path = std::env::temp_dir().join(format!(
-            "forge-spec-dist-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-spec-dist-{}", std::process::id()));
         let _ = std::fs::remove_file(&path);
         let key = generate_keypair();
         fingerprint_registry::append(

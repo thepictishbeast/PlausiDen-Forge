@@ -51,9 +51,7 @@ pub fn format_rfc3339_utc(epoch: u64) -> String {
     let minute = (secs_in_day % 3600) / 60;
     let second = secs_in_day % 60;
     let (year, month, day) = civil_from_days(days as i64);
-    format!(
-        "{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z"
-    )
+    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z")
 }
 
 /// Current wall-clock as RFC-3339 UTC. Falls back to the epoch
@@ -73,7 +71,11 @@ pub fn current_rfc3339_utc() -> String {
 /// 1970-01-01 to (year, month, day). Public-domain algorithm.
 fn civil_from_days(days: i64) -> (i32, u32, u32) {
     let z = days + 719468;
-    let era = if z >= 0 { z / 146097 } else { (z - 146096) / 146097 };
+    let era = if z >= 0 {
+        z / 146097
+    } else {
+        (z - 146096) / 146097
+    };
     let doe = (z - era * 146097) as u32;
     let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
     let y = yoe as i64 + era * 400;

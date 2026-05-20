@@ -262,10 +262,8 @@ mod tests {
         // Run the phase in an empty temp root — loom_path won't
         // exist, triggering the first warn branch. Assert advocacy
         // is populated across the four code paths.
-        let tmp = std::env::temp_dir().join(format!(
-            "forge-loom-sync-advocacy-{}",
-            std::process::id()
-        ));
+        let tmp =
+            std::env::temp_dir().join(format!("forge-loom-sync-advocacy-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&tmp);
         std::fs::create_dir_all(&tmp).expect("mkdir");
         std::fs::create_dir_all(tmp.join("static")).expect("mkdir static");

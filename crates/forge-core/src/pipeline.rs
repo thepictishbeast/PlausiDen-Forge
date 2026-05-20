@@ -850,7 +850,10 @@ mod tests {
             .unwrap();
         // Rendered stage still has access to discovered + parsed
         // via the Pipeline accessors.
-        assert_eq!(p.discovered().expect("discovered present").cms_pages.len(), 1);
+        assert_eq!(
+            p.discovered().expect("discovered present").cms_pages.len(),
+            1
+        );
         assert_eq!(p.parsed().expect("parsed present").page_count, 1);
     }
 

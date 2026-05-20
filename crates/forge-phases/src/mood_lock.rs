@@ -250,13 +250,7 @@ impl MoodAffinity {
                     "bar_chart",
                     "diverging_bar",
                 ][..],
-                &[
-                    "paragraph",
-                    "kv_pair",
-                    "table",
-                    "timeline",
-                    "citation",
-                ][..],
+                &["paragraph", "kv_pair", "table", "timeline", "citation"][..],
             ),
             "archival" => (
                 &[
@@ -285,13 +279,7 @@ impl MoodAffinity {
                     "photo",
                     "image_hero",
                 ][..],
-                &[
-                    "code",
-                    "terminal",
-                    "table",
-                    "timeline",
-                    "citation",
-                ][..],
+                &["code", "terminal", "table", "timeline", "citation"][..],
             ),
             "severe" => (
                 &[
@@ -387,10 +375,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-mood-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-mood-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -431,7 +416,10 @@ drift_budget = 0
         .unwrap();
         write_cms(&root, "i.json", r#"{"sections":[{"kind":"hero"}]}"#);
         let findings = MoodLockPhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "unknown mood should be silent; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "unknown mood should be silent; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -462,7 +450,9 @@ drift_budget = 10
         );
         let findings = MoodLockPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("primary mood `editorial`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("primary mood `editorial`")),
             "expected editorial drift finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -492,7 +482,10 @@ drift_budget = 10
             ]}"#,
         );
         let findings = MoodLockPhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "aligned composition should pass; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "aligned composition should pass; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 

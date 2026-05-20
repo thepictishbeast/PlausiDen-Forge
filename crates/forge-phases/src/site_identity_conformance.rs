@@ -267,10 +267,7 @@ fn count_sentences_words(text: &str) -> (u32, u32) {
         .split(|c: char| c == '.' || c == '!' || c == '?')
         .filter(|s| !s.trim().is_empty())
         .count();
-    let words = text
-        .split_whitespace()
-        .filter(|w| !w.is_empty())
-        .count();
+    let words = text.split_whitespace().filter(|w| !w.is_empty()).count();
     (
         u32::try_from(sentences).unwrap_or(u32::MAX),
         u32::try_from(words).unwrap_or(u32::MAX),
@@ -284,10 +281,8 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-ident-conf-{name}-{}",
-            std::process::id()
-        ));
+        let p =
+            std::env::temp_dir().join(format!("forge-ident-conf-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         fs::create_dir_all(p.join("static").join("css")).unwrap();
@@ -387,18 +382,15 @@ pattern = "cms/index.json"
         write_cms(&root, "about.json", r#"{"sections":[]}"#);
         let findings = SiteIdentityConformancePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings
-                .iter()
-                .any(|f| f.message.contains("about.json")
-                    && f.message
-                        .contains("doesn't match any declared content_type")),
+            findings.iter().any(|f| f.message.contains("about.json")
+                && f.message
+                    .contains("doesn't match any declared content_type")),
             "expected unmatched-content-type finding for about.json; got: {findings:#?}"
         );
         // index.json should NOT be flagged.
         assert!(!findings
             .iter()
-            .any(|f| f.message.contains("index.json")
-                && f.message.contains("doesn't match")));
+            .any(|f| f.message.contains("index.json") && f.message.contains("doesn't match")));
         let _ = fs::remove_dir_all(&root);
     }
 

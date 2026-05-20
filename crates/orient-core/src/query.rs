@@ -145,7 +145,9 @@ impl OrientationQuery {
 
         // Audience subset.
         if !self.audience.is_empty() {
-            let Some(have) = &p.audience else { return false };
+            let Some(have) = &p.audience else {
+                return false;
+            };
             if !self.audience.iter().all(|w| have.contains(w)) {
                 return false;
             }
@@ -193,7 +195,9 @@ impl OrientationQuery {
 
         // Resource subset.
         if !self.resource.is_empty() {
-            let Some(have) = &p.resource else { return false };
+            let Some(have) = &p.resource else {
+                return false;
+            };
             if !self.resource.iter().all(|w| have.contains(w)) {
                 return false;
             }
@@ -226,7 +230,9 @@ impl OrientationQuery {
 
         // Temporal subset.
         if !self.temporal.is_empty() {
-            let Some(have) = &p.temporal else { return false };
+            let Some(have) = &p.temporal else {
+                return false;
+            };
             if !self.temporal.iter().all(|w| have.contains(w)) {
                 return false;
             }

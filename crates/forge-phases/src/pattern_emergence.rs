@@ -113,7 +113,11 @@ impl Phase for PatternEmergencePhase {
         }
 
         if entries.len() >= cfg.window_baseline + cfg.window_recent {
-            let baseline_window = take_window(&entries, cfg.window_baseline + cfg.window_recent, cfg.window_baseline);
+            let baseline_window = take_window(
+                &entries,
+                cfg.window_baseline + cfg.window_recent,
+                cfg.window_baseline,
+            );
             let baseline_avg = avg_pairwise_distance(baseline_window);
             if baseline_avg > 0.0 {
                 let rate = (baseline_avg - recent_avg) / baseline_avg;
@@ -198,7 +202,11 @@ fn take_last(entries: &[FingerprintRegistryEntry], n: usize) -> &[FingerprintReg
     &entries[start..]
 }
 
-fn take_window(entries: &[FingerprintRegistryEntry], offset_from_end: usize, n: usize) -> &[FingerprintRegistryEntry] {
+fn take_window(
+    entries: &[FingerprintRegistryEntry],
+    offset_from_end: usize,
+    n: usize,
+) -> &[FingerprintRegistryEntry] {
     let end = entries.len().saturating_sub(offset_from_end - n);
     let start = end.saturating_sub(n);
     &entries[start..end]
@@ -232,18 +240,14 @@ mod tests {
     use super::*;
     use forge_core::attest::generate_keypair;
     use forge_core::fingerprint::{
-        AssetDistribution, ContentSilhouette, FingerprintSpec, PrimitiveOccurrence,
-        SiteFingerprint,
+        AssetDistribution, ContentSilhouette, FingerprintSpec, PrimitiveOccurrence, SiteFingerprint,
     };
     use forge_core::fingerprint_registry::append;
     use std::collections::BTreeMap;
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-emergence-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-emergence-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("registry")).unwrap();
         p
@@ -325,7 +329,15 @@ mod tests {
         let key = generate_keypair();
         let path = std::env::temp_dir().join(format!("emerge-single-{}", std::process::id()));
         let _ = fs::remove_file(&path);
-        append(&path, "s", "t", sample_fingerprint(1), "2026-05-20T12:00:00Z", &key).unwrap();
+        append(
+            &path,
+            "s",
+            "t",
+            sample_fingerprint(1),
+            "2026-05-20T12:00:00Z",
+            &key,
+        )
+        .unwrap();
         let entries = read_all(&path).unwrap();
         assert_eq!(avg_pairwise_distance(&entries), 0.0);
         let _ = fs::remove_file(&path);
@@ -338,11 +350,22 @@ mod tests {
         let _ = fs::remove_file(&path);
         for i in 0..5 {
             let ts = format!("2026-05-20T12:00:{i:02}Z");
-            append(&path, &format!("s{i}"), "t", sample_fingerprint(i as u32 + 10), &ts, &key).unwrap();
+            append(
+                &path,
+                &format!("s{i}"),
+                "t",
+                sample_fingerprint(i as u32 + 10),
+                &ts,
+                &key,
+            )
+            .unwrap();
         }
         let entries = read_all(&path).unwrap();
         let avg = avg_pairwise_distance(&entries);
-        assert!(avg > 0.0, "5 distinct sites should have positive avg distance");
+        assert!(
+            avg > 0.0,
+            "5 distinct sites should have positive avg distance"
+        );
         let _ = fs::remove_file(&path);
     }
 

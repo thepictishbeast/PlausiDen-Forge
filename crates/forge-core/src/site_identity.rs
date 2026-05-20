@@ -433,7 +433,10 @@ description = "Long-form editorial content"
         assert!(id.forbidden_primitives.iter().any(|f| f == "hero"));
         assert_eq!(id.content_type.len(), 2);
         assert_eq!(id.content_type_for("cms/index.json"), Some("homepage"));
-        assert_eq!(id.content_type_for("cms/blog/post-1.json"), Some("blog_post"));
+        assert_eq!(
+            id.content_type_for("cms/blog/post-1.json"),
+            Some("blog_post")
+        );
         assert_eq!(id.content_type_for("cms/marketing/page.json"), None);
         let _ = fs::remove_dir_all(&dir);
     }
@@ -451,7 +454,7 @@ description = "Long-form editorial content"
         id.allowed_primitives.push("hero_editorial".into());
         assert!(id.is_primitive_allowed("hero_editorial"));
         assert!(!id.is_primitive_allowed("kv_pair")); // not on whitelist
-        // Forbidden wins even if also on whitelist.
+                                                      // Forbidden wins even if also on whitelist.
         id.allowed_primitives.push("hero".into());
         assert!(!id.is_primitive_allowed("hero"));
     }

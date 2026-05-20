@@ -330,10 +330,8 @@ mod tests {
     #[test]
     fn unbuilt_route_findings_carry_advocacy() {
         use std::fs;
-        let tmp = std::env::temp_dir().join(format!(
-            "forge-unbuilt-advocacy-{}",
-            std::process::id()
-        ));
+        let tmp =
+            std::env::temp_dir().join(format!("forge-unbuilt-advocacy-{}", std::process::id()));
         let _ = fs::remove_dir_all(&tmp);
         fs::create_dir_all(tmp.join("static")).unwrap();
         // Page with one dead internal href.

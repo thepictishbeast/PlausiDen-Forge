@@ -257,10 +257,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-substance-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-substance-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -320,7 +317,9 @@ mod tests {
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("`paragraph.body`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("`paragraph.body`")),
             "expected paragraph.body finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -360,7 +359,9 @@ mod tests {
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("`hero_editorial.title`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("`hero_editorial.title`")),
             "expected hero_editorial.title finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -381,7 +382,9 @@ mod tests {
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("`kv_pair.items`")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("`kv_pair.items`")),
             "expected kv_pair.items finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -409,7 +412,9 @@ body = 200
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("substance floor is 200")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("substance floor is 200")),
             "expected override-floor finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);

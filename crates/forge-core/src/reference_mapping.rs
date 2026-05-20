@@ -67,11 +67,7 @@ pub struct ExtractedSignals {
 
 /// Map extractor signals → SiteSpec. Pure function.
 #[must_use]
-pub fn map_to_spec(
-    site_id: &str,
-    tenant_id: &str,
-    signals: &ExtractedSignals,
-) -> SiteSpec {
+pub fn map_to_spec(site_id: &str, tenant_id: &str, signals: &ExtractedSignals) -> SiteSpec {
     let mut spec = SiteSpec::new(site_id, tenant_id)
         .with_voice(signals.voice.suggested_tier.clone())
         .with_mood(suggest_mood(signals))
@@ -91,9 +87,7 @@ pub fn map_to_spec(
 fn suggest_mood(signals: &ExtractedSignals) -> String {
     // Mood heuristic from motion + voice + palette signals.
     if signals.motion.has_animations || !signals.motion.transition_curves.is_empty() {
-        if signals.motion.distinct_box_shadows >= 3
-            || signals.motion.has_gradients
-        {
+        if signals.motion.distinct_box_shadows >= 3 || signals.motion.has_gradients {
             return "kinetic".to_owned();
         }
     }
@@ -101,13 +95,10 @@ fn suggest_mood(signals: &ExtractedSignals) -> String {
     if signals.motion.border_radius_mode_px >= 16 && signals.motion.has_gradients {
         return "playful".to_owned();
     }
-    if signals.motion.distinct_box_shadows == 0
-        && signals.motion.border_radius_mode_px <= 2
-    {
+    if signals.motion.distinct_box_shadows == 0 && signals.motion.border_radius_mode_px <= 2 {
         // Very flat treatment → severe or minimal.
         if signals.typography.font_families.iter().any(|f| {
-            f.stack.to_lowercase().contains("mono")
-                || f.stack.to_lowercase().contains("monospace")
+            f.stack.to_lowercase().contains("mono") || f.stack.to_lowercase().contains("monospace")
         }) {
             return "industrial".to_owned();
         }
@@ -125,11 +116,7 @@ fn suggest_mood(signals: &ExtractedSignals) -> String {
 fn suggest_density(signals: &ExtractedSignals) -> String {
     // Density from spacing rhythm.
     let rhythm = signals.spacing.rhythm_unit_px;
-    let total_sections: usize = signals
-        .sections_by_page
-        .values()
-        .map(Vec::len)
-        .sum();
+    let total_sections: usize = signals.sections_by_page.values().map(Vec::len).sum();
 
     match (rhythm, total_sections) {
         (0..=8, _) if total_sections >= 8 => "extreme".to_owned(),
@@ -300,12 +287,12 @@ mod tests {
     #[test]
     fn suggest_mood_industrial_when_monospace_present() {
         let mut s = signals_with_voice("technical");
-        s.typography.font_families.push(
-            crate::extractors::typography::FontFamilyEntry {
+        s.typography
+            .font_families
+            .push(crate::extractors::typography::FontFamilyEntry {
                 stack: "JetBrains Mono, monospace".to_owned(),
                 occurrence_count: 20,
-            },
-        );
+            });
         // Flat treatment (no shadows, no border-radius).
         let spec = map_to_spec("s", "", &s);
         assert_eq!(spec.mood, "industrial");

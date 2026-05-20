@@ -475,8 +475,20 @@ pub fn semver_cmp(a: &str, b: &str) -> Option<std::cmp::Ordering> {
     if !is_canonical_semver(a) || !is_canonical_semver(b) {
         return None;
     }
-    let a_core = a.split('-').next().unwrap_or(a).split('+').next().unwrap_or(a);
-    let b_core = b.split('-').next().unwrap_or(b).split('+').next().unwrap_or(b);
+    let a_core = a
+        .split('-')
+        .next()
+        .unwrap_or(a)
+        .split('+')
+        .next()
+        .unwrap_or(a);
+    let b_core = b
+        .split('-')
+        .next()
+        .unwrap_or(b)
+        .split('+')
+        .next()
+        .unwrap_or(b);
     let a_parts: Vec<u64> = a_core.split('.').filter_map(|p| p.parse().ok()).collect();
     let b_parts: Vec<u64> = b_core.split('.').filter_map(|p| p.parse().ok()).collect();
     Some(a_parts.cmp(&b_parts))
@@ -645,13 +657,19 @@ impl BuildReport {
     /// without advocacy — it's a discipline metric, not a gate.
     #[must_use]
     pub fn findings_missing_advocacy(&self) -> Vec<&Finding> {
-        self.findings.iter().filter(|f| f.advocacy.is_empty()).collect()
+        self.findings
+            .iter()
+            .filter(|f| f.advocacy.is_empty())
+            .collect()
     }
 
     /// Count of findings with at least one populated advocacy field.
     #[must_use]
     pub fn advocacy_populated_count(&self) -> usize {
-        self.findings.iter().filter(|f| !f.advocacy.is_empty()).count()
+        self.findings
+            .iter()
+            .filter(|f| !f.advocacy.is_empty())
+            .count()
     }
 
     /// Phases (by name) that emitted at least one finding without

@@ -86,8 +86,7 @@ impl Phase for PrimitiveExhaustionPhase {
 
         // Sort kinds by descending share so the most-exhausted
         // primitive's finding appears first in the report.
-        let mut ranked: Vec<(&String, u64)> =
-            counts.iter().map(|(k, v)| (k, *v)).collect();
+        let mut ranked: Vec<(&String, u64)> = counts.iter().map(|(k, v)| (k, *v)).collect();
         ranked.sort_by(|a, b| b.1.cmp(&a.1));
 
         for (kind, count) in ranked {
@@ -149,10 +148,7 @@ impl ExhaustionConfig {
             .and_then(|n| u64::try_from(n).ok())
             .unwrap_or(DEFAULT_MIN_TOTAL);
         let mut threshold_by_kind = BTreeMap::new();
-        if let Some(table) = section
-            .get("threshold_by_kind")
-            .and_then(|v| v.as_table())
-        {
+        if let Some(table) = section.get("threshold_by_kind").and_then(|v| v.as_table()) {
             for (k, v) in table {
                 if let Some(f) = v.as_float() {
                     threshold_by_kind.insert(k.clone(), f);
@@ -233,10 +229,8 @@ mod tests {
     use std::path::PathBuf;
 
     fn temp_root(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-exhaustion-{name}-{}",
-            std::process::id()
-        ));
+        let p =
+            std::env::temp_dir().join(format!("forge-exhaustion-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(p.join("cms")).unwrap();
         p
@@ -307,8 +301,9 @@ mod tests {
         );
         let findings = PrimitiveExhaustionPhase.run(&ctx_for(&root)).unwrap();
         assert!(
-            findings.iter().any(|f| f.message.contains("`paragraph`")
-                && f.message.contains("60%")),
+            findings
+                .iter()
+                .any(|f| f.message.contains("`paragraph`") && f.message.contains("60%")),
             "expected paragraph-exhausted finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -335,7 +330,10 @@ mod tests {
             ]}"#,
         );
         let findings = PrimitiveExhaustionPhase.run(&ctx_for(&root)).unwrap();
-        assert!(findings.is_empty(), "balanced distribution; got: {findings:#?}");
+        assert!(
+            findings.is_empty(),
+            "balanced distribution; got: {findings:#?}"
+        );
         let _ = fs::remove_dir_all(&root);
     }
 

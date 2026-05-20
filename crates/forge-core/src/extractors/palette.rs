@@ -300,14 +300,20 @@ mod tests {
         assert_eq!(palette[0].occurrence_count, 7);
         assert_eq!(palette[0].source_properties.len(), 2);
         assert!(palette[0].source_properties.contains(&"color".to_owned()));
-        assert!(palette[0].source_properties.contains(&"background-color".to_owned()));
+        assert!(palette[0]
+            .source_properties
+            .contains(&"background-color".to_owned()));
     }
 
     #[test]
     fn extract_sorts_by_occurrence_descending() {
         let dump = dump_with(&[(
             "color",
-            &[("rgb(0,0,0)", 5), ("rgb(255,255,255)", 100), ("rgb(100,100,100)", 30)],
+            &[
+                ("rgb(0,0,0)", 5),
+                ("rgb(255,255,255)", 100),
+                ("rgb(100,100,100)", 30),
+            ],
         )]);
         let palette = extract(&dump);
         assert_eq!(palette.len(), 3);
@@ -371,10 +377,7 @@ mod tests {
     #[test]
     fn extract_from_path_round_trips_dump() {
         let dump = dump_with(&[("color", &[("rgb(0,0,0)", 3)])]);
-        let path = std::env::temp_dir().join(format!(
-            "forge-palette-{}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("forge-palette-{}", std::process::id()));
         std::fs::write(&path, serde_json::to_string(&dump).unwrap()).unwrap();
         let palette = extract_from_path(&path).unwrap();
         assert_eq!(palette.len(), 1);

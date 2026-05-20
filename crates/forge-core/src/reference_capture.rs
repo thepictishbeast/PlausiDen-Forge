@@ -158,7 +158,9 @@ pub enum CaptureError {
     /// Timestamp field is not the substrate's canonical RFC-3339
     /// UTC form (`YYYY-MM-DDTHH:MM:SSZ`, 20 chars). Rejected on
     /// write so no malformed string lands in a persisted manifest.
-    #[error("invalid RFC-3339 UTC timestamp in {field}: {provided:?} (expected YYYY-MM-DDTHH:MM:SSZ)")]
+    #[error(
+        "invalid RFC-3339 UTC timestamp in {field}: {provided:?} (expected YYYY-MM-DDTHH:MM:SSZ)"
+    )]
     BadTimestamp {
         /// Which field carried the bad value (e.g. `"updated_at"`
         /// or `"captures[2].captured_at"`).
@@ -173,11 +175,7 @@ impl ReferenceCapture {
     /// Used by Crawler-side emitters that fill paths in after
     /// writing the artifacts.
     #[must_use]
-    pub fn new(
-        url: impl Into<String>,
-        captured_at: impl Into<String>,
-        viewport_px: u32,
-    ) -> Self {
+    pub fn new(url: impl Into<String>, captured_at: impl Into<String>, viewport_px: u32) -> Self {
         Self {
             spec: CaptureSpec::V1,
             url: url.into(),
@@ -274,10 +272,7 @@ mod tests {
     use super::*;
 
     fn temp_dir(name: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "forge-capture-{name}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("forge-capture-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&p);
         fs::create_dir_all(&p).unwrap();
         p
@@ -285,11 +280,7 @@ mod tests {
 
     #[test]
     fn reference_capture_builder_sets_defaults() {
-        let c = ReferenceCapture::new(
-            "https://example.com",
-            "2026-05-20T00:00:00Z",
-            1280,
-        );
+        let c = ReferenceCapture::new("https://example.com", "2026-05-20T00:00:00Z", 1280);
         assert_eq!(c.url, "https://example.com");
         assert_eq!(c.viewport_px, 1280);
         assert!(c.screenshot_path.is_empty());
@@ -322,10 +313,14 @@ mod tests {
     #[test]
     fn for_viewport_filters_captures() {
         let mut m = CaptureManifest::new("s", "https://x");
-        m.captures.push(ReferenceCapture::new("https://x", "t", 390));
-        m.captures.push(ReferenceCapture::new("https://x", "t", 768));
-        m.captures.push(ReferenceCapture::new("https://x", "t", 1280));
-        m.captures.push(ReferenceCapture::new("https://x", "t", 1280));
+        m.captures
+            .push(ReferenceCapture::new("https://x", "t", 390));
+        m.captures
+            .push(ReferenceCapture::new("https://x", "t", 768));
+        m.captures
+            .push(ReferenceCapture::new("https://x", "t", 1280));
+        m.captures
+            .push(ReferenceCapture::new("https://x", "t", 1280));
         assert_eq!(m.for_viewport(390).len(), 1);
         assert_eq!(m.for_viewport(1280).len(), 2);
         assert_eq!(m.for_viewport(9999).len(), 0);
@@ -371,7 +366,8 @@ mod tests {
         let path = dir.join("manifest.json");
         let mut m = CaptureManifest::new("s", "https://x");
         m.updated_at = "2026-05-20T13:00:00Z".to_owned();
-        m.captures.push(ReferenceCapture::new("https://x", "yesterday", 1280));
+        m.captures
+            .push(ReferenceCapture::new("https://x", "yesterday", 1280));
         match m.write(&path) {
             Err(CaptureError::BadTimestamp { field, provided }) => {
                 assert_eq!(field, "captures[0].captured_at");
