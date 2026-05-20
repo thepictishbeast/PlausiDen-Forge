@@ -85,6 +85,7 @@ pub enum ExtractorError {
     },
 }
 
+pub mod motion;
 pub mod palette;
 pub mod spacing;
 pub mod typography;
