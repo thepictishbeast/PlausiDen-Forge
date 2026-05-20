@@ -116,6 +116,25 @@ impl Phase for RenderPhase {
         let mut rendered_slugs: std::collections::HashSet<String> =
             std::collections::HashSet::new();
 
+        // Pre-scan the slug set so output_path_for_slug can route
+        // "parent" slugs to `<slug>/index.html` rather than
+        // `<slug>.html`. A slug is "parent" when another slug in the
+        // same build nests under it via the `--` convention (e.g.
+        // `about` is parent of `about--privacy-policy`). The
+        // browser-visible URL of a parent page is the directory
+        // form (`/about/`) which only resolves to the nested
+        // index.html — emitting the flat sibling at `<slug>.html`
+        // would leave `/about/` 404ing despite the slug existing.
+        let all_slugs: std::collections::HashSet<String> = json_files
+            .iter()
+            .filter_map(|p| slug_from_filename(p))
+            .collect();
+        let parent_slugs: std::collections::HashSet<String> = all_slugs
+            .iter()
+            .filter_map(|s| s.split_once("--").map(|(parent, _)| parent.to_owned()))
+            .filter(|p| all_slugs.contains(p))
+            .collect();
+
         // Skin bytes + two derived hashes, computed once per build:
         //   - `raw_hash_b64` → goes inside the SYNC-FROM-LOOM marker
         //     that gets prepended to the skin file (loom_sync gate
@@ -248,7 +267,7 @@ impl Phase for RenderPhase {
             // so the browser's SRI check matches what we serve.
             let html = inject_skin_integrity(&html_raw, &skin_integrity_attr);
 
-            let out_path = output_path_for_slug(&out_dir, &slug);
+            let out_path = output_path_for_slug(&out_dir, &slug, &parent_slugs);
             if let Some(parent) = out_path.parent() {
                 if let Err(e) = std::fs::create_dir_all(parent) {
                     return Err(BuildError::Io {
@@ -494,11 +513,16 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
 /// Convention: a slug containing `--` is treated as a nested-URL
 /// path. Each `--` becomes a `/` and the page is written to
 /// `out_dir/<a>/<b>/.../<n>/index.html`. A flat slug retains the
-/// original `out_dir/<slug>.html` shape.
+/// original `out_dir/<slug>.html` shape — UNLESS another slug in
+/// the same build nests under it (`about--privacy-policy` makes
+/// `about` a parent slug), in which case the flat slug emits to
+/// `out_dir/<slug>/index.html` instead. That ensures URLs like
+/// `/about/` resolve to a page when the site links to them.
 ///
-/// Examples:
+/// Examples (assume `parent_slugs = {"about"}`):
 /// * `index`                       → `out_dir/index.html`
-/// * `about`                       → `out_dir/about.html`
+/// * `about`                       → `out_dir/about/index.html` (parent)
+/// * `contact`                     → `out_dir/contact.html` (not parent)
 /// * `about--privacy-policy`       → `out_dir/about/privacy-policy/index.html`
 /// * `legal--terms--us`            → `out_dir/legal/terms/us/index.html`
 ///
@@ -508,8 +532,15 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
 /// the slug to a file path. Keeping that grammar intact and using
 /// `--` as an explicit nest marker means existing code keeps
 /// working; the only place `--` is interpreted is here.
-fn output_path_for_slug(out_dir: &Path, slug: &str) -> PathBuf {
+fn output_path_for_slug(
+    out_dir: &Path,
+    slug: &str,
+    parent_slugs: &std::collections::HashSet<String>,
+) -> PathBuf {
     if !slug.contains("--") {
+        if parent_slugs.contains(slug) {
+            return out_dir.join(slug).join("index.html");
+        }
         return out_dir.join(format!("{slug}.html"));
     }
     let mut p = out_dir.to_path_buf();
@@ -969,19 +1000,36 @@ mod tests {
     #[test]
     fn output_path_flat_slug_stays_flat() {
         let out_dir = Path::new("/tmp/out");
-        let p = output_path_for_slug(out_dir, "index");
+        let no_parents = std::collections::HashSet::new();
+        let p = output_path_for_slug(out_dir, "index", &no_parents);
         assert_eq!(p, Path::new("/tmp/out/index.html"));
-        let p = output_path_for_slug(out_dir, "about");
-        assert_eq!(p, Path::new("/tmp/out/about.html"));
+        let p = output_path_for_slug(out_dir, "contact", &no_parents);
+        assert_eq!(p, Path::new("/tmp/out/contact.html"));
     }
 
     #[test]
     fn output_path_double_dash_nests_into_index_html() {
         let out_dir = Path::new("/tmp/out");
-        let p = output_path_for_slug(out_dir, "about--privacy-policy");
+        let no_parents = std::collections::HashSet::new();
+        let p = output_path_for_slug(out_dir, "about--privacy-policy", &no_parents);
         assert_eq!(p, Path::new("/tmp/out/about/privacy-policy/index.html"));
-        let p = output_path_for_slug(out_dir, "legal--terms--us");
+        let p = output_path_for_slug(out_dir, "legal--terms--us", &no_parents);
         assert_eq!(p, Path::new("/tmp/out/legal/terms/us/index.html"));
+    }
+
+    #[test]
+    fn output_path_parent_slug_emits_to_directory_index() {
+        // When `about--privacy-policy.json` exists in the same build,
+        // a sibling `about.json` is the page that serves at /about/
+        // — must emit to about/index.html, not about.html.
+        let out_dir = Path::new("/tmp/out");
+        let mut parents = std::collections::HashSet::new();
+        parents.insert("about".to_owned());
+        let p = output_path_for_slug(out_dir, "about", &parents);
+        assert_eq!(p, Path::new("/tmp/out/about/index.html"));
+        // Non-parent flat slugs stay flat even with a populated set.
+        let p = output_path_for_slug(out_dir, "contact", &parents);
+        assert_eq!(p, Path::new("/tmp/out/contact.html"));
     }
 
     #[test]
