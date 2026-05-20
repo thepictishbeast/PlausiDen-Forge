@@ -26,33 +26,58 @@ impl Phase for CspPhase {
             let body = file.body.as_str();
 
             if !body.contains(r#"http-equiv="Content-Security-Policy""#) {
-                findings.push(Finding::strict(
-                    self.name(),
-                    file.name.clone(),
-                    "missing Content-Security-Policy meta",
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        file.name.clone(),
+                        "missing Content-Security-Policy meta",
+                    )
+                    .citing(["sec-005"])
+                    .why("rendered page ships no CSP — XSS payloads from any origin can execute against the page")
+                    .fix("the page shell template should emit a `<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'self'; frame-ancestors 'none'; ...\">` — fix in the Loom page-shell primitive that emitted this HTML, not in static/")
+                    .skill("add-loom-primitive")
+                    .avoid("don't hand-add a <meta> tag to the rendered HTML — it's a build artifact"),
+                );
             } else if !body.contains("default-src 'self'") {
-                findings.push(Finding::strict(
-                    self.name(),
-                    file.name.clone(),
-                    "CSP missing default-src 'self'",
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        file.name.clone(),
+                        "CSP missing default-src 'self'",
+                    )
+                    .citing(["sec-005"])
+                    .why("CSP without default-src 'self' leaves the fall-through wide open for any directive not explicitly set")
+                    .fix("update the page-shell CSP emission in PlausiDen-Loom to start every CSP with `default-src 'self'; ...`")
+                    .skill("add-loom-primitive"),
+                );
             }
 
             if !contains_xcontenttype_nosniff(body) {
-                findings.push(Finding::strict(
-                    self.name(),
-                    file.name.clone(),
-                    "missing X-Content-Type-Options nosniff",
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        file.name.clone(),
+                        "missing X-Content-Type-Options nosniff",
+                    )
+                    .citing(["sec-005"])
+                    .why("without nosniff, browsers may MIME-sniff a response and interpret data as HTML/JS; an attacker-controlled upload can execute in the browser")
+                    .fix("emit `<meta http-equiv=\"X-Content-Type-Options\" content=\"nosniff\">` in the Loom page-shell template")
+                    .skill("add-loom-primitive"),
+                );
             }
 
             if !body.contains("frame-ancestors 'none'") {
-                findings.push(Finding::strict(
-                    self.name(),
-                    file.name.clone(),
-                    "CSP missing frame-ancestors 'none' (clickjacking)",
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        file.name.clone(),
+                        "CSP missing frame-ancestors 'none' (clickjacking)",
+                    )
+                    .citing(["sec-005"])
+                    .why("without frame-ancestors 'none', the page can be iframed by hostile origins for clickjacking attacks")
+                    .fix("add `frame-ancestors 'none'` to the CSP directive set in the Loom page-shell template")
+                    .skill("add-loom-primitive"),
+                );
             }
         }
 
