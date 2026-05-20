@@ -36,6 +36,8 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+pub mod augmentable;
+
 use serde::{Deserialize, Serialize};
 
 /// Probabilistic strength clamped to [0.0, 1.0].
