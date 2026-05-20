@@ -37,6 +37,7 @@ use forge_phases::backend_coverage::BackendCoveragePhase;
 use forge_phases::carbon_budget::CarbonBudgetPhase;
 use forge_phases::composition_lineage::CompositionLineagePhase;
 use forge_phases::content_substance::ContentSubstancePhase;
+use forge_phases::slop_dictionary::SlopDictionaryPhase;
 use forge_phases::contrast::ContrastPhase;
 use forge_phases::crawl::CrawlPhase;
 use forge_phases::csp::CspPhase;
@@ -1546,6 +1547,7 @@ fn run() -> Result<ExitCode> {
         // docs/VARIATION_GUARANTEES.md.
         Box::new(EditorialPurityGatePhase::default()),
         Box::new(ContentSubstancePhase::default()),
+        Box::new(SlopDictionaryPhase::default()),
         Box::new(SiteIdentityConformancePhase::default()),
         Box::new(IdentityCoherencePhase::default()),
         Box::new(ThemeVariationRequiredPhase::default()),

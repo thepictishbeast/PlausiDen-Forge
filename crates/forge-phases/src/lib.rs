@@ -65,6 +65,7 @@ pub mod primitive_exhaustion;
 pub mod print_stylesheet;
 pub mod reader_safety;
 pub mod render;
+pub mod slop_dictionary;
 pub mod required_pages;
 pub mod reseeding_cadence;
 pub mod self_check;
