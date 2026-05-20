@@ -91,3 +91,4 @@ pub mod sections;
 pub mod spacing;
 pub mod structural;
 pub mod typography;
+pub mod voice;
