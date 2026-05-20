@@ -149,3 +149,69 @@ ci: fmt-check clippy test ## Run the gate set CI would run (fmt-check + clippy +
 
 .PHONY: pre-commit
 pre-commit: fmt clippy test-quick doctrine-check ## Quick local checks before committing.
+
+# ----------------------------------------------------------------
+# Pixel reproduction loop (Forge #218)
+# ----------------------------------------------------------------
+#
+# Drives the dual-capture diff workflow documented in
+# docs/PIXEL_REP_PROSPERITYCLUB.md. Captures the live URL + the
+# local Forge mirror at 390/768/1280 px via Crawler's
+# --capture-reference, lands the artifacts side-by-side under
+# PlausiDen-Crawler/runs/<slug>/ and <slug>-forge/.
+#
+# Override variables on the command line:
+#   make pixel-rep SLUG=stripe SITE_URL=https://stripe.com/
+#
+# CRAWLER_BIN env override points at a custom binary path (default
+# resolves PlausiDen-Crawler/target/release/crawler).
+
+PIXEL_REP_SLUG          ?= prosperityclub
+PIXEL_REP_SITE_URL      ?= https://prosperityclub.com/
+PIXEL_REP_PORT          ?= 8125
+CRAWLER_REPO_DIR        ?= ../PlausiDen-Crawler
+CRAWLER_BIN             ?= $(CRAWLER_REPO_DIR)/target/release/crawler
+
+.PHONY: pixel-rep
+pixel-rep: ## Capture live + Forge mirror at 3 viewports. Override SLUG / SITE_URL / PIXEL_REP_PORT.
+	@test -x "$(CRAWLER_BIN)" || (echo "crawler binary not found at $(CRAWLER_BIN); run 'cd $(CRAWLER_REPO_DIR) && cargo build --release --bin crawler'" && exit 2)
+	@printf '\n\033[1mpixel-rep $(PIXEL_REP_SLUG)\033[0m\n  live  = $(PIXEL_REP_SITE_URL)\n  forge = http://127.0.0.1:$(PIXEL_REP_PORT)/ (served from static/)\n\n'
+	@echo "[1/3] capturing live $(PIXEL_REP_SITE_URL)..."
+	@cd $(CRAWLER_REPO_DIR) && ./target/release/crawler \
+	    --capture-reference $(PIXEL_REP_SITE_URL) \
+	    --site-slug $(PIXEL_REP_SLUG) 2>&1 | tail -4
+	@echo ""
+	@echo "[2/3] starting static server on :$(PIXEL_REP_PORT)..."
+	@cd static && nohup ruby -run -ehttpd . -p $(PIXEL_REP_PORT) > /tmp/forge-pixel-rep-server.log 2>&1 & echo $$! > /tmp/forge-pixel-rep.pid; sleep 2
+	@test "$$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:$(PIXEL_REP_PORT)/)" = "200" || (echo "static server did not come up; check /tmp/forge-pixel-rep-server.log" && kill $$(cat /tmp/forge-pixel-rep.pid 2>/dev/null) 2>/dev/null && exit 3)
+	@echo "[3/3] capturing local Forge mirror..."
+	@cd $(CRAWLER_REPO_DIR) && ./target/release/crawler \
+	    --capture-reference http://127.0.0.1:$(PIXEL_REP_PORT)/ \
+	    --site-slug $(PIXEL_REP_SLUG)-forge 2>&1 | tail -4
+	@kill $$(cat /tmp/forge-pixel-rep.pid 2>/dev/null) 2>/dev/null
+	@rm -f /tmp/forge-pixel-rep.pid
+	@printf '\n\033[1mcaptures landed:\033[0m\n'
+	@printf '  live:  $(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)/\n'
+	@printf '  forge: $(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)-forge/\n\n'
+	@ls -la $(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)/manifest.json $(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)-forge/manifest.json 2>&1 | sed 's|^|  |'
+
+.PHONY: pixel-rep-diff
+pixel-rep-diff: ## Print a compact diff of two manifests written by pixel-rep. Requires SLUG.
+	@printf '\n\033[1mpixel-rep diff $(PIXEL_REP_SLUG)\033[0m\n\n'
+	@for vp in 390 768 1280; do \
+	    live_png=$(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)/$$vp.png; \
+	    forge_png=$(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)-forge/$$vp.png; \
+	    live_html=$(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)/$$vp.html; \
+	    forge_html=$(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)-forge/$$vp.html; \
+	    if [ -f $$live_png ] && [ -f $$forge_png ]; then \
+	        live_size=$$(stat -c%s $$live_png); \
+	        forge_size=$$(stat -c%s $$forge_png); \
+	        live_html_size=$$(stat -c%s $$live_html); \
+	        forge_html_size=$$(stat -c%s $$forge_html); \
+	        printf '  %s px  png live=%dB forge=%dB  |  html live=%dB forge=%dB\n' \
+	            $$vp $$live_size $$forge_size $$live_html_size $$forge_html_size; \
+	    else \
+	        printf '  %s px  ⚠ missing captures (run make pixel-rep first)\n' $$vp; \
+	    fi; \
+	done
+	@printf '\n'
