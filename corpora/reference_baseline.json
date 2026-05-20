@@ -1,0 +1,207 @@
+{
+  "$schema": "../docs/reference_baseline.schema.json",
+  "spec": "v1",
+  "description": "Reference-corpus statistical baseline (#252). Per-site measured metrics across the curated REFERENCE_CORPUS.md set. Drives the differentiation_budget + composition_lineage gates: when a tenant has no reference target, these baseline values become the substrate's editorial floor. Populated incrementally as Crawler-side capture lands (#263).",
+  "captured_at": null,
+  "captured_by": null,
+  "viewports": [390, 768, 1280],
+  "sites": [
+    {
+      "slug": "nytimes-article",
+      "url": "https://www.nytimes.com",
+      "tier": "editorial-press",
+      "density_tier": "dense",
+      "voice_tier": "professional",
+      "mood_primary": "editorial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Drop caps, marginalia, lead paragraph density. Re-measure annually."
+    },
+    {
+      "slug": "atlantic-feature",
+      "url": "https://www.theatlantic.com",
+      "tier": "editorial-press",
+      "density_tier": "dense",
+      "voice_tier": "professional",
+      "mood_primary": "editorial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Long-form measure; custom-type hero."
+    },
+    {
+      "slug": "stripe-press",
+      "url": "https://stripe.com/press",
+      "tier": "editorial-press",
+      "density_tier": "comfortable",
+      "voice_tier": "editorial",
+      "mood_primary": "editorial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Editorial discipline on a tech substrate; gradient restraint."
+    },
+    {
+      "slug": "craigmod",
+      "url": "https://craigmod.com",
+      "tier": "editorial-press",
+      "density_tier": "sparse",
+      "voice_tier": "editorial",
+      "mood_primary": "editorial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Single-author voice; minimal-but-maximalist typography."
+    },
+    {
+      "slug": "matuzo",
+      "url": "https://matuzo.at",
+      "tier": "editorial-press",
+      "density_tier": "comfortable",
+      "voice_tier": "technical",
+      "mood_primary": "editorial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Long-form web-design analysis; honest density."
+    },
+    {
+      "slug": "paulgraham",
+      "url": "https://paulgraham.com",
+      "tier": "editorial-press",
+      "density_tier": "sparse",
+      "voice_tier": "casual",
+      "mood_primary": "minimal",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Density-via-text-only; zero chrome; reading-first."
+    },
+    {
+      "slug": "stripe",
+      "url": "https://stripe.com",
+      "tier": "technical-product",
+      "density_tier": "comfortable",
+      "voice_tier": "professional",
+      "mood_primary": "industrial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Asymmetric hero, in-line code visuals, gradient discipline."
+    },
+    {
+      "slug": "linear",
+      "url": "https://linear.app",
+      "tier": "technical-product",
+      "density_tier": "comfortable",
+      "voice_tier": "professional",
+      "mood_primary": "minimal",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Big-confident type, OKLCH palette, animation restraint."
+    },
+    {
+      "slug": "vercel",
+      "url": "https://vercel.com",
+      "tier": "technical-product",
+      "density_tier": "dense",
+      "voice_tier": "professional",
+      "mood_primary": "industrial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Demo-as-hero; feature density without overcrowding."
+    },
+    {
+      "slug": "anthropic",
+      "url": "https://anthropic.com",
+      "tier": "technical-product",
+      "density_tier": "comfortable",
+      "voice_tier": "editorial",
+      "mood_primary": "editorial",
+      "metrics": {
+        "primitive_entropy_norm": null,
+        "variant_diversity_avg": null,
+        "asset_spread_entropy_norm": null,
+        "avg_sentence_words": null,
+        "p95_sentence_words": null,
+        "ari": null,
+        "jargon_density_ppm": null
+      },
+      "notes": "Editorial typography on a tech site; hero with code mock."
+    }
+  ],
+  "aggregate_targets": {
+    "differentiation_budget_min_score": 60,
+    "primitive_entropy_norm_floor": 0.55,
+    "variant_diversity_avg_floor": 1.8,
+    "asset_spread_entropy_norm_floor": 0.4,
+    "avg_sentence_words_p50_ceiling": 22,
+    "p95_sentence_words_ceiling": 36,
+    "ari_p50_ceiling": 11,
+    "jargon_density_ppm_p95_ceiling": 25000
+  },
+  "notes": [
+    "Metrics fields are null until the Crawler-side capture pipeline (#263) populates them with measured values.",
+    "Aggregate targets are operator-tunable; they define the substrate's editorial floor when a tenant has no reference target declared.",
+    "Density tier and mood_primary values are operator-curated, not measured. They encode the substrate's classification of each reference.",
+    "When measurements land, re-compute aggregate_targets from the measured distribution (e.g. floor = 10th percentile across sites in tier).",
+    "The schema versioning lives in spec='v1'. Bump only when the metrics shape changes incompatibly."
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reference baseline (#252)",
+  "description": "Statistical-baseline shape for the curated reference corpus. Populated incrementally by the Crawler-side capture pipeline (#263). Drives differentiation_budget + composition_lineage gates when no per-tenant reference is supplied.",
+  "type": "object",
+  "required": ["spec", "viewports", "sites", "aggregate_targets"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "spec": { "type": "string", "enum": ["v1"] },
+    "description": { "type": "string" },
+    "captured_at": { "type": ["string", "null"] },
+    "captured_by": { "type": ["string", "null"] },
+    "viewports": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 320 }
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "slug",
+          "url",
+          "tier",
+          "density_tier",
+          "voice_tier",
+          "mood_primary",
+          "metrics"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "url": { "type": "string", "format": "uri" },
+          "tier": {
+            "type": "string",
+            "enum": ["editorial-press", "technical-product", "civic-tier", "platform-tier"]
+          },
+          "density_tier": {
+            "type": "string",
+            "enum": ["sparse", "comfortable", "dense", "extreme"]
+          },
+          "voice_tier": {
+            "type": "string",
+            "enum": ["plain", "casual", "editorial", "professional", "technical", "academic"]
+          },
+          "mood_primary": {
+            "type": "string",
+            "enum": ["editorial", "industrial", "organic", "minimal", "kinetic", "archival", "playful", "severe"]
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "primitive_entropy_norm": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+              "variant_diversity_avg": { "type": ["number", "null"], "minimum": 0 },
+              "asset_spread_entropy_norm": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+              "avg_sentence_words": { "type": ["number", "null"], "minimum": 0 },
+              "p95_sentence_words": { "type": ["number", "null"], "minimum": 0 },
+              "ari": { "type": ["number", "null"] },
+              "jargon_density_ppm": { "type": ["number", "null"], "minimum": 0 }
+            }
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "aggregate_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "differentiation_budget_min_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "primitive_entropy_norm_floor": { "type": "number", "minimum": 0, "maximum": 1 },
+        "variant_diversity_avg_floor": { "type": "number", "minimum": 0 },
+        "asset_spread_entropy_norm_floor": { "type": "number", "minimum": 0, "maximum": 1 },
+        "avg_sentence_words_p50_ceiling": { "type": "integer", "minimum": 0 },
+        "p95_sentence_words_ceiling": { "type": "integer", "minimum": 0 },
+        "ari_p50_ceiling": { "type": "integer", "minimum": 0 },
+        "jargon_density_ppm_p95_ceiling": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
