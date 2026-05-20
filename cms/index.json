@@ -70,7 +70,12 @@
       "align": "start",
       "eyebrow": "Prosperity Club",
       "title": "Welcome to Prosperity Club",
-      "lede": "Helping People Achieve Their Prosperity Goals.",
+      "lede": "Helping People Achieve Their Prosperity Goals. How to make enough money to pay your bills.",
+      "cta": {
+        "label": "Contact Us Now",
+        "href": "/contact/",
+        "data_backend": "cta-contact"
+      },
       "background": {
         "kind": "photo",
         "src": "/assets/photos/stock-66.jpg",
@@ -78,11 +83,6 @@
         "overlay": "dark"
       },
       "height": "compact"
-    },
-    {
-      "kind": "heading",
-      "level": 2,
-      "text": "What we cover."
     },
     {
       "kind": "paragraph",
