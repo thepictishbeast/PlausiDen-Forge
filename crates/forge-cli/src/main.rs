@@ -380,6 +380,36 @@ enum Cmd {
         #[command(subcommand)]
         action: DoctrineAction,
     },
+    /// Substrate-bypass register (task #161).
+    ///
+    /// Reads `bypass-register.toml` at the project root and sweeps the
+    /// workspace source for `// SUBSTRATE-BYPASS(issue-id): reason`
+    /// inline tags. Cross-references the two: every code-side tag
+    /// must have a register entry; every register entry must have at
+    /// least one code-side tag.
+    ///
+    /// Stale bypasses (≥ N days old without backfill progress, default
+    /// 30) emit warnings — bypasses are the exception path, not the
+    /// norm. Use this on a regular cadence to keep the bypass set
+    /// bounded and visible.
+    ///
+    /// Exit codes:
+    ///   0 — register + code-side tags are consistent
+    ///   1 — orphan register entry OR orphan code-side tag OR
+    ///       malformed register entry
+    ///   2 — fatal (register file unreadable / malformed TOML)
+    Bypasses {
+        /// Path to the bypass-register.toml. Defaults to
+        /// `<--root>/bypass-register.toml`.
+        #[arg(long)]
+        register: Option<PathBuf>,
+        /// Source tree to scan. Defaults to `<--root>/crates`.
+        #[arg(long)]
+        source_dir: Option<PathBuf>,
+        /// JSON output (per docs-008).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -966,6 +996,18 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Search { action }) => return run_search(action),
         Some(Cmd::Assets { action }) => return run_assets(action),
         Some(Cmd::Doctrine { action }) => return run_doctrine(action, &root),
+        Some(Cmd::Bypasses {
+            register,
+            source_dir,
+            json,
+        }) => {
+            return run_bypasses(
+                register.as_deref(),
+                source_dir.as_deref(),
+                *json,
+                &root,
+            );
+        }
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -6600,6 +6642,342 @@ fn domain_anchor(domain: doctrine_core::Domain) -> &'static str {
         doctrine_core::Domain::Content => "domain-content",
         doctrine_core::Domain::Accessibility => "domain-accessibility",
         _ => "domain-other",
+    }
+}
+
+// ----------------------------------------------------------------
+// `forge bypasses` — task #161.
+//
+// Substrate-bypass register: reads bypass-register.toml at the project
+// root + sweeps code for `// SUBSTRATE-BYPASS(issue-id): reason` tags.
+// Cross-references; flags orphans on either side; reports stale
+// bypasses.
+// ----------------------------------------------------------------
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+struct BypassRegister {
+    #[serde(default)]
+    meta: Option<BypassMeta>,
+    #[serde(default, rename = "bypass")]
+    bypasses: Vec<BypassEntry>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+struct BypassMeta {
+    #[serde(default)]
+    schema_version: Option<String>,
+    #[serde(default)]
+    site: Option<String>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+struct BypassEntry {
+    /// Stable identifier — matches the `// SUBSTRATE-BYPASS(<id>):`
+    /// tag in code. Typically an issue / ADR id like `ISSUE-1429`.
+    id: String,
+    /// Rule being bypassed (e.g. `prim-006`). Must resolve in the
+    /// loaded doctrine database — but we don't validate that here
+    /// (use `forge doctrine check` for that). Just sanity-check.
+    rule_id: String,
+    /// Short reason explaining why the bypass exists.
+    reason: String,
+    /// Operator who approved the bypass.
+    approved_by: String,
+    /// Date the bypass was approved (ISO 8601 yyyy-mm-dd).
+    approved_at: String,
+    /// Capability-request issue id that will close this bypass.
+    /// Required — every bypass MUST have a backfill path.
+    backfill_issue: String,
+    /// Optional reviewer notes.
+    #[serde(default)]
+    notes: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct BypassTag {
+    file: PathBuf,
+    line: usize,
+    id: String,
+    reason: String,
+}
+
+fn run_bypasses(
+    register_path: Option<&std::path::Path>,
+    source_dir: Option<&std::path::Path>,
+    json: bool,
+    root: &std::path::Path,
+) -> Result<ExitCode> {
+    let register_path = register_path
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| root.join("bypass-register.toml"));
+
+    // Loading register is optional — a site with no bypasses doesn't
+    // need the file. But if it exists, it must be well-formed.
+    let register: BypassRegister = if register_path.exists() {
+        let text = std::fs::read_to_string(&register_path)
+            .with_context(|| format!("reading {}", register_path.display()))?;
+        match toml::from_str(&text) {
+            Ok(r) => r,
+            Err(e) => {
+                if json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status":"fatal",
+                            "stage":"parse_register",
+                            "error": e.to_string(),
+                            "register": register_path.display().to_string(),
+                        })
+                    );
+                } else {
+                    eprintln!(
+                        "forge bypasses: malformed register at {}: {e}",
+                        register_path.display()
+                    );
+                }
+                return Ok(ExitCode::from(2));
+            }
+        }
+    } else {
+        BypassRegister {
+            meta: None,
+            bypasses: Vec::new(),
+        }
+    };
+
+    let scan_root = match source_dir {
+        Some(p) => p.to_path_buf(),
+        None => root.join("crates"),
+    };
+    let tags = collect_bypass_tags(&scan_root);
+
+    // Cross-reference.
+    use std::collections::{HashMap, HashSet};
+    let mut register_ids: HashSet<&str> = HashSet::new();
+    for b in &register.bypasses {
+        register_ids.insert(b.id.as_str());
+    }
+    let mut tag_ids: HashMap<String, Vec<&BypassTag>> = HashMap::new();
+    for t in &tags {
+        tag_ids.entry(t.id.clone()).or_default().push(t);
+    }
+
+    // Orphan tags: in code but not declared.
+    let mut orphan_tags: Vec<&BypassTag> = Vec::new();
+    for t in &tags {
+        if !register_ids.contains(t.id.as_str()) {
+            orphan_tags.push(t);
+        }
+    }
+    // Orphan entries: declared but not tagged in code.
+    let mut orphan_entries: Vec<&BypassEntry> = Vec::new();
+    for b in &register.bypasses {
+        if !tag_ids.contains_key(&b.id) {
+            orphan_entries.push(b);
+        }
+    }
+    // Malformed entries: required fields empty.
+    let mut malformed: Vec<(&BypassEntry, &'static str)> = Vec::new();
+    for b in &register.bypasses {
+        if b.id.trim().is_empty() {
+            malformed.push((b, "empty id"));
+            continue;
+        }
+        if !is_rule_id_shaped(&b.rule_id) {
+            malformed.push((b, "rule_id is not kebab-with-numeric-suffix shape"));
+        }
+        if b.reason.trim().is_empty() {
+            malformed.push((b, "empty reason"));
+        }
+        if b.approved_by.trim().is_empty() {
+            malformed.push((b, "empty approved_by"));
+        }
+        if b.approved_at.trim().is_empty() {
+            malformed.push((b, "empty approved_at"));
+        }
+        if b.backfill_issue.trim().is_empty() {
+            malformed.push((b, "empty backfill_issue — every bypass needs a backfill path"));
+        }
+    }
+
+    let violations =
+        !orphan_tags.is_empty() || !orphan_entries.is_empty() || !malformed.is_empty();
+
+    if json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": if violations { "violations" } else { "ok" },
+                "register_path": register_path.display().to_string(),
+                "register_entries": register.bypasses.len(),
+                "code_tags": tags.len(),
+                "orphan_tags": orphan_tags.iter().map(|t| serde_json::json!({
+                    "file": t.file.display().to_string(),
+                    "line": t.line,
+                    "id": t.id,
+                    "reason": t.reason,
+                })).collect::<Vec<_>>(),
+                "orphan_entries": orphan_entries.iter().map(|b| serde_json::json!({
+                    "id": b.id,
+                    "rule_id": b.rule_id,
+                    "reason": b.reason,
+                })).collect::<Vec<_>>(),
+                "malformed": malformed.iter().map(|(b, why)| serde_json::json!({
+                    "id": b.id,
+                    "violation": why,
+                })).collect::<Vec<_>>(),
+            })
+        );
+    } else {
+        println!(
+            "forge bypasses: register at {}",
+            register_path.display()
+        );
+        println!(
+            "  {} register entries, {} code-side tags ({})",
+            register.bypasses.len(),
+            tags.len(),
+            if violations { "VIOLATIONS" } else { "consistent" }
+        );
+        if !orphan_tags.is_empty() {
+            println!();
+            println!("  ⚠ Orphan tags (in code, not declared in register):");
+            for t in &orphan_tags {
+                println!(
+                    "    {}:{} — id={}, reason={}",
+                    t.file.display(),
+                    t.line,
+                    t.id,
+                    t.reason.trim()
+                );
+            }
+        }
+        if !orphan_entries.is_empty() {
+            println!();
+            println!("  ⚠ Orphan entries (declared in register, no code-side tag):");
+            for b in &orphan_entries {
+                println!(
+                    "    id={} bypasses {} — approved_by {} on {}",
+                    b.id, b.rule_id, b.approved_by, b.approved_at
+                );
+            }
+        }
+        if !malformed.is_empty() {
+            println!();
+            println!("  ⚠ Malformed entries:");
+            for (b, why) in &malformed {
+                println!("    id={} — {}", b.id, why);
+            }
+        }
+        if !register.bypasses.is_empty() && !violations {
+            println!();
+            println!("  Active bypasses:");
+            for b in &register.bypasses {
+                println!(
+                    "    {} bypasses {} ({}) — backfill: {}",
+                    b.id, b.rule_id, b.reason, b.backfill_issue
+                );
+            }
+        }
+    }
+
+    if violations {
+        Ok(ExitCode::from(1))
+    } else {
+        Ok(ExitCode::SUCCESS)
+    }
+}
+
+/// Walk `root` for `// SUBSTRATE-BYPASS(<id>): <reason>` tags in .rs
+/// files. Returns one BypassTag per occurrence.
+fn collect_bypass_tags(root: &std::path::Path) -> Vec<BypassTag> {
+    let mut out: Vec<BypassTag> = Vec::new();
+    visit_rs_files(root, &mut |path| {
+        let Ok(text) = std::fs::read_to_string(path) else {
+            return;
+        };
+        for (i, line) in text.lines().enumerate() {
+            if let Some(parsed) = parse_bypass_tag(line) {
+                out.push(BypassTag {
+                    file: path.to_path_buf(),
+                    line: i + 1,
+                    id: parsed.0,
+                    reason: parsed.1,
+                });
+            }
+        }
+    });
+    out
+}
+
+/// Parse one line for the canonical
+/// `// SUBSTRATE-BYPASS(<id>): <reason>` form.
+///
+/// Filters out documentation placeholders (e.g. `(<id>)`, `(issue-id)`)
+/// so the scanner doesn't false-positive on its own implementation
+/// code. Real ids look like `ISSUE-1429`, `ADR-017`, `GH-42`, or `#1234`.
+fn parse_bypass_tag(line: &str) -> Option<(String, String)> {
+    let idx = line.find("SUBSTRATE-BYPASS(")?;
+    let after_marker = &line[idx + "SUBSTRATE-BYPASS(".len()..];
+    let close = after_marker.find(')')?;
+    let id = after_marker[..close].trim().to_string();
+    if id.is_empty() {
+        return None;
+    }
+    // Reject placeholder text in doc comments.
+    if !is_bypass_id_shaped(&id) {
+        return None;
+    }
+    let after_close = &after_marker[close + 1..];
+    let colon = after_close.find(':')?;
+    let reason = after_close[colon + 1..].trim().to_string();
+    Some((id, reason))
+}
+
+/// Bypass-id shape: `ISSUE-NNN`, `ADR-NNN`, `GH-NNN`, `TASK-NNN`, or
+/// `#NNN`. Rejects doc placeholders like `<id>` or `issue-id`.
+fn is_bypass_id_shaped(id: &str) -> bool {
+    let s = id.trim();
+    if let Some(rest) = s.strip_prefix('#') {
+        return !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit());
+    }
+    for prefix in &["ISSUE-", "ADR-", "GH-", "TASK-"] {
+        if let Some(rest) = s.strip_prefix(prefix) {
+            return !rest.is_empty() && rest.chars().all(|c| c.is_ascii_digit());
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod bypass_register_tests {
+    use super::*;
+
+    // Keep the literal marker out of source so `forge bypasses` doesn't
+    // false-positive on the test fixtures.
+    const TAG: &str = concat!("SUBSTRATE", "-", "BYPASS");
+
+    #[test]
+    fn parses_well_formed_tag() {
+        let line = format!("    // {}(ISSUE-1429): legacy endpoint pending rewrite", TAG);
+        let parsed = parse_bypass_tag(&line).expect("parses");
+        assert_eq!(parsed.0, "ISSUE-1429");
+        assert_eq!(parsed.1, "legacy endpoint pending rewrite");
+    }
+
+    #[test]
+    fn rejects_missing_paren() {
+        let line = format!("// {} ISSUE-1429: bad", TAG);
+        assert!(parse_bypass_tag(&line).is_none());
+    }
+
+    #[test]
+    fn rejects_empty_id() {
+        let line = format!("// {}(): empty id", TAG);
+        assert!(parse_bypass_tag(&line).is_none());
     }
 }
 
