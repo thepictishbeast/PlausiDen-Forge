@@ -106,6 +106,43 @@ jobs:
           exit $fail
 
       # ----------------------------------------------------------------
+      # 3b. Source-grep guardrail (task #188): no AI imports anywhere
+      #     outside crates/forge-critic. Fails BEFORE compilation so
+      #     a PR adding `use anthropic::Client;` to forge-phases never
+      #     lands. Complements the binary-symbol check above.
+      # ----------------------------------------------------------------
+      - name: assert no AI imports outside forge-critic
+        run: |
+          set -euo pipefail
+          FORBIDDEN_PATTERNS=(
+            "use lfi_core"
+            "use llm_core"
+            "use anthropic::"
+            "use openai::"
+            "use ollama::"
+            "use neupsl::"
+            "use hdc::"
+            "ANTHROPIC_API_KEY"
+            "OPENAI_API_KEY"
+            "OLLAMA_HOST"
+          )
+          fail=0
+          for pat in "${FORBIDDEN_PATTERNS[@]}"; do
+            # Permit only within forge-critic.
+            hits=$(grep -rn "$pat" crates/ 2>/dev/null \
+              | grep -v "crates/forge-critic" || true)
+            if [ -n "$hits" ]; then
+              echo "::error::AI-assuming code outside forge-critic for pattern: $pat"
+              echo "$hits"
+              fail=1
+            fi
+          done
+          if [ $fail -eq 0 ]; then
+            echo "Source-grep audit clean: no AI imports outside forge-critic."
+          fi
+          exit $fail
+
+      # ----------------------------------------------------------------
       # 4. Run forge build against a fixture site and assert clean
       #    completion in the no-AI build.
       # ----------------------------------------------------------------
