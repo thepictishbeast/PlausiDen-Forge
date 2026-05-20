@@ -1,32 +1,34 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Stripe — Financial Infrastructure to Grow Your Revenue",
+  "title": "Stripe \u2014 Financial Infrastructure to Grow Your Revenue",
   "description": "Stripe is a financial services platform that helps all types of businesses accept payments, build flexible billing models and manage money movement.",
   "brand": "Stripe",
   "chrome": "page_shell",
   "theme": "ocean",
   "nav_actions": [
-    {"label": "stripe.com", "href": "https://stripe.com/", "data_backend": "cta-platform"}
+    {
+      "label": "stripe.com",
+      "href": "https://stripe.com/",
+      "data_backend": "cta-platform"
+    }
   ],
   "path": "/stripe.html",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Products",
-        "links": [
-          {"label": "Payments",      "href": "/stripe-payments/",      "data_backend": "view-platform"},
-          {"label": "Billing",       "href": "/stripe-billing/",       "data_backend": "view-pricing"},
-          {"label": "Issuing",       "href": "/stripe-issuing/",       "data_backend": "view-platform"},
-          {"label": "Treasury",      "href": "/stripe-treasury/",      "data_backend": "view-platform"},
-          {"label": "Connect",       "href": "/stripe-connect/",       "data_backend": "view-platform"}
-        ]
-      },
-      {
         "heading": "Reference",
         "links": [
-          {"label": "stripe.com",    "href": "https://stripe.com/",            "data_backend": "cta-platform"},
-          {"label": "Docs",          "href": "https://docs.stripe.com/",        "data_backend": "view-docs"}
+          {
+            "label": "stripe.com",
+            "href": "https://stripe.com/",
+            "data_backend": "cta-platform"
+          },
+          {
+            "label": "Docs",
+            "href": "https://docs.stripe.com/",
+            "data_backend": "view-docs"
+          }
         ]
       }
     ],
@@ -38,22 +40,31 @@
       "jurisdiction": "Pixel-rep rotation"
     },
     "legal_links": [
-      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
-      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+      {
+        "label": "Privacy",
+        "href": "/about/privacy-policy/",
+        "data_backend": "view-docs"
+      },
+      {
+        "label": "Terms",
+        "href": "/about/terms-and-conditions/",
+        "data_backend": "view-docs"
+      }
     ],
-    "colophon": "© 2026 Forge-static approximation of stripe.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Stripe, Inc."
+    "colophon": "\u00a9 2026 Forge-static approximation of stripe.com \u2014 authored by PlausiDen-Forge for substrate validation. Not affiliated with Stripe, Inc."
   },
   "nav_links": [
-    {"label": "Payments", "href": "/stripe-payments/", "data_backend": "view-platform"},
-    {"label": "Billing",  "href": "/stripe-billing/",  "data_backend": "view-pricing"},
-    {"label": "Connect",  "href": "/stripe-connect/",  "data_backend": "view-platform"},
-    {"label": "Docs",     "href": "https://docs.stripe.com/", "data_backend": "view-docs"}
+    {
+      "label": "Docs",
+      "href": "https://docs.stripe.com/",
+      "data_backend": "view-docs"
+    }
   ],
   "sections": [
     {
       "kind": "image_hero",
       "align": "start",
-      "eyebrow": "Stripe — Forge static mirror",
+      "eyebrow": "Stripe \u2014 Forge static mirror",
       "title": "Financial Infrastructure to Grow Your Revenue.",
       "lede": "Stripe is a financial services platform that helps all types of businesses accept payments, build flexible billing models and manage money movement.",
       "cta": {
@@ -80,7 +91,7 @@
       "items": [
         {
           "key": "Payments",
-          "value": "Accept and optimise payments globally — online and in person.",
+          "value": "Accept and optimise payments globally \u2014 online and in person.",
           "hint": "Cards, wallets, bank debits, BNPL, and crypto. Real-time decline-rate optimisation. Unified API across 195+ countries."
         },
         {
@@ -129,7 +140,7 @@
         {
           "key": "Hertz",
           "value": "Hertz unifies commerce with Stripe.",
-          "hint": "Cross-channel unification: in-vehicle, kiosk, web, mobile — one ledger, one reconciliation pipeline."
+          "hint": "Cross-channel unification: in-vehicle, kiosk, web, mobile \u2014 one ledger, one reconciliation pipeline."
         },
         {
           "key": "URBN",
@@ -163,7 +174,11 @@
       "eyebrow": "Reference",
       "title": "View the live Stripe site.",
       "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
-      "cta": {"label": "stripe.com", "href": "https://stripe.com/", "data_backend": "cta-platform"}
+      "cta": {
+        "label": "stripe.com",
+        "href": "https://stripe.com/",
+        "data_backend": "cta-platform"
+      }
     }
   ]
 }

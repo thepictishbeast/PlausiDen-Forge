@@ -1,31 +1,34 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Notion — The AI workspace that works for you",
+  "title": "Notion \u2014 The AI workspace that works for you",
   "description": "Build Custom Agents, search across all your apps, and automate busywork. The AI workspace where teams get more done, faster.",
   "brand": "Notion",
   "chrome": "page_shell",
   "theme": "light",
   "nav_actions": [
-    {"label": "notion.com", "href": "https://www.notion.com/", "data_backend": "cta-platform"}
+    {
+      "label": "notion.com",
+      "href": "https://www.notion.com/",
+      "data_backend": "cta-platform"
+    }
   ],
   "path": "/notion.html",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Product",
-        "links": [
-          {"label": "Workspace",   "href": "/notion-workspace/", "data_backend": "view-platform"},
-          {"label": "Agents",      "href": "/notion-agents/",   "data_backend": "view-platform"},
-          {"label": "Search",      "href": "/notion-search/",   "data_backend": "view-platform"},
-          {"label": "Calendar",    "href": "/notion-calendar/", "data_backend": "view-platform"}
-        ]
-      },
-      {
         "heading": "Reference",
         "links": [
-          {"label": "notion.com",  "href": "https://www.notion.com/",          "data_backend": "cta-platform"},
-          {"label": "Help",        "href": "https://www.notion.com/help",      "data_backend": "view-docs"}
+          {
+            "label": "notion.com",
+            "href": "https://www.notion.com/",
+            "data_backend": "cta-platform"
+          },
+          {
+            "label": "Help",
+            "href": "https://www.notion.com/help",
+            "data_backend": "view-docs"
+          }
         ]
       }
     ],
@@ -37,22 +40,31 @@
       "jurisdiction": "Pixel-rep rotation"
     },
     "legal_links": [
-      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
-      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+      {
+        "label": "Privacy",
+        "href": "/about/privacy-policy/",
+        "data_backend": "view-docs"
+      },
+      {
+        "label": "Terms",
+        "href": "/about/terms-and-conditions/",
+        "data_backend": "view-docs"
+      }
     ],
-    "colophon": "© 2026 Forge-static approximation of notion.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Notion Labs, Inc."
+    "colophon": "\u00a9 2026 Forge-static approximation of notion.com \u2014 authored by PlausiDen-Forge for substrate validation. Not affiliated with Notion Labs, Inc."
   },
   "nav_links": [
-    {"label": "Product",   "href": "/notion-product/",  "data_backend": "view-platform"},
-    {"label": "Customers", "href": "/notion-customers/","data_backend": "view-platform"},
-    {"label": "Pricing",   "href": "/notion-pricing/",  "data_backend": "view-pricing"},
-    {"label": "Help",      "href": "https://www.notion.com/help", "data_backend": "view-docs"}
+    {
+      "label": "Help",
+      "href": "https://www.notion.com/help",
+      "data_backend": "view-docs"
+    }
   ],
   "sections": [
     {
       "kind": "image_hero",
       "align": "start",
-      "eyebrow": "Notion — Forge static mirror",
+      "eyebrow": "Notion \u2014 Forge static mirror",
       "title": "The AI workspace that works for you.",
       "lede": "Build Custom Agents, search across all your apps, and automate busywork. The AI workspace where teams get more done, faster.",
       "cta": {
@@ -74,7 +86,7 @@
     },
     {
       "kind": "pull_quote",
-      "body": "Meet the night shift. Notion agents keep work moving 24/7 — capturing knowledge, answering questions, and pushing projects forward while you sleep. Trusted by 98% of the Forbes Cloud 100.",
+      "body": "Meet the night shift. Notion agents keep work moving 24/7 \u2014 capturing knowledge, answering questions, and pushing projects forward while you sleep. Trusted by 98% of the Forbes Cloud 100.",
       "attribution": "notion.com, SSR-extracted",
       "emphasis": "display"
     },
@@ -86,7 +98,7 @@
         {
           "key": "Automate",
           "value": "Automate repetitive work for your team.",
-          "hint": "Agent flows that take a meeting note and route it to the right project, generate the status update, and prompt the assignee — without a templated form to fill in."
+          "hint": "Agent flows that take a meeting note and route it to the right project, generate the status update, and prompt the assignee \u2014 without a templated form to fill in."
         },
         {
           "key": "Answer",
@@ -107,7 +119,7 @@
     },
     {
       "kind": "paragraph",
-      "text": "Notion's substrate is the typed block — every doc, database row, calendar entry, and chat message is the same primitive shape. AI features compose against that single substrate rather than fragmented per-surface SDKs. The reference shape: one substrate beats N integrated tools."
+      "text": "Notion's substrate is the typed block \u2014 every doc, database row, calendar entry, and chat message is the same primitive shape. AI features compose against that single substrate rather than fragmented per-surface SDKs. The reference shape: one substrate beats N integrated tools."
     },
     {
       "kind": "call_to_action",
@@ -115,7 +127,11 @@
       "eyebrow": "Reference",
       "title": "Open the live Notion site.",
       "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
-      "cta": {"label": "notion.com", "href": "https://www.notion.com/", "data_backend": "cta-platform"}
+      "cta": {
+        "label": "notion.com",
+        "href": "https://www.notion.com/",
+        "data_backend": "cta-platform"
+      }
     }
   ]
 }

@@ -1,12 +1,16 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "PlausiDen — Comprehensive IT for the Modern Enterprise",
-  "description": "Comprehensive IT for the modern enterprise — cybersecurity, AI automation, cloud infrastructure, software development. Built for teams that take confidentiality seriously.",
+  "title": "PlausiDen \u2014 Comprehensive IT for the Modern Enterprise",
+  "description": "Comprehensive IT for the modern enterprise \u2014 cybersecurity, AI automation, cloud infrastructure, software development. Built for teams that take confidentiality seriously.",
   "brand": "PlausiDen",
   "chrome": "page_shell",
   "theme": "light",
   "nav_actions": [
-    {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+    {
+      "label": "Free consultation",
+      "href": "/plausiden-contact/",
+      "data_backend": "cta-contact"
+    }
   ],
   "path": "/plausiden.html",
   "site_origin": "https://dev.plausiden.com",
@@ -15,26 +19,41 @@
       {
         "heading": "Company",
         "links": [
-          {"label": "About",          "href": "/about/",          "data_backend": "view-about"},
-          {"label": "Careers",        "href": "/careers/",        "data_backend": "view-blog"},
-          {"label": "Engineering",    "href": "/engineering/",    "data_backend": "view-docs"}
+          {
+            "label": "About",
+            "href": "/about/",
+            "data_backend": "view-about"
+          },
+          {
+            "label": "Careers",
+            "href": "/careers/",
+            "data_backend": "view-blog"
+          },
+          {
+            "label": "Engineering",
+            "href": "/engineering/",
+            "data_backend": "view-docs"
+          }
         ]
       },
       {
         "heading": "Solutions",
         "links": [
-          {"label": "IT Operations",       "href": "/it-operations/",       "data_backend": "view-platform"},
-          {"label": "Cyber Security",      "href": "/cyber-security/",      "data_backend": "view-platform"},
-          {"label": "Artificial Intelligence", "href": "/ai/",              "data_backend": "view-platform"},
-          {"label": "Automation & IoT",    "href": "/automation-iot/",      "data_backend": "view-platform"},
-          {"label": "Software",            "href": "/software/",            "data_backend": "view-platform"},
-          {"label": "Hardware",            "href": "/hardware/",            "data_backend": "view-platform"}
-        ]
-      },
-      {
-        "heading": "Contact",
-        "links": [
-          {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+          {
+            "label": "Artificial Intelligence",
+            "href": "/ai/",
+            "data_backend": "view-platform"
+          },
+          {
+            "label": "Software",
+            "href": "/software/",
+            "data_backend": "view-platform"
+          },
+          {
+            "label": "Hardware",
+            "href": "/hardware/",
+            "data_backend": "view-platform"
+          }
         ]
       }
     ],
@@ -46,16 +65,35 @@
       "jurisdiction": "USA"
     },
     "legal_links": [
-      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
-      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+      {
+        "label": "Privacy",
+        "href": "/about/privacy-policy/",
+        "data_backend": "view-docs"
+      },
+      {
+        "label": "Terms",
+        "href": "/about/terms-and-conditions/",
+        "data_backend": "view-docs"
+      }
     ],
-    "colophon": "© 2026 PlausiDen LLC. All rights reserved."
+    "colophon": "\u00a9 2026 PlausiDen LLC. All rights reserved."
   },
   "nav_links": [
-    {"label": "Solutions",   "href": "/solutions/",   "data_backend": "view-platform"},
-    {"label": "Engineering", "href": "/engineering/", "data_backend": "view-docs"},
-    {"label": "About",       "href": "/about/",       "data_backend": "view-about"},
-    {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+    {
+      "label": "Solutions",
+      "href": "/solutions/",
+      "data_backend": "view-platform"
+    },
+    {
+      "label": "Engineering",
+      "href": "/engineering/",
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "About",
+      "href": "/about/",
+      "data_backend": "view-about"
+    }
   ],
   "sections": [
     {
@@ -99,12 +137,12 @@
         {
           "key": "Artificial Intelligence",
           "value": "Intelligent systems + predictive analytics.",
-          "hint": "Specialist models for forecasting, anomaly detection, and document understanding — deployed on your infrastructure with confidentiality preserved end-to-end."
+          "hint": "Specialist models for forecasting, anomaly detection, and document understanding \u2014 deployed on your infrastructure with confidentiality preserved end-to-end."
         },
         {
           "key": "Automation & IoT",
           "value": "Operational efficiency at industrial scale.",
-          "hint": "Production-line telemetry, edge inference, and supply-chain integration — Rust + WASM substrate where latency + reliability are load-bearing."
+          "hint": "Production-line telemetry, edge inference, and supply-chain integration \u2014 Rust + WASM substrate where latency + reliability are load-bearing."
         },
         {
           "key": "Software",
@@ -137,7 +175,7 @@
         {
           "key": "Strategy",
           "value": "Customized strategies, not cookie-cutter solutions.",
-          "hint": "Every engagement starts with the actual constraints — regulatory, technical, organizational — and produces an implementation tied to those constraints, not a vendor checklist."
+          "hint": "Every engagement starts with the actual constraints \u2014 regulatory, technical, organizational \u2014 and produces an implementation tied to those constraints, not a vendor checklist."
         },
         {
           "key": "Expertise",
@@ -152,7 +190,11 @@
       "eyebrow": "Free consultation",
       "title": "Ready to make your IT spend faster, cheaper, and confidentiality-preserving?",
       "lede": "Contact us today for a free consultation and discover how we can optimize your operations.",
-      "cta": {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
+      "cta": {
+        "label": "Free consultation",
+        "href": "/plausiden-contact/",
+        "data_backend": "cta-contact"
+      }
     }
   ]
 }

@@ -1,31 +1,34 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Render — The cloud for builders",
+  "title": "Render \u2014 The cloud for builders",
   "description": "Deploy and scale any app or agent from your first user to your billionth. Build faster on intuitive cloud infrastructure for the modern web.",
   "brand": "Render",
   "chrome": "page_shell",
   "theme": "ocean",
   "nav_actions": [
-    {"label": "render.com", "href": "https://render.com/", "data_backend": "cta-platform"}
+    {
+      "label": "render.com",
+      "href": "https://render.com/",
+      "data_backend": "cta-platform"
+    }
   ],
   "path": "/render.html",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Product",
-        "links": [
-          {"label": "Web Services",  "href": "/render-web/",      "data_backend": "view-platform"},
-          {"label": "Background",    "href": "/render-bg/",       "data_backend": "view-platform"},
-          {"label": "PostgreSQL",    "href": "/render-pg/",       "data_backend": "view-platform"},
-          {"label": "Redis",         "href": "/render-redis/",    "data_backend": "view-platform"}
-        ]
-      },
-      {
         "heading": "Reference",
         "links": [
-          {"label": "render.com",    "href": "https://render.com/",         "data_backend": "cta-platform"},
-          {"label": "Docs",          "href": "https://render.com/docs",     "data_backend": "view-docs"}
+          {
+            "label": "render.com",
+            "href": "https://render.com/",
+            "data_backend": "cta-platform"
+          },
+          {
+            "label": "Docs",
+            "href": "https://render.com/docs",
+            "data_backend": "view-docs"
+          }
         ]
       }
     ],
@@ -37,22 +40,31 @@
       "jurisdiction": "Pixel-rep rotation"
     },
     "legal_links": [
-      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
-      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+      {
+        "label": "Privacy",
+        "href": "/about/privacy-policy/",
+        "data_backend": "view-docs"
+      },
+      {
+        "label": "Terms",
+        "href": "/about/terms-and-conditions/",
+        "data_backend": "view-docs"
+      }
     ],
-    "colophon": "© 2026 Forge-static approximation of render.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Render Services, Inc."
+    "colophon": "\u00a9 2026 Forge-static approximation of render.com \u2014 authored by PlausiDen-Forge for substrate validation. Not affiliated with Render Services, Inc."
   },
   "nav_links": [
-    {"label": "Product",   "href": "/render-product/",  "data_backend": "view-platform"},
-    {"label": "Pricing",   "href": "/render-pricing/",  "data_backend": "view-pricing"},
-    {"label": "Docs",      "href": "https://render.com/docs", "data_backend": "view-docs"},
-    {"label": "Customers", "href": "/render-customers/","data_backend": "view-platform"}
+    {
+      "label": "Docs",
+      "href": "https://render.com/docs",
+      "data_backend": "view-docs"
+    }
   ],
   "sections": [
     {
       "kind": "image_hero",
       "align": "start",
-      "eyebrow": "Render — Forge static mirror",
+      "eyebrow": "Render \u2014 Forge static mirror",
       "title": "The cloud for builders.",
       "lede": "Deploy and scale any app or agent from your first user to your billionth. Build faster on intuitive cloud infrastructure for the modern web.",
       "cta": {
@@ -125,7 +137,11 @@
       "eyebrow": "Reference",
       "title": "Open the live Render site.",
       "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
-      "cta": {"label": "render.com", "href": "https://render.com/", "data_backend": "cta-platform"}
+      "cta": {
+        "label": "render.com",
+        "href": "https://render.com/",
+        "data_backend": "cta-platform"
+      }
     }
   ]
 }

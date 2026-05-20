@@ -1,31 +1,34 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Vercel — Build and deploy the best web experiences with the AI Cloud",
+  "title": "Vercel \u2014 Build and deploy the best web experiences with the AI Cloud",
   "description": "Vercel gives developers the frameworks, workflows, and infrastructure to build a faster, more personalized web.",
   "brand": "Vercel",
   "chrome": "page_shell",
   "theme": "dark",
   "nav_actions": [
-    {"label": "vercel.com", "href": "https://vercel.com/", "data_backend": "cta-platform"}
+    {
+      "label": "vercel.com",
+      "href": "https://vercel.com/",
+      "data_backend": "cta-platform"
+    }
   ],
   "path": "/vercel.html",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Product",
-        "links": [
-          {"label": "Frameworks",     "href": "/vercel-frameworks/",     "data_backend": "view-platform"},
-          {"label": "AI Cloud",       "href": "/vercel-ai-cloud/",       "data_backend": "view-platform"},
-          {"label": "Edge Functions", "href": "/vercel-edge/",           "data_backend": "view-platform"},
-          {"label": "Analytics",      "href": "/vercel-analytics/",      "data_backend": "view-platform"}
-        ]
-      },
-      {
         "heading": "Reference",
         "links": [
-          {"label": "vercel.com",     "href": "https://vercel.com/",         "data_backend": "cta-platform"},
-          {"label": "Docs",           "href": "https://vercel.com/docs",     "data_backend": "view-docs"}
+          {
+            "label": "vercel.com",
+            "href": "https://vercel.com/",
+            "data_backend": "cta-platform"
+          },
+          {
+            "label": "Docs",
+            "href": "https://vercel.com/docs",
+            "data_backend": "view-docs"
+          }
         ]
       }
     ],
@@ -37,22 +40,31 @@
       "jurisdiction": "Pixel-rep rotation"
     },
     "legal_links": [
-      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
-      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+      {
+        "label": "Privacy",
+        "href": "/about/privacy-policy/",
+        "data_backend": "view-docs"
+      },
+      {
+        "label": "Terms",
+        "href": "/about/terms-and-conditions/",
+        "data_backend": "view-docs"
+      }
     ],
-    "colophon": "© 2026 Forge-static approximation of vercel.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Vercel Inc."
+    "colophon": "\u00a9 2026 Forge-static approximation of vercel.com \u2014 authored by PlausiDen-Forge for substrate validation. Not affiliated with Vercel Inc."
   },
   "nav_links": [
-    {"label": "Products",   "href": "/vercel-products/",  "data_backend": "view-platform"},
-    {"label": "Customers",  "href": "/vercel-customers/", "data_backend": "view-platform"},
-    {"label": "Docs",       "href": "https://vercel.com/docs", "data_backend": "view-docs"},
-    {"label": "Pricing",    "href": "/vercel-pricing/",   "data_backend": "view-pricing"}
+    {
+      "label": "Docs",
+      "href": "https://vercel.com/docs",
+      "data_backend": "view-docs"
+    }
   ],
   "sections": [
     {
       "kind": "image_hero",
       "align": "start",
-      "eyebrow": "Vercel — Forge static mirror",
+      "eyebrow": "Vercel \u2014 Forge static mirror",
       "title": "Build and deploy on the AI Cloud.",
       "lede": "Vercel gives developers the frameworks, workflows, and infrastructure to build a faster, more personalized web.",
       "cta": {
@@ -90,7 +102,7 @@
         {
           "key": "Web Apps",
           "value": "Framework-aware deploys.",
-          "hint": "Next.js, Nuxt, SvelteKit, Astro — first-class CI/CD with preview deploys per branch, automatic edge caching, image optimization."
+          "hint": "Next.js, Nuxt, SvelteKit, Astro \u2014 first-class CI/CD with preview deploys per branch, automatic edge caching, image optimization."
         },
         {
           "key": "Commerce",
@@ -125,7 +137,11 @@
       "eyebrow": "Reference",
       "title": "Open the live Vercel site.",
       "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
-      "cta": {"label": "vercel.com", "href": "https://vercel.com/", "data_backend": "cta-platform"}
+      "cta": {
+        "label": "vercel.com",
+        "href": "https://vercel.com/",
+        "data_backend": "cta-platform"
+      }
     }
   ]
 }

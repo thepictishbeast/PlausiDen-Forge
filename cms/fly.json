@@ -1,32 +1,34 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Fly — Build fast. Run any code fearlessly.",
+  "title": "Fly \u2014 Build fast. Run any code fearlessly.",
   "description": "Fly.io ships your apps close to users on a global Anycast network. Build fast, run any code fearlessly.",
   "brand": "Fly",
   "chrome": "page_shell",
   "theme": "dark",
   "nav_actions": [
-    {"label": "fly.io", "href": "https://fly.io/", "data_backend": "cta-platform"}
+    {
+      "label": "fly.io",
+      "href": "https://fly.io/",
+      "data_backend": "cta-platform"
+    }
   ],
   "path": "/fly.html",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Product",
-        "links": [
-          {"label": "Machines",   "href": "/fly-machines/",   "data_backend": "view-platform"},
-          {"label": "Apps",       "href": "/fly-apps/",       "data_backend": "view-platform"},
-          {"label": "Volumes",    "href": "/fly-volumes/",    "data_backend": "view-platform"},
-          {"label": "Anycast",    "href": "/fly-anycast/",    "data_backend": "view-platform"},
-          {"label": "Postgres",   "href": "/fly-postgres/",   "data_backend": "view-platform"}
-        ]
-      },
-      {
         "heading": "Reference",
         "links": [
-          {"label": "fly.io",     "href": "https://fly.io/",         "data_backend": "cta-platform"},
-          {"label": "Docs",       "href": "https://fly.io/docs/",    "data_backend": "view-docs"}
+          {
+            "label": "fly.io",
+            "href": "https://fly.io/",
+            "data_backend": "cta-platform"
+          },
+          {
+            "label": "Docs",
+            "href": "https://fly.io/docs/",
+            "data_backend": "view-docs"
+          }
         ]
       }
     ],
@@ -38,22 +40,36 @@
       "jurisdiction": "Pixel-rep rotation"
     },
     "legal_links": [
-      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
-      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+      {
+        "label": "Privacy",
+        "href": "/about/privacy-policy/",
+        "data_backend": "view-docs"
+      },
+      {
+        "label": "Terms",
+        "href": "/about/terms-and-conditions/",
+        "data_backend": "view-docs"
+      }
     ],
-    "colophon": "© 2026 Forge-static approximation of fly.io — authored by PlausiDen-Forge for substrate validation. Not affiliated with Fly.io."
+    "colophon": "\u00a9 2026 Forge-static approximation of fly.io \u2014 authored by PlausiDen-Forge for substrate validation. Not affiliated with Fly.io."
   },
   "nav_links": [
-    {"label": "Pricing",   "href": "/fly-pricing/",   "data_backend": "view-pricing"},
-    {"label": "Customers", "href": "/fly-customers/", "data_backend": "view-platform"},
-    {"label": "Docs",      "href": "https://fly.io/docs/", "data_backend": "view-docs"},
-    {"label": "Blog",      "href": "https://fly.io/blog/", "data_backend": "view-blog"}
+    {
+      "label": "Docs",
+      "href": "https://fly.io/docs/",
+      "data_backend": "view-docs"
+    },
+    {
+      "label": "Blog",
+      "href": "https://fly.io/blog/",
+      "data_backend": "view-blog"
+    }
   ],
   "sections": [
     {
       "kind": "image_hero",
       "align": "start",
-      "eyebrow": "Fly — Forge static mirror",
+      "eyebrow": "Fly \u2014 Forge static mirror",
       "title": "Build fast. Run any code fearlessly.",
       "lede": "Fly.io ships your apps close to users on a global Anycast network. The reference shape: a deploy platform where the deploy unit is a single binary + a single TOML, and the runtime is a hardware-virtualized Firecracker microVM.",
       "cta": {
@@ -92,7 +108,7 @@
         {
           "key": "Apps",
           "value": "Multi-region apps from one fly.toml.",
-          "hint": "Declarative deploy: regions, scale rules, health checks, secrets — all in one config the platform reads. Same shape regardless of stack."
+          "hint": "Declarative deploy: regions, scale rules, health checks, secrets \u2014 all in one config the platform reads. Same shape regardless of stack."
         },
         {
           "key": "Volumes",
@@ -126,7 +142,11 @@
       "eyebrow": "Reference",
       "title": "Open the live Fly site.",
       "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
-      "cta": {"label": "fly.io", "href": "https://fly.io/", "data_backend": "cta-platform"}
+      "cta": {
+        "label": "fly.io",
+        "href": "https://fly.io/",
+        "data_backend": "cta-platform"
+      }
     }
   ]
 }

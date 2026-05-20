@@ -1,32 +1,34 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "GitHub — Change is constant. GitHub keeps you ahead.",
+  "title": "GitHub \u2014 Change is constant. GitHub keeps you ahead.",
   "description": "Developer platform with Copilot integration. Where millions of developers, businesses, and the largest open source community build software that advances humanity.",
   "brand": "GitHub",
   "chrome": "page_shell",
   "theme": "dark",
   "nav_actions": [
-    {"label": "github.com", "href": "https://github.com/", "data_backend": "cta-platform"}
+    {
+      "label": "github.com",
+      "href": "https://github.com/",
+      "data_backend": "cta-platform"
+    }
   ],
   "path": "/github.html",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Product",
-        "links": [
-          {"label": "Repositories", "href": "/github-repos/",    "data_backend": "view-platform"},
-          {"label": "Actions",      "href": "/github-actions/",  "data_backend": "view-platform"},
-          {"label": "Copilot",      "href": "/github-copilot/",  "data_backend": "view-platform"},
-          {"label": "Issues",       "href": "/github-issues/",   "data_backend": "view-platform"},
-          {"label": "Discussions",  "href": "/github-discussions/", "data_backend": "view-platform"}
-        ]
-      },
-      {
         "heading": "Reference",
         "links": [
-          {"label": "github.com",   "href": "https://github.com/",     "data_backend": "cta-platform"},
-          {"label": "Docs",         "href": "https://docs.github.com/", "data_backend": "view-docs"}
+          {
+            "label": "github.com",
+            "href": "https://github.com/",
+            "data_backend": "cta-platform"
+          },
+          {
+            "label": "Docs",
+            "href": "https://docs.github.com/",
+            "data_backend": "view-docs"
+          }
         ]
       }
     ],
@@ -38,22 +40,31 @@
       "jurisdiction": "Pixel-rep rotation"
     },
     "legal_links": [
-      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
-      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+      {
+        "label": "Privacy",
+        "href": "/about/privacy-policy/",
+        "data_backend": "view-docs"
+      },
+      {
+        "label": "Terms",
+        "href": "/about/terms-and-conditions/",
+        "data_backend": "view-docs"
+      }
     ],
-    "colophon": "© 2026 Forge-static approximation of github.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with GitHub, Inc."
+    "colophon": "\u00a9 2026 Forge-static approximation of github.com \u2014 authored by PlausiDen-Forge for substrate validation. Not affiliated with GitHub, Inc."
   },
   "nav_links": [
-    {"label": "Features",   "href": "/github-features/",  "data_backend": "view-platform"},
-    {"label": "Customers",  "href": "/github-customers/", "data_backend": "view-platform"},
-    {"label": "Docs",       "href": "https://docs.github.com/", "data_backend": "view-docs"},
-    {"label": "Pricing",    "href": "/github-pricing/",   "data_backend": "view-pricing"}
+    {
+      "label": "Docs",
+      "href": "https://docs.github.com/",
+      "data_backend": "view-docs"
+    }
   ],
   "sections": [
     {
       "kind": "image_hero",
       "align": "start",
-      "eyebrow": "GitHub — Forge static mirror",
+      "eyebrow": "GitHub \u2014 Forge static mirror",
       "title": "Change is constant. GitHub keeps you ahead.",
       "lede": "Developer platform with Copilot integration. Where millions of developers, businesses, and the largest open source community build software that advances humanity.",
       "cta": {
@@ -107,7 +118,7 @@
         {
           "key": "Discussions",
           "value": "Long-form decision capture.",
-          "hint": "RFC threads, Q&A, announcements. Distinct from issues — the place engineering decisions get litigated before they become work items."
+          "hint": "RFC threads, Q&A, announcements. Distinct from issues \u2014 the place engineering decisions get litigated before they become work items."
         }
       ]
     },
@@ -118,7 +129,7 @@
     },
     {
       "kind": "paragraph",
-      "text": "American Airlines, Duolingo, Ernst & Young, Ford — alongside millions of open source maintainers — ship on GitHub. The reference shape is one where the same substrate serves enterprise compliance posture and individual-developer side projects without two SKUs that diverge."
+      "text": "American Airlines, Duolingo, Ernst & Young, Ford \u2014 alongside millions of open source maintainers \u2014 ship on GitHub. The reference shape is one where the same substrate serves enterprise compliance posture and individual-developer side projects without two SKUs that diverge."
     },
     {
       "kind": "call_to_action",
@@ -126,7 +137,11 @@
       "eyebrow": "Reference",
       "title": "Open the live GitHub site.",
       "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
-      "cta": {"label": "github.com", "href": "https://github.com/", "data_backend": "cta-platform"}
+      "cta": {
+        "label": "github.com",
+        "href": "https://github.com/",
+        "data_backend": "cta-platform"
+      }
     }
   ]
 }
