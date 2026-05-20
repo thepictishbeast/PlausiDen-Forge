@@ -23,6 +23,7 @@ pub mod annotation_review;
 pub mod density_audit;
 pub mod disclosure_audit;
 pub mod editorial_purity_gate;
+pub mod pattern_entropy;
 pub mod site_identity_conformance;
 pub mod uniqueness_gate;
 pub mod placeholder_value_audit;
