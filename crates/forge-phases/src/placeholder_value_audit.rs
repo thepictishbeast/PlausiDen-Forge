@@ -44,6 +44,7 @@
 
 use std::fs;
 
+use forge_core::tenant_corpus::TenantCorpus;
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 use serde_json::Value;
 
@@ -113,6 +114,20 @@ impl Phase for PlaceholderValueAuditPhase {
 
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
         let mut findings = Vec::new();
+        // Layer tenant-corpus extensions on top of the baseline
+        // per [[per-tenant-corpora-doctrine]] / commit 534f02c.
+        // Fail-tolerant: None means no tenant extras; baseline
+        // is the floor.
+        let tenant = TenantCorpus::load(&ctx.root);
+        let tenant_extras: Vec<(&str, &str)> = tenant
+            .as_ref()
+            .map(|t| {
+                t.extra_scaffold_defaults
+                    .iter()
+                    .map(|e| (e.field.as_str(), e.value.as_str()))
+                    .collect()
+            })
+            .unwrap_or_default();
         let cms_dir = ctx.root.join("cms");
         if !cms_dir.is_dir() {
             return Ok(findings);
@@ -138,7 +153,7 @@ impl Phase for PlaceholderValueAuditPhase {
                 continue;
             };
             let path_disp = path.display().to_string();
-            check_page(&path_disp, &value, &mut findings, self.name());
+            check_page(&path_disp, &value, &tenant_extras, &mut findings, self.name());
         }
         Ok(findings)
     }
@@ -146,15 +161,22 @@ impl Phase for PlaceholderValueAuditPhase {
 
 /// Walk a CmsPage JSON value + check top-level fields against
 /// the scaffold-default + empty-placeholder lists.
+///
+/// `tenant_extras` is the per-tenant additive list pulled from
+/// `forge.toml [tenant_corpus] extra_scaffold_defaults`. Empty
+/// slice when the operator hasn't configured one — phase falls
+/// through to the substrate baseline.
 fn check_page(
     path: &str,
     page: &Value,
+    tenant_extras: &[(&str, &str)],
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
     let Some(obj) = page.as_object() else {
         return;
     };
+    // Substrate baseline first.
     for (field, scaffold_value) in SCAFFOLD_DEFAULTS {
         if let Some(actual) = obj.get(*field).and_then(|v| v.as_str()) {
             // Exact match (case-sensitive — typical scaffold defaults
@@ -166,6 +188,22 @@ fn check_page(
                     path.to_owned(),
                     format!(
                         "placeholder_value_audit — {field} = \"{scaffold_value}\" is the unmodified scaffold default; operator should customize before shipping."
+                    ),
+                ));
+            }
+        }
+    }
+    // Then tenant extras. Same check shape; the finding message
+    // includes a "tenant-corpus" tag so reports can distinguish
+    // baseline hits from tenant-extension hits.
+    for (field, scaffold_value) in tenant_extras {
+        if let Some(actual) = obj.get(*field).and_then(|v| v.as_str()) {
+            if actual == *scaffold_value {
+                findings.push(Finding::strict(
+                    phase,
+                    path.to_owned(),
+                    format!(
+                        "placeholder_value_audit (tenant-corpus) — {field} = \"{scaffold_value}\" matches an operator-configured scaffold default; customize before shipping."
                     ),
                 ));
             }
@@ -192,8 +230,18 @@ mod tests {
     use serde_json::json;
 
     fn run_check(page: Value) -> Vec<Finding> {
+        run_check_with_tenant(page, &[])
+    }
+
+    fn run_check_with_tenant(page: Value, tenant_extras: &[(&str, &str)]) -> Vec<Finding> {
         let mut findings = Vec::new();
-        check_page("/cms/test.json", &page, &mut findings, "placeholder_value_audit");
+        check_page(
+            "/cms/test.json",
+            &page,
+            tenant_extras,
+            &mut findings,
+            "placeholder_value_audit",
+        );
         findings
     }
 
@@ -300,6 +348,60 @@ mod tests {
             "brand": null,
             "description": true,
         }));
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn tenant_extra_scaffold_default_fires_strict() {
+        // Operator declared "Acme Internal — Untitled Project" as a
+        // scaffold default; matching content fires strict.
+        let findings = run_check_with_tenant(
+            json!({"title": "Acme Internal — Untitled Project"}),
+            &[("title", "Acme Internal — Untitled Project")],
+        );
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].severity, forge_core::Severity::Strict);
+        // Message tagged so reports can distinguish baseline vs tenant.
+        assert!(findings[0].message.contains("(tenant-corpus)"));
+        assert!(findings[0].message.contains("Acme Internal"));
+    }
+
+    #[test]
+    fn tenant_extras_are_additive_not_replacement() {
+        // Page hits BOTH a baseline default AND a tenant extra.
+        // Both should fire — tenant extras are additive per
+        // [[per-tenant-corpora-doctrine]].
+        let findings = run_check_with_tenant(
+            json!({
+                "title": "My Site",                      // baseline
+                "brand": "Internal — Replace Me",        // tenant
+            }),
+            &[("brand", "Internal — Replace Me")],
+        );
+        assert_eq!(findings.len(), 2);
+        let messages: Vec<&str> = findings.iter().map(|f| f.message.as_str()).collect();
+        assert!(messages.iter().any(|m| m.contains("My Site")));
+        assert!(messages
+            .iter()
+            .any(|m| m.contains("Internal — Replace Me") && m.contains("(tenant-corpus)")));
+    }
+
+    #[test]
+    fn empty_tenant_extras_falls_through_to_baseline_only() {
+        // No tenant extras → behavior identical to baseline.
+        let findings = run_check_with_tenant(json!({"title": "My Site"}), &[]);
+        assert_eq!(findings.len(), 1);
+        assert!(!findings[0].message.contains("(tenant-corpus)"));
+    }
+
+    #[test]
+    fn tenant_extra_with_no_matching_content_silent() {
+        // Operator configured an extra default but the actual
+        // content doesn't match → no finding from the tenant layer.
+        let findings = run_check_with_tenant(
+            json!({"title": "Our actual site title"}),
+            &[("title", "Internal Placeholder")],
+        );
         assert!(findings.is_empty());
     }
 
