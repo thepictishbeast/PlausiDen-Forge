@@ -2191,29 +2191,10 @@ fn run_authoring(root: &std::path::Path, action: &AuthoringAction) -> Result<Exi
                 }
                 return Ok(ExitCode::from(1));
             }
-            // Mirror of content_substance defaults (kept in sync;
-            // future refactor: lift into forge_core).
-            let min_chars: &[(&str, &str, u32)] = &[
-                ("hero_editorial", "title", 20),
-                ("hero_editorial", "lede", 60),
-                ("hero", "title", 20),
-                ("paragraph", "body", 80),
-                ("pull_quote", "body", 40),
-                ("code", "body", 20),
-                ("code_block", "body", 20),
-                ("heading", "title", 8),
-                ("sub_heading", "title", 6),
-                ("section_heading", "title", 6),
-                ("call_to_action", "label", 4),
-                ("image_hero", "title", 8),
-                ("split_hero", "title", 20),
-            ];
-            let min_counts: &[(&str, &str, u32)] = &[
-                ("kv_pair", "items", 3),
-                ("feature_spotlight", "items", 3),
-                ("gallery", "items", 3),
-                ("logo_wall", "items", 4),
-            ];
+            // Single source of truth: shared with the
+            // content_substance gate via forge_core.
+            let min_chars = forge_core::content_substance::DEFAULT_MIN_CHARS;
+            let min_counts = forge_core::content_substance::DEFAULT_MIN_COUNTS;
 
             #[derive(serde::Serialize)]
             struct TodoEntry {

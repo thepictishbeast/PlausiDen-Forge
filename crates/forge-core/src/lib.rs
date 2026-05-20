@@ -27,6 +27,7 @@
 #![deny(missing_docs)]
 
 pub mod attest;
+pub mod content_substance;
 pub mod diagnostic;
 pub mod extractors;
 pub mod fingerprint;

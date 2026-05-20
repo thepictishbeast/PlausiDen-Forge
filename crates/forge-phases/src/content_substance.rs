@@ -58,28 +58,7 @@ use serde_json::Value;
 #[non_exhaustive]
 pub struct ContentSubstancePhase;
 
-const DEFAULT_MIN_CHARS: &[(&str, &str, u32)] = &[
-    ("hero_editorial", "title", 20),
-    ("hero_editorial", "lede", 60),
-    ("hero", "title", 20),
-    ("paragraph", "body", 80),
-    ("pull_quote", "body", 40),
-    ("code", "body", 20),
-    ("code_block", "body", 20),
-    ("heading", "title", 8),
-    ("sub_heading", "title", 6),
-    ("section_heading", "title", 6),
-    ("call_to_action", "label", 4),
-    ("image_hero", "title", 8),
-    ("split_hero", "title", 20),
-];
-
-const DEFAULT_MIN_COUNTS: &[(&str, &str, u32)] = &[
-    ("kv_pair", "items", 3),
-    ("feature_spotlight", "items", 3),
-    ("gallery", "items", 3),
-    ("logo_wall", "items", 4),
-];
+use forge_core::content_substance::{DEFAULT_MIN_CHARS, DEFAULT_MIN_COUNTS};
 
 impl Phase for ContentSubstancePhase {
     fn name(&self) -> &'static str {
