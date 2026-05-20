@@ -121,6 +121,7 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
     check_vague_cta_label(sections, &path_disp, findings, phase);
     check_roadmap_vagueness(sections, &path_disp, findings, phase);
     check_image_desert(sections, &path_disp, findings, phase);
+    check_short_paragraph_dominance(sections, &path_disp, findings, phase);
 }
 
 fn check_sparse_page(
@@ -783,6 +784,77 @@ fn check_image_desert(
     }
 }
 
+/// `short_paragraph_dominance` — scannable-bait page-shape detector.
+///
+/// SaaS marketing pages routinely chop prose into one-sentence
+/// paragraphs to feel "scannable". The visual fingerprint: dozens of
+/// tiny p-tags separated by big margins, no actual essay-density
+/// anywhere. Real editorial body sits in multi-sentence paragraphs.
+///
+/// Heuristic: collect every `paragraph` / `lede` section's body text;
+/// compute the average word count. Flag pages where:
+/// * at least 5 paragraphs are present (small pages are exempt — a
+///   landing splash legitimately has short copy)
+/// * AND the average paragraph length is below 12 words.
+///
+/// Distinct from `sparse_page` (which flags pages with too few
+/// sections). This one targets pages with PLENTY of sections, all
+/// of them anemic.
+fn check_short_paragraph_dominance(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    const MIN_PARAGRAPHS: usize = 5;
+    const SHORT_THRESHOLD_WORDS: f32 = 12.0;
+
+    let mut paragraph_word_counts: Vec<usize> = Vec::new();
+    for s in sections {
+        let Some(kind) = s.get("kind").and_then(|k| k.as_str()) else {
+            continue;
+        };
+        if !matches!(kind, "paragraph" | "lede") {
+            continue;
+        }
+        // `paragraph` carries a `text` field; `lede` carries `text`
+        // or `body` depending on the variant. Try both.
+        let body = s
+            .get("text")
+            .and_then(|t| t.as_str())
+            .or_else(|| s.get("body").and_then(|b| b.as_str()))
+            .unwrap_or("");
+        let words = body.split_whitespace().count();
+        if words > 0 {
+            paragraph_word_counts.push(words);
+        }
+    }
+    let total_paragraphs = paragraph_word_counts.len();
+    if total_paragraphs < MIN_PARAGRAPHS {
+        return;
+    }
+    let sum: usize = paragraph_word_counts.iter().sum();
+    let avg = sum as f32 / total_paragraphs as f32;
+    if avg >= SHORT_THRESHOLD_WORDS {
+        return;
+    }
+    let short_count = paragraph_word_counts
+        .iter()
+        .filter(|n| **n < SHORT_THRESHOLD_WORDS as usize)
+        .count();
+    findings.push(Finding::warn(
+        phase,
+        path.to_owned(),
+        format!(
+            "short_paragraph_dominance: {} of {} paragraphs are under {} words (avg = {:.1}). Scannable-bait page shape — reads as marketing filler rather than editorial body. Combine related sentences into multi-sentence paragraphs; reserve one-sentence paragraphs for emphasis, not as the dominant rhythm.",
+            short_count,
+            total_paragraphs,
+            SHORT_THRESHOLD_WORDS as usize,
+            avg,
+        ),
+    ));
+}
+
 /// Walk every string-valued field across the JSON tree of the
 /// given sections and call `visit` with each. Used by detectors
 /// that look at full-page text rather than per-section structure.
@@ -1119,5 +1191,101 @@ mod tests {
             }
         });
         assert_eq!(hits, 1);
+    }
+
+    #[test]
+    fn short_paragraph_dominance_warns_on_scannable_bait_shape() {
+        // 6 paragraphs all very short — typical SaaS-marketing rhythm.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Fast. Reliable. Built for you."}),
+            json!({"kind": "paragraph", "text": "Use anywhere. Anytime."}),
+            json!({"kind": "paragraph", "text": "Cancel any time."}),
+            json!({"kind": "paragraph", "text": "Free to start."}),
+            json!({"kind": "paragraph", "text": "Sign up below."}),
+            json!({"kind": "paragraph", "text": "It just works."}),
+        ];
+        let mut findings = vec![];
+        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        let msg = &findings[0].message;
+        assert!(msg.contains("short_paragraph_dominance"));
+        assert!(msg.contains("6 paragraphs"));
+        assert!(msg.contains("under 12 words"));
+    }
+
+    #[test]
+    fn short_paragraph_dominance_silent_on_essay_density() {
+        // Multi-sentence editorial paragraphs — should NOT warn.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "The minimum wage today is worth 40% less than it was in 1968. A household earning $75,000 can only afford 21% of home listings."}),
+            json!({"kind": "paragraph", "text": "Buy, Borrow, Die. 1031 exchanges. Roth IRA stacking. None of these are loopholes — they are statutes written into the tax code."}),
+            json!({"kind": "paragraph", "text": "Before maximizing returns, protect what you have. Disability, life, health, home — covered honestly, including which products are oversold."}),
+            json!({"kind": "paragraph", "text": "Five weeks, member-only. Covers strategy, structure, and keeping what you build — not how to pick stocks."}),
+            json!({"kind": "paragraph", "text": "Index funds. Asset location. Rebalancing rules. The boring strategy compounds harder than the exciting one."}),
+        ];
+        let mut findings = vec![];
+        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn short_paragraph_dominance_silent_below_min_paragraph_count() {
+        // Only 4 short paragraphs — below the MIN_PARAGRAPHS=5 floor.
+        // A landing splash can legitimately ship short copy.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Fast."}),
+            json!({"kind": "paragraph", "text": "Reliable."}),
+            json!({"kind": "paragraph", "text": "Built for you."}),
+            json!({"kind": "paragraph", "text": "Sign up."}),
+        ];
+        let mut findings = vec![];
+        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn short_paragraph_dominance_counts_lede_alongside_paragraph() {
+        // `lede` sections also count toward the body-text average.
+        let sections = vec![
+            json!({"kind": "lede", "text": "Fast and clean."}),
+            json!({"kind": "paragraph", "text": "Try it."}),
+            json!({"kind": "paragraph", "text": "Use it."}),
+            json!({"kind": "paragraph", "text": "Love it."}),
+            json!({"kind": "paragraph", "text": "Buy it."}),
+        ];
+        let mut findings = vec![];
+        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains("5 paragraphs"));
+    }
+
+    #[test]
+    fn short_paragraph_dominance_ignores_non_body_sections() {
+        // Heading / cta / kv_pair / etc. are NOT body text and don't
+        // count toward the paragraph word-count average.
+        let sections = vec![
+            json!({"kind": "heading", "text": "Hi"}),
+            json!({"kind": "call_to_action", "title": "Go"}),
+            json!({"kind": "kv_pair", "items": []}),
+        ];
+        let mut findings = vec![];
+        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn short_paragraph_dominance_average_at_threshold_does_not_warn() {
+        // Average exactly at the 12-word threshold should NOT warn —
+        // the check is strict less-than.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "one two three four five six seven eight nine ten eleven twelve"}),
+            json!({"kind": "paragraph", "text": "one two three four five six seven eight nine ten eleven twelve"}),
+            json!({"kind": "paragraph", "text": "one two three four five six seven eight nine ten eleven twelve"}),
+            json!({"kind": "paragraph", "text": "one two three four five six seven eight nine ten eleven twelve"}),
+            json!({"kind": "paragraph", "text": "one two three four five six seven eight nine ten eleven twelve"}),
+        ];
+        let mut findings = vec![];
+        check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
     }
 }
