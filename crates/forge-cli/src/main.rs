@@ -644,6 +644,34 @@ enum ConfigAction {
 
 #[derive(Subcommand, Debug)]
 enum DoctrineAction {
+    /// Audit the doctrine rule database by lifecycle state.
+    ///
+    /// Reports:
+    ///   * count per lifecycle state (experimental / stable / deprecated)
+    ///   * experimental rules (candidates for promotion)
+    ///   * deprecated rules + sunset dates + replacements
+    ///   * health summary (e.g. stable rules dominate; deprecated set
+    ///     is bounded; experimental backlog is small)
+    ///
+    /// Use this on a regular cadence (per [[backward-compat-version-
+    /// discipline]] deprecation lifecycle) to keep the doctrine alive
+    /// rather than ossified.
+    ///
+    /// Exit codes:
+    ///   0 — audit complete
+    ///   1 — at least one consistency issue (e.g. deprecated rule
+    ///       without sunset date — though doctrine-core parser
+    ///       already enforces this, so this is a belt-and-suspenders
+    ///       check)
+    ///   2 — fatal (doctrine dir / parse error)
+    Lifecycle {
+        /// Path to AVP-Doctrine root.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// JSON output.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// Render the full doctrine database as a single Markdown
     /// document suitable for publishing at
     /// `docs.plausiden.com/doctrine` (or any static-site path).
@@ -5349,6 +5377,9 @@ fn run_assets_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
 
 fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result<ExitCode> {
     match action {
+        DoctrineAction::Lifecycle { doctrine_dir, json } => {
+            run_doctrine_lifecycle(doctrine_dir.as_deref(), *json, forge_root)
+        }
         DoctrineAction::Render { doctrine_dir, out } => {
             run_doctrine_render(doctrine_dir.as_deref(), out.as_deref(), forge_root)
         }
@@ -6404,6 +6435,142 @@ fn render_rule_markdown(r: &doctrine_core::Rule, buf: &mut String) {
         buf.push_str("\n\n");
     }
     buf.push_str("---\n\n");
+}
+
+// ----------------------------------------------------------------
+// `forge doctrine lifecycle` — task #178.
+//
+// Audits the rule database by lifecycle state. Surfaces experimental
+// rules (candidates for stable promotion), deprecated rules (with
+// sunset dates + replacement links), and a health summary.
+// ----------------------------------------------------------------
+
+fn run_doctrine_lifecycle(
+    doctrine_dir: Option<&std::path::Path>,
+    json: bool,
+    forge_root: &std::path::Path,
+) -> Result<ExitCode> {
+    let dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+    let db = match doctrine_core::load_from_dir(&dir) {
+        Ok(d) => d,
+        Err(e) => {
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status":"fatal",
+                        "stage":"load_database",
+                        "error": e.to_string(),
+                    })
+                );
+            } else {
+                eprintln!("forge doctrine lifecycle: failed to load doctrine — {e}");
+            }
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    let total = db.len();
+    let experimental: Vec<&doctrine_core::Rule> =
+        db.by_lifecycle(doctrine_core::Lifecycle::Experimental).collect();
+    let stable: Vec<&doctrine_core::Rule> =
+        db.by_lifecycle(doctrine_core::Lifecycle::Stable).collect();
+    let deprecated: Vec<&doctrine_core::Rule> =
+        db.by_lifecycle(doctrine_core::Lifecycle::Deprecated).collect();
+
+    // Health flags (warnings, not blockers — parser already enforces
+    // structural invariants).
+    let mut issues: Vec<String> = Vec::new();
+    for r in &deprecated {
+        if r.deprecated_at.is_none() {
+            issues.push(format!(
+                "{} marked deprecated but missing deprecated_at (this should be impossible — parser invariant)",
+                r.id
+            ));
+        }
+        if r.replaced_by.is_none() {
+            // Not an error — a deprecated rule may have no successor
+            // (the rule simply no longer applies). Surface as info.
+            issues.push(format!(
+                "{} deprecated without a replaced_by successor — verify intentional",
+                r.id
+            ));
+        }
+    }
+
+    if json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": if issues.is_empty() { "ok" } else { "issues" },
+                "total_rules": total,
+                "experimental": {
+                    "count": experimental.len(),
+                    "ids": experimental.iter().map(|r| &r.id).collect::<Vec<_>>(),
+                },
+                "stable": {
+                    "count": stable.len(),
+                },
+                "deprecated": {
+                    "count": deprecated.len(),
+                    "rules": deprecated.iter().map(|r| serde_json::json!({
+                        "id": r.id,
+                        "name": r.name,
+                        "deprecated_at": r.deprecated_at,
+                        "replaced_by": r.replaced_by,
+                    })).collect::<Vec<_>>(),
+                },
+                "issues": issues,
+            })
+        );
+    } else {
+        println!("forge doctrine lifecycle audit");
+        println!("  total rules:    {total}");
+        println!("  experimental:   {} (candidates for stable promotion)", experimental.len());
+        println!("  stable:         {} (binding doctrine)", stable.len());
+        println!("  deprecated:     {} (being removed)", deprecated.len());
+        if !experimental.is_empty() {
+            println!();
+            println!("Experimental rules awaiting promotion:");
+            for r in &experimental {
+                println!("  - {} — {}  (domain: {})", r.id, r.name, domain_label(r.domain));
+            }
+        }
+        if !deprecated.is_empty() {
+            println!();
+            println!("Deprecated rules:");
+            for r in &deprecated {
+                let date = r.deprecated_at.as_deref().unwrap_or("(date missing)");
+                let replacement = r
+                    .replaced_by
+                    .as_deref()
+                    .map(|s| format!(" → {s}"))
+                    .unwrap_or_default();
+                println!("  - {} — {}  [sunset: {date}]{replacement}", r.id, r.name);
+            }
+        }
+        if !issues.is_empty() {
+            println!();
+            println!("⚠ Issues:");
+            for s in &issues {
+                println!("  {s}");
+            }
+        }
+        println!();
+        let pct_stable = if total > 0 { (stable.len() * 100) / total } else { 0 };
+        println!(
+            "Health: {}% stable. Experimental backlog: {}. Deprecated set: {}.",
+            pct_stable,
+            experimental.len(),
+            deprecated.len()
+        );
+    }
+
+    if issues.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
 }
 
 fn domain_label(domain: doctrine_core::Domain) -> &'static str {
