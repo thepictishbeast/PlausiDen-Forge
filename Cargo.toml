@@ -40,6 +40,12 @@ members = [
     "crates/forge-auth",
     "crates/forge-serve",
     "crates/forge-replay",
+    # T101 (#210): forge-codegen — generates a complete-Rust-stack
+    # runtime (axum + sqlx + maud + serde handlers) from the
+    # CMS manifest. Stage-based; v1 ships HandlerScaffold only
+    # (one stub fn per CmsPage). Future stages extend to router
+    # assembly, maud bodies, and the sqlx persistence layer.
+    "crates/forge-codegen",
     # T29: manifest-core — the keystone PlatformManifest type. Every
     # platform capability is declared once here and projected
     # downstream (Forge phases, runtime backends, admin UI, etc.)

@@ -1,0 +1,32 @@
+[package]
+name = "forge-codegen"
+version = "0.1.0"
+publish = false  # workspace-internal
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Forge — generate a complete-Rust-stack runtime (axum + sqlx + maud + serde handlers) from CMS manifest. Stage-based; each stage emits one slice of the generated server."
+
+[dependencies]
+thiserror.workspace = true
+serde = { workspace = true }
+serde_json = { workspace = true }
+# Same dep style as forge-phases: pull from upstream git ref;
+# the workspace [patch] block redirects to the local checkout
+# during development.
+loom-cms-render = { git = "https://github.com/thepictishbeast/PlausiDen-Loom.git", branch = "main" }
+
+[dev-dependencies]
+# Tests use proptest for the slug-to-fn-name escape table.
+proptest = { workspace = true }
+
+[lints.rust]
+unsafe_code = "deny"
+unused_must_use = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
