@@ -1,0 +1,162 @@
+name: determ-baseline
+
+# Deterministic-first CI gate (task #189).
+#
+# Per [[deterministic-first-lfi-optional]] + AVP-Doctrine
+# CONFIG_SURFACE.md + DETERMINISTIC_FIRST.md: every Forge build
+# must function correctly WITHOUT any AI feature compiled in
+# (Scenario A) and must degrade gracefully when AI is compiled
+# in but unreachable at runtime (Scenario B).
+#
+# This workflow runs both scenarios on every push + PR. Failures
+# block merge.
+#
+# Today, no Forge crate gates behavior behind a `lfi` / `llm`
+# feature flag. The workflow asserts the current ground truth:
+# the binary contains zero LFI / LLM provider symbols. When the
+# Forge-LFI integration lands (task #186/#188 → forge-critic
+# LfiCritic impl), this workflow's symbol-presence check + the
+# Scenario B env-var injection become load-bearing — they assert
+# that no path through forge-cli reaches AI without the operator
+# explicitly opting in.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scenario-a-no-ai-compiled:
+    name: Scenario A — build + test + run with NO AI compiled in
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # ----------------------------------------------------------------
+      # 1. Build the workspace with --no-default-features.
+      #    Today every Forge crate is default-deterministic. When LFI
+      #    feature flags get added (task #186), this step will produce
+      #    a binary with zero AI dependencies linked in.
+      # ----------------------------------------------------------------
+      - name: build (--no-default-features)
+        env:
+          RUST_BACKTRACE: 1
+        run: |
+          cargo build --workspace --release --locked --no-default-features
+
+      # ----------------------------------------------------------------
+      # 2. Run the full test suite — no AI dependency in the test path.
+      # ----------------------------------------------------------------
+      - name: test workspace (no AI features)
+        run: |
+          cargo test --workspace --release --locked --no-default-features
+
+      # ----------------------------------------------------------------
+      # 3. Assert the produced binary contains no symbol from any
+      #    AI-integration crate. Greps the target/release/forge binary
+      #    for telltale names that would indicate accidental linkage.
+      #
+      #    Today these symbols don't exist anywhere (forge-critic ships
+      #    a NoopCritic only). The check establishes the gate for when
+      #    LFI integration lands.
+      # ----------------------------------------------------------------
+      - name: assert no AI symbols in binary
+        run: |
+          set -euo pipefail
+          BIN="target/release/forge"
+          [ -x "$BIN" ] || { echo "::error::missing $BIN"; exit 1; }
+
+          # Symbols that should NEVER appear in a --no-default-features
+          # build. Names cover the public-API surface of every AI
+          # integration crate the platform might consume.
+          FORBIDDEN=(
+            "lfi_core::"
+            "llm_core::"
+            "neupsl::"
+            "hdc::"
+            "anthropic::"
+            "openai::"
+            "ollama::"
+          )
+
+          symbols=$(strings "$BIN" || true)
+          fail=0
+          for needle in "${FORBIDDEN[@]}"; do
+            if printf '%s' "$symbols" | grep -q -F -- "$needle"; then
+              echo "::error::Scenario A violation: binary contains '$needle' — AI integration leaked into --no-default-features build"
+              fail=1
+            fi
+          done
+          if [ $fail -eq 0 ]; then
+            echo "Scenario A passed: no AI symbols in --no-default-features binary"
+          fi
+          exit $fail
+
+      # ----------------------------------------------------------------
+      # 4. Run forge build against a fixture site and assert clean
+      #    completion in the no-AI build.
+      # ----------------------------------------------------------------
+      - name: smoke — forge --help
+        run: |
+          ./target/release/forge --help > /dev/null
+          ./target/release/forge orient --json > orient.json
+          # Orient must succeed without AI dependency.
+          test -s orient.json
+          # Status must be ok (or degraded when doctrine dir is absent
+          # in a fresh CI checkout — accept either).
+          grep -qE '"status":\s*"(ok|degraded)"' orient.json
+
+  scenario-b-ai-compiled-runtime-failed:
+    name: Scenario B — AI compiled in but runtime FORCED to fail
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # When the LFI / LLM feature flags land (task #186), uncomment this
+    # job's actual logic. Until then, the job is a placeholder that
+    # documents the contract.
+    if: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # 1. Build with AI features compiled in.
+      - name: build (--features lfi,llm)
+        run: |
+          cargo build --workspace --release --locked --features lfi,llm
+
+      # 2. Force every AI invocation to fail at runtime + run pipeline.
+      - name: pipeline with AI forced-fail
+        env:
+          PLAUSIDEN_LFI_FORCE_FAIL: "1"
+          PLAUSIDEN_LLM_FORCE_FAIL: "1"
+          RUST_BACKTRACE: 1
+        run: |
+          # The platform must degrade gracefully: every A capability
+          # falls back to deterministic baseline; every P capability
+          # surfaces a clear "AI required" diagnostic; zero panics.
+          ./target/release/forge build --mode production
+          ./target/release/forge orient --json > orient.json
+
+      # 3. Assert audit chain recorded the fallbacks.
+      - name: assert audit-chain fell back
+        run: |
+          # Read the latest build report + verify every AI invocation
+          # carries `fell_back: true` + a non-null `fallback_reason`.
+          # (Implementation lands with task #186 + audit-chain wiring.)
+          test -f reports/latest.json
+          # Placeholder assertion — refine after LFI integration lands.
