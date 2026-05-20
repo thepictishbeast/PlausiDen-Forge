@@ -42,7 +42,20 @@ impl Phase for TokensPhase {
             // VALUES leaves the rest of the body to be scanned —
             // so `padding: 16px;` in a rule body still flags, but
             // `--loom-space-4: 16px;` in a token declaration does not.
-            let body_no_decls = strip_css_var_declarations(&file.body);
+            //
+            // Fix 2026-05-20: ALSO strip the bodies of every
+            // `<style>...</style>` block. Those blocks ARE CSS,
+            // not HTML — they're the inline critical-CSS payload
+            // Loom emits. Raw hex / px inside them is the design
+            // system itself (fallback colors in `var(--x, #abc)`,
+            // px values in the cascade). The gate's intent is to
+            // catch tokens leaking into HTML attributes / body
+            // text, not into the canonical CSS-language portion
+            // of the same file. Without this strip the gate
+            // emits 11 false-positive warns (one per rendered
+            // page) every build.
+            let body_no_style = strip_style_blocks(&file.body);
+            let body_no_decls = strip_css_var_declarations(&body_no_style);
 
             // 1. Raw px values (excluding common SVG fragment sizes).
             let bad_px: Vec<String> = scan_px(&body_no_decls);
@@ -79,6 +92,59 @@ impl Phase for TokensPhase {
 
         Ok(findings)
     }
+}
+
+/// Replace every `<style>...</style>` block body with whitespace
+/// so the rest of the document keeps its line numbering for
+/// downstream phases. The contents of a style block are CSS, not
+/// HTML — they belong to the design system layer, not the page
+/// layer. Token leakage INTO that CSS is loom's concern; the tokens
+/// gate here only asks about tokens leaking into the HTML body
+/// (attributes, text, inline `style=` attrs).
+///
+/// Case-insensitive on the opening / closing tag. Survives nested
+/// attributes on the opening tag (e.g. `<style type="text/css">`).
+/// Unterminated style blocks elide everything to EOF — a malformed
+/// page would produce odd reports either way; failing closed for the
+/// purposes of THIS scanner is the safer default.
+fn strip_style_blocks(body: &str) -> String {
+    let mut out = String::with_capacity(body.len());
+    let bytes = body.as_bytes();
+    let lower = body.to_ascii_lowercase();
+    let mut i = 0;
+    while i < bytes.len() {
+        let Some(open_rel) = lower[i..].find("<style") else {
+            out.push_str(&body[i..]);
+            break;
+        };
+        let open_start = i + open_rel;
+        // Emit everything up to and INCLUDING the opening tag — we
+        // strip only the body so the gate can still see e.g. CSP
+        // attributes on the <style> tag itself.
+        let Some(open_end_rel) = body[open_start..].find('>') else {
+            out.push_str(&body[i..]);
+            break;
+        };
+        let open_end = open_start + open_end_rel + 1;
+        out.push_str(&body[i..open_end]);
+        // Now scan for the closing tag; replace the body with
+        // a single newline placeholder so the strip is visible
+        // in any diagnostic that prints the stripped text.
+        match lower[open_end..].find("</style>") {
+            Some(close_rel) => {
+                let close_start = open_end + close_rel;
+                out.push_str("\n/* [style body stripped by tokens phase] */\n");
+                out.push_str(&body[close_start..close_start + "</style>".len()]);
+                i = close_start + "</style>".len();
+            }
+            None => {
+                // Unterminated — elide rest of file.
+                out.push_str("\n/* [unterminated style body stripped] */\n");
+                i = bytes.len();
+            }
+        }
+    }
+    out
 }
 
 /// Strip the VALUE side of every `--name: value;` declaration in
@@ -187,23 +253,88 @@ fn is_safe_px(s: &str) -> bool {
     matches!(s, "0px" | "1px" | "2px" | "3px")
 }
 
-/// True if the body contains a `#` hex color (3 or 6 digits) on
-/// a line that is NOT a `http-equiv` (CSP meta) or `svg` (inline
-/// SVG path) line. This mirrors the bash forge regex behavior.
+/// True if the body contains a `#` hex color in a CSS-value-bearing
+/// HTML attribute (`style="..."` body, or the `content` value of a
+/// `<meta name="theme-color">` tag).
 ///
-/// REGRESSION-GUARD: the bash version did `grep | grep -v` chain.
-/// Replicating that here verbatim; a more semantic check (parse
-/// the HTML, check only attribute values) is queued.
+/// 2026-05-20: previously this scanned every non-svg/csp LINE for
+/// `#XXX[XXX]` and returned true on any match. That gives false
+/// positives on body text containing GitHub-style issue references
+/// (`PlausiDen-Forge #222`) which match as 3-digit hex. The
+/// substrate-correct semantic is: only flag hex appearing inside an
+/// attribute that the browser will actually parse as CSS color,
+/// because that's the only place an unthemed hex actually leaks
+/// through the design system. Plain text like "issue #222" is
+/// editorial content, not a styling leak.
+///
+/// The earlier `<style>...</style>` body strip in
+/// `strip_style_blocks` already keeps inline critical-CSS out of
+/// scope — this function now further narrows the search to attribute
+/// values, returning true ONLY when an attribute body itself
+/// contains hex.
 fn scan_hex_outside_svg_csp(body: &str) -> bool {
-    for line in body.lines() {
-        if line.contains("http-equiv") || line.contains("svg") {
-            continue;
-        }
-        if has_hex_color(line) {
+    for attr_value in iter_css_bearing_attr_values(body) {
+        if has_hex_color(&attr_value) {
             return true;
         }
     }
     false
+}
+
+/// Yield the body of every `style="..."` attribute, plus the
+/// `content` value of every `<meta name="theme-color" content="...">`
+/// tag. These are the two HTML surfaces where a hex literal becomes
+/// a real, un-themed CSS color in the browser.
+///
+/// Conservative parse: handles double-quoted values only (the form
+/// Loom emits). Single-quoted / unquoted attributes are out of scope
+/// — Loom never produces them; if a different generator does, the
+/// resulting hex won't flag here but ALSO won't be a substrate-side
+/// regression.
+fn iter_css_bearing_attr_values(body: &str) -> Vec<String> {
+    let lower = body.to_ascii_lowercase();
+    let mut out: Vec<String> = Vec::new();
+
+    // style="..." anywhere.
+    let mut search_from = 0;
+    while let Some(rel) = lower[search_from..].find("style=\"") {
+        let abs = search_from + rel + "style=\"".len();
+        if let Some(close_rel) = body[abs..].find('"') {
+            out.push(body[abs..abs + close_rel].to_owned());
+            search_from = abs + close_rel + 1;
+        } else {
+            break;
+        }
+    }
+
+    // <meta name="theme-color" content="...">. The two attributes
+    // can appear in either order in well-formed HTML; scan for
+    // both spellings.
+    for pattern in &[
+        "name=\"theme-color\"",
+        "name='theme-color'",
+        "theme-color",
+    ] {
+        let mut search_from = 0;
+        while let Some(rel) = lower[search_from..].find(pattern) {
+            let abs = search_from + rel + pattern.len();
+            // Find the end of the meta tag.
+            let Some(tag_end_rel) = body[abs..].find('>') else {
+                break;
+            };
+            let tag_end = abs + tag_end_rel;
+            let tag = &body[abs..tag_end];
+            if let Some(c_rel) = tag.to_ascii_lowercase().find("content=\"") {
+                let c_abs = abs + c_rel + "content=\"".len();
+                if let Some(close_rel) = body[c_abs..tag_end].find('"') {
+                    out.push(body[c_abs..c_abs + close_rel].to_owned());
+                }
+            }
+            search_from = tag_end + 1;
+        }
+    }
+
+    out
 }
 
 /// Detect a `#XXX` or `#XXXXXX` hex-color token. Word-boundary
@@ -238,6 +369,53 @@ fn has_hex_color(line: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn strip_style_blocks_removes_inline_critical_css() {
+        let body = "<head><style>:root{--a:#fff} body { color:#abc }</style><body><p style=\"color:#def\">x</p>";
+        let stripped = strip_style_blocks(body);
+        assert!(stripped.contains("<style>"), "opening tag preserved");
+        assert!(stripped.contains("</style>"), "closing tag preserved");
+        assert!(!stripped.contains("#abc"), "style body hex elided");
+        assert!(stripped.contains("#def"), "inline attr hex still visible");
+    }
+
+    #[test]
+    fn tokens_gate_passes_inline_critical_css_with_hex_fallbacks() {
+        let body = r#"<head><style>:root{--loom-accent:#4338CA} body{border-left:3px solid color-mix(in oklab,var(--loom-accent,#4338CA) 70%,transparent)}</style><body><p>clean</p>"#;
+        let s = strip_css_var_declarations(&strip_style_blocks(body));
+        assert!(!scan_hex_outside_svg_csp(&s),
+            "raw hex fallback inside <style> must not flag — that's the design system, not a leak");
+    }
+
+    #[test]
+    fn tokens_gate_still_flags_inline_style_attr_hex() {
+        let body = r#"<head><body><p style="color:#abc">leak</p>"#;
+        let s = strip_css_var_declarations(&strip_style_blocks(body));
+        assert!(scan_hex_outside_svg_csp(&s),
+            "raw hex in inline style= attr must still flag");
+    }
+
+    #[test]
+    fn tokens_gate_ignores_issue_number_in_body_text() {
+        // Editorial body text referencing GitHub issues used to
+        // false-positive as 3-digit hex. The gate now scopes hex
+        // scanning to actual CSS-bearing attributes only.
+        let body = "<p>Pixel-rep target per PlausiDen-Forge #222. Not affiliated.</p>";
+        assert!(!scan_hex_outside_svg_csp(body),
+            "issue-number references in body text must not flag as hex color");
+    }
+
+    #[test]
+    fn tokens_gate_flags_theme_color_meta_with_raw_hex() {
+        // <meta name="theme-color" content="#abc"> IS a real CSS-
+        // value-bearing attribute; raw hex there should still flag
+        // because the value goes straight to the browser without a
+        // theme cascade.
+        let body = r##"<meta name="theme-color" content="#abcdef">"##;
+        assert!(scan_hex_outside_svg_csp(body),
+            "raw hex in theme-color meta must still flag");
+    }
 
     #[test]
     fn px_scanner_finds_offenders() {
