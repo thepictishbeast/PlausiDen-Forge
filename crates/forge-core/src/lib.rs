@@ -30,6 +30,7 @@ pub mod attest;
 pub mod fingerprint;
 pub mod fingerprint_registry;
 pub mod pipeline;
+pub mod site_identity;
 pub mod tenant_corpus;
 
 use std::path::PathBuf;
