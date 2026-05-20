@@ -23,6 +23,7 @@ pub mod annotation_review;
 pub mod density_audit;
 pub mod disclosure_audit;
 pub mod placeholder_value_audit;
+pub mod source_list_audit;
 pub mod asset_optimization;
 pub mod backend_coverage;
 pub mod carbon_budget;
