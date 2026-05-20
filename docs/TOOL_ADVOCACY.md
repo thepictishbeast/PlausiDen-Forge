@@ -142,15 +142,15 @@ A sweep across emission sites in `forge-cli`, `forge-phases`, `forge-core`, `loo
 
 ## Implementation arc
 
-| Step | Deliverable |
-|------|-------------|
-| **Done — this doc** | Advocacy template + Advocacy trait sketch + audit of current state |
-| Phase 1 follow-on | Implement `Advocacy` struct + `WithAdvocacy` trait in `forge-core` |
-| Phase 2 follow-on | Refactor the 17 ◐ emission sites to populate Advocacy (one PR per phase, low blast radius each) |
-| Phase 3 follow-on | Refactor the 3 ✗ emission sites |
-| Phase 4 follow-on | JSON output emits `advocacy` field per `docs/JSON_OUTPUT.md`; consumer schemas updated |
-| Phase 5 follow-on | Loom + Crawler emission sites adopt the same trait (cross-repo) |
-| CI guardrail | A lint that refuses new `Finding::new(...)` without an `Advocacy` (after Phase 1 lands) |
+| Step | Status | Deliverable |
+|------|--------|-------------|
+| **Done — this doc** | ✓ | Advocacy template + Advocacy trait sketch + audit of current state |
+| Phase 1 | ✓ landed at 9ee5851 | Advocacy struct + WithAdvocacy trait + Finding builders + 7 unit tests; phantom_button retrofit + print_finding renderer |
+| Phase 2 | pending | Refactor remaining 16 ◐ emission sites (one PR per phase, low blast radius each) |
+| Phase 3 | pending | Refactor the 3 ✗ emission sites |
+| Phase 4 | pending | JSON output emits `advocacy` field per `docs/JSON_OUTPUT.md`; consumer schemas updated (automatic via serde; needs schema doc + MCP tool description update) |
+| Phase 5 | pending | Loom + Crawler emission sites adopt the same trait (cross-repo) |
+| CI guardrail | pending | A lint that refuses new `Finding::new(...)` without an `Advocacy` (after Phase 2 majority lands) |
 
 Each phase is a small bounded task; total ~10-15 PRs across the substrate.
 
