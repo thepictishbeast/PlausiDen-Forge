@@ -1,0 +1,132 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Terms and Conditions — Prosperity Club",
+  "description": "Terms governing access to and use of the Prosperity Club website, the membership programs, and the Investing Masterclass. Includes the educational-only disclaimer for financial content.",
+  "brand": "Prosperity Club",
+  "chrome": "page_shell",
+  "theme": "warm",
+  "path": "/about/terms-and-conditions/",
+  "site_origin": "https://dev.plausiden.com",
+  "nav_links": [
+    {"label": "About",              "href": "/about/",                       "data_backend": "view-about-deborah"},
+    {"label": "Prosper in Life",    "href": "/prosper-in-life/",             "data_backend": "prosperity-view-prosper"},
+    {"label": "Blogs",              "href": "/blogs-finance-insurance/",     "data_backend": "prosperity-view-blog"},
+    {"label": "Financial Resources","href": "/financial-resources/",         "data_backend": "prosperity-view-resources"},
+    {"label": "Contact Us",         "href": "/how-to-contact-us/",           "data_backend": "prosperity-view-contact"}
+  ],
+  "sections": [
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Terms and Conditions."
+    },
+    {
+      "kind": "paragraph",
+      "text": "By accessing or using the Prosperity Club website, the free articles, the Investing Masterclass, or the Risk Management consultation, you agree to the terms below. If any term is unacceptable to you, do not use the service. These terms are governed by the laws of the United States."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "What Prosperity Club is."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Prosperity Club is a financial-education service. The articles are written by a licensed insurance agent. The Investing Masterclass covers personal-finance strategy. The Risk Management consultation discusses insurance products. None of this is personalised financial, legal, tax, or investment advice. The content is educational; it is not a substitute for a licensed professional who has reviewed your specific circumstances."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "What this is not."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Disclaimers.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Not advice",
+          "value": "Educational content, not personalised advice.",
+          "hint": "Reading an article on this site does not establish an advisor-client relationship. Decisions made from material on this site are your own. A licensed advisor who has reviewed your full financial picture should validate any plan before you act on it."
+        },
+        {
+          "key": "Not solicitation",
+          "value": "We do not solicit the sale of securities.",
+          "hint": "Prosperity Club discusses investing concepts; it does not recommend specific securities and does not sell securities. Buy or sell decisions are yours."
+        },
+        {
+          "key": "Not guaranteed",
+          "value": "Past performance does not predict future results.",
+          "hint": "Markets fluctuate. Insurance products change. Tax rules change. The educational content reflects current understanding at the time of writing; you are responsible for confirming nothing has changed before you act."
+        },
+        {
+          "key": "Not insurance",
+          "value": "The website is not an insurance quote.",
+          "hint": "Discussion of insurance products on this site is educational. To get a quote tied to your circumstances, contact Deborah directly and provide the required underwriting information."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Membership."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Membership in the Investing Masterclass is $5 per month, billed by Stripe, cancellable at any time. Cancellation takes effect at the end of the current billing period. No refunds for partial periods. Access to the Masterclass continues until the end of the period you paid for."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Your responsibilities."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "What you agree to.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Truthful",
+          "value": "Provide accurate information.",
+          "hint": "If you sign up under a false name or give us a false email, we may suspend your access. Insurance quotes based on inaccurate information are not valid."
+        },
+        {
+          "key": "Respectful",
+          "value": "Treat other members and staff with respect.",
+          "hint": "We may end the membership of anyone whose conduct toward other members, or toward the educator, is abusive."
+        },
+        {
+          "key": "Own copy",
+          "value": "Use the educational content for personal learning.",
+          "hint": "You may share excerpts with attribution. You may not republish the full Masterclass on another site, or resell access. The content is copyrighted to Prosperity Club / Deborah Armstrong."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Limitations of liability."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Prosperity Club is not liable for any loss arising from your reliance on the educational content. The maximum aggregate liability of Prosperity Club to any single member, for any cause, is limited to the total amount that member paid us in the preceding twelve months. Some jurisdictions do not allow that kind of limitation; if you are in one of them, the limit is the smallest amount that local law allows."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Changes."
+    },
+    {
+      "kind": "paragraph",
+      "text": "We may update these terms. When we do, we will mark the updated version with a new effective date at the top, and we will email active members about substantive changes. Continuing to use the service after the effective date is acceptance of the change. If the change is unacceptable, cancel your membership."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Contact."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Questions about these terms: deborah@prosperityclub.com. We will respond within five business days."
+    }
+  ]
+}

@@ -248,7 +248,15 @@ impl Phase for RenderPhase {
             // so the browser's SRI check matches what we serve.
             let html = inject_skin_integrity(&html_raw, &skin_integrity_attr);
 
-            let out_path = out_dir.join(format!("{slug}.html"));
+            let out_path = output_path_for_slug(&out_dir, &slug);
+            if let Some(parent) = out_path.parent() {
+                if let Err(e) = std::fs::create_dir_all(parent) {
+                    return Err(BuildError::Io {
+                        context: format!("render mkdir {}", parent.display()),
+                        source: e,
+                    });
+                }
+            }
             if let Err(e) = atomic_write(&out_path, html.as_bytes()) {
                 return Err(BuildError::Io {
                     context: format!("render write {}", out_path.display()),
@@ -481,6 +489,37 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
 /// Defence in depth: a typo'd or deliberately-malformed
 /// Atomic write: tmp file + rename. POSIX guarantees rename is
 /// atomic on the same filesystem.
+/// Map a slug to its output `.html` path under `out_dir`.
+///
+/// Convention: a slug containing `--` is treated as a nested-URL
+/// path. Each `--` becomes a `/` and the page is written to
+/// `out_dir/<a>/<b>/.../<n>/index.html`. A flat slug retains the
+/// original `out_dir/<slug>.html` shape.
+///
+/// Examples:
+/// * `index`                       → `out_dir/index.html`
+/// * `about`                       → `out_dir/about.html`
+/// * `about--privacy-policy`       → `out_dir/about/privacy-policy/index.html`
+/// * `legal--terms--us`            → `out_dir/legal/terms/us/index.html`
+///
+/// Why a sentinel rather than allowing literal `/` in the slug:
+/// the slug grammar (`[a-z][a-z0-9-]*`) was the contract for
+/// `loom site init --route` and for every audit phase that joins
+/// the slug to a file path. Keeping that grammar intact and using
+/// `--` as an explicit nest marker means existing code keeps
+/// working; the only place `--` is interpreted is here.
+fn output_path_for_slug(out_dir: &Path, slug: &str) -> PathBuf {
+    if !slug.contains("--") {
+        return out_dir.join(format!("{slug}.html"));
+    }
+    let mut p = out_dir.to_path_buf();
+    for segment in slug.split("--") {
+        p.push(segment);
+    }
+    p.push("index.html");
+    p
+}
+
 /// Inject `integrity="sha384-..." crossorigin="anonymous"` onto
 /// the loom-skin.css `<link rel="stylesheet">` tag in a rendered
 /// HTML page. Idempotent: if `integrity=` is already present the
@@ -925,6 +964,24 @@ mod tests {
         std::fs::write(tmp.join("forge.toml"), "this is = not valid toml [[[ ").expect("write");
         assert_eq!(forge_toml_theme(&tmp), None);
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn output_path_flat_slug_stays_flat() {
+        let out_dir = Path::new("/tmp/out");
+        let p = output_path_for_slug(out_dir, "index");
+        assert_eq!(p, Path::new("/tmp/out/index.html"));
+        let p = output_path_for_slug(out_dir, "about");
+        assert_eq!(p, Path::new("/tmp/out/about.html"));
+    }
+
+    #[test]
+    fn output_path_double_dash_nests_into_index_html() {
+        let out_dir = Path::new("/tmp/out");
+        let p = output_path_for_slug(out_dir, "about--privacy-policy");
+        assert_eq!(p, Path::new("/tmp/out/about/privacy-policy/index.html"));
+        let p = output_path_for_slug(out_dir, "legal--terms--us");
+        assert_eq!(p, Path::new("/tmp/out/legal/terms/us/index.html"));
     }
 
     #[test]

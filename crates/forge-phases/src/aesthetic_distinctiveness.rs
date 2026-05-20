@@ -914,13 +914,19 @@ fn check_image_desert(
         }
     }
     if image_count == 0 {
-        findings.push(Finding::warn(
-            phase,
-            path.to_owned(),
-            format!(
-                "image_desert: page has {content_sections} content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background"
-            ),
-        ));
+        findings.push(
+            Finding::warn(
+                phase,
+                path.to_owned(),
+                format!(
+                    "image_desert: page has {content_sections} content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background"
+                ),
+            )
+            .why("a page that's all text reads as either (a) a legal disclosure where text density is the point or (b) an unfinished page where the editor forgot the visual layer; the detector can't distinguish, so it flags both and lets the editor decide")
+            .fix("if this is genuinely text-only by intent (privacy / terms / disclosure), add a single illustrative section above the body (an image_hero with a 'compact' or 'narrow' height, an asset_slug pointer to a relevant icon, or a feature_spotlight with one item carrying an icon_slug). If this is unfinished, add 2-3 visual sections to break up the wall of text")
+            .skill("compose-loom-page")
+            .avoid("don't stuff a stock photo onto a legal page just to silence this gate — the gate exists to flag uninhabited pages, not to require photos on every page. A single icon next to the title is enough visual anchor for a disclosure page"),
+        );
     }
 }
 
