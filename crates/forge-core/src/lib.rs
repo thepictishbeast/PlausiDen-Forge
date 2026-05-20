@@ -634,6 +634,40 @@ impl BuildReport {
     pub fn passed(&self, mode: BuildMode) -> bool {
         self.findings.iter().all(|f| !f.severity.blocks_in(mode))
     }
+
+    /// Findings that ship without `.why()` / `.fix()` / `.skill()` /
+    /// `.avoid()` advocacy. Per the `[[tool-starvation-anti-pattern]]`
+    /// + `[[substrate-only-path]]` doctrine, every finding should
+    /// name the substrate-correct fix alongside the diagnosis;
+    /// diagnoses without advocacy push operators toward bash/grep
+    /// workarounds. This helper surfaces the gap so a retrofit
+    /// pass can target it phase-by-phase. The build still passes
+    /// without advocacy — it's a discipline metric, not a gate.
+    #[must_use]
+    pub fn findings_missing_advocacy(&self) -> Vec<&Finding> {
+        self.findings.iter().filter(|f| f.advocacy.is_empty()).collect()
+    }
+
+    /// Count of findings with at least one populated advocacy field.
+    #[must_use]
+    pub fn advocacy_populated_count(&self) -> usize {
+        self.findings.iter().filter(|f| !f.advocacy.is_empty()).count()
+    }
+
+    /// Phases (by name) that emitted at least one finding without
+    /// advocacy. De-duplicated, sorted. Helps a retrofit pass pick
+    /// the right next phase to work on.
+    #[must_use]
+    pub fn phases_missing_advocacy(&self) -> Vec<String> {
+        let mut phases: Vec<String> = self
+            .findings_missing_advocacy()
+            .iter()
+            .map(|f| f.phase.clone())
+            .collect();
+        phases.sort();
+        phases.dedup();
+        phases
+    }
 }
 
 #[cfg(test)]
@@ -677,6 +711,32 @@ mod tests {
         r.push(Finding::strict("p", "path", "msg"));
         assert!(!r.passed(BuildMode::Poc));
         assert!(!r.passed(BuildMode::Production));
+    }
+
+    #[test]
+    fn report_findings_missing_advocacy_partitions_correctly() {
+        let mut r = BuildReport::default();
+        r.push(Finding::strict("phase_a", "p", "m"));
+        r.push(Finding::warn("phase_b", "p", "m").why("reason"));
+        r.push(Finding::warn("phase_a", "p", "m").fix("do x"));
+        r.push(Finding::warn("phase_c", "p", "m"));
+        // Two findings carry advocacy, two don't.
+        assert_eq!(r.advocacy_populated_count(), 2);
+        assert_eq!(r.findings_missing_advocacy().len(), 2);
+        // phase_a + phase_c each have at least one missing-advocacy
+        // finding — phase_b's only finding had advocacy populated.
+        assert_eq!(
+            r.phases_missing_advocacy(),
+            vec!["phase_a".to_owned(), "phase_c".to_owned()]
+        );
+    }
+
+    #[test]
+    fn report_advocacy_metrics_on_empty_report() {
+        let r = BuildReport::default();
+        assert_eq!(r.advocacy_populated_count(), 0);
+        assert!(r.findings_missing_advocacy().is_empty());
+        assert!(r.phases_missing_advocacy().is_empty());
     }
 
     // -----------------------------------------------------------------

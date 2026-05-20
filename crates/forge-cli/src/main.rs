@@ -1626,6 +1626,38 @@ fn run() -> Result<ExitCode> {
     println!("  mode:                {}", report.mode);
     println!("  strict findings:     {}", report.strict_count);
     println!("  suppressible warns:  {}", report.warn_count);
+    // Advocacy coverage — per [[tool-starvation-anti-pattern]] +
+    // [[substrate-only-path]], every finding should carry .why /
+    // .fix / .skill / .avoid alongside the diagnosis. Track the
+    // gap as a discipline metric (not a gate) so a retrofit pass
+    // can target the phases with the biggest gap first.
+    let total_findings = report.findings.len();
+    if total_findings > 0 {
+        let covered = report.advocacy_populated_count();
+        let missing_phases = report.phases_missing_advocacy();
+        let pct = if total_findings == 0 {
+            100
+        } else {
+            (covered * 100) / total_findings
+        };
+        println!(
+            "  advocacy coverage:   {covered}/{total_findings} ({pct}%) — {} phase(s) with gaps",
+            missing_phases.len()
+        );
+        if !missing_phases.is_empty() {
+            let preview: Vec<_> = missing_phases.iter().take(5).collect();
+            let tail = if missing_phases.len() > 5 {
+                format!(", … (+{})", missing_phases.len() - 5)
+            } else {
+                String::new()
+            };
+            let names: Vec<&str> = preview.iter().map(|s| s.as_str()).collect();
+            println!(
+                "                       gap phases: {}{tail}",
+                names.join(", ")
+            );
+        }
+    }
     println!("  duration:            {}ms", report.duration_ms);
     println!("  chain length:        {}", report.chain_length);
     if let Some(h) = &report.prev_hash {
