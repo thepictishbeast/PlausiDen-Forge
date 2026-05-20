@@ -122,6 +122,7 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
     check_roadmap_vagueness(sections, &path_disp, findings, phase);
     check_image_desert(sections, &path_disp, findings, phase);
     check_short_paragraph_dominance(sections, &path_disp, findings, phase);
+    check_adjacent_section_repetition(sections, &path_disp, findings, phase);
 }
 
 fn check_sparse_page(
@@ -855,6 +856,100 @@ fn check_short_paragraph_dominance(
     ));
 }
 
+/// `adjacent_section_repetition` — same `kind` 3+ times in a row.
+///
+/// The structural fingerprint of a SkillShots-shape page: 5
+/// `feature_spotlight` adjacent, or 8 `paragraph` in a row, or 4
+/// `pricing` tiers stacked. The page reads as one repeating beat
+/// rather than a composition of contrasting blocks.
+///
+/// Distinct from:
+/// * `monotonous_feature_grid` — flags ONE feature_spotlight with
+///   too-similar icons across its items. This check flags MULTIPLE
+///   adjacent sections of the same kind.
+/// * `sparse_page` — flags too few sections total. This one fires
+///   on pages with PLENTY of sections, all of the same shape.
+///
+/// Heuristic:
+/// 1. Walk `sections` linearly.
+/// 2. Maintain a run-length counter on the current section's `kind`.
+/// 3. Flag every run of 3+ same-kind adjacent sections.
+///
+/// Exempt kinds: section-glue primitives that legitimately repeat:
+/// * `paragraph` — editorial body is supposed to be many paragraphs.
+/// * `heading`, `sub_heading` — section labels naturally cluster.
+/// * `divider`, `spacer` — decoration-only.
+/// * `lede` — opening lede paragraphs.
+///
+/// The check targets compound primitives (feature_spotlight, pricing,
+/// quote, testimonial, kv_pair, logo_wall, image_hero, etc.) where
+/// repetition signals weak page composition.
+fn check_adjacent_section_repetition(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    const MIN_RUN: usize = 3;
+    const EXEMPT_KINDS: &[&str] = &[
+        "paragraph",
+        "heading",
+        "sub_heading",
+        "divider",
+        "spacer",
+        "lede",
+        "drop_cap",
+        "epigraph",
+        "container",
+    ];
+
+    let mut runs: Vec<(String, usize)> = Vec::new();
+    let mut current_kind: Option<String> = None;
+    let mut current_run = 0usize;
+    for s in sections {
+        let kind = s
+            .get("kind")
+            .and_then(|k| k.as_str())
+            .unwrap_or("")
+            .to_owned();
+        if Some(&kind) == current_kind.as_ref() {
+            current_run += 1;
+        } else {
+            if let Some(prev_kind) = current_kind.take() {
+                if current_run >= MIN_RUN && !EXEMPT_KINDS.contains(&prev_kind.as_str()) {
+                    runs.push((prev_kind, current_run));
+                }
+            }
+            current_kind = Some(kind);
+            current_run = 1;
+        }
+    }
+    // Flush the final run.
+    if let Some(prev_kind) = current_kind.take() {
+        if current_run >= MIN_RUN && !EXEMPT_KINDS.contains(&prev_kind.as_str()) {
+            runs.push((prev_kind, current_run));
+        }
+    }
+
+    if runs.is_empty() {
+        return;
+    }
+    let summary: Vec<String> = runs
+        .iter()
+        .map(|(k, n)| format!("{k}×{n}"))
+        .collect();
+    findings.push(Finding::warn(
+        phase,
+        path.to_owned(),
+        format!(
+            "adjacent_section_repetition: {} run(s) of {}+ same-kind sections adjacent [{}]. Page reads as one repeating beat rather than a composition of contrasting blocks — interleave with other primitives (pull_quote / kv_pair / code_shell / heading) to break the rhythm.",
+            runs.len(),
+            MIN_RUN,
+            summary.join(", "),
+        ),
+    ));
+}
+
 /// Walk every string-valued field across the JSON tree of the
 /// given sections and call `visit` with each. Used by detectors
 /// that look at full-page text rather than per-section structure.
@@ -1286,6 +1381,112 @@ mod tests {
         ];
         let mut findings = vec![];
         check_short_paragraph_dominance(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn adjacent_section_repetition_warns_on_three_in_a_row() {
+        // 3 feature_spotlight adjacent — the canonical SkillShots shape.
+        let sections = vec![
+            json!({"kind": "image_hero", "title": "x"}),
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "call_to_action", "title": "Go"}),
+        ];
+        let mut findings = vec![];
+        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        let msg = &findings[0].message;
+        assert!(msg.contains("adjacent_section_repetition"));
+        assert!(msg.contains("feature_spotlight×3"));
+        assert!(msg.contains("1 run"));
+    }
+
+    #[test]
+    fn adjacent_section_repetition_silent_on_two_in_a_row() {
+        // 2 adjacent — below the MIN_RUN=3 threshold.
+        let sections = vec![
+            json!({"kind": "quote", "body": "x"}),
+            json!({"kind": "quote", "body": "y"}),
+            json!({"kind": "call_to_action", "title": "Go"}),
+        ];
+        let mut findings = vec![];
+        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn adjacent_section_repetition_exempts_paragraph_runs() {
+        // 8 paragraphs adjacent — editorial body legitimately
+        // repeats paragraph. The exempt list catches this.
+        let sections = vec![
+            json!({"kind": "heading", "text": "Section"}),
+            json!({"kind": "paragraph", "text": "First."}),
+            json!({"kind": "paragraph", "text": "Second."}),
+            json!({"kind": "paragraph", "text": "Third."}),
+            json!({"kind": "paragraph", "text": "Fourth."}),
+            json!({"kind": "paragraph", "text": "Fifth."}),
+            json!({"kind": "paragraph", "text": "Sixth."}),
+            json!({"kind": "paragraph", "text": "Seventh."}),
+            json!({"kind": "paragraph", "text": "Eighth."}),
+        ];
+        let mut findings = vec![];
+        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn adjacent_section_repetition_multiple_runs_reported() {
+        // Two distinct runs in the same page — both surface in the
+        // summary.
+        let sections = vec![
+            json!({"kind": "pricing", "tiers": []}),
+            json!({"kind": "pricing", "tiers": []}),
+            json!({"kind": "pricing", "tiers": []}),
+            json!({"kind": "heading", "text": "Or"}),
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "feature_spotlight", "items": []}),
+        ];
+        let mut findings = vec![];
+        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("2 run"));
+        assert!(msg.contains("pricing×3"));
+        assert!(msg.contains("feature_spotlight×4"));
+    }
+
+    #[test]
+    fn adjacent_section_repetition_run_at_end_of_page_caught() {
+        // The final-run flush must catch runs that terminate at the
+        // end of the section list (no following section breaks the run).
+        let sections = vec![
+            json!({"kind": "image_hero", "title": "x"}),
+            json!({"kind": "kv_pair", "items": []}),
+            json!({"kind": "kv_pair", "items": []}),
+            json!({"kind": "kv_pair", "items": []}),
+        ];
+        let mut findings = vec![];
+        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("kv_pair×3"));
+    }
+
+    #[test]
+    fn adjacent_section_repetition_does_not_count_non_adjacent_repeats() {
+        // 3 feature_spotlight total but interleaved with other kinds
+        // — the page composes contrast; no warning.
+        let sections = vec![
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "paragraph", "text": "Body."}),
+            json!({"kind": "feature_spotlight", "items": []}),
+            json!({"kind": "pull_quote", "body": "Quote."}),
+            json!({"kind": "feature_spotlight", "items": []}),
+        ];
+        let mut findings = vec![];
+        check_adjacent_section_repetition(&sections, "test", &mut findings, "aesthetic_distinctiveness");
         assert!(findings.is_empty());
     }
 }
