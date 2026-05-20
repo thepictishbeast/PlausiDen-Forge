@@ -17,6 +17,11 @@ time = { workspace = true }
 ed25519-dalek = { workspace = true }
 rand_core = { workspace = true }
 base64 = { workspace = true }
+# Per-tenant corpora loader (PER_TENANT_CORPORA.md spec, commit
+# f02fff0). Read the [tenant_corpus] section of forge.toml into
+# the typed TenantCorpus struct; fail-tolerant (None on missing /
+# malformed, never blocks the build).
+toml = { version = "0.8", default-features = false, features = ["parse"] }
 
 [dev-dependencies]
 # T26: property-based tests on the Merkle chain step + verify.

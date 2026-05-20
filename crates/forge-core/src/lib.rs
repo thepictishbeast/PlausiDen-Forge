@@ -28,6 +28,7 @@
 
 pub mod attest;
 pub mod pipeline;
+pub mod tenant_corpus;
 
 use std::path::PathBuf;
 
