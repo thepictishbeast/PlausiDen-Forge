@@ -428,6 +428,155 @@ impl std::fmt::Display for Trait {
     }
 }
 
+impl Category {
+    /// Canonical snake_case slug.
+    #[must_use]
+    pub fn slug(self) -> &'static str {
+        match self {
+            Self::VisibilityLifecycle => "visibility_lifecycle",
+            Self::Interaction => "interaction",
+            Self::Accessibility => "accessibility",
+            Self::Responsive => "responsive",
+            Self::Internationalization => "internationalization",
+            Self::Theming => "theming",
+            Self::Security => "security",
+            Self::Sovereignty => "sovereignty",
+            Self::Performance => "performance",
+            Self::Reliability => "reliability",
+            Self::Discipline => "discipline",
+        }
+    }
+
+    /// Display-friendly title (Title Case with spacing).
+    #[must_use]
+    pub fn title(self) -> &'static str {
+        match self {
+            Self::VisibilityLifecycle => "Visibility & Lifecycle",
+            Self::Interaction => "Interaction",
+            Self::Accessibility => "Accessibility (a11y)",
+            Self::Responsive => "Responsive",
+            Self::Internationalization => "Internationalization (i18n)",
+            Self::Theming => "Theming",
+            Self::Security => "Security",
+            Self::Sovereignty => "Sovereignty (PSA — privacy / security / anonymity)",
+            Self::Performance => "Performance",
+            Self::Reliability => "Reliability",
+            Self::Discipline => "Discipline",
+        }
+    }
+
+    /// All 11 canonical categories in stable doc-rendering order.
+    #[must_use]
+    pub fn all() -> &'static [Self] {
+        &[
+            Self::VisibilityLifecycle,
+            Self::Interaction,
+            Self::Accessibility,
+            Self::Responsive,
+            Self::Internationalization,
+            Self::Theming,
+            Self::Security,
+            Self::Sovereignty,
+            Self::Performance,
+            Self::Reliability,
+            Self::Discipline,
+        ]
+    }
+}
+
+/// Render the full 54-trait catalog as a Markdown document
+/// suitable for publishing at `docs.plausiden.com/traits` or
+/// `PlausiDen-Forge/docs/traits-catalog.md`.
+///
+/// Pure projection of the typed enum + category metadata — no
+/// AI involvement per `[[deterministic-first-lfi-optional]]`.
+/// Same input (the enum) → same output (deterministic bytes).
+///
+/// Closes `#172 [trait-v7]`.
+#[must_use]
+pub fn render_markdown_catalog() -> String {
+    let mut out = String::new();
+    out.push_str("# PlausiDen trait catalog\n\n");
+    out.push_str(
+        "Generated from the `loom-traits` crate per AVP-Doctrine \
+         `TRAIT_DAG.md`. **54 traits across 11 categories.**\n\n",
+    );
+    out.push_str(
+        "Every substrate-managed entity (Loom primitive, CMS \
+         section, Forge phase, Crawler detector, *-core type) \
+         declares which traits it satisfies. Audit phases enforce \
+         category-shaped invariants + default-required-trait sets \
+         per entity class. See `TRAIT_DAG.md` for the design \
+         rationale + entity-class default tables.\n\n",
+    );
+    out.push_str("---\n\n");
+
+    // Per-category sections in stable order.
+    for cat in Category::all() {
+        out.push_str(&format!("## {}\n\n", cat.title()));
+        let in_cat: Vec<Trait> = Trait::all()
+            .iter()
+            .copied()
+            .filter(|t| t.category() == *cat)
+            .collect();
+        out.push_str(&format!(
+            "_{} trait{}._\n\n",
+            in_cat.len(),
+            if in_cat.len() == 1 { "" } else { "s" }
+        ));
+        out.push_str("| Slug | Variant |\n");
+        out.push_str("|------|---------|\n");
+        for t in in_cat {
+            out.push_str(&format!("| `{}` | `{:?}` |\n", t.slug(), t));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("---\n\n");
+    out.push_str("## Default-required trait sets\n\n");
+    out.push_str(
+        "Per AVP-Doctrine rule `prim-001` + `TRAIT_DAG.md` § \
+         Default-required traits per entity class:\n\n",
+    );
+
+    out.push_str("### Loom primitive (Visible lineage)\n\n");
+    for t in Trait::loom_visible_defaults() {
+        out.push_str(&format!("- `{}` ({})\n", t.slug(), t.category().title()));
+    }
+    out.push('\n');
+
+    out.push_str("### Loom primitive (Interactive lineage — additional)\n\n");
+    out.push_str(
+        "Cascades onto the Visible set above when the primitive declares Interactive.\n\n",
+    );
+    for t in Trait::loom_interactive_defaults() {
+        out.push_str(&format!("- `{}` ({})\n", t.slug(), t.category().title()));
+    }
+    out.push('\n');
+
+    out.push_str("---\n\n");
+    out.push_str("## Cross-references\n\n");
+    out.push_str(
+        "- [TRAIT_DAG.md](../../PlausiDen-AVP-Doctrine/TRAIT_DAG.md) — design rationale\n",
+    );
+    out.push_str(
+        "- [N_ORIENTATION_SUBSTRATE.md](../../PlausiDen-AVP-Doctrine/N_ORIENTATION_SUBSTRATE.md) — companion orientation system\n",
+    );
+    out.push_str(
+        "- [MAPPING_TABLES.md](../../PlausiDen-AVP-Doctrine/MAPPING_TABLES.md) — \
+         cross-orientation mappings that drive default-required selection\n",
+    );
+    out.push_str(
+        "- [VERSION_DISCIPLINE.md](../../PlausiDen-AVP-Doctrine/VERSION_DISCIPLINE.md) — \
+         trait lifecycle + additive change classification\n",
+    );
+    out.push_str(
+        "- Source: `crates/loom-traits/src/lib.rs` — typed enum source of truth\n",
+    );
+
+    out
+}
+
 /// A set of traits an entity declares. Wraps `Vec<Trait>` with
 /// helpers for subset / superset queries used by Forge audit
 /// phases ("does this primitive satisfy the Loom Visible defaults?").
@@ -642,5 +791,82 @@ mod tests {
         assert_eq!(json, "[\"mobile-friendly\",\"versioned\"]");
         let back: TraitSet = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(back.0, set.0);
+    }
+
+    // -----------------------------------------------------------------
+    // Markdown catalog rendering tests — task #172
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn category_metadata_complete() {
+        // Every category has non-empty title + slug + appears in all().
+        for c in Category::all() {
+            assert!(!c.title().is_empty(), "{c:?} empty title");
+            assert!(!c.slug().is_empty(), "{c:?} empty slug");
+        }
+        assert_eq!(Category::all().len(), 11);
+    }
+
+    #[test]
+    fn category_slugs_unique() {
+        let mut seen = std::collections::HashSet::new();
+        for c in Category::all() {
+            assert!(seen.insert(c.slug()), "duplicate category slug: {:?}", c.slug());
+        }
+    }
+
+    #[test]
+    fn rendered_catalog_contains_every_trait() {
+        let md = render_markdown_catalog();
+        // Every trait slug appears at least once in the rendered doc.
+        for t in Trait::all() {
+            assert!(
+                md.contains(t.slug()),
+                "rendered catalog missing trait {:?} ({})",
+                t,
+                t.slug()
+            );
+        }
+    }
+
+    #[test]
+    fn rendered_catalog_contains_every_category_title() {
+        let md = render_markdown_catalog();
+        for c in Category::all() {
+            assert!(
+                md.contains(c.title()),
+                "rendered catalog missing category title {:?}",
+                c.title()
+            );
+        }
+    }
+
+    #[test]
+    fn rendered_catalog_has_top_level_heading() {
+        let md = render_markdown_catalog();
+        assert!(md.starts_with("# PlausiDen trait catalog"));
+    }
+
+    #[test]
+    fn rendered_catalog_documents_default_sets() {
+        let md = render_markdown_catalog();
+        // Visible defaults section header + all 8 trait slugs appear.
+        assert!(md.contains("Loom primitive (Visible lineage)"));
+        for t in Trait::loom_visible_defaults() {
+            assert!(md.contains(t.slug()));
+        }
+        // Interactive cascade section + 3 trait slugs.
+        assert!(md.contains("Loom primitive (Interactive lineage"));
+        for t in Trait::loom_interactive_defaults() {
+            assert!(md.contains(t.slug()));
+        }
+    }
+
+    #[test]
+    fn rendered_catalog_is_deterministic() {
+        // Pure projection: same call → identical bytes.
+        let a = render_markdown_catalog();
+        let b = render_markdown_catalog();
+        assert_eq!(a, b);
     }
 }
