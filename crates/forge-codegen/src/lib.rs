@@ -600,7 +600,11 @@ fn slug_to_fn_name(slug: &str) -> Result<String, CodegenError> {
             }
         }
     }
-    if !out.chars().nth("render_".len()).is_some_and(|c| !c.is_ascii_digit()) {
+    if !out
+        .chars()
+        .nth("render_".len())
+        .is_some_and(|c| !c.is_ascii_digit())
+    {
         // Rust identifiers can't start with a digit. The
         // `render_` prefix already guarantees that, but be
         // explicit so the contract is testable.
@@ -884,11 +888,10 @@ mod tests {
             out.files.iter().map(|f| &f.path).collect::<Vec<_>>()
         );
         // Kebab variant must NOT exist (Rust won't load it).
-        assert!(
-            !out.files
-                .iter()
-                .any(|f| f.path == "src/handlers/about-privacy-policy.rs")
-        );
+        assert!(!out
+            .files
+            .iter()
+            .any(|f| f.path == "src/handlers/about-privacy-policy.rs"));
     }
 
     #[test]
@@ -905,7 +908,9 @@ mod tests {
             .find(|f| f.path == "src/handlers/about.rs")
             .unwrap();
         assert!(about.contents.contains("Path: \"/about/\""));
-        assert!(about.contents.contains("pub async fn render_about() -> Html<String>"));
+        assert!(about
+            .contents
+            .contains("pub async fn render_about() -> Html<String>"));
         // Title round-trips through the embedded JSON payload.
         assert!(
             about.contents.contains(r#""title":"About Us""#),
@@ -914,7 +919,9 @@ mod tests {
         );
         // Real render path, not the stub string return.
         assert!(about.contents.contains("loom_cms_render::render_page(p)"));
-        assert!(about.contents.contains("loom_cms_render::page_shell_themed"));
+        assert!(about
+            .contents
+            .contains("loom_cms_render::page_shell_themed"));
         // OnceLock parse-once-per-process.
         assert!(about.contents.contains("static CELL: OnceLock"));
     }
@@ -1058,11 +1065,7 @@ mod tests {
             backends: vec![],
         };
         let out = generate(&plan).unwrap();
-        let toml = out
-            .files
-            .iter()
-            .find(|f| f.path == "Cargo.toml")
-            .unwrap();
+        let toml = out.files.iter().find(|f| f.path == "Cargo.toml").unwrap();
         assert!(toml.contents.contains("[dev-dependencies]"));
         assert!(toml.contents.contains("tower ="));
         assert!(toml.contents.contains("http-body-util"));
@@ -1076,15 +1079,9 @@ mod tests {
             backends: vec![backend("subscribe"), backend("contact-form")],
         };
         let out = generate(&plan).unwrap();
+        assert!(out.files.iter().any(|f| f.path == "src/db/subscribe.rs"));
         assert!(
-            out.files
-                .iter()
-                .any(|f| f.path == "src/db/subscribe.rs")
-        );
-        assert!(
-            out.files
-                .iter()
-                .any(|f| f.path == "src/db/contact_form.rs"),
+            out.files.iter().any(|f| f.path == "src/db/contact_form.rs"),
             "kebab slug must produce snake-case file on disk"
         );
         assert!(out.files.iter().any(|f| f.path == "src/db/mod.rs"));
@@ -1095,7 +1092,9 @@ mod tests {
             .unwrap();
         assert!(mod_rs.contents.contains("pub mod subscribe;"));
         assert!(mod_rs.contents.contains("pub mod contact_form;"));
-        assert!(mod_rs.contents.contains("pub use subscribe::query_subscribe;"));
+        assert!(mod_rs
+            .contents
+            .contains("pub use subscribe::query_subscribe;"));
         assert!(mod_rs
             .contents
             .contains("pub use contact_form::query_contact_form;"));
@@ -1200,11 +1199,7 @@ mod tests {
             backends: vec![],
         };
         let out = generate(&plan).unwrap();
-        let toml = out
-            .files
-            .iter()
-            .find(|f| f.path == "Cargo.toml")
-            .unwrap();
+        let toml = out.files.iter().find(|f| f.path == "Cargo.toml").unwrap();
         assert!(toml.contents.contains("name = \"demo-server\""));
         assert!(toml.contents.contains("edition = \"2021\""));
         assert!(toml.contents.contains("publish = false"));
@@ -1225,11 +1220,7 @@ mod tests {
             backends: vec![],
         };
         let out = generate(&plan).unwrap();
-        let main = out
-            .files
-            .iter()
-            .find(|f| f.path == "src/main.rs")
-            .unwrap();
+        let main = out.files.iter().find(|f| f.path == "src/main.rs").unwrap();
         assert!(main.contents.contains("demo_server::build_router()"));
         assert!(main.contents.contains("FORGE_LISTEN"));
         assert!(main.contents.contains("#[tokio::main]"));
@@ -1263,8 +1254,12 @@ mod tests {
             .iter()
             .find(|f| f.path == "src/router.rs")
             .unwrap();
-        assert!(router.contents.contains(".route(\"/\", get(handlers::render_index))"));
-        assert!(router.contents.contains(".route(\"/about\", get(handlers::render_about))"));
+        assert!(router
+            .contents
+            .contains(".route(\"/\", get(handlers::render_index))"));
+        assert!(router
+            .contents
+            .contains(".route(\"/about\", get(handlers::render_about))"));
         assert!(router.contents.contains(
             ".route(\"/about/privacy-policy\", get(handlers::render_about_privacy_policy))"
         ));

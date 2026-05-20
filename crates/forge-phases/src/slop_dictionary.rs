@@ -178,8 +178,7 @@ impl Phase for SlopDictionaryPhase {
                         if *target_kind != kind {
                             continue;
                         }
-                        let Some(raw_text) = section.get(*field).and_then(|v| v.as_str())
-                        else {
+                        let Some(raw_text) = section.get(*field).and_then(|v| v.as_str()) else {
                             continue;
                         };
                         let normalized = normalize(raw_text);
@@ -280,8 +279,7 @@ mod tests {
         ));
         std::fs::create_dir_all(tmp.join("cms")).expect("mk cms");
         for (name, body) in pages {
-            std::fs::write(tmp.join("cms").join(format!("{name}.json")), body)
-                .expect("write json");
+            std::fs::write(tmp.join("cms").join(format!("{name}.json")), body).expect("write json");
         }
         let ctx = BuildCtx {
             root: tmp.clone(),
@@ -391,11 +389,9 @@ mod tests {
         }"#;
         let (ctx, tmp) = make_ctx_with_cms(&[("a", body)]);
         let findings = SlopDictionaryPhase.run(&ctx).expect("run");
-        assert!(
-            findings
-                .iter()
-                .any(|f| f.message.contains("industry-leading")),
-        );
+        assert!(findings
+            .iter()
+            .any(|f| f.message.contains("industry-leading")),);
         let _ = std::fs::remove_dir_all(&tmp);
     }
 

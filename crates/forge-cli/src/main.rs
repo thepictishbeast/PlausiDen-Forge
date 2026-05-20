@@ -37,7 +37,6 @@ use forge_phases::backend_coverage::BackendCoveragePhase;
 use forge_phases::carbon_budget::CarbonBudgetPhase;
 use forge_phases::composition_lineage::CompositionLineagePhase;
 use forge_phases::content_substance::ContentSubstancePhase;
-use forge_phases::slop_dictionary::SlopDictionaryPhase;
 use forge_phases::contrast::ContrastPhase;
 use forge_phases::crawl::CrawlPhase;
 use forge_phases::csp::CspPhase;
@@ -77,6 +76,7 @@ use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::semver_enforcement::SemverEnforcementPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::site_identity_conformance::SiteIdentityConformancePhase;
+use forge_phases::slop_dictionary::SlopDictionaryPhase;
 use forge_phases::sri::SriPhase;
 use forge_phases::structured_data::StructuredDataPhase;
 use forge_phases::substrate_purity::SubstratePurityPhase;
@@ -8856,9 +8856,8 @@ fn run_codegen(
         for p in &json_paths {
             let raw = std::fs::read_to_string(p)
                 .map_err(|e| anyhow::anyhow!("read {}: {}", p.display(), e))?;
-            let page: loom_cms_render::CmsPage = serde_json::from_str(&raw).map_err(|e| {
-                anyhow::anyhow!("parse cms page {}: {}", p.display(), e)
-            })?;
+            let page: loom_cms_render::CmsPage = serde_json::from_str(&raw)
+                .map_err(|e| anyhow::anyhow!("parse cms page {}: {}", p.display(), e))?;
             pages.push(page);
         }
     }
@@ -8906,8 +8905,7 @@ fn run_codegen(
 
     // Write to disk.
     let out = out_dir.expect("checked above");
-    std::fs::create_dir_all(out)
-        .map_err(|e| anyhow::anyhow!("mkdir {}: {}", out.display(), e))?;
+    std::fs::create_dir_all(out).map_err(|e| anyhow::anyhow!("mkdir {}: {}", out.display(), e))?;
     for f in &output.files {
         let dest = out.join(&f.path);
         if let Some(parent) = dest.parent() {
@@ -8937,9 +8935,9 @@ fn parse_backends_toml(raw: &str) -> Result<Vec<forge_codegen::BackendSpec>> {
         return Ok(out);
     };
     for (name, body) in table {
-        let body = body.as_table().ok_or_else(|| {
-            anyhow::anyhow!("backends.{name}: expected table, got {body:?}")
-        })?;
+        let body = body
+            .as_table()
+            .ok_or_else(|| anyhow::anyhow!("backends.{name}: expected table, got {body:?}"))?;
         let method = body
             .get("method")
             .and_then(|v| v.as_str())

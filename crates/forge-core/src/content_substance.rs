@@ -32,13 +32,13 @@ pub const DEFAULT_MIN_CHARS: &[(&str, &str, u32)] = &[
     ("hero_editorial", "title", 20),
     ("hero_editorial", "lede", 60),
     ("hero", "title", 20),
-    ("paragraph", "text", 80),     // Loom: Paragraph { text: String }
-    ("pull_quote", "body", 40),    // Loom: PullQuote { body: String }
-    ("code", "body", 20),          // Loom: Code { body: String }
-    ("heading", "text", 8),        // Loom: Heading { text: String }
+    ("paragraph", "text", 80),      // Loom: Paragraph { text: String }
+    ("pull_quote", "body", 40),     // Loom: PullQuote { body: String }
+    ("code", "body", 20),           // Loom: Code { body: String }
+    ("heading", "text", 8),         // Loom: Heading { text: String }
     ("call_to_action", "title", 4), // Loom: CallToAction { title: String }
-    ("image_hero", "title", 8),    // Loom: ImageHero { title: String }
-    ("split_hero", "title", 20),   // Loom: SplitHero { title: String }
+    ("image_hero", "title", 8),     // Loom: ImageHero { title: String }
+    ("split_hero", "title", 20),    // Loom: SplitHero { title: String }
 ];
 
 /// Per-(kind, field) minimum array-length floors. Below this

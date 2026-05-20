@@ -310,11 +310,7 @@ fn iter_css_bearing_attr_values(body: &str) -> Vec<String> {
     // <meta name="theme-color" content="...">. The two attributes
     // can appear in either order in well-formed HTML; scan for
     // both spellings.
-    for pattern in &[
-        "name=\"theme-color\"",
-        "name='theme-color'",
-        "theme-color",
-    ] {
+    for pattern in &["name=\"theme-color\"", "name='theme-color'", "theme-color"] {
         let mut search_from = 0;
         while let Some(rel) = lower[search_from..].find(pattern) {
             let abs = search_from + rel + pattern.len();
@@ -384,16 +380,20 @@ mod tests {
     fn tokens_gate_passes_inline_critical_css_with_hex_fallbacks() {
         let body = r#"<head><style>:root{--loom-accent:#4338CA} body{border-left:3px solid color-mix(in oklab,var(--loom-accent,#4338CA) 70%,transparent)}</style><body><p>clean</p>"#;
         let s = strip_css_var_declarations(&strip_style_blocks(body));
-        assert!(!scan_hex_outside_svg_csp(&s),
-            "raw hex fallback inside <style> must not flag — that's the design system, not a leak");
+        assert!(
+            !scan_hex_outside_svg_csp(&s),
+            "raw hex fallback inside <style> must not flag — that's the design system, not a leak"
+        );
     }
 
     #[test]
     fn tokens_gate_still_flags_inline_style_attr_hex() {
         let body = r#"<head><body><p style="color:#abc">leak</p>"#;
         let s = strip_css_var_declarations(&strip_style_blocks(body));
-        assert!(scan_hex_outside_svg_csp(&s),
-            "raw hex in inline style= attr must still flag");
+        assert!(
+            scan_hex_outside_svg_csp(&s),
+            "raw hex in inline style= attr must still flag"
+        );
     }
 
     #[test]
@@ -402,8 +402,10 @@ mod tests {
         // false-positive as 3-digit hex. The gate now scopes hex
         // scanning to actual CSS-bearing attributes only.
         let body = "<p>Pixel-rep target per PlausiDen-Forge #222. Not affiliated.</p>";
-        assert!(!scan_hex_outside_svg_csp(body),
-            "issue-number references in body text must not flag as hex color");
+        assert!(
+            !scan_hex_outside_svg_csp(body),
+            "issue-number references in body text must not flag as hex color"
+        );
     }
 
     #[test]
@@ -413,8 +415,10 @@ mod tests {
         // because the value goes straight to the browser without a
         // theme cascade.
         let body = r##"<meta name="theme-color" content="#abcdef">"##;
-        assert!(scan_hex_outside_svg_csp(body),
-            "raw hex in theme-color meta must still flag");
+        assert!(
+            scan_hex_outside_svg_csp(body),
+            "raw hex in theme-color meta must still flag"
+        );
     }
 
     #[test]
