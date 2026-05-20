@@ -1068,6 +1068,14 @@ enum FingerprintAction {
         #[arg(long, default_value_t = false)]
         json: bool,
     },
+    /// Compute the current site's SiteFingerprint commitment
+    /// without writing it to the registry. Read-only inspection
+    /// of what the variation arc gates measure.
+    Compute {
+        /// JSON output (full fingerprint structure).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// List entries in the fingerprint registry. (closes #239 list dim)
     List {
         /// Override the default registry path
@@ -2477,10 +2485,157 @@ fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitC
     }
 }
 
+/// Compute a SiteFingerprint by walking cms/*.json. Mirror of
+/// the heuristic used by the uniqueness_gate phase so the CLI's
+/// compute subcommand reports what the gate would record.
+fn compute_fingerprint_from_cms(
+    cms_dir: &std::path::Path,
+) -> Result<forge_core::fingerprint::SiteFingerprint> {
+    use forge_core::fingerprint::{
+        AssetDistribution, CompositionRhythm, ContentSilhouette, FingerprintSpec,
+        PrimitiveOccurrence, SiteFingerprint, TokenOverride,
+    };
+    use std::collections::BTreeMap;
+    let mut paths: Vec<std::path::PathBuf> = Vec::new();
+    for entry in std::fs::read_dir(cms_dir)? {
+        let p = entry?.path();
+        if p.extension().and_then(|e| e.to_str()) == Some("json") {
+            paths.push(p);
+        }
+    }
+    paths.sort();
+
+    let mut primitives: Vec<PrimitiveOccurrence> = Vec::new();
+    let mut silhouettes: BTreeMap<String, ContentSilhouette> = BTreeMap::new();
+    let mut rhythms: BTreeMap<String, CompositionRhythm> = BTreeMap::new();
+    let mut assets = AssetDistribution::default();
+
+    for path in paths {
+        let raw = std::fs::read_to_string(&path)?;
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(&raw) else {
+            continue;
+        };
+        let page = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_owned();
+        let mut section_count: u32 = 0;
+        let mut total_chars: u32 = 0;
+        if let Some(sections) = value.get("sections").and_then(|s| s.as_array()) {
+            for section in sections {
+                let Some(kind) = section.get("kind").and_then(|v| v.as_str()) else {
+                    continue;
+                };
+                section_count += 1;
+                primitives.push(PrimitiveOccurrence::new(
+                    kind.to_owned(),
+                    String::new(),
+                    page.clone(),
+                ));
+                match kind {
+                    "image" | "gallery" | "hero_image" | "image_hero" | "photo" => {
+                        assets.image_count += 1;
+                    }
+                    "video" | "video_embed" => assets.video_count += 1,
+                    "form" | "code" | "code_block" | "interactive" => {
+                        assets.interactive_count += 1
+                    }
+                    _ => {}
+                }
+                for field in &["title", "body", "lede", "subtitle", "message", "summary"] {
+                    if let Some(text) = section.get(field).and_then(|v| v.as_str()) {
+                        total_chars = total_chars
+                            .saturating_add(u32::try_from(text.chars().count()).unwrap_or(u32::MAX));
+                    }
+                }
+            }
+        }
+        let bucket = match total_chars {
+            0..=99 => 0,
+            100..=499 => 1,
+            500..=999 => 2,
+            1000..=2499 => 3,
+            2500..=4999 => 4,
+            _ => 5,
+        };
+        silhouettes.insert(
+            page.clone(),
+            ContentSilhouette::new(bucket, 0, 0, String::new()),
+        );
+        let tier = match (section_count, if section_count == 0 { 0 } else { total_chars / section_count }) {
+            (0..=3, _) => "sparse",
+            (4..=7, 0..=300) => "comfortable",
+            (4..=7, _) => "dense",
+            (8..=12, _) => "dense",
+            _ => "extreme",
+        };
+        rhythms.insert(page, CompositionRhythm::new(section_count, tier.to_owned()));
+    }
+
+    Ok(SiteFingerprint::new(
+        FingerprintSpec::V1,
+        primitives,
+        Vec::<TokenOverride>::new(),
+        silhouettes,
+        rhythms,
+        assets,
+    ))
+}
+
 /// Task #258: registry-tampering defense. Verify the fingerprint
 /// registry's Merkle chain + (optionally) Ed25519 signatures.
 fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result<ExitCode> {
     match action {
+        FingerprintAction::Compute { json } => {
+            // Walk cms/*.json and compute the SiteFingerprint
+            // commitment without touching the registry.
+            let cms_dir = root.join("cms");
+            if !cms_dir.is_dir() {
+                if *json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status": "fail",
+                            "stage": "compute",
+                            "error": format!("no cms/ directory at {}", cms_dir.display()),
+                        })
+                    );
+                } else {
+                    eprintln!("forge fingerprint compute: no cms/ directory at {}", cms_dir.display());
+                }
+                return Ok(ExitCode::from(1));
+            }
+            let fp = compute_fingerprint_from_cms(&cms_dir)
+                .with_context(|| format!("compute fingerprint from {}", cms_dir.display()))?;
+            let hex = fp.commitment_hex();
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "commitment_hex": hex,
+                        "primitive_count": fp.primitives.len(),
+                        "silhouette_count": fp.silhouettes.len(),
+                        "rhythm_count": fp.rhythms.len(),
+                        "asset_image_count": fp.assets.image_count,
+                        "asset_video_count": fp.assets.video_count,
+                        "asset_interactive_count": fp.assets.interactive_count,
+                    })
+                );
+            } else {
+                println!("forge fingerprint compute:");
+                println!("  commitment:  {hex}");
+                println!("  primitives:  {} occurrences", fp.primitives.len());
+                println!("  silhouettes: {} pages", fp.silhouettes.len());
+                println!("  rhythms:     {} pages", fp.rhythms.len());
+                println!(
+                    "  assets:      {} image / {} video / {} interactive",
+                    fp.assets.image_count, fp.assets.video_count, fp.assets.interactive_count
+                );
+            }
+            Ok(ExitCode::SUCCESS)
+        }
         FingerprintAction::Verify {
             registry_path,
             signatures,
