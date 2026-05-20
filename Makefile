@@ -219,3 +219,42 @@ pixel-rep-diff: ## Print a compact diff of two manifests written by pixel-rep. R
 	    fi; \
 	done
 	@printf '\n'
+
+PIXEL_REP_DIFF_OUT      ?= $(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)-diff
+PIXEL_REP_FUZZ          ?= 5%
+
+.PHONY: pixel-rep-visual-diff
+pixel-rep-visual-diff: ## Visual pixel-diff via ImageMagick. Emits diff PNGs + AE counts.
+	@command -v magick >/dev/null 2>&1 || (echo "ImageMagick not installed (need 'magick' on PATH)" && exit 2)
+	@mkdir -p $(PIXEL_REP_DIFF_OUT)
+	@printf '\n\033[1mpixel-rep visual-diff %s\033[0m\n  fuzz: %s\n  out:  %s/\n\n' \
+	    "$(PIXEL_REP_SLUG)" "$(PIXEL_REP_FUZZ)" "$(PIXEL_REP_DIFF_OUT)"
+	@for vp in 390 768 1280; do \
+	    live_png=$(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)/$$vp.png; \
+	    forge_png=$(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)-forge/$$vp.png; \
+	    diff_png=$(PIXEL_REP_DIFF_OUT)/$$vp.diff.png; \
+	    if [ ! -f $$live_png ] || [ ! -f $$forge_png ]; then \
+	        printf '  %s px  ⚠ missing captures (run make pixel-rep first)\n' $$vp; \
+	        continue; \
+	    fi; \
+	    live_dim=$$(magick identify -format '%wx%h' $$live_png); \
+	    forge_dim=$$(magick identify -format '%wx%h' $$forge_png); \
+	    forge_canvas=$(PIXEL_REP_DIFF_OUT)/$$vp.forge-canvas.png; \
+	    live_target_h=$$(magick identify -format '%h' $$live_png); \
+	    magick $$forge_png -gravity north -background white \
+	        -extent $${vp}x$$live_target_h $$forge_canvas 2>/dev/null; \
+	    ae=$$(magick compare -metric AE -fuzz $(PIXEL_REP_FUZZ) \
+	          $$live_png $$forge_canvas $$diff_png 2>&1 | head -1); \
+	    total=$$(awk "BEGIN { print $$vp * $$live_target_h }"); \
+	    if [ -n "$$total" ] && [ "$$total" -gt 0 ]; then \
+	        pct=$$(awk "BEGIN { printf \"%.1f\", $$ae * 100 / $$total }"); \
+	    else \
+	        pct="?"; \
+	    fi; \
+	    printf '  %s px  live=%s  forge=%s  →  diff=%s px (%s%% of live area)\n' \
+	        $$vp $$live_dim $$forge_dim $$ae $$pct; \
+	    rm -f $$forge_canvas; \
+	done
+	@printf '\nDiff PNGs (red overlay marks differing pixels):\n'
+	@ls -la $(PIXEL_REP_DIFF_OUT)/*.diff.png 2>/dev/null | sed 's|^|  |' || echo '  (no diffs produced)'
+	@printf '\n'
