@@ -4,6 +4,8 @@ Orientation for any AI agent (Claude or otherwise) working in this repository. R
 
 > Per [[tool-starvation-anti-pattern]] doctrine: the failure mode that wastes most time is reaching for generic tools (bash, grep, find, curl, hand-rolled scripts) when a platform tool already exists. Stop and check first.
 
+> Cross-repo orientation: see [PLAUSIDEN_ECOSYSTEM.md](./PLAUSIDEN_ECOSYSTEM.md) for how this repo relates to PlausiDen-Loom / Crawler / Annotator / CMS / Canon / Meta / AVP-Doctrine / LFI / Forge-LFI.
+
 ---
 
 ## RULE 0 — The substrate is the only path (LOAD-BEARING)
