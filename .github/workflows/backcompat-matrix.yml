@@ -1,0 +1,175 @@
+name: backcompat-matrix
+
+# Backward-compatibility CI matrix per AVP-Doctrine
+# VERSION_DISCIPLINE.md § Renderability guarantee:
+#
+#   "Every published artifact remains renderable by some substrate
+#    version. Artifacts pinned to a version inside the support
+#    window render natively."
+#
+# This workflow runs every fixture CMS file through `forge build`
+# against every supported substrate version pin + asserts clean
+# build. As the support_window expands (multiple released
+# versions), the matrix grows automatically.
+#
+# Today the support_window has one version (HEAD); the workflow
+# documents the expansion shape + establishes the CI surface for
+# when v0.2 / v1.0 / etc. land. Each new release adds a matrix
+# entry; each new fixture adds a matrix entry; the cross-product
+# enforces renderability without per-PR manual verification.
+#
+# Closes task #140 (backcompat-v4).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "cms/**"
+      - "cms-northbrook-backup/**"
+      - "forge.toml"
+      - "backends.toml"
+      - ".github/workflows/backcompat-matrix.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "cms/**"
+      - "cms-northbrook-backup/**"
+      - "forge.toml"
+      - "backends.toml"
+      - ".github/workflows/backcompat-matrix.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  matrix:
+    name: ${{ matrix.fixture }} × forge ${{ matrix.forge_version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Substrate version pins. Today only HEAD is in the support
+        # window; add prior released versions here as the window
+        # expands per VERSION_DISCIPLINE.md.
+        #
+        # Format: { forge_version: "<git ref>", label: "<human label>" }
+        forge_version:
+          - "HEAD"
+          # Example expansion when v0.2.0 lands (commented until
+          # the release tag exists):
+          # - "v0.2.0"
+          # - "v0.1.0"
+        # CMS fixtures to render. Each fixture exercises a different
+        # primitive composition; the cross-product asserts every
+        # composition renders cleanly against every supported
+        # substrate version.
+        fixture:
+          - "cms/index.json"
+          - "cms-northbrook-backup/index.json"
+          - "cms-northbrook-backup/about.json"
+          - "cms-northbrook-backup/contact.json"
+          - "cms-northbrook-backup/field-notes.json"
+          - "cms-northbrook-backup/programs.json"
+          - "cms-northbrook-backup/visit.json"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      # ----------------------------------------------------------------
+      # Checkout the target forge version. For HEAD this is a no-op;
+      # for tagged versions it switches the working tree.
+      # ----------------------------------------------------------------
+      - name: checkout target version
+        if: matrix.forge_version != 'HEAD'
+        run: |
+          git fetch --tags --depth=1 origin "${{ matrix.forge_version }}"
+          git checkout "${{ matrix.forge_version }}"
+
+      # ----------------------------------------------------------------
+      # Build forge-cli at the target version.
+      # ----------------------------------------------------------------
+      - name: build forge-cli
+        env:
+          RUST_BACKTRACE: 1
+        run: |
+          cargo build --release -p forge-cli --locked
+
+      # ----------------------------------------------------------------
+      # Render the fixture: copy it to cms/<basename>.json + build.
+      # Strict-clean is mandatory — any finding fails the matrix
+      # entry (per VERSION_DISCIPLINE.md renderability guarantee:
+      # all in-window combinations must render cleanly).
+      # ----------------------------------------------------------------
+      - name: prepare fixture
+        run: |
+          set -euo pipefail
+          BASE=$(basename "${{ matrix.fixture }}")
+          # Use a clean cms/ directory so old test artifacts don't
+          # contaminate the build.
+          mkdir -p _matrix_run/cms _matrix_run/static
+          cp "${{ matrix.fixture }}" "_matrix_run/cms/$BASE"
+          cp forge.toml _matrix_run/forge.toml 2>/dev/null || true
+          cp backends.toml _matrix_run/backends.toml 2>/dev/null || true
+          ls -la _matrix_run/cms/
+
+      - name: forge build (strict if production)
+        env:
+          RUST_BACKTRACE: 1
+        run: |
+          cd _matrix_run
+          ../target/release/forge --root . build --json-report build-report.json
+          # forge-cli exits non-zero on strict findings; failure
+          # here breaks the matrix entry.
+
+      # ----------------------------------------------------------------
+      # Upload build report + rendered static/ for diff against
+      # historical baselines (per VERSION_DISCIPLINE.md §
+      # Renderability guarantee).
+      # ----------------------------------------------------------------
+      - name: upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backcompat-${{ matrix.forge_version }}-${{ strategy.job-index }}
+          path: |
+            _matrix_run/build-report.json
+            _matrix_run/static/
+          if-no-files-found: warn
+          retention-days: 14
+
+  summary:
+    name: matrix summary
+    runs-on: ubuntu-latest
+    needs: matrix
+    if: always()
+    steps:
+      - name: emit verdict
+        run: |
+          {
+            echo "## Backcompat matrix verdict"
+            echo ""
+            echo "All fixture × version combinations in the support_window"
+            echo "must render clean for renderability guarantee per"
+            echo "VERSION_DISCIPLINE.md."
+            echo ""
+            echo "**Result:** ${{ needs.matrix.result }}"
+            echo ""
+            echo "When this matrix grows beyond HEAD (e.g. v0.2 lands"
+            echo "and is added to the matrix.forge_version list), each"
+            echo "released version's row asserts that fixtures pinned"
+            echo "to ANY in-window version still render."
+            echo ""
+            echo "Migration path for out-of-window artifacts: pinned"
+            echo "via the signed migration registry per migration-core."
+          } >>"$GITHUB_STEP_SUMMARY"
