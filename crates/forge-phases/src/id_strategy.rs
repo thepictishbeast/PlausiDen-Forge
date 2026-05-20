@@ -98,11 +98,25 @@ fn collect_attr_values(body: &str, prefix: &str) -> Vec<String> {
             // verify left boundary so e.g. `data-id="..."` doesn't
             // match a search for `id="`. The boundary is the char
             // immediately before `prefix`.
+            //
+            // Issue #8 fix (2026-05-20): if the prior byte is >= 0x80
+            // it's part of a multi-byte UTF-8 rune (leading or
+            // continuation byte), which means the prior "character"
+            // is a non-ASCII letter — treat as word continuation,
+            // not a boundary. Previously, `as char` on a continuation
+            // byte produced a U+0080-U+00BF char that failed both the
+            // alphanumeric and dash/underscore checks, falsely
+            // marking a UTF-8-internal position as a word boundary.
             let left_ok = if idx == 0 {
                 true
             } else {
-                let prev = search.as_bytes()[idx - 1] as char;
-                !prev.is_ascii_alphanumeric() && prev != '-' && prev != '_'
+                let prev_byte = search.as_bytes()[idx - 1];
+                if prev_byte >= 0x80 {
+                    false
+                } else {
+                    let prev = prev_byte as char;
+                    !prev.is_ascii_alphanumeric() && prev != '-' && prev != '_'
+                }
             };
             if left_ok {
                 out.push(after[..end].to_owned());

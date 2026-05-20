@@ -83,14 +83,23 @@ fn has_motion(css: &str) -> bool {
 
 fn has_decl(css: &str, key: &str) -> bool {
     // Must be at a word boundary (no `transitionable:` matches).
+    //
+    // Issue #8 fix (2026-05-20): byte >= 0x80 is part of a multi-byte
+    // UTF-8 rune (CSS comments commonly carry Unicode); treat as
+    // word continuation rather than letting `as char` produce a
+    // control-range char that fails the alphanumeric check.
     let mut search = css;
     while let Some(idx) = search.find(key) {
-        let prev = if idx == 0 {
-            ' '
+        if idx > 0 {
+            let prev_byte = search.as_bytes()[idx - 1];
+            if prev_byte < 0x80 {
+                let prev = prev_byte as char;
+                if !prev.is_alphanumeric() && prev != '_' && prev != '-' {
+                    return true;
+                }
+            }
+            // prev_byte >= 0x80 → mid-rune; not a boundary, continue.
         } else {
-            search.as_bytes()[idx - 1] as char
-        };
-        if !prev.is_alphanumeric() && prev != '_' && prev != '-' {
             return true;
         }
         search = &search[idx + key.len()..];

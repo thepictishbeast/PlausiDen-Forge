@@ -144,11 +144,20 @@ pub fn collect_anchor_names(body: &str) -> BTreeSet<String> {
     let mut offset = 0usize;
     while let Some(rel_idx) = search.find("id=\"") {
         let abs_idx = offset + rel_idx;
+        // Issue #8 fix (2026-05-20): byte >= 0x80 is part of a
+        // multi-byte UTF-8 rune; treat as word continuation rather
+        // than letting `as char` produce a control-range char that
+        // fails the alphanumeric check and falsely marks a boundary.
         let left_ok = if abs_idx == 0 {
             true
         } else {
-            let prev = body.as_bytes()[abs_idx - 1] as char;
-            !prev.is_ascii_alphanumeric() && prev != '-' && prev != '_'
+            let prev_byte = body.as_bytes()[abs_idx - 1];
+            if prev_byte >= 0x80 {
+                false
+            } else {
+                let prev = prev_byte as char;
+                !prev.is_ascii_alphanumeric() && prev != '-' && prev != '_'
+            }
         };
         let after = &search[rel_idx + "id=\"".len()..];
         if let Some(end) = after.find('"') {
