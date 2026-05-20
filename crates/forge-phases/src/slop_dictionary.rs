@@ -33,6 +33,33 @@ use std::fs;
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 use serde_json::Value;
 
+/// Substring-match list. Each entry, when found ANYWHERE inside
+/// a section's text field (case-insensitive, after whitespace
+/// collapse), produces a warn. Strictly narrower than
+/// SAAS_CLICHES — entries here must be unambiguous filler that
+/// can't appear in a legitimate editorial sentence by accident.
+///
+/// Example: "ai-native" is a marketing word that nobody uses in
+/// good faith; flag it anywhere. Contrast with "the modern way"
+/// (in SAAS_CLICHES) which is filler ONLY when it stands alone
+/// as a heading; a real sentence might legitimately use those
+/// words.
+const SAAS_SUBSTRINGS: &[&str] = &[
+    "ai-native",
+    "out of the box",
+    "purpose-built",
+    "battle-tested",
+    "lightning-fast",
+    "blazing fast",
+    "world-class",
+    "best-in-class",
+    "industry-leading",
+    "next-generation",
+    "cutting-edge",
+    "state-of-the-art",
+    "your single source of truth",
+];
+
 /// Canonical SaaS-cliche list. Match case-insensitively as the
 /// WHOLE field value (after trimming + whitespace collapse).
 /// Conservative on purpose — these are unambiguous filler, not
@@ -184,6 +211,44 @@ impl Phase for SlopDictionaryPhase {
                                 ),
                             );
                         }
+                        // Substring pass: catches cliches embedded in
+                        // otherwise-editorial sentences. Narrower list
+                        // than SAAS_CLICHES — entries are unambiguous
+                        // marketing words that can't appear in good
+                        // faith editorial copy by accident.
+                        for needle in SAAS_SUBSTRINGS {
+                            if normalized.contains(needle) {
+                                findings.push(
+                                    Finding::warn(
+                                        self.name(),
+                                        format!(
+                                            "{path_disp}#section-{idx}-{kind}.{field}"
+                                        ),
+                                        format!(
+                                            "{kind}.{field} contains marketing phrase {needle:?} (within {raw_text:?}). The substring is unambiguous SaaS-marketing slop — rewrite the sentence to drop it."
+                                        ),
+                                    )
+                                    .why(
+                                        "phrases like 'ai-native', 'industry-leading', \
+                                         'next-generation' are marketing modifiers that carry no \
+                                         editorial substance; their presence anywhere is a tell \
+                                         that the copy was generated rather than written.",
+                                    )
+                                    .fix(format!(
+                                        "remove the phrase {needle:?} and restate what the \
+                                         sentence is actually about. If you can't restate it \
+                                         without the cliche, the sentence has no content to \
+                                         restate — drop the field."
+                                    ))
+                                    .skill("author-cms-content")
+                                    .avoid(
+                                        "don't rewrite to a synonym from the same family \
+                                         ('cutting-edge' → 'state-of-the-art') — the family is \
+                                         the problem.",
+                                    ),
+                                );
+                            }
+                        }
                     }
                 }
             }
@@ -295,6 +360,55 @@ mod tests {
         assert!(!f.advocacy.substrate_fix.is_empty());
         assert!(f.advocacy.skill.is_some());
         assert!(f.advocacy.anti_pattern.is_some());
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn substring_match_in_full_sentence_flags() {
+        // "ai-native" buried in a hero lede — would slip past
+        // the whole-field cliche list. The substring pass
+        // catches it.
+        let body = r#"{
+            "title": "x", "description": "x", "path": "/",
+            "sections": [{"kind": "paragraph",
+                "text": "We're building the ai-native future of customer support."}]
+        }"#;
+        let (ctx, tmp) = make_ctx_with_cms(&[("a", body)]);
+        let findings = SlopDictionaryPhase.run(&ctx).expect("run");
+        assert!(
+            findings.iter().any(|f| f.message.contains("ai-native")),
+            "expected substring-mode finding for 'ai-native'; got: {findings:?}"
+        );
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn substring_match_is_case_insensitive() {
+        let body = r#"{
+            "title": "x", "description": "x", "path": "/",
+            "sections": [{"kind": "paragraph",
+                "text": "An Industry-Leading platform for INSURANCE."}]
+        }"#;
+        let (ctx, tmp) = make_ctx_with_cms(&[("a", body)]);
+        let findings = SlopDictionaryPhase.run(&ctx).expect("run");
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.message.contains("industry-leading")),
+        );
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn editorial_paragraph_without_substring_does_not_flag() {
+        let body = r#"{
+            "title": "x", "description": "x", "path": "/",
+            "sections": [{"kind": "paragraph",
+                "text": "Insurance protects what you own. Track expenses, store documents safely, plan for retirement."}]
+        }"#;
+        let (ctx, tmp) = make_ctx_with_cms(&[("a", body)]);
+        let findings = SlopDictionaryPhase.run(&ctx).expect("run");
+        assert!(findings.is_empty());
         let _ = std::fs::remove_dir_all(&tmp);
     }
 
