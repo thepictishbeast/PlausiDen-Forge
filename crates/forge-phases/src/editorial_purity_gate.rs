@@ -236,8 +236,137 @@ fn check_section(
                 );
             }
         }
+        "logo_wall" => {
+            // The trope: "Trusted by these companies" scroll-rail
+            // with 8+ logos. Editorial pages cite specific cases
+            // with named projects, not bulk-logo-wall.
+            let items_len = section
+                .get("items")
+                .and_then(|v| v.as_array())
+                .map(Vec::len)
+                .unwrap_or(0);
+            if items_len >= 6 {
+                push(
+                    "editorial-purity.logo-wall-marquee",
+                    format!("`LogoWall` with {items_len} items — the \"Trusted by these companies\" SaaS-marketing trope. Editorial pages cite specific named cases / projects with proof, not bulk-logo walls."),
+                    findings,
+                );
+            }
+        }
+        "marquee" => {
+            push(
+                "editorial-purity.marquee-band",
+                "`Marquee` variant used — the auto-scrolling text/logo band is a SaaS-marketing trope that prevents user reading control. Editorial pages do not auto-scroll content past the reader.".to_owned(),
+                findings,
+            );
+        }
+        "heading" => {
+            check_numbers_that_compose_heading(section, where_at, exempt, findings, phase);
+        }
+        "kicker" => {
+            check_numbers_that_compose_heading(section, where_at, exempt, findings, phase);
+        }
+        "call_to_action" => {
+            // Pre-footer "Get started" SaaS trope:
+            // gradient background + 2+ buttons clustered + short text.
+            let bg = section
+                .get("background")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let bg_is_gradient = bg.contains("gradient") || bg == "gradient_hero" || bg == "primary_gradient";
+            // Section has a single `cta` or `secondary_cta` slot; the
+            // anti-pattern is gradient bg + dual CTA + short title.
+            let title = section
+                .get("title")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let has_secondary = section
+                .get("secondary_cta")
+                .map(|v| !v.is_null())
+                .unwrap_or(false);
+            let title_chars = title.chars().count();
+            if bg_is_gradient && has_secondary && title_chars < 50 {
+                push(
+                    "editorial-purity.cta-band-gradient-dual",
+                    format!("`CallToAction` with gradient background + secondary CTA + short title (`\"{title}\"`, {title_chars} chars) — the canonical pre-footer \"Get started today\" SaaS trope. Use a single primary CTA in a non-gradient editorial band, or split into a single-CTA editorial closer."),
+                    findings,
+                );
+            }
+        }
+        "announcement_bar" => {
+            // The "🎉 New feature!" / "📢 Big news!" emoji-prefixed
+            // announcement band is a SaaS attention-grab trope.
+            let text = section
+                .get("text")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            if leads_with_emoji_or_announcement_glyph(text) {
+                push(
+                    "editorial-purity.announcement-bar-emoji-prefix",
+                    format!("`AnnouncementBar` text leads with an emoji / decorative glyph (`\"{}\"...`) — the 🎉📢🚀 attention-grab prefix is a SaaS trope. Editorial announcements lead with substantive language; if you need emphasis, that's a `Badge` or visual marker the substrate provides explicitly.",
+                        text.chars().take(20).collect::<String>()),
+                    findings,
+                );
+            }
+        }
         _ => {}
     }
+}
+
+/// Numbers-that-compose / by-the-numbers heading pattern. Pure
+/// substring check on lowercased text — matches the JARGON_PHRASES
+/// "numbers that" + "by the numbers" entries.
+fn check_numbers_that_compose_heading(
+    section: &Value,
+    where_at: &str,
+    exempt: &[String],
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    let text = section
+        .get("text")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let lower = text.to_lowercase();
+    let trope_kind = "editorial-purity.numbers-that-compose-heading";
+    if exempt.iter().any(|e| e == trope_kind) {
+        return;
+    }
+    let patterns = [
+        "numbers that",
+        "by the numbers",
+        "numbers don't lie",
+        "the numbers speak",
+        "results speak for themselves",
+    ];
+    for p in patterns {
+        if lower.contains(p) {
+            findings.push(Finding::strict(
+                phase,
+                where_at.to_owned(),
+                format!(
+                    "editorial_purity_gate — `{trope_kind}` — heading text contains `\"{p}\"` (full text: `\"{text}\"`). The \"numbers that compose\" / \"by the numbers\" / \"results speak\" framing is a SaaS-marketing cliché that introduces a `StatBand`-style block of fabricated statistics. Use a Sparkline / Histogram with the actual data + a SUBSTANTIVE heading naming what the numbers are."
+                ),
+            ));
+            return;
+        }
+    }
+}
+
+/// True iff text leads with a decorative emoji / announcement
+/// glyph commonly used in SaaS announcement bars. Conservative
+/// list — only the most-common attention-grab characters.
+fn leads_with_emoji_or_announcement_glyph(text: &str) -> bool {
+    let first = text.trim_start().chars().next();
+    let Some(c) = first else {
+        return false;
+    };
+    // Common announcement / attention-grab emoji.
+    matches!(
+        c,
+        '🎉' | '📢' | '🚀' | '✨' | '⚡' | '🔥' | '🎊' | '📣'
+            | '💥' | '🌟' | '⭐' | '🆕' | '🎁' | '🎯'
+    )
 }
 
 /// Hero centered-single-line trope: title < 30 chars + no lede +
@@ -576,6 +705,184 @@ mod tests {
             "editorial_purity_gate",
         );
         assert!(findings.is_empty());
+    }
+
+    // v2 trope expansions (4 new shapes flagged):
+
+    #[test]
+    fn logo_wall_with_6_or_more_items_fires_strict() {
+        let page = json!({
+            "sections": [{
+                "kind": "logo_wall",
+                "heading": "Trusted by",
+                "items": [
+                    {"name": "Acme"}, {"name": "Beta"}, {"name": "Gamma"},
+                    {"name": "Delta"}, {"name": "Epsilon"}, {"name": "Zeta"}
+                ]
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(findings.iter().any(|f| f.message.contains("logo-wall-marquee")));
+    }
+
+    #[test]
+    fn logo_wall_with_5_or_fewer_items_silent() {
+        let page = json!({
+            "sections": [{
+                "kind": "logo_wall",
+                "heading": "Cases",
+                "items": [
+                    {"name": "A"}, {"name": "B"}, {"name": "C"},
+                    {"name": "D"}, {"name": "E"}
+                ]
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(!findings.iter().any(|f| f.message.contains("logo-wall-marquee")));
+    }
+
+    #[test]
+    fn marquee_variant_fires_strict() {
+        let page = json!({
+            "sections": [{
+                "kind": "marquee",
+                "items": [{"text": "x"}],
+                "speed": "fast"
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(findings.iter().any(|f| f.message.contains("marquee-band")));
+    }
+
+    #[test]
+    fn heading_numbers_that_compose_fires_strict() {
+        for pattern in [
+            "Numbers that compose",
+            "By the numbers",
+            "The numbers speak for themselves",
+            "Our results speak for themselves",
+        ] {
+            let page = json!({
+                "sections": [{
+                    "kind": "heading",
+                    "text": pattern,
+                    "level": "h2"
+                }]
+            });
+            let findings = run_check_enforced(page);
+            assert!(
+                findings.iter().any(|f| f.message.contains("numbers-that-compose-heading")),
+                "pattern {pattern} should fire"
+            );
+        }
+    }
+
+    #[test]
+    fn heading_substantive_text_silent() {
+        let page = json!({
+            "sections": [{
+                "kind": "heading",
+                "text": "Build durations across the last quarter",
+                "level": "h2"
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(!findings.iter().any(|f| f.message.contains("numbers-that-compose-heading")));
+    }
+
+    #[test]
+    fn cta_band_with_gradient_dual_buttons_short_title_fires_strict() {
+        let page = json!({
+            "sections": [{
+                "kind": "call_to_action",
+                "title": "Get started today",
+                "background": "gradient_hero",
+                "cta": {"label": "Start", "href": "/start", "data_backend": "x"},
+                "secondary_cta": {"label": "Demo", "href": "/demo", "data_backend": "y"}
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+    }
+
+    #[test]
+    fn cta_band_without_gradient_silent() {
+        let page = json!({
+            "sections": [{
+                "kind": "call_to_action",
+                "title": "Get started today",
+                "background": "muted",
+                "cta": {"label": "Start", "href": "/start", "data_backend": "x"},
+                "secondary_cta": {"label": "Demo", "href": "/demo", "data_backend": "y"}
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(!findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+    }
+
+    #[test]
+    fn cta_band_single_cta_with_gradient_silent() {
+        // Single CTA + gradient → still allowed; the trope is the
+        // DUAL-button + gradient combo.
+        let page = json!({
+            "sections": [{
+                "kind": "call_to_action",
+                "title": "Get started",
+                "background": "gradient",
+                "cta": {"label": "Start", "href": "/start", "data_backend": "x"},
+                "secondary_cta": null
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(!findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+    }
+
+    #[test]
+    fn cta_band_long_title_silent() {
+        // Even with gradient + dual, a substantive 50+ char title
+        // signals editorial intent — operator put real content there.
+        let page = json!({
+            "sections": [{
+                "kind": "call_to_action",
+                "title": "An exceptionally substantive long-form call-to-action title that names what the action is",
+                "background": "gradient",
+                "cta": {"label": "Start", "href": "/start", "data_backend": "x"},
+                "secondary_cta": {"label": "Demo", "href": "/demo", "data_backend": "y"}
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(!findings.iter().any(|f| f.message.contains("cta-band-gradient-dual")));
+    }
+
+    #[test]
+    fn announcement_bar_emoji_prefix_fires_strict() {
+        for emoji_prefix in ["🎉 New feature!", "📢 Big news!", "🚀 Launching now"] {
+            let page = json!({
+                "sections": [{
+                    "kind": "announcement_bar",
+                    "text": emoji_prefix,
+                    "tone": "info"
+                }]
+            });
+            let findings = run_check_enforced(page);
+            assert!(
+                findings.iter().any(|f| f.message.contains("announcement-bar-emoji-prefix")),
+                "should fire on {emoji_prefix}"
+            );
+        }
+    }
+
+    #[test]
+    fn announcement_bar_no_emoji_prefix_silent() {
+        let page = json!({
+            "sections": [{
+                "kind": "announcement_bar",
+                "text": "Maintenance window scheduled for Saturday 2026-03-15 04:00-06:00 UTC.",
+                "tone": "warn"
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(!findings.iter().any(|f| f.message.contains("announcement-bar-emoji-prefix")));
     }
 
     #[test]
