@@ -22,6 +22,7 @@ pub mod aesthetic_distinctiveness;
 pub mod annotation_review;
 pub mod density_audit;
 pub mod disclosure_audit;
+pub mod composition_lineage;
 pub mod editorial_purity_gate;
 pub mod mood_lock;
 pub mod pattern_entropy;
