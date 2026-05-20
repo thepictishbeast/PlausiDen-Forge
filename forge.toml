@@ -67,3 +67,38 @@ report_dir = "reports"
 # runs `loom cms-render` per file manually.
 [render]
 write_canonical = true
+
+# 2026-05-20: variation arc gates per docs/VARIATION_GUARANTEES.md.
+# Each gate's section opts the site into the corresponding audit;
+# without the section the gate is silent.
+
+[editorial_purity]
+enforce = true
+
+[pattern_entropy]
+enforce = true
+min_entropy = 0.55
+min_distinct_primitives = 4
+scope = "site"
+
+[site_identity]
+site_id = "prosperityclub.com"
+tenant_id = "plausiden"
+density_preference = "comfortable"
+
+[site_identity.voice]
+tier = "editorial"
+max_avg_sentence_words = 26
+
+[site_identity.mood]
+primary = "editorial"
+drift_budget = 15
+
+[[site_identity.theme_variant]]
+name = "light"
+required = true
+
+# uniqueness_gate not enabled by default — needs registry seeded
+# first via `forge fingerprint register` (CLI command lands later).
+# [uniqueness_gate]
+# enforce = true

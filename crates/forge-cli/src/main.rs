@@ -41,6 +41,7 @@ use forge_phases::csp::CspPhase;
 use forge_phases::csp_devmode::CspDevmodePhase;
 use forge_phases::dns_hygiene_lint::DnsHygieneLintPhase;
 use forge_phases::dynamic_runtime::DynamicRuntimePhase;
+use forge_phases::editorial_purity_gate::EditorialPurityGatePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
@@ -55,6 +56,7 @@ use forge_phases::network_target_enforcement::NetworkTargetEnforcementPhase;
 use forge_phases::hunted_tier::HuntedTierPhase;
 use forge_phases::noscript_strict::NoscriptStrictPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
+use forge_phases::pattern_entropy::PatternEntropyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::print_stylesheet::PrintStylesheetPhase;
@@ -64,6 +66,7 @@ use forge_phases::required_pages::RequiredPagesPhase;
 use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::semver_enforcement::SemverEnforcementPhase;
+use forge_phases::site_identity_conformance::SiteIdentityConformancePhase;
 use forge_phases::sri::SriPhase;
 use forge_phases::structured_data::StructuredDataPhase;
 use forge_phases::substrate_purity::SubstratePurityPhase;
@@ -73,6 +76,7 @@ use forge_phases::trait_implications::TraitImplicationsPhase;
 use forge_phases::theme_contrast::ThemeContrastPhase;
 use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
+use forge_phases::uniqueness_gate::UniquenessGatePhase;
 use forge_phases::validate_cms::ValidateCmsPhase;
 
 #[derive(Parser, Debug)]
@@ -1339,6 +1343,15 @@ fn run() -> Result<ExitCode> {
         // Substrate-distinctiveness gate that closes the "looks
         // like every other landing" feedback loop.
         Box::new(AestheticDistinctivenessPhase),
+        // 2026-05-20: variation arc gates. Each is silent unless
+        // its forge.toml section opts in (back-compat). Together
+        // they enforce the cross-site uniqueness + within-site
+        // variation + identity conformance guarantees per
+        // docs/VARIATION_GUARANTEES.md.
+        Box::new(EditorialPurityGatePhase::default()),
+        Box::new(SiteIdentityConformancePhase::default()),
+        Box::new(PatternEntropyPhase::default()),
+        Box::new(UniquenessGatePhase::default()),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
         // infra issues surface earlier; runtime-only regressions
         // (placeholder text in DOM, ARIA drift, axe runtime) get

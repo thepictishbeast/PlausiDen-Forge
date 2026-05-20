@@ -223,15 +223,23 @@ fn check_required_themes(
     if required.is_empty() {
         return;
     }
-    // Theme variants are conventionally css files at static/css/<name>.css
-    // OR static/<name>.css for flat layouts. Check both.
+    // Theme variants live in various conventional locations. Check
+    // every common spot so the gate doesn't false-positive against
+    // Loom's existing loom-<name>.css emission convention.
     for name in required {
         let candidates = [
             static_dir.join("css").join(format!("{name}.css")),
             static_dir.join(format!("{name}.css")),
-            static_dir
-                .join("themes")
-                .join(format!("{name}.css")),
+            static_dir.join("themes").join(format!("{name}.css")),
+            // Loom convention: loom-<name>.css emitted at static/.
+            static_dir.join(format!("loom-{name}.css")),
+            // Loom may also emit unsuffixed loom.css for the
+            // default theme.
+            if name == "light" || name == "default" {
+                static_dir.join("loom.css")
+            } else {
+                static_dir.join(format!("loom-{name}.css"))
+            },
         ];
         let found = candidates.iter().any(|p| p.exists());
         if !found {
