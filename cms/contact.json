@@ -61,6 +61,7 @@
   "sections": [
     {
       "kind": "image_hero",
+      "align": "start",
       "eyebrow": "Contact",
       "title": "Reach the dome.",
       "lede": "We answer the phone during business hours October through May, and on Friday afternoons June through September. Email reaches all three staff and is the most reliable way to get a same-day reply.",

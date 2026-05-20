@@ -61,6 +61,7 @@
   "sections": [
     {
       "kind": "image_hero",
+      "align": "start",
       "eyebrow": "Programs",
       "title": "What the dome is for.",
       "lede": "Three programs share the same forty-inch reflector — public observing on the second Friday of every month, school programs October through May, and a small research portfolio that runs on the spare time between the other two.",

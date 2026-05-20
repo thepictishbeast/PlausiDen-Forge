@@ -61,6 +61,7 @@
   "sections": [
     {
       "kind": "image_hero",
+      "align": "start",
       "eyebrow": "Visit",
       "title": "Coming up the ridge.",
       "lede": "Ridge Road runs eight miles west from the village of Northbrook. The observatory sits at the top, behind a gate that we open an hour before doors. Be patient — the last mile is unpaved and full of frost heaves through April.",

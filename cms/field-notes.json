@@ -61,6 +61,7 @@
   "sections": [
     {
       "kind": "image_hero",
+      "align": "start",
       "eyebrow": "Field notes",
       "title": "Dispatches from the dome.",
       "lede": "What we looked at, what we saw, what surprised us, what the weather did. Updated when there is something to say — typically the week after a public observing night or after a research session.",

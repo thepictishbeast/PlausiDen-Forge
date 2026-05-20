@@ -61,6 +61,7 @@
   "sections": [
     {
       "kind": "image_hero",
+      "align": "start",
       "eyebrow": "About",
       "title": "Northbrook Observatory.",
       "lede": "A 501(c)(3) public-research observatory on Ridge Road, eight miles west of the village of Northbrook. We host monthly public observing nights, school programs from October through May, and a small research portfolio centered on photometry of variable stars.",

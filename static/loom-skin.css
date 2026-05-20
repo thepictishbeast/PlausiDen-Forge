@@ -6665,6 +6665,18 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-image-hero.h-compact     { padding-top: clamp(2.5rem, 4vw, 3.5rem); padding-bottom: clamp(2.5rem, 4vw, 3.5rem); }
 .loom-image-hero.h-comfortable { padding-top: clamp(3.5rem, 5vw, 5rem);   padding-bottom: clamp(3.5rem, 5vw, 5rem); }
 .loom-image-hero.h-tall        { padding-top: clamp(5rem, 7vw, 7rem);     padding-bottom: clamp(5rem, 7vw, 7rem); }
+/* Substrate-de-consumer-shaping (2026-05-20): when the cms author
+ * sets `align: start` on an ImageHero, override the default center
+ * posture with left-aligned editorial. SaaS-marketing default
+ * (data-align="center" or absent) stays centered to preserve
+ * backwards compatibility with existing Loom consumer sites. */
+.loom-image-hero[data-align="start"] {
+  place-items: start;
+  text-align: start;
+}
+.loom-image-hero[data-align="start"] .loom-image-hero__inner {
+  align-items: flex-start;
+}
 .loom-image-hero__inner {
   max-width: 64rem;
   width: 100%;

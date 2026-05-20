@@ -61,6 +61,7 @@
   "sections": [
     {
       "kind": "image_hero",
+      "align": "start",
       "eyebrow": "Northbrook Observatory · Grafton County, NH",
       "title": "A small observatory under a darker sky.",
       "lede": "We point a forty-inch Cassegrain reflector at the night sky on the second Friday of every month, and we tell anyone who shows up what we're looking at. Founded 1888. Still here.",
