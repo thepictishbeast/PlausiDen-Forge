@@ -56,6 +56,24 @@ const SAAS_CLICHES: &[&str] = &[
     "redefine the way",
     "future of work",
     "modern stack",
+    // Cycle 2026-05-20 list expansion — keep in sync with
+    // crawler-detectors::heading_quality::SAAS_CLICHES.
+    "ai for everyone",
+    "everything you need",
+    "all-in-one platform",
+    "your all-in-one",
+    "the way you work",
+    "where teams come together",
+    "trusted by thousands",
+    "ship faster",
+    "move fast",
+    "ship with confidence",
+    "the modern way",
+    "the new standard",
+    "designed for developers",
+    "developer-first",
+    "ai-native",
+    "your competitive advantage",
 ];
 
 /// Text-bearing section fields the phase scans. Pairs:
