@@ -19,7 +19,7 @@
 //!
 //! * `hero_editorial.title` ≥ 20 chars
 //! * `hero_editorial.lede` ≥ 60 chars (when present)
-//! * `paragraph.body` ≥ 80 chars
+//! * `paragraph.text` ≥ 80 chars
 //! * `pull_quote.body` ≥ 40 chars
 //! * `kv_pair.items` ≥ 3 entries
 //! * `code.body` ≥ 20 chars
@@ -36,7 +36,7 @@
 //! enforce = true
 //! strict = true                    # default; false → warn
 //! # Override defaults per-kind:
-//! # min_chars.paragraph.body = 200
+//! # min_chars.paragraph.text = 200
 //! # min_count.kv_pair.items = 5
 //! ```
 //!
@@ -295,7 +295,7 @@ mod tests {
         write_cms(
             &root,
             "i.json",
-            r#"{"sections":[{"kind":"paragraph","body":"x"}]}"#,
+            r#"{"sections":[{"kind":"paragraph","text":"x"}]}"#,
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
         assert!(findings.is_empty());
@@ -313,13 +313,13 @@ mod tests {
         write_cms(
             &root,
             "i.json",
-            r#"{"sections":[{"kind":"paragraph","body":"too short"}]}"#,
+            r#"{"sections":[{"kind":"paragraph","text":"too short"}]}"#,
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
         assert!(
             findings
                 .iter()
-                .any(|f| f.message.contains("`paragraph.body`")),
+                .any(|f| f.message.contains("`paragraph.text`")),
             "expected paragraph.body finding; got: {findings:#?}"
         );
         let _ = fs::remove_dir_all(&root);
@@ -336,7 +336,7 @@ mod tests {
         write_cms(
             &root,
             "i.json",
-            &serde_json::json!({"sections":[{"kind":"paragraph","body":"x".repeat(100)}]})
+            &serde_json::json!({"sections":[{"kind":"paragraph","text":"x".repeat(100)}]})
                 .to_string(),
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
@@ -400,14 +400,14 @@ mod tests {
 enforce = true
 
 [content_substance.min_chars.paragraph]
-body = 200
+text = 200
 "#,
         )
         .unwrap();
         write_cms(
             &root,
             "i.json",
-            &serde_json::json!({"sections":[{"kind":"paragraph","body":"x".repeat(150)}]})
+            &serde_json::json!({"sections":[{"kind":"paragraph","text":"x".repeat(150)}]})
                 .to_string(),
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
@@ -431,7 +431,7 @@ body = 200
         write_cms(
             &root,
             "i.json",
-            r#"{"sections":[{"kind":"paragraph","body":"x"}]}"#,
+            r#"{"sections":[{"kind":"paragraph","text":"x"}]}"#,
         );
         let findings = ContentSubstancePhase.run(&ctx_for(&root)).unwrap();
         assert!(!findings.is_empty());
