@@ -348,6 +348,34 @@ const JARGON_PHRASES: &[&str] = &[
     "value proposition",
     "scalable solution",
     "turnkey solution",
+    // 2026-05-20 expansion: marketing-amplifier verbs that promise
+    // transformation without naming what is being transformed.
+    "supercharge",
+    "supercharged",
+    "unleash",
+    "revolutionize",
+    "revolutionary",
+    "reimagine",
+    "reimagined",
+    "transform your",
+    "elevate your",
+    "empower your team",
+    "ignite your",
+    "unlock the power",
+    // 2026-05-20 expansion: "future of X" framings — vague aspirational
+    // claim with no falsifiable content.
+    "the future of work",
+    "the future of business",
+    "the future of finance",
+    "the future of software",
+    "the future of ai",
+    // 2026-05-20 expansion: vague superlatives + reach claims that
+    // gesture at scale without naming any verifiable instance.
+    "trusted by leading",
+    "the leader in",
+    "the most advanced",
+    "unparalleled",
+    "best-of-class",
 ];
 
 /// Eyebrow text that adds zero information — "Beta", "New", "Latest",
@@ -357,6 +385,80 @@ const VAGUE_EYEBROW_LITERALS: &[&str] = &[
     "beta", "new", "alpha", "latest", "introducing", "coming soon",
     "now available", "announcement", "tba", "tbd",
 ];
+
+/// Classify a slop phrase into a category so the finding message
+/// tells the operator WHAT kind of slop the phrase exemplifies, not
+/// just that it matched some phrase list.
+///
+/// Categories:
+/// * `superlative` — "best-in-class" / "world-class" / "the most
+///   advanced" / etc. Reach claims without falsifiable content.
+/// * `amplifier` — "supercharge" / "transform your" / "elevate" /
+///   marketing-verb empty-promise vocabulary.
+/// * `future-of` — "the future of work" / etc. Vague aspirational
+///   framings.
+/// * `ai-buzzword` — "ai-powered" / "ai-driven" / "blockchain-powered".
+/// * `business-jargon` — "synergy" / "low-hanging fruit" / classic
+///   corporate-speak filler.
+fn classify_jargon(phrase: &str) -> &'static str {
+    // Match category by recognized roots; falls back to
+    // "business-jargon" for the legacy bucket.
+    if phrase.starts_with("the future of") {
+        return "future-of";
+    }
+    if phrase.starts_with("ai-") || phrase.starts_with("ai ")
+        || phrase == "blockchain-powered"
+    {
+        return "ai-buzzword";
+    }
+    let amplifier = matches!(
+        phrase,
+        "supercharge"
+            | "supercharged"
+            | "unleash"
+            | "revolutionize"
+            | "revolutionary"
+            | "reimagine"
+            | "reimagined"
+            | "transform your"
+            | "elevate your"
+            | "empower your team"
+            | "ignite your"
+            | "unlock the power"
+            | "game-changer"
+            | "game-changing"
+            | "paradigm shift"
+    );
+    if amplifier {
+        return "amplifier";
+    }
+    let superlative = matches!(
+        phrase,
+        "best-in-class"
+            | "best of breed"
+            | "best-of-breed"
+            | "best-of-class"
+            | "world-class"
+            | "world class"
+            | "cutting-edge"
+            | "cutting edge"
+            | "next-generation"
+            | "next generation"
+            | "next-gen"
+            | "industry-leading"
+            | "industry leading"
+            | "trusted by leading"
+            | "the leader in"
+            | "the most advanced"
+            | "unparalleled"
+            | "future-proof"
+            | "future proof"
+    );
+    if superlative {
+        return "superlative";
+    }
+    "business-jargon"
+}
 
 fn check_corporate_jargon(
     sections: &[Value],
@@ -378,12 +480,26 @@ fn check_corporate_jargon(
     }
     hits.sort();
     hits.dedup();
+    // Bucket hits by category so the finding surfaces which kind(s)
+    // of slop are present, not just an undifferentiated list.
+    let mut by_cat: std::collections::BTreeMap<&'static str, Vec<String>> =
+        std::collections::BTreeMap::new();
+    for h in &hits {
+        by_cat.entry(classify_jargon(h)).or_default().push(h.clone());
+    }
+    let cat_summary: Vec<String> = by_cat
+        .iter()
+        .map(|(cat, phrases)| format!("{cat}: [{}]", phrases.join(", ")))
+        .collect();
     findings.push(Finding::warn(
         phase,
         path.to_owned(),
         format!(
-            "corporate_jargon: page text contains SaaS-cliché phrase(s) [{}] — these read as filler; substitute a concrete claim that names a real thing",
-            hits.join(", ")
+            "corporate_jargon: page text contains {} SaaS-cliché phrase(s) across {} categor{}: {}. These read as filler — substitute concrete claims that name a real thing the operator can point to.",
+            hits.len(),
+            by_cat.len(),
+            if by_cat.len() == 1 { "y" } else { "ies" },
+            cat_summary.join(" · ")
         ),
     ));
 }
@@ -848,6 +964,95 @@ mod tests {
         assert!(msg.contains("corporate_jargon"));
         assert!(msg.contains("best-in-class"));
         assert!(msg.contains("seamless integration"));
+        // After 2026-05-20 categorization: each phrase is bucketed.
+        // best-in-class → superlative, seamless integration → business-jargon.
+        assert!(msg.contains("superlative:"));
+        assert!(msg.contains("business-jargon:"));
+    }
+
+    #[test]
+    fn corporate_jargon_categorizes_amplifier_verbs() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Supercharge your workflow and unleash your team's potential."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("amplifier:"));
+        assert!(msg.contains("supercharge"));
+        assert!(msg.contains("unleash"));
+    }
+
+    #[test]
+    fn corporate_jargon_categorizes_future_of_framings() {
+        let sections = vec![
+            json!({"kind": "heading", "text": "Welcome to the future of work."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("future-of:"));
+        assert!(msg.contains("the future of work"));
+    }
+
+    #[test]
+    fn corporate_jargon_categorizes_ai_buzzwords() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "An AI-powered platform for blockchain-powered teams."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("ai-buzzword:"));
+        assert!(msg.contains("ai-powered"));
+        assert!(msg.contains("blockchain-powered"));
+    }
+
+    #[test]
+    fn corporate_jargon_categorizes_superlatives() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Our world-class engineering team is industry-leading."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("superlative:"));
+        assert!(msg.contains("world-class"));
+        assert!(msg.contains("industry-leading"));
+    }
+
+    #[test]
+    fn corporate_jargon_categorizes_business_jargon_default() {
+        // Legacy bucket — phrases not in any specific category fall
+        // here so the dictionary expansion stays back-compat.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Let's circle back on the synergies after the deep dive."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        assert!(msg.contains("business-jargon:"));
+        assert!(msg.contains("circle back"));
+        assert!(msg.contains("synergies"));
+        assert!(msg.contains("deep dive"));
+    }
+
+    #[test]
+    fn corporate_jargon_reports_multiple_categories_in_one_finding() {
+        // A page with mixed-category slop should produce ONE finding
+        // surfacing all categories, separated by " · " for readability.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Supercharge your workflow with our world-class AI-powered platform."}),
+        ];
+        let mut findings = vec![];
+        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1, "should emit exactly one finding even with multi-category slop");
+        let msg = &findings[0].message;
+        assert!(msg.contains("amplifier:"));
+        assert!(msg.contains("ai-buzzword:"));
+        assert!(msg.contains("superlative:"));
+        assert!(msg.contains(" · "));
+        assert!(msg.contains("3 categor"));
     }
 
     #[test]
