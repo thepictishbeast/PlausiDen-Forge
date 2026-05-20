@@ -1,0 +1,131 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Render — The cloud for builders",
+  "description": "Deploy and scale any app or agent from your first user to your billionth. Build faster on intuitive cloud infrastructure for the modern web.",
+  "brand": "Render",
+  "chrome": "page_shell",
+  "theme": "ocean",
+  "nav_actions": [
+    {"label": "render.com", "href": "https://render.com/", "data_backend": "cta-platform"}
+  ],
+  "path": "/render.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Product",
+        "links": [
+          {"label": "Web Services",  "href": "/render-web/",      "data_backend": "view-platform"},
+          {"label": "Background",    "href": "/render-bg/",       "data_backend": "view-platform"},
+          {"label": "PostgreSQL",    "href": "/render-pg/",       "data_backend": "view-platform"},
+          {"label": "Redis",         "href": "/render-redis/",    "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Reference",
+        "links": [
+          {"label": "render.com",    "href": "https://render.com/",         "data_backend": "cta-platform"},
+          {"label": "Docs",          "href": "https://render.com/docs",     "data_backend": "view-docs"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Render approximation",
+      "phone": "Forge-static mirror",
+      "email": "approximation@plausiden.com",
+      "address": "Authored from SSR-extractable copy",
+      "jurisdiction": "Pixel-rep rotation"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 Forge-static approximation of render.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Render Services, Inc."
+  },
+  "nav_links": [
+    {"label": "Product",   "href": "/render-product/",  "data_backend": "view-platform"},
+    {"label": "Pricing",   "href": "/render-pricing/",  "data_backend": "view-pricing"},
+    {"label": "Docs",      "href": "https://render.com/docs", "data_backend": "view-docs"},
+    {"label": "Customers", "href": "/render-customers/","data_backend": "view-platform"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Render — Forge static mirror",
+      "title": "The cloud for builders.",
+      "lede": "Deploy and scale any app or agent from your first user to your billionth. Build faster on intuitive cloud infrastructure for the modern web.",
+      "cta": {
+        "label": "render.com",
+        "href": "https://render.com/",
+        "data_backend": "cta-platform"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating cloud infrastructure.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge-static approximation of render.com authored from SSR-extractable headings + meta description. Pixel-rep rotation target per PlausiDen-Forge #222. Not affiliated with Render; the substrate uses Render as a reference shape for the editorial_purity_gate's deploy-platform audit."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "Click, click, done. Select a service. Deploy your code. Render does the rest.",
+      "attribution": "render.com, SSR-extracted deploy-flow",
+      "emphasis": "display"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Your fastest path to production.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Web Services",
+          "value": "Stateless HTTP + WebSocket services.",
+          "hint": "Auto-scaling, zero-downtime deploys from git push. Free TLS. The default shape for new apps."
+        },
+        {
+          "key": "Background",
+          "value": "Background workers + cron jobs.",
+          "hint": "Long-running tasks, scheduled jobs, queue consumers. Same deploy + observability surface as web services."
+        },
+        {
+          "key": "PostgreSQL",
+          "value": "Managed PostgreSQL.",
+          "hint": "Daily backups, point-in-time restore, automatic failover. Connection pooling baked in."
+        },
+        {
+          "key": "Redis",
+          "value": "Managed Redis.",
+          "hint": "In-memory cache + queue substrate. Cluster mode for horizontal scaling."
+        },
+        {
+          "key": "Networking",
+          "value": "Intuitive hosting and private networking.",
+          "hint": "Service mesh between your apps + databases without operator-side VPC config. Default-deny posture."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Click, click, done."
+    },
+    {
+      "kind": "paragraph",
+      "text": "The reference shape: a deploy platform where the operator-facing flow is three explicit steps (select / deploy / receive), not a 12-tab dashboard. Render's substrate commits to keeping it that way."
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Reference",
+      "title": "Open the live Render site.",
+      "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
+      "cta": {"label": "render.com", "href": "https://render.com/", "data_backend": "cta-platform"}
+    }
+  ]
+}

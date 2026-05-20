@@ -1,0 +1,132 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Fly — Build fast. Run any code fearlessly.",
+  "description": "Fly.io ships your apps close to users on a global Anycast network. Build fast, run any code fearlessly.",
+  "brand": "Fly",
+  "chrome": "page_shell",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "fly.io", "href": "https://fly.io/", "data_backend": "cta-platform"}
+  ],
+  "path": "/fly.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Product",
+        "links": [
+          {"label": "Machines",   "href": "/fly-machines/",   "data_backend": "view-platform"},
+          {"label": "Apps",       "href": "/fly-apps/",       "data_backend": "view-platform"},
+          {"label": "Volumes",    "href": "/fly-volumes/",    "data_backend": "view-platform"},
+          {"label": "Anycast",    "href": "/fly-anycast/",    "data_backend": "view-platform"},
+          {"label": "Postgres",   "href": "/fly-postgres/",   "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Reference",
+        "links": [
+          {"label": "fly.io",     "href": "https://fly.io/",         "data_backend": "cta-platform"},
+          {"label": "Docs",       "href": "https://fly.io/docs/",    "data_backend": "view-docs"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Fly approximation",
+      "phone": "Forge-static mirror",
+      "email": "approximation@plausiden.com",
+      "address": "Authored from SSR-extractable copy",
+      "jurisdiction": "Pixel-rep rotation"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 Forge-static approximation of fly.io — authored by PlausiDen-Forge for substrate validation. Not affiliated with Fly.io."
+  },
+  "nav_links": [
+    {"label": "Pricing",   "href": "/fly-pricing/",   "data_backend": "view-pricing"},
+    {"label": "Customers", "href": "/fly-customers/", "data_backend": "view-platform"},
+    {"label": "Docs",      "href": "https://fly.io/docs/", "data_backend": "view-docs"},
+    {"label": "Blog",      "href": "https://fly.io/blog/", "data_backend": "view-blog"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Fly — Forge static mirror",
+      "title": "Build fast. Run any code fearlessly.",
+      "lede": "Fly.io ships your apps close to users on a global Anycast network. The reference shape: a deploy platform where the deploy unit is a single binary + a single TOML, and the runtime is a hardware-virtualized Firecracker microVM.",
+      "cta": {
+        "label": "fly.io",
+        "href": "https://fly.io/",
+        "data_backend": "cta-platform"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating distributed cloud infrastructure.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge-static approximation of fly.io authored from SSR-extractable og:title + og:description (live ships a thin SSR with most content hydrated client-side). Pixel-rep rotation target per PlausiDen-Forge #222. Not affiliated with Fly.io; the substrate uses Fly as a reference shape for the editorial_purity_gate's edge-platform + Firecracker-MicroVM-deploy audit."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "Run any code fearlessly. A unit of deploy is a single binary + a single TOML; the runtime is a hardware-virtualized Firecracker microVM. The reference shape for editorial-density deploy platforms.",
+      "attribution": "fly.io public framing + PlausiDen-Forge substrate-doctrine reframe",
+      "emphasis": "display"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Fly product surface.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Machines",
+          "value": "Firecracker microVMs as the unit of compute.",
+          "hint": "Hardware virtualization, not container isolation. Sub-second start; ms-scale autoscale. Any code that runs on Linux runs on a Machine."
+        },
+        {
+          "key": "Apps",
+          "value": "Multi-region apps from one fly.toml.",
+          "hint": "Declarative deploy: regions, scale rules, health checks, secrets — all in one config the platform reads. Same shape regardless of stack."
+        },
+        {
+          "key": "Volumes",
+          "value": "Per-Machine block storage.",
+          "hint": "Persistent volumes attached to specific Machines. Lets stateful workloads (databases, queues, caches) run with the same deploy ergonomics as stateless apps."
+        },
+        {
+          "key": "Anycast",
+          "value": "Global Anycast network.",
+          "hint": "Same IP, routed to the closest region. TLS termination + WAF at the edge; app code never sees a 'choose a region' prompt at request time."
+        },
+        {
+          "key": "Postgres",
+          "value": "Fly Postgres (managed).",
+          "hint": "Multi-region Postgres deployed via fly.toml. Read replicas auto-routed via the same Anycast layer."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Run any code fearlessly."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Fly's substrate commits to a deploy unit (Machine) that's smaller than a container and harder-isolated than a VM. The reference shape: the deploy platform should be the thinnest layer above the runtime, not a multi-quarter migration target."
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Reference",
+      "title": "Open the live Fly site.",
+      "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
+      "cta": {"label": "fly.io", "href": "https://fly.io/", "data_backend": "cta-platform"}
+    }
+  ]
+}
