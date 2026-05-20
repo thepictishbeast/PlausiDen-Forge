@@ -1086,6 +1086,34 @@ enum FingerprintAction {
 /// `forge synthesis` subcommands. Backs task #292.
 #[derive(clap::Subcommand, Clone, Debug)]
 enum SynthesisAction {
+    /// Scaffold a starter SiteSpec from a page-type library
+    /// template (#250). Reads `corpora/page_types.json`,
+    /// looks up the template by slug, emits a SiteSpec JSON
+    /// to stdout (or `--out`) that the operator can edit and
+    /// then `forge synthesis generate`.
+    ScaffoldFromTemplate {
+        /// Template slug from corpora/page_types.json (e.g.
+        /// `homepage_editorial`, `long_form_article`).
+        slug: String,
+        /// Site identifier embedded in the spec.
+        #[arg(long, default_value = "untitled")]
+        site_id: String,
+        /// Tenant identifier embedded in the spec.
+        #[arg(long, default_value = "")]
+        tenant_id: String,
+        /// Page slug under which the template's section_signature
+        /// lands. Default `index`.
+        #[arg(long, default_value = "index")]
+        page_slug: String,
+        /// Where to write the resulting SiteSpec JSON. Default
+        /// stdout.
+        #[arg(long)]
+        out: Option<std::path::PathBuf>,
+        /// JSON output (always JSON regardless of flag — kept
+        /// for parity with the other subcommands).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// Load a SiteSpec JSON file and print its summary without
     /// writing any cms/ files. Operator reviews before
     /// committing.
@@ -2089,6 +2117,79 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
 /// Task #292: synthesis preview + generate.
 fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<ExitCode> {
     match action {
+        SynthesisAction::ScaffoldFromTemplate {
+            slug,
+            site_id,
+            tenant_id,
+            page_slug,
+            out,
+            json: _,
+        } => {
+            let library_path = root.join("corpora/page_types.json");
+            let body = std::fs::read_to_string(&library_path).with_context(|| {
+                format!("read {} — required for scaffold", library_path.display())
+            })?;
+            let library: serde_json::Value = serde_json::from_str(&body)
+                .with_context(|| format!("parse JSON from {}", library_path.display()))?;
+            let templates = library
+                .get("templates")
+                .and_then(|v| v.as_array())
+                .ok_or_else(|| anyhow::anyhow!("no templates array in {}", library_path.display()))?;
+            let template = templates
+                .iter()
+                .find(|t| t.get("slug").and_then(|v| v.as_str()) == Some(slug.as_str()))
+                .ok_or_else(|| anyhow::anyhow!("template slug `{slug}` not found in corpora/page_types.json"))?;
+            let voice = template
+                .get("tier")
+                .and_then(|v| v.as_str())
+                .map(|s| match s {
+                    "editorial" => "editorial",
+                    "technical" => "professional",
+                    "civic" => "casual",
+                    "personal" => "casual",
+                    _ => "editorial",
+                })
+                .unwrap_or("editorial");
+            let mood = template
+                .get("mood_affinity")
+                .and_then(|v| v.as_array())
+                .and_then(|a| a.first())
+                .and_then(|v| v.as_str())
+                .unwrap_or("editorial");
+            let density = template
+                .get("density_tier")
+                .and_then(|v| v.as_str())
+                .unwrap_or("comfortable");
+            let section_signature = template
+                .get("section_signature")
+                .and_then(|v| v.as_array())
+                .ok_or_else(|| anyhow::anyhow!("template `{slug}` has no section_signature"))?;
+            let mut spec = forge_core::synthesis::SiteSpec::new(site_id, tenant_id)
+                .with_voice(voice)
+                .with_mood(mood)
+                .with_density(density);
+            let sections: Vec<forge_core::synthesis::SectionSpec> = section_signature
+                .iter()
+                .filter_map(|s| s.as_str())
+                .map(forge_core::synthesis::SectionSpec::new)
+                .collect();
+            spec = spec.with_page(page_slug.clone(), sections);
+            let rendered = serde_json::to_string_pretty(&spec)?;
+            if let Some(path) = out {
+                let resolved = if path.is_absolute() { path.clone() } else { root.join(path) };
+                std::fs::write(&resolved, &rendered).with_context(|| {
+                    format!("write spec to {}", resolved.display())
+                })?;
+                println!(
+                    "forge synthesis scaffold: wrote {} (template `{slug}`, page `{page_slug}`, {} sections)",
+                    resolved.display(),
+                    section_signature.len()
+                );
+            } else {
+                println!("{rendered}");
+            }
+            Ok(ExitCode::SUCCESS)
+        }
         SynthesisAction::Preview { spec, json } => {
             let body = std::fs::read_to_string(spec)
                 .with_context(|| format!("read {}", spec.display()))?;
