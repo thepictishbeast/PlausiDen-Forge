@@ -27,6 +27,7 @@
 #![deny(missing_docs)]
 
 pub mod attest;
+pub mod fingerprint;
 pub mod pipeline;
 pub mod tenant_corpus;
 
