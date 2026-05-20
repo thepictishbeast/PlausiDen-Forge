@@ -294,11 +294,51 @@ pub fn classify_diff(prev: &SiteIdentity, next: &SiteIdentity) -> IdentityDiff {
     }
 }
 
-/// Append one transition to a JSONL chain.
+/// Errors `append_to_chain` can return.
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum ChainAppendError {
+    /// Filesystem error.
+    #[error("identity-chain I/O error: {0}")]
+    Io(#[from] std::io::Error),
+    /// JSON serialization error.
+    #[error("identity-chain JSON error: {0}")]
+    Json(#[from] serde_json::Error),
+    /// Transition's timestamp is not the substrate's canonical
+    /// RFC-3339 UTC form. The signature is computed over the
+    /// raw timestamp bytes, so a malformed string would be
+    /// signed into the chain forever — gate it at the
+    /// persistence boundary.
+    #[error("invalid RFC-3339 UTC timestamp on transition: {provided:?} (expected YYYY-MM-DDTHH:MM:SSZ)")]
+    BadTimestamp {
+        /// The string carried by the transition.
+        provided: String,
+    },
+}
+
+impl IdentityTransition {
+    /// Check the transition's timestamp is the substrate's
+    /// canonical RFC-3339 UTC form. Callers can pre-check before
+    /// signing to avoid producing a signed-but-unpersistable
+    /// transition.
+    #[must_use]
+    pub fn has_canonical_timestamp(&self) -> bool {
+        crate::iso_time::is_canonical_rfc3339_utc(&self.timestamp)
+    }
+}
+
+/// Append one transition to a JSONL chain. Validates the
+/// timestamp at the wire boundary; a malformed string never
+/// lands on disk.
 pub fn append_to_chain(
     path: &Path,
     transition: &IdentityTransition,
-) -> Result<(), std::io::Error> {
+) -> Result<(), ChainAppendError> {
+    if !transition.has_canonical_timestamp() {
+        return Err(ChainAppendError::BadTimestamp {
+            provided: transition.timestamp.clone(),
+        });
+    }
     let json = serde_json::to_string(transition)?;
     use std::io::Write as _;
     let mut file = std::fs::OpenOptions::new()
@@ -457,14 +497,62 @@ mod tests {
             std::process::id()
         ));
         let _ = std::fs::remove_file(&path);
-        let t1 = IdentityTransition::build("", "h1", "t1", "s", "", IdentityDiff::default());
-        let t2 = IdentityTransition::build("h1", "h2", "t2", "s", "", IdentityDiff::default());
+        let t1 = IdentityTransition::build(
+            "", "h1", "2026-05-20T12:00:00Z", "s", "", IdentityDiff::default(),
+        );
+        let t2 = IdentityTransition::build(
+            "h1", "h2", "2026-05-20T12:01:00Z", "s", "", IdentityDiff::default(),
+        );
         append_to_chain(&path, &t1).unwrap();
         append_to_chain(&path, &t2).unwrap();
         let entries = read_chain(&path).unwrap();
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[1].from_identity_hash, "h1");
         let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn append_to_chain_rejects_malformed_timestamp() {
+        let path = std::env::temp_dir().join(format!(
+            "forge-transition-bad-ts-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_file(&path);
+        for bad in [
+            "",
+            "ts",
+            "2026-05-20",
+            "2026-05-20T12:00:00",       // missing Z
+            "2026-05-20t12:00:00Z",      // lowercase t
+            "2026-05-20T12:00:00.5Z",    // fractional
+            "2026-05-20T12:00:00+00:00", // explicit offset
+        ] {
+            let t = IdentityTransition::build(
+                "from", "to", bad, "site", "", IdentityDiff::default(),
+            );
+            match append_to_chain(&path, &t) {
+                Err(ChainAppendError::BadTimestamp { provided }) => {
+                    assert_eq!(provided, bad);
+                }
+                other => panic!("expected BadTimestamp for {bad:?}, got {other:?}"),
+            }
+        }
+        assert!(!path.exists(), "chain must never appear on disk on bad-timestamp rejection");
+    }
+
+    #[test]
+    fn tampered_transition_verify_fails_uses_canonical_timestamp() {
+        // tampered case uses "ts" placeholder — has_canonical_timestamp
+        // must still report false so the gate would catch it before
+        // persistence (the test below stays in-memory by design).
+        let t = IdentityTransition::build(
+            "from", "to", "ts", "site", "", IdentityDiff::default(),
+        );
+        assert!(!t.has_canonical_timestamp());
+        let t = IdentityTransition::build(
+            "from", "to", "2026-05-20T12:00:00Z", "site", "", IdentityDiff::default(),
+        );
+        assert!(t.has_canonical_timestamp());
     }
 
     // Helper module to construct ThemeVariant since the struct
