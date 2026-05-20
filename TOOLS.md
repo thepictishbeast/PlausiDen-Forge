@@ -27,6 +27,21 @@ forge watch --debounce-ms 500 --max-rebuilds 100
 
 ---
 
+## JSON output (for scripts + AI agents)
+
+Every Forge subcommand (and the Loom / Crawler companions) supports `--json` for machine-readable output. Canonical schemas live in [`docs/JSON_OUTPUT.md`](./docs/JSON_OUTPUT.md).
+
+```
+forge orient --json                        # session brief
+forge doctrine query --json                # rule projection
+forge build --json-report path.json        # build report alongside terminal
+forge config --json                        # all config gates as one document
+```
+
+Every envelope has a `status` field: `ok | warn | fail | fatal | empty`. Exit codes mirror status. Per rule `docs-008`.
+
+---
+
 ## MCP tool surface (for AI clients)
 
 Cross-AI consumable Model Context Protocol tool definitions live in `mcp/`:
