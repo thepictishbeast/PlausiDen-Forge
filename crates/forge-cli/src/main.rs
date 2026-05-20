@@ -197,6 +197,13 @@ enum Cmd {
         #[command(subcommand)]
         action: SynthesisAction,
     },
+    /// Content authoring audit: scan cms/*.json + output a
+    /// structured TODO list of sections with empty/below-floor
+    /// content fields. Companion to the content_substance gate.
+    Authoring {
+        #[command(subcommand)]
+        action: AuthoringAction,
+    },
     /// Adversarial audits run OUTSIDE the build pipeline. Used
     /// for one-off scans + pre-commit hooks; never gated on a
     /// build's success.
@@ -1111,6 +1118,22 @@ enum FingerprintAction {
     },
 }
 
+/// `forge authoring` subcommands — content-authoring inspection.
+#[derive(clap::Subcommand, Clone, Debug)]
+enum AuthoringAction {
+    /// Audit cms/*.json: list every section whose content
+    /// fields are empty or below the substance floor. Output
+    /// is a structured authoring checklist.
+    Audit {
+        /// Override the default cms/ path.
+        #[arg(long)]
+        cms_dir: Option<std::path::PathBuf>,
+        /// JSON output for tooling consumers.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
 /// `forge synthesis` subcommands. Backs task #292.
 #[derive(clap::Subcommand, Clone, Debug)]
 enum SynthesisAction {
@@ -1255,6 +1278,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Fingerprint { action }) => return run_fingerprint(&root, action),
         Some(Cmd::Identity { action }) => return run_identity(&root, action),
         Some(Cmd::Synthesis { action }) => return run_synthesis(&root, action),
+        Some(Cmd::Authoring { action }) => return run_authoring(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Fix { apply, json }) => return run_fix(&root, *apply, *json),
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
@@ -2137,6 +2161,178 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
                 );
             } else {
                 println!("{}", fp.as_str());
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+    }
+}
+
+/// `forge authoring audit` — content authoring inspection.
+/// Pairs with the content_substance gate (substance-001):
+/// the gate refuses builds; this CLI surfaces the checklist
+/// upfront so the operator can author the empty sections.
+fn run_authoring(root: &std::path::Path, action: &AuthoringAction) -> Result<ExitCode> {
+    match action {
+        AuthoringAction::Audit { cms_dir, json } => {
+            let dir = cms_dir
+                .clone()
+                .unwrap_or_else(|| root.join("cms"));
+            if !dir.is_dir() {
+                if *json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status": "fail",
+                            "error": format!("no cms/ at {}", dir.display()),
+                        })
+                    );
+                } else {
+                    eprintln!("forge content audit: no cms/ at {}", dir.display());
+                }
+                return Ok(ExitCode::from(1));
+            }
+            // Mirror of content_substance defaults (kept in sync;
+            // future refactor: lift into forge_core).
+            let min_chars: &[(&str, &str, u32)] = &[
+                ("hero_editorial", "title", 20),
+                ("hero_editorial", "lede", 60),
+                ("hero", "title", 20),
+                ("paragraph", "body", 80),
+                ("pull_quote", "body", 40),
+                ("code", "body", 20),
+                ("code_block", "body", 20),
+                ("heading", "title", 8),
+                ("sub_heading", "title", 6),
+                ("section_heading", "title", 6),
+                ("call_to_action", "label", 4),
+                ("image_hero", "title", 8),
+                ("split_hero", "title", 20),
+            ];
+            let min_counts: &[(&str, &str, u32)] = &[
+                ("kv_pair", "items", 3),
+                ("feature_spotlight", "items", 3),
+                ("gallery", "items", 3),
+                ("logo_wall", "items", 4),
+            ];
+
+            #[derive(serde::Serialize)]
+            struct TodoEntry {
+                file: String,
+                section_index: usize,
+                kind: String,
+                field: String,
+                actual: u32,
+                floor: u32,
+                kind_of_violation: &'static str, // "chars" | "count"
+            }
+            let mut todos: Vec<TodoEntry> = Vec::new();
+            let mut total_sections = 0usize;
+
+            let mut paths: Vec<std::path::PathBuf> = Vec::new();
+            for entry in std::fs::read_dir(&dir)? {
+                let p = entry?.path();
+                if p.extension().and_then(|e| e.to_str()) == Some("json") {
+                    paths.push(p);
+                }
+            }
+            paths.sort();
+
+            for path in &paths {
+                let body = std::fs::read_to_string(path)?;
+                let Ok(value) = serde_json::from_str::<serde_json::Value>(&body) else {
+                    continue;
+                };
+                let Some(sections) = value.get("sections").and_then(|v| v.as_array()) else {
+                    continue;
+                };
+                let file_disp = path.display().to_string();
+                for (idx, section) in sections.iter().enumerate() {
+                    let Some(kind) = section.get("kind").and_then(|v| v.as_str()) else {
+                        continue;
+                    };
+                    total_sections += 1;
+                    for (target_kind, field, floor) in min_chars {
+                        if *target_kind != kind {
+                            continue;
+                        }
+                        let actual = section
+                            .get(*field)
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.chars().count() as u32)
+                            .unwrap_or(0);
+                        if actual < *floor {
+                            todos.push(TodoEntry {
+                                file: file_disp.clone(),
+                                section_index: idx,
+                                kind: kind.to_owned(),
+                                field: (*field).to_owned(),
+                                actual,
+                                floor: *floor,
+                                kind_of_violation: "chars",
+                            });
+                        }
+                    }
+                    for (target_kind, field, floor) in min_counts {
+                        if *target_kind != kind {
+                            continue;
+                        }
+                        let actual = section
+                            .get(*field)
+                            .and_then(|v| v.as_array())
+                            .map(|a| a.len() as u32)
+                            .unwrap_or(0);
+                        if actual < *floor {
+                            todos.push(TodoEntry {
+                                file: file_disp.clone(),
+                                section_index: idx,
+                                kind: kind.to_owned(),
+                                field: (*field).to_owned(),
+                                actual,
+                                floor: *floor,
+                                kind_of_violation: "count",
+                            });
+                        }
+                    }
+                }
+            }
+
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "cms_dir": dir.display().to_string(),
+                        "files_scanned": paths.len(),
+                        "sections_scanned": total_sections,
+                        "todos_count": todos.len(),
+                        "todos": todos,
+                    })
+                );
+            } else {
+                println!(
+                    "forge content audit: {} TODOs across {} sections in {} files",
+                    todos.len(),
+                    total_sections,
+                    paths.len()
+                );
+                if !todos.is_empty() {
+                    let mut current_file = String::new();
+                    for t in &todos {
+                        if t.file != current_file {
+                            println!("\n  {}", t.file);
+                            current_file = t.file.clone();
+                        }
+                        let unit = if t.kind_of_violation == "chars" {
+                            "chars"
+                        } else {
+                            "items"
+                        };
+                        println!(
+                            "    [{:>2}] {}.{} — {} {} (need {})",
+                            t.section_index, t.kind, t.field, t.actual, unit, t.floor
+                        );
+                    }
+                }
             }
             Ok(ExitCode::SUCCESS)
         }
