@@ -112,6 +112,11 @@ members = [
     # (Brief → IA → Wireframe → Content → Tokens → Audit). LLM/LFI
     # backends are out-of-tree implementations of the Generator trait.
     "crates/ai-pipeline-core",
+    # 2026-05-20: doctrine-core — typed projection of AVP-Doctrine
+    # doctrine/rules/*.toml. Loads + validates the 71-rule database,
+    # exposes query API. Used by `forge doctrine query`, the
+    # doctrine-check PR gate, and the Forge findings-cite-rules wiring.
+    "crates/doctrine-core",
     # T64: manifest-attest — consolidated signing layer for every
     # PlausiDen artifact. Ed25519 today; ML-DSA hybrid lands in #65.
     "crates/manifest-attest",
@@ -284,3 +289,22 @@ opt-level = 3
 lto = "fat"
 codegen-units = 1
 strip = "symbols"
+
+# ----------------------------------------------------------------
+# Loom dev-loop path override (2026-05-20, task #144).
+#
+# forge-phases depends on Loom via git:
+#   loom-tokens / loom-cms-render / loom-lint / loom-components
+#   = { git = "https://github.com/thepictishbeast/PlausiDen-Loom.git", branch = "main" }
+#
+# Without override, every Loom edit requires commit+push+repin
+# before Forge sees it. With the override, local edits land in
+# the next `cargo build` immediately.
+#
+# To disable (e.g. CI building against the pinned commit), comment
+# the block out; Cargo.lock regenerates either way.
+[patch."https://github.com/thepictishbeast/PlausiDen-Loom.git"]
+loom-tokens     = { path = "/home/paul/projects/PlausiDen-Loom/loom-tokens" }
+loom-cms-render = { path = "/home/paul/projects/PlausiDen-Loom/loom-cms-render" }
+loom-lint       = { path = "/home/paul/projects/PlausiDen-Loom/loom-lint" }
+loom-components = { path = "/home/paul/projects/PlausiDen-Loom/loom-components" }
