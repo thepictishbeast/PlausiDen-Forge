@@ -3,6 +3,11 @@
 # live API — the data-backend slugs are documentation of intent,
 # not real handlers.
 
+# Top-level schema_version per semver_enforcement gate contract.
+# Kept in sync with the [meta].schema_version below; the gate
+# looks for it at the file root, not nested.
+schema_version = 1
+
 [meta]
 project = "PlausiDen Marketing"
 api_base = "https://plausiden.com/api"
