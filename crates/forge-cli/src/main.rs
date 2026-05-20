@@ -644,6 +644,31 @@ enum ConfigAction {
 
 #[derive(Subcommand, Debug)]
 enum DoctrineAction {
+    /// PR-time gate: load + validate the doctrine database AND
+    /// verify every rule citation in the workspace resolves to a
+    /// known rule.
+    ///
+    /// Walks `crates/**/*.rs` for `Finding::...().citing(["rule-X"])`
+    /// patterns. Each cited id is looked up in the loaded database;
+    /// orphan citations (rule doesn't exist) fail the gate.
+    ///
+    /// Exit codes:
+    ///   0 — database loads clean + every citation resolves
+    ///   1 — database loads clean but at least one citation orphan
+    ///   2 — fatal (doctrine dir missing / parse error)
+    Check {
+        /// Path to AVP-Doctrine repo root. Same resolution as `query`.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// Directory to scan for `.citing([...])` patterns. Defaults
+        /// to `<forge-root>/crates`. Can be a single file or any
+        /// directory tree.
+        #[arg(long)]
+        source_dir: Option<PathBuf>,
+        /// JSON output (per docs-008 cross-AI compatibility rule).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// Query the doctrine rule database. At least one filter
     /// (or `--rule` to fetch by id) should be supplied; with
     /// no filters, lists every loaded rule's id + name.
@@ -5240,6 +5265,16 @@ fn run_assets_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
 
 fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result<ExitCode> {
     match action {
+        DoctrineAction::Check {
+            doctrine_dir,
+            source_dir,
+            json,
+        } => run_doctrine_check(
+            doctrine_dir.as_deref(),
+            source_dir.as_deref(),
+            *json,
+            forge_root,
+        ),
         DoctrineAction::Query {
             rule,
             domain,
@@ -5522,6 +5557,260 @@ fn lifecycle_label(l: doctrine_core::Lifecycle) -> &'static str {
         doctrine_core::Lifecycle::Deprecated => "deprecated",
         // #[non_exhaustive] — future variants surface as "unknown".
         _ => "unknown",
+    }
+}
+
+// ----------------------------------------------------------------
+// `forge doctrine check` — task #176.
+//
+// PR-time gate: load + validate the doctrine database (any parse /
+// schema error already fails via doctrine-core), then sweep the
+// workspace source for `.citing([...])` rule references and verify
+// each id resolves.
+//
+// Detects:
+//   * orphan citations (Finding cites a rule id that doesn't exist)
+//   * citation typos (rule id close-but-not-exact match)
+//
+// Future extension: enforces_rules coverage map (which rules have
+// no enforcing phase declared in their `enforcement` arrays vs which
+// have one that exists in forge-phases). For now, citation
+// resolution is the load-bearing check.
+// ----------------------------------------------------------------
+
+fn run_doctrine_check(
+    doctrine_dir: Option<&std::path::Path>,
+    source_dir: Option<&std::path::Path>,
+    json: bool,
+    forge_root: &std::path::Path,
+) -> Result<ExitCode> {
+    let dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+    let db = match doctrine_core::load_from_dir(&dir) {
+        Ok(d) => d,
+        Err(e) => {
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "fatal",
+                        "stage": "load_database",
+                        "error": e.to_string(),
+                        "doctrine_dir": dir.display().to_string(),
+                    })
+                );
+            } else {
+                eprintln!(
+                    "forge doctrine check: failed to load doctrine database — {e}\n  doctrine_dir = {}",
+                    dir.display()
+                );
+            }
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    let scan_root = match source_dir {
+        Some(p) => p.to_path_buf(),
+        None => forge_root.join("crates"),
+    };
+
+    // Walk the source tree collecting (file_path, line_no, rule_id) tuples
+    // for every .citing([...]) literal.
+    let citations = collect_citations(&scan_root);
+
+    let mut orphans: Vec<Citation> = Vec::new();
+    for c in &citations {
+        if db.by_id(&c.rule_id).is_none() {
+            orphans.push(c.clone());
+        }
+    }
+
+    if json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": if orphans.is_empty() { "ok" } else { "violations" },
+                "rules_loaded": db.len(),
+                "citations_found": citations.len(),
+                "orphans": orphans.iter().map(|c| serde_json::json!({
+                    "file": c.file.display().to_string(),
+                    "line": c.line,
+                    "rule_id": c.rule_id,
+                })).collect::<Vec<_>>(),
+            })
+        );
+    } else {
+        println!(
+            "forge doctrine check: {} rules loaded; {} citation(s) scanned from {}",
+            db.len(),
+            citations.len(),
+            scan_root.display()
+        );
+        if orphans.is_empty() {
+            println!("  OK — every citation resolves");
+        } else {
+            for o in &orphans {
+                println!(
+                    "  STRICT  orphan citation: {}:{} cites rule \"{}\" — no such rule in doctrine",
+                    o.file.display(),
+                    o.line,
+                    o.rule_id
+                );
+            }
+            println!("  {} orphan citation(s)", orphans.len());
+        }
+    }
+
+    if orphans.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Citation {
+    file: PathBuf,
+    line: usize,
+    rule_id: String,
+}
+
+/// Walk `root` recursively, looking for `.citing(["rule-X", "rule-Y"])`
+/// literals in any `.rs` file. Returns one Citation per id, including
+/// duplicates (same id cited from two sites is two Citations).
+fn collect_citations(root: &std::path::Path) -> Vec<Citation> {
+    let mut out: Vec<Citation> = Vec::new();
+    visit_rs_files(root, &mut |path| {
+        let Ok(text) = std::fs::read_to_string(path) else {
+            return;
+        };
+        for (i, line) in text.lines().enumerate() {
+            // Find ".citing([" and harvest every quoted id up to "])".
+            // This is a deliberately conservative scan — multi-line
+            // .citing() blocks are caught only if the opening "["
+            // is on the same line as `.citing(`.
+            for (col, _) in line.match_indices(".citing([") {
+                let after = &line[col + ".citing([".len()..];
+                let end = match after.find("])") {
+                    Some(n) => n,
+                    None => continue,
+                };
+                let payload = &after[..end];
+                for raw_id in payload.split(',') {
+                    let id = raw_id.trim().trim_matches(|c: char| c == '"' || c.is_whitespace());
+                    if id.is_empty() {
+                        continue;
+                    }
+                    // Filter to rule-id-shaped tokens: lowercase
+                    // letters / hyphens / a 3-digit numeric suffix.
+                    // Skips doc examples ("rule-X"), test fixtures
+                    // with escape-quoted forms (`\"prim-001\"`),
+                    // and rustdoc placeholder strings ("...").
+                    if !is_rule_id_shaped(id) {
+                        continue;
+                    }
+                    out.push(Citation {
+                        file: path.to_path_buf(),
+                        line: i + 1,
+                        rule_id: id.to_string(),
+                    });
+                }
+            }
+        }
+    });
+    out
+}
+
+/// Strict rule-id pattern: kebab-case word(s) + `-NNN` numeric
+/// suffix. Examples: `prim-001`, `a11y-003`, `sec-010`, `build-008`.
+/// Rejects: doc placeholders like `rule-X`, escape-quoted forms
+/// like `\"prim-001\"`, rustdoc dots, etc.
+fn is_rule_id_shaped(id: &str) -> bool {
+    let bytes = id.as_bytes();
+    if bytes.len() < 5 {
+        // Minimum: "a-001" — 1 letter + dash + 3 digits.
+        return false;
+    }
+    let mut found_dash_before_num = false;
+    let mut iter = bytes.iter().enumerate().peekable();
+    while let Some(&(i, &b)) = iter.peek() {
+        if b == b'-' && i + 3 < bytes.len() {
+            // Look ahead: do the next 3 chars look like digits and
+            // are we at end-of-string after them?
+            let tail = &bytes[i + 1..];
+            if tail.len() == 3 && tail.iter().all(|c| c.is_ascii_digit()) {
+                found_dash_before_num = true;
+                break;
+            }
+        }
+        if !(b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-') {
+            return false;
+        }
+        iter.next();
+    }
+    found_dash_before_num
+}
+
+/// Recursive directory walk, calling `cb` for every `.rs` file.
+/// Skips `target/` and hidden dirs (`.git`, etc.) for speed.
+fn visit_rs_files(root: &std::path::Path, cb: &mut dyn FnMut(&std::path::Path)) {
+    let Ok(read) = std::fs::read_dir(root) else {
+        return;
+    };
+    for entry in read.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            if name == "target" || name.starts_with('.') {
+                continue;
+            }
+            visit_rs_files(&path, cb);
+        } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
+            cb(&path);
+        }
+    }
+}
+
+#[cfg(test)]
+mod doctrine_check_tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn collects_single_line_citing() {
+        let tmp = std::env::temp_dir().join(format!(
+            "doctrine-check-test-{}-{}",
+            std::process::id(),
+            line!()
+        ));
+        std::fs::create_dir_all(&tmp).unwrap();
+        let f = tmp.join("a.rs");
+        let mut h = std::fs::File::create(&f).unwrap();
+        writeln!(h, "    let x = Finding::strict(\"p\", \"\", \"m\").citing([\"prim-001\"]);").unwrap();
+        writeln!(h, "    let y = Finding::warn(\"p\", \"\", \"m\").citing([\"sec-007\", \"a11y-001\"]);").unwrap();
+        let cites = collect_citations(&tmp);
+        let ids: Vec<&str> = cites.iter().map(|c| c.rule_id.as_str()).collect();
+        assert!(ids.contains(&"prim-001"));
+        assert!(ids.contains(&"sec-007"));
+        assert!(ids.contains(&"a11y-001"));
+        assert_eq!(cites.len(), 3);
+        std::fs::remove_dir_all(&tmp).ok();
+    }
+
+    #[test]
+    fn ignores_files_outside_rs() {
+        let tmp = std::env::temp_dir().join(format!(
+            "doctrine-check-test-nonrs-{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&tmp).unwrap();
+        std::fs::write(
+            tmp.join("x.toml"),
+            ".citing([\"prim-001\"])",
+        )
+        .unwrap();
+        let cites = collect_citations(&tmp);
+        assert_eq!(cites.len(), 0);
+        std::fs::remove_dir_all(&tmp).ok();
     }
 }
 
