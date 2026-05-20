@@ -28,3 +28,9 @@ reports/attest-key.b64
 # share the same hook + bypass paul's intentional per-machine
 # override pattern.
 .githooks/
+
+# Licensed dreamstime stock pool — 1.3 GB of full-res images
+# Deborah Armstrong paid licenses (ingested 2026-05-20).
+# Substrate-wide reusable photo pool; rsync to deploy targets.
+# Track via git-lfs in a follow-on task if commit-discovery becomes load-bearing.
+static/assets/dreamstime/
