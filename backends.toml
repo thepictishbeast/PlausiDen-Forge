@@ -21,18 +21,6 @@ path = "/platform"
 purpose = "Platform overview"
 impl_files = []
 
-[backends.view-why]
-method = "GET"
-path = "/why"
-purpose = "Manifesto"
-impl_files = []
-
-[backends.view-pricing]
-method = "GET"
-path = "/pricing"
-purpose = "Pricing"
-impl_files = []
-
 [backends.view-docs]
 method = "GET"
 path = "/docs"
@@ -51,41 +39,11 @@ path = "/about"
 purpose = "About"
 impl_files = []
 
-[backends.view-contact]
-method = "GET"
-path = "/contact"
-purpose = "Contact"
-impl_files = []
-
 # CTAs
 [backends.cta-platform]
 method = "GET"
 path = "/platform"
 purpose = "CTA: see the platform"
-impl_files = []
-
-[backends.cta-why]
-method = "GET"
-path = "/why"
-purpose = "CTA: read the manifesto"
-impl_files = []
-
-[backends.cta-docs]
-method = "GET"
-path = "/docs"
-purpose = "CTA: read the docs"
-impl_files = []
-
-[backends.cta-pricing]
-method = "GET"
-path = "/pricing"
-purpose = "CTA: see pricing"
-impl_files = []
-
-[backends.cta-start]
-method = "GET"
-path = "/start"
-purpose = "CTA: start"
 impl_files = []
 
 [backends.cta-contact]
@@ -94,154 +52,10 @@ path = "/contact"
 purpose = "CTA: contact"
 impl_files = []
 
-[backends.cta-subscribe]
-method = "POST"
-path = "/subscribe"
-purpose = "CTA: email newsletter (mailto)"
-impl_files = []
-
-[backends.cta-github]
-method = "GET"
-path = "https://github.com/thepictishbeast"
-purpose = "CTA: GitHub org"
-impl_files = []
-
 # Platform card jumps
-[backends.view-forge]
-method = "GET"
-path = "/platform#forge"
-purpose = "Card: Forge"
-impl_files = []
-
-[backends.view-loom]
-method = "GET"
-path = "/platform#loom"
-purpose = "Card: Loom"
-impl_files = []
-
-[backends.view-crawler]
-method = "GET"
-path = "/platform#crawler"
-purpose = "Card: Crawler"
-impl_files = []
-
-[backends.view-annotator]
-method = "GET"
-path = "/platform#annotator"
-purpose = "Card: Annotator"
-impl_files = []
-
-[backends.view-cms]
-method = "GET"
-path = "/platform#cms"
-purpose = "Card: CMS"
-impl_files = []
-
-[backends.view-lfi]
-method = "GET"
-path = "/platform#lfi"
-purpose = "Card: LFI"
-impl_files = []
-
 # Pricing tier cards
-[backends.view-tier-solo]
-method = "GET"
-path = "/pricing#solo"
-purpose = "Tier: Solo"
-impl_files = []
-
-[backends.view-tier-team]
-method = "GET"
-path = "/pricing#team"
-purpose = "Tier: Team"
-impl_files = []
-
-[backends.view-tier-enterprise]
-method = "GET"
-path = "/pricing#enterprise"
-purpose = "Tier: Enterprise"
-impl_files = []
-
 # Blog post placeholder
-[backends.view-post]
-method = "GET"
-path = "/blog/{slug}"
-purpose = "Blog post (placeholder)"
-impl_files = []
-
-[backends.cta-blog]
-method = "GET"
-path = "/blog"
-purpose = "CTA: blog / changelog"
-impl_files = []
-
-[backends.cta-changelog]
-method = "GET"
-path = "/blog"
-purpose = "CTA: changelog"
-impl_files = []
-
-[backends.view-signin]
-method = "GET"
-path = "/signin"
-purpose = "Sign in page"
-impl_files = []
-
-[backends.cta-signin]
-method = "GET"
-path = "/signin"
-purpose = "CTA: sign in"
-impl_files = []
-
-[backends.cta-signout]
-method = "POST"
-path = "/auth/signout"
-purpose = "CTA: sign out"
-impl_files = []
-
-[backends.cta-passkey-enroll]
-method = "POST"
-path = "/auth/passkey/enroll"
-purpose = "CTA: enroll passkey"
-impl_files = []
-
-[backends.view-trial]
-method = "GET"
-path = "/trial"
-purpose = "Start trial"
-impl_files = []
-
-[backends.cta-trial]
-method = "GET"
-path = "/trial"
-purpose = "CTA: start trial"
-impl_files = []
-
 # PlausiDen LLC site rebuild (IT consultancy positioning).
-[backends.view-services]
-method = "GET"
-path = "/services.html"
-purpose = "Services overview"
-impl_files = []
-
-[backends.view-field-notes]
-method = "GET"
-path = "/field-notes.html"
-purpose = "Field notes / engineering blog"
-impl_files = []
-
-[backends.cta-encrypted-inquiry]
-method = "GET"
-path = "/encrypted-inquiry.html"
-purpose = "CTA: encrypted inquiry channel (age/PGP)"
-impl_files = []
-
-[backends.cta-quote]
-method = "GET"
-path = "/quote.html"
-purpose = "CTA: request a quote / free consultation"
-impl_files = []
-
 # Prosperity Club — pixel-rebuild target (#112 / #118).
 # Same site, separate backend namespace via prosperity- prefix.
 [backends.prosperity-view-about]
@@ -262,12 +76,6 @@ path = "/prosperity-blog.html"
 purpose = "Prosperity Club: blogs index"
 impl_files = []
 
-[backends.prosperity-view-finance]
-method = "GET"
-path = "/prosperity-finance.html"
-purpose = "Prosperity Club: finance + insurance column"
-impl_files = []
-
 [backends.prosperity-view-resources]
 method = "GET"
 path = "/prosperity-resources.html"
@@ -286,50 +94,113 @@ path = "/master-class.html"
 purpose = "Prosperity Club: master-class videos"
 impl_files = []
 
-[backends.prosperity-cta-contact]
-method = "POST"
-path = "/prosperity-contact"
-purpose = "Prosperity Club CTA: contact form submit"
+# ----------------------------------------------------------------
+# Prosperity Club routes (2026-05-20 — Forge pixel-copy test)
+# ----------------------------------------------------------------
+[backends.cta-join-free]
+method = "GET"
+path = "/membership/"
+purpose = "Join Prosperity Club (free tier)"
 impl_files = []
 
-# ============================================================
-# Northbrook Observatory — dev.plausiden.com new site (PoC).
-# Fictional public-research observatory in northern New England.
-# Replaces the prior IT consultancy site as the demo target.
-# ============================================================
-
-[backends.view-programs]
+[backends.view-about-deborah]
 method = "GET"
-path = "/programs.html"
-purpose = "Northbrook: public programs + school + research"
+path = "/about/"
+purpose = "About Deborah Armstrong"
 impl_files = []
 
-[backends.view-visit]
+[backends.view-our-team]
 method = "GET"
-path = "/visit.html"
-purpose = "Northbrook: directions + hours + accessibility"
+path = "/about/our-team/"
+purpose = "About — our team"
 impl_files = []
 
-[backends.cta-schedule-visit]
+[backends.view-faqs]
 method = "GET"
-path = "/visit.html#schedule"
-purpose = "Northbrook CTA: book a public observing night"
+path = "/about/prosperity-club-faqs/"
+purpose = "Prosperity Club FAQs"
 impl_files = []
 
-[backends.cta-newsletter-sky]
+[backends.view-privacy]
 method = "GET"
-path = "/contact.html#newsletter"
-purpose = "Northbrook CTA: subscribe to monthly sky-report"
+path = "/about/privacy-policy/"
+purpose = "Privacy policy"
 impl_files = []
 
-[backends.cta-donate]
+[backends.view-terms]
 method = "GET"
-path = "/about.html#support"
-purpose = "Northbrook CTA: support the observatory (donations)"
+path = "/about/terms-and-conditions/"
+purpose = "Terms and conditions"
 impl_files = []
 
-[backends.view-field-archive]
+[backends.view-learn-social-class]
 method = "GET"
-path = "/field-notes.html"
-purpose = "Northbrook: archive of staff dispatches"
+path = "/prosper-in-life/how-social-class-affects-your-life/"
+purpose = "Article — social class"
+impl_files = []
+
+[backends.view-middle-class]
+method = "GET"
+path = "/what-is-considered-middle-class/"
+purpose = "Article — middle class"
+impl_files = []
+
+[backends.view-poverty]
+method = "GET"
+path = "/escaping-poverty-and-making-ends-meet/"
+purpose = "Article — escaping poverty"
+impl_files = []
+
+[backends.view-debt]
+method = "GET"
+path = "/strategies-to-get-out-of-debt-quickly/"
+purpose = "Article — out of debt"
+impl_files = []
+
+[backends.view-wages]
+method = "GET"
+path = "/the-ugly-truth-about-what-you-are-paid/"
+purpose = "Article — wages truth"
+impl_files = []
+
+[backends.view-insurance-foundation]
+method = "GET"
+path = "/why-insurance-is-essential-for-financial-well-being/"
+purpose = "Article — insurance foundation"
+impl_files = []
+
+[backends.view-health]
+method = "GET"
+path = "/understand-your-health-insurance-options/"
+purpose = "Article — health insurance"
+impl_files = []
+
+[backends.view-term-life]
+method = "GET"
+path = "/what-is-term-insurance-the-basics/"
+purpose = "Article — term life insurance"
+impl_files = []
+
+[backends.view-perm-life]
+method = "GET"
+path = "/all-you-need-to-know-about-permanent-life-insurance/"
+purpose = "Article — permanent life insurance"
+impl_files = []
+
+[backends.view-annuities]
+method = "GET"
+path = "/how-do-annuities-work-and-what-are-the-benefits/"
+purpose = "Article — annuities"
+impl_files = []
+
+[backends.view-home-renters]
+method = "GET"
+path = "/how-to-protect-your-valuables-with-renters-homeowners-insurance/"
+purpose = "Article — home/renters insurance"
+impl_files = []
+
+[backends.view-auto]
+method = "GET"
+path = "/everything-you-need-to-know-about-auto-insurance/"
+purpose = "Article — auto insurance"
 impl_files = []
