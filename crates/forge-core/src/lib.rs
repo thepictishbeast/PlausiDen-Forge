@@ -28,6 +28,7 @@
 
 pub mod attest;
 pub mod diagnostic;
+pub mod extractors;
 pub mod fingerprint;
 pub mod fingerprint_migration;
 pub mod fingerprint_registry;
