@@ -34,6 +34,7 @@ pub mod fingerprint_registry;
 pub mod identity_transition;
 pub mod pipeline;
 pub mod provenance;
+pub mod session_context;
 pub mod site_identity;
 pub mod skill_telemetry;
 pub mod tenant_corpus;
