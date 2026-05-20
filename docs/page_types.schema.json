@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Page-type library (#250)",
+  "description": "Curated substrate-native compositional templates. Each entry is a recipe for one content type — a section_signature avoiding SaaS tropes. Consumed by the reference-matching engine (#273) + by operators authoring CMS.",
+  "type": "object",
+  "required": ["spec", "templates"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "spec": { "type": "string", "enum": ["v1"] },
+    "description": { "type": "string" },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "tier",
+          "mood_affinity",
+          "density_tier",
+          "section_signature"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "slug": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "name": { "type": "string" },
+          "tier": {
+            "type": "string",
+            "enum": ["editorial", "technical", "civic", "personal"]
+          },
+          "mood_affinity": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "editorial",
+                "industrial",
+                "organic",
+                "minimal",
+                "kinetic",
+                "archival",
+                "playful",
+                "severe"
+              ]
+            }
+          },
+          "density_tier": {
+            "type": "string",
+            "enum": ["sparse", "comfortable", "dense", "extreme"]
+          },
+          "section_signature": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

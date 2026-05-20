@@ -1,0 +1,294 @@
+{
+  "$schema": "../docs/page_types.schema.json",
+  "spec": "v1",
+  "description": "Page-type library (#250). Curated set of substrate-native compositional templates. Each entry is a recipe for one content type — a sequence of CmsSection kinds + variant hints that AVOIDS SaaS tropes (no centered-single-line heroes, no 3-column feature_spotlight grids, no most-popular-badge pricing). The reference-matching engine (#273) consumes this library to map extracted reference shapes to substrate-native counterparts. Operators can also pick templates directly when authoring CMS.",
+  "templates": [
+    {
+      "slug": "homepage_editorial",
+      "name": "Editorial homepage",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "minimal", "archival"],
+      "density_tier": "comfortable",
+      "section_signature": [
+        "hero_editorial",
+        "paragraph",
+        "pull_quote",
+        "kv_pair",
+        "section_heading",
+        "paragraph",
+        "image_hero",
+        "paragraph",
+        "call_to_action"
+      ],
+      "notes": "Asymmetric hero with monospace kicker; long-form lede; one pull_quote anchor; kv_pair info panel; closing CTA without SaaS-trope visuals."
+    },
+    {
+      "slug": "long_form_article",
+      "name": "Long-form article / essay",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "archival"],
+      "density_tier": "dense",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "paragraph",
+        "paragraph",
+        "pull_quote",
+        "paragraph",
+        "paragraph",
+        "section_heading",
+        "paragraph",
+        "code",
+        "paragraph",
+        "pull_quote",
+        "paragraph"
+      ],
+      "notes": "Reading-first composition; one section_heading per logical break; two pull_quotes as anchors; optional code block where the prose names a concrete artifact."
+    },
+    {
+      "slug": "product_marketing_technical",
+      "name": "Product marketing (technical product)",
+      "tier": "technical",
+      "mood_affinity": ["industrial", "minimal"],
+      "density_tier": "comfortable",
+      "section_signature": [
+        "split_hero",
+        "paragraph",
+        "kv_pair",
+        "code",
+        "section_heading",
+        "kv_pair",
+        "sparkline",
+        "paragraph",
+        "call_to_action"
+      ],
+      "notes": "Split hero with code visual; kv_pair info panels (NOT feature_spotlight grids); sparkline shows real product metric; CTA without gradient pressure."
+    },
+    {
+      "slug": "documentation_index",
+      "name": "Documentation index",
+      "tier": "technical",
+      "mood_affinity": ["industrial", "archival"],
+      "density_tier": "dense",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "kv_pair",
+        "section_heading",
+        "kv_pair",
+        "kv_pair",
+        "table"
+      ],
+      "notes": "Heading + lede paragraph; kv_pair groups of topic links; table for cross-reference matrix; no marketing prose."
+    },
+    {
+      "slug": "changelog",
+      "name": "Changelog / release notes",
+      "tier": "technical",
+      "mood_affinity": ["industrial", "archival"],
+      "density_tier": "dense",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "sub_heading",
+        "paragraph",
+        "code",
+        "sub_heading",
+        "paragraph",
+        "code",
+        "sub_heading",
+        "paragraph"
+      ],
+      "notes": "Heading + lede; one sub_heading per release; optional code block per release showing the actual diff or migration step."
+    },
+    {
+      "slug": "about_editorial",
+      "name": "About page (editorial)",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "organic"],
+      "density_tier": "comfortable",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "paragraph",
+        "pull_quote",
+        "image_hero",
+        "paragraph",
+        "kv_pair"
+      ],
+      "notes": "Personal voice; one image_hero (real photo, not stock); kv_pair carries contact / publication / role info."
+    },
+    {
+      "slug": "contact_form",
+      "name": "Contact page",
+      "tier": "editorial",
+      "mood_affinity": ["minimal", "editorial"],
+      "density_tier": "sparse",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "form",
+        "kv_pair",
+        "paragraph"
+      ],
+      "notes": "Heading + lede; form with HONEST labels (no marketing-speak); kv_pair for alternate channels (email, phone, postal); closing paragraph on response timing."
+    },
+    {
+      "slug": "pricing_editorial",
+      "name": "Pricing page (editorial — no SaaS tropes)",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "industrial"],
+      "density_tier": "comfortable",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "section_heading",
+        "kv_pair",
+        "section_heading",
+        "table",
+        "paragraph",
+        "pull_quote"
+      ],
+      "notes": "Pricing without highlighted-tier badges; uses kv_pair groups + table for tier-vs-feature matrix; closing pull_quote articulates the value, not the upsell. Editorial counterpart to standard SaaS pricing."
+    },
+    {
+      "slug": "field_notes_chronological",
+      "name": "Field notes / chronological log",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "archival"],
+      "density_tier": "dense",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "sub_heading",
+        "paragraph",
+        "pull_quote",
+        "sub_heading",
+        "paragraph",
+        "image_hero",
+        "sub_heading",
+        "paragraph",
+        "code"
+      ],
+      "notes": "Reverse-chrono entries; each entry led by sub_heading with date; mixes paragraph/pull_quote/image/code by entry content."
+    },
+    {
+      "slug": "blog_post_long",
+      "name": "Blog post — long-form",
+      "tier": "editorial",
+      "mood_affinity": ["editorial"],
+      "density_tier": "dense",
+      "section_signature": [
+        "heading",
+        "sub_heading",
+        "paragraph",
+        "paragraph",
+        "paragraph",
+        "pull_quote",
+        "paragraph",
+        "section_heading",
+        "paragraph",
+        "image_hero",
+        "paragraph",
+        "paragraph",
+        "section_heading",
+        "paragraph",
+        "code",
+        "paragraph"
+      ],
+      "notes": "Heading + sub_heading + author/date lede; long body with one image_hero anchor and one code block when the post names a specific artifact."
+    },
+    {
+      "slug": "masterclass_landing",
+      "name": "Masterclass / course landing",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "industrial"],
+      "density_tier": "comfortable",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "kv_pair",
+        "section_heading",
+        "kv_pair",
+        "video_embed",
+        "paragraph",
+        "kv_pair",
+        "call_to_action"
+      ],
+      "notes": "Course outline via kv_pair (week + topic); embedded video for instructor intro; CTA at end without urgency-pressure SaaS shapes."
+    },
+    {
+      "slug": "case_study_editorial",
+      "name": "Case study (editorial — no fake testimonial cards)",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "industrial"],
+      "density_tier": "comfortable",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "kv_pair",
+        "section_heading",
+        "paragraph",
+        "pull_quote",
+        "paragraph",
+        "image_hero",
+        "section_heading",
+        "paragraph",
+        "sparkline",
+        "paragraph"
+      ],
+      "notes": "Editorial case study — heading + lede + summary kv_pair; pull_quote in operator's voice (no avatar / no rounded-card testimonial); sparkline for the actual measured outcome."
+    },
+    {
+      "slug": "topic_landing",
+      "name": "Topic landing / catalog",
+      "tier": "editorial",
+      "mood_affinity": ["editorial", "archival"],
+      "density_tier": "dense",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "section_heading",
+        "kv_pair",
+        "section_heading",
+        "kv_pair",
+        "section_heading",
+        "kv_pair"
+      ],
+      "notes": "Used as the entry point for a topic-area (e.g. 'Insurance' on prosperityclub.com). Each section_heading is a sub-topic; kv_pair lists articles + brief annotation."
+    },
+    {
+      "slug": "search_results",
+      "name": "Search results",
+      "tier": "technical",
+      "mood_affinity": ["minimal", "industrial"],
+      "density_tier": "dense",
+      "section_signature": [
+        "heading",
+        "form",
+        "kv_pair",
+        "paragraph"
+      ],
+      "notes": "Heading + search form + result kv_pair list + result-count paragraph. No SaaS facets sidebar trope; no infinite-scroll trope."
+    },
+    {
+      "slug": "error_404",
+      "name": "404 / not found",
+      "tier": "technical",
+      "mood_affinity": ["minimal"],
+      "density_tier": "sparse",
+      "section_signature": [
+        "heading",
+        "paragraph",
+        "kv_pair"
+      ],
+      "notes": "Honest heading (NOT 'oops!' or 'whoops!' SaaS trope); paragraph naming what URL was requested; kv_pair of best-guess alternate URLs."
+    }
+  ],
+  "notes": [
+    "The library is intentionally substrate-native: every template uses CmsSection kinds that pass editorial_purity_gate without exceptions.",
+    "Templates are starting points, not prescriptions. Operators add/remove sections per actual content; the section_signature names the canonical shape.",
+    "Future templates land additive: new entries with the same schema; v2 only if section_signature semantics change.",
+    "Coverage target: ship enough templates that the reference-matching engine (#273) has a target slot for every common reference content type."
+  ]
+}
