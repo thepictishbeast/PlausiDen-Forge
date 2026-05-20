@@ -250,14 +250,30 @@ impl Phase for RenderPhase {
                     if rendered_slugs.contains(&stem) {
                         continue;
                     }
-                    findings.push(Finding::warn(
-                        self.name(),
-                        p.display().to_string(),
-                        format!(
-                            "static/{stem}.html has no cms/{stem}.json source — stale artifact \
-                             (delete the file OR add cms/{stem}.json)"
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            p.display().to_string(),
+                            format!(
+                                "static/{stem}.html has no cms/{stem}.json source — stale artifact"
+                            ),
+                        )
+                        .why(
+                            "the canonical render set is cms/*.json; when a CMS source is \
+                             deleted the previously-rendered static/<slug>.html lingers and \
+                             downstream audit phases (sri/tokens/perf_budget/unbuilt_route) \
+                             re-scan it, producing N derived warns per stale file",
+                        )
+                        .fix(format!(
+                            "either: (a) delete static/{stem}.html if the page is intentionally \
+                             gone, OR (b) restore cms/{stem}.json if the page should still ship"
+                        ))
+                        .skill("author-cms-content")
+                        .avoid(
+                            "don't manually edit static/<slug>.html — Forge regenerates it from \
+                             cms/<slug>.json on every build with write_canonical=true",
                         ),
-                    ));
+                    );
                 }
             }
         }
@@ -653,6 +669,20 @@ mod tests {
             orphan_findings[0].message
         );
         assert_eq!(orphan_findings[0].severity, forge_core::Severity::Warn);
+        // Substrate advocacy doctrine: every render-phase finding
+        // carries why/fix/skill/avoid alongside the message.
+        let adv = &orphan_findings[0].advocacy;
+        assert!(!adv.why.is_empty(), "orphan finding must carry .why()");
+        assert!(
+            adv.substrate_fix.contains("delete") || adv.substrate_fix.contains("restore"),
+            ".fix() must name the substrate-correct action: {:?}",
+            adv.substrate_fix
+        );
+        assert_eq!(adv.skill.as_deref(), Some("author-cms-content"));
+        assert!(
+            adv.anti_pattern.is_some(),
+            "orphan finding must carry .avoid() naming the wrong path"
+        );
         let _ = std::fs::remove_dir_all(&tmp);
     }
 
