@@ -158,6 +158,15 @@ enum Cmd {
         #[command(subcommand)]
         action: AttestAction,
     },
+    /// Registry-tampering defense (#258): Merkle-chain + Ed25519
+    /// signature verifier for the fingerprint registry that backs
+    /// the cross-site uniqueness gate. Lets external auditors
+    /// replay the chain end-to-end to confirm no entry has been
+    /// retroactively tampered with.
+    Fingerprint {
+        #[command(subcommand)]
+        action: FingerprintAction,
+    },
     /// Adversarial audits run OUTSIDE the build pipeline. Used
     /// for one-off scans + pre-commit hooks; never gated on a
     /// build's success.
@@ -1012,6 +1021,39 @@ enum AttestAction {
     },
 }
 
+/// `forge fingerprint` subcommands. Backs task #258.
+#[derive(clap::Subcommand, Clone, Debug)]
+enum FingerprintAction {
+    /// Verify the fingerprint registry's Merkle chain end-to-end.
+    /// Optionally verifies Ed25519 signatures against the public
+    /// key in `reports/attest-pubkey.b64`.
+    Verify {
+        /// Override the default registry path
+        /// (`registry/fingerprints.jsonl`).
+        #[arg(long)]
+        registry_path: Option<std::path::PathBuf>,
+        /// Verify signatures (otherwise only the chain hashes).
+        #[arg(long, default_value_t = false)]
+        signatures: bool,
+        /// JSON output for cross-AI consumers.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+    /// List entries in the fingerprint registry.
+    List {
+        /// Override the default registry path
+        /// (`registry/fingerprints.jsonl`).
+        #[arg(long)]
+        registry_path: Option<std::path::PathBuf>,
+        /// Optionally filter by tenant id.
+        #[arg(long)]
+        tenant: Option<String>,
+        /// JSON output for cross-AI consumers.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum ModeArg {
     Poc,
@@ -1067,6 +1109,7 @@ fn run() -> Result<ExitCode> {
     match args.command.as_ref() {
         Some(Cmd::Verify { chain, signatures, json }) => return run_verify(&root, *chain, *signatures, *json),
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
+        Some(Cmd::Fingerprint { action }) => return run_fingerprint(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Fix { apply, json }) => return run_fix(&root, *apply, *json),
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
@@ -1928,6 +1971,187 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
                 );
             } else {
                 println!("{}", fp.as_str());
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+    }
+}
+
+/// Task #258: registry-tampering defense. Verify the fingerprint
+/// registry's Merkle chain + (optionally) Ed25519 signatures.
+fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result<ExitCode> {
+    match action {
+        FingerprintAction::Verify {
+            registry_path,
+            signatures,
+            json,
+        } => {
+            let registry = registry_path
+                .clone()
+                .unwrap_or_else(|| root.join("registry/fingerprints.jsonl"));
+            if !registry.exists() {
+                let payload = serde_json::json!({
+                    "status": "ok",
+                    "stage": "verify",
+                    "registry_path": registry.display().to_string(),
+                    "entries": 0,
+                    "chain_valid": true,
+                    "signatures_verified": false,
+                    "note": "registry file does not exist — nothing to verify",
+                });
+                if *json {
+                    println!("{payload}");
+                } else {
+                    println!(
+                        "forge fingerprint verify: registry at {} does not exist — nothing to verify (exit 0)",
+                        registry.display()
+                    );
+                }
+                return Ok(ExitCode::SUCCESS);
+            }
+            // Optional Ed25519 public-key load when --signatures.
+            let verify_key = if *signatures {
+                let pub_path = root.join("reports/attest-pubkey.b64");
+                if !pub_path.is_file() {
+                    let payload = serde_json::json!({
+                        "status": "fail",
+                        "stage": "verify",
+                        "error": format!("no {} — run `forge attest init` first or omit --signatures", pub_path.display()),
+                    });
+                    if *json {
+                        println!("{payload}");
+                    } else {
+                        eprintln!(
+                            "forge fingerprint verify: --signatures requires {}; run `forge attest init` first or omit the flag",
+                            pub_path.display()
+                        );
+                    }
+                    return Ok(ExitCode::from(1));
+                }
+                let s = std::fs::read_to_string(&pub_path)
+                    .with_context(|| format!("read {}", pub_path.display()))?;
+                match forge_core::attest::pubkey_from_base64(s.trim()) {
+                    Some(vk) => Some(vk),
+                    None => {
+                        let payload = serde_json::json!({
+                            "status": "fail",
+                            "stage": "verify",
+                            "error": format!("could not parse pubkey from {}", pub_path.display()),
+                        });
+                        if *json {
+                            println!("{payload}");
+                        } else {
+                            eprintln!(
+                                "forge fingerprint verify: could not parse pubkey from {}",
+                                pub_path.display()
+                            );
+                        }
+                        return Ok(ExitCode::from(1));
+                    }
+                }
+            } else {
+                None
+            };
+            let result = forge_core::fingerprint_registry::verify_chain(
+                &registry,
+                verify_key.as_ref(),
+            );
+            let entries = forge_core::fingerprint_registry::read_all(&registry)
+                .map(|v| v.len())
+                .unwrap_or(0);
+            match result {
+                Ok(()) => {
+                    let payload = serde_json::json!({
+                        "status": "ok",
+                        "stage": "verify",
+                        "registry_path": registry.display().to_string(),
+                        "entries": entries,
+                        "chain_valid": true,
+                        "signatures_verified": *signatures,
+                    });
+                    if *json {
+                        println!("{payload}");
+                    } else {
+                        println!(
+                            "forge fingerprint verify: ok ({} entries, chain valid{})",
+                            entries,
+                            if *signatures {
+                                ", signatures verified"
+                            } else {
+                                ""
+                            }
+                        );
+                    }
+                    Ok(ExitCode::SUCCESS)
+                }
+                Err(e) => {
+                    let payload = serde_json::json!({
+                        "status": "fail",
+                        "stage": "verify",
+                        "registry_path": registry.display().to_string(),
+                        "entries": entries,
+                        "chain_valid": false,
+                        "error": e.to_string(),
+                    });
+                    if *json {
+                        println!("{payload}");
+                    } else {
+                        eprintln!(
+                            "forge fingerprint verify: FAIL — {} ({} entries before failure)",
+                            e, entries
+                        );
+                    }
+                    Ok(ExitCode::from(2))
+                }
+            }
+        }
+        FingerprintAction::List {
+            registry_path,
+            tenant,
+            json,
+        } => {
+            let registry = registry_path
+                .clone()
+                .unwrap_or_else(|| root.join("registry/fingerprints.jsonl"));
+            let entries = if !registry.exists() {
+                Vec::new()
+            } else if let Some(t) = tenant {
+                forge_core::fingerprint_registry::for_tenant(&registry, t)
+                    .with_context(|| format!("read tenant entries from {}", registry.display()))?
+            } else {
+                forge_core::fingerprint_registry::read_all(&registry)
+                    .with_context(|| format!("read entries from {}", registry.display()))?
+            };
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "stage": "list",
+                        "registry_path": registry.display().to_string(),
+                        "tenant_filter": tenant.clone().unwrap_or_default(),
+                        "count": entries.len(),
+                        "entries": entries.iter().map(|e| serde_json::json!({
+                            "sequence": e.sequence,
+                            "hash": e.hash,
+                            "site_id": e.site_id,
+                            "tenant_id": e.tenant_id,
+                            "timestamp": e.timestamp,
+                        })).collect::<Vec<_>>(),
+                    })
+                );
+            } else {
+                println!(
+                    "forge fingerprint list: {} entries in {}",
+                    entries.len(),
+                    registry.display()
+                );
+                for e in &entries {
+                    println!(
+                        "  #{:04}  {}  site={}  tenant={}  {}",
+                        e.sequence, &e.hash[..16], e.site_id, e.tenant_id, e.timestamp
+                    );
+                }
             }
             Ok(ExitCode::SUCCESS)
         }
