@@ -43,6 +43,7 @@ use forge_phases::dns_hygiene_lint::DnsHygieneLintPhase;
 use forge_phases::dynamic_runtime::DynamicRuntimePhase;
 use forge_phases::editorial_purity_gate::EditorialPurityGatePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
+use forge_phases::mood_lock::MoodLockPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
 use forge_phases::jurisdiction_compliance::JurisdictionCompliancePhase;
@@ -1352,6 +1353,7 @@ fn run() -> Result<ExitCode> {
         Box::new(EditorialPurityGatePhase::default()),
         Box::new(SiteIdentityConformancePhase::default()),
         Box::new(VoiceProfileAuditPhase::default()),
+        Box::new(MoodLockPhase::default()),
         Box::new(PatternEntropyPhase::default()),
         Box::new(UniquenessGatePhase::default()),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
