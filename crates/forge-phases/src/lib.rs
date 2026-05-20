@@ -29,6 +29,7 @@ pub mod forbidden_patterns;
 pub mod mood_lock;
 pub mod pattern_entropy;
 pub mod site_identity_conformance;
+pub mod substrate_self_audit;
 pub mod theme_variation_required;
 pub mod uniqueness_gate;
 pub mod voice_profile_audit;
