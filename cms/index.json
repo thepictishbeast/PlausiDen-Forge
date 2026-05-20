@@ -59,10 +59,12 @@
     "colophon": "© 2026 Prosperity Club, Deborah Armstrong. Content for educational purposes only. Not financial, legal, or investment advice."
   },
   "nav_links": [
-    {"label": "Learn",           "href": "/learn/",            "data_backend": "view-learn"},
-    {"label": "Masterclass",     "href": "/masterclass/",      "data_backend": "view-masterclass"},
-    {"label": "Risk Management", "href": "/risk-management/",  "data_backend": "view-risk-management"},
-    {"label": "About",           "href": "/about/",            "data_backend": "view-about"}
+    {"label": "About",              "href": "/about/",                       "data_backend": "prosperity-view-about"},
+    {"label": "Prosper in Life",    "href": "/prosper-in-life/",             "data_backend": "prosperity-view-prosper"},
+    {"label": "Blogs",              "href": "/blogs-finance-insurance/",     "data_backend": "prosperity-view-blog"},
+    {"label": "Financial Resources","href": "/financial-resources/",         "data_backend": "prosperity-view-resources"},
+    {"label": "Contact Us",         "href": "/how-to-contact-us/",           "data_backend": "prosperity-view-contact"},
+    {"label": "Master Class Videos","href": "/master-class-sign-up/",        "data_backend": "prosperity-view-master-class"}
   ],
   "sections": [
     {
