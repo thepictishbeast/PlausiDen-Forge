@@ -1,0 +1,133 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Linear — The system for product development",
+  "description": "Purpose-built for planning and building products with AI agents.",
+  "brand": "Linear",
+  "chrome": "page_shell",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "linear.app", "href": "https://linear.app/", "data_backend": "cta-platform"}
+  ],
+  "path": "/linear.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Product",
+        "links": [
+          {"label": "Issues",     "href": "/linear-issues/",     "data_backend": "view-platform"},
+          {"label": "Projects",   "href": "/linear-projects/",   "data_backend": "view-platform"},
+          {"label": "Agents",     "href": "/linear-agents/",     "data_backend": "view-platform"},
+          {"label": "PRs",        "href": "/linear-prs/",        "data_backend": "view-platform"},
+          {"label": "Insights",   "href": "/linear-insights/",   "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Reference",
+        "links": [
+          {"label": "linear.app",    "href": "https://linear.app/",        "data_backend": "cta-platform"},
+          {"label": "Linear docs",   "href": "https://linear.app/docs",    "data_backend": "view-docs"},
+          {"label": "Method",        "href": "https://linear.app/method",  "data_backend": "view-docs"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Linear approximation",
+      "phone": "Forge-static mirror",
+      "email": "approximation@plausiden.com",
+      "address": "Authored from SSR-extractable copy",
+      "jurisdiction": "Pixel-rep rotation"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 Forge-static approximation of linear.app — authored by PlausiDen-Forge for substrate validation. Not affiliated with Linear, Inc."
+  },
+  "nav_links": [
+    {"label": "Features",  "href": "/linear-features/",  "data_backend": "view-platform"},
+    {"label": "Method",    "href": "https://linear.app/method", "data_backend": "view-docs"},
+    {"label": "Customers", "href": "/linear-customers/", "data_backend": "view-platform"},
+    {"label": "Pricing",   "href": "/linear-pricing/",   "data_backend": "view-pricing"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Linear — Forge static mirror",
+      "title": "The system for product development.",
+      "lede": "Purpose-built for planning and building products with AI agents. Linear is shaped by the practices and principles of world-class product teams.",
+      "cta": {
+        "label": "linear.app",
+        "href": "https://linear.app/",
+        "data_backend": "cta-platform"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating product development workflow.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge-static approximation of linear.app authored from SSR-extractable headings + descriptions. Pixel-rep rotation target per PlausiDen-Forge #222. Not affiliated with Linear; the substrate uses Linear as a reference shape for the editorial_purity_gate's dense-info-panel audit (Linear is one of the few mainstream SaaS sites that already ships an editorial-density landing rather than the SaaS-trope hero+features grid)."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "Designed for workflows shared by humans and agents. From drafting PRDs to pushing PRs. Reduces noise and restores momentum to help teams ship with high velocity and focus.",
+      "attribution": "linear.app, SSR-extracted",
+      "emphasis": "display"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Faster app launch.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Plan",
+          "value": "Make product faster — turn conversations into actionable issues.",
+          "hint": "Customer feedback is routed, labeled, and prioritized for the right team. No issue-tracker triage queue eating engineering attention."
+        },
+        {
+          "key": "Define",
+          "value": "Define the work, end to end.",
+          "hint": "Plan and navigate from idea to launch. Align teams via product initiatives, strategic roadmaps, and clear up-to-date PRDs."
+        },
+        {
+          "key": "Ship",
+          "value": "Move work forward with agents.",
+          "hint": "Build and deploy AI agents that work alongside your team. Complex tasks together or delegate entire issues end-to-end."
+        },
+        {
+          "key": "Review",
+          "value": "Review PRs and agent output.",
+          "hint": "Understand code changes at a glance with structural diffs for human and agent output. Review, discuss, and merge — all within Linear."
+        },
+        {
+          "key": "Measure",
+          "value": "Understand progress without guesswork.",
+          "hint": "Project updates, analytics, and dashboards surface what needs your attention. The signal-to-noise ratio is the product."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Built for the future. Available today."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Linear ships with a deliberately small surface area: issues, projects, cycles, and the agent layer that operates on them. Every feature is shaped by the Linear Method — the principles document that determines what doesn't ship as much as what does."
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Reference",
+      "title": "Open the live Linear site.",
+      "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
+      "cta": {"label": "linear.app", "href": "https://linear.app/", "data_backend": "cta-platform"}
+    }
+  ]
+}
