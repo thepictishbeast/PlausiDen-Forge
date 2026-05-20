@@ -28,6 +28,7 @@
 
 pub mod attest;
 pub mod fingerprint;
+pub mod fingerprint_registry;
 pub mod pipeline;
 pub mod tenant_corpus;
 
