@@ -123,11 +123,27 @@ fn check_class(
                 .and_then(|s| s.to_str())
                 .unwrap_or("?")
                 .to_owned();
-            findings.push(Finding::warn(
-                phase,
-                name,
-                format!("{} {} > {} budget — {hint}", iec(sz), label, iec(budget)),
-            ));
+            findings.push(
+                Finding::warn(
+                    phase,
+                    name,
+                    format!("{} {} > {} budget — {hint}", iec(sz), label, iec(budget)),
+                )
+                .why(
+                    "every kilobyte over budget is one more TLS round-trip the reader's \
+                     browser has to wait for before paint — the budget is the reader-side \
+                     latency floor, not an internal lint",
+                )
+                .fix(format!(
+                    "{label} over budget at {}: {hint}",
+                    iec(sz)
+                ))
+                .avoid(
+                    "don't raise the budget to silence the warn — every active substrate \
+                     uses the same defaults so over-budget assets are a real regression, not \
+                     a config mismatch",
+                ),
+            );
         }
     }
     Ok(())
@@ -156,6 +172,32 @@ fn iec(n: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn perf_budget_findings_carry_advocacy() {
+        use std::fs;
+        let tmp = std::env::temp_dir().join(format!(
+            "forge-perf-budget-advocacy-{}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&tmp);
+        fs::create_dir_all(tmp.join("static")).unwrap();
+        // Write a JS file 20K — well above the 8K JS budget.
+        let big = vec![b'a'; 20 * 1024];
+        fs::write(tmp.join("static/big.js"), &big).unwrap();
+        let ctx = BuildCtx {
+            root: tmp.clone(),
+            static_dir: tmp.join("static"),
+            mode: forge_core::BuildMode::Poc,
+        };
+        let findings = PerfBudgetPhase.run(&ctx).expect("run");
+        assert_eq!(findings.len(), 1, "expected one over-budget finding");
+        let adv = &findings[0].advocacy;
+        assert!(!adv.why.is_empty(), "must carry .why()");
+        assert!(!adv.substrate_fix.is_empty(), "must carry .fix()");
+        assert!(adv.anti_pattern.is_some(), "must carry .avoid()");
+        let _ = fs::remove_dir_all(&tmp);
+    }
 
     #[test]
     fn iec_formats() {

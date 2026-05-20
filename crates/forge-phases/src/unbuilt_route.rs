@@ -43,11 +43,30 @@ impl Phase for UnbuiltRoutePhase {
                 let path = ctx.static_dir.join(&target);
                 if !path.exists() {
                     let msg = format!("href=\"{href}\" → static/{target} does not exist");
-                    findings.push(if suppress {
+                    let f = if suppress {
                         Finding::warn(self.name(), file.name.clone(), msg)
                     } else {
                         Finding::strict(self.name(), file.name.clone(), msg)
-                    });
+                    };
+                    findings.push(
+                        f.why(
+                            "every internal href in shipped HTML must resolve to a file in \
+                             static/. an unresolved href ships to readers as a 404 — silent in \
+                             the build, loud in the browser",
+                        )
+                        .fix(format!(
+                            "either: (a) add cms/{}.json so render writes static/{target}, OR \
+                             (b) remove the dead link from the rendering source (CMS body / \
+                             Loom primitive props)",
+                            target.trim_end_matches(".html")
+                        ))
+                        .skill("author-cms-content")
+                        .avoid(
+                            "don't manually `touch static/<route>.html` to make the gate pass \
+                             — that file is regenerated only from cms/*.json on write_canonical \
+                             builds and will be flagged as an orphan",
+                        ),
+                    );
                 }
             }
         }
@@ -306,6 +325,41 @@ mod tests {
         // forge.toml exists but no [poc] section
         std::fs::write(dir.path().join("forge.toml"), "[forge]\nmode = \"poc\"\n").unwrap();
         assert!(!forge_toml_suppress_unbuilt_route(dir.path()));
+    }
+
+    #[test]
+    fn unbuilt_route_findings_carry_advocacy() {
+        use std::fs;
+        let tmp = std::env::temp_dir().join(format!(
+            "forge-unbuilt-advocacy-{}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&tmp);
+        fs::create_dir_all(tmp.join("static")).unwrap();
+        // Page with one dead internal href.
+        fs::write(
+            tmp.join("static/index.html"),
+            r#"<!doctype html><html><body><a href="/learn/">learn</a></body></html>"#,
+        )
+        .unwrap();
+        let ctx = BuildCtx {
+            root: tmp.clone(),
+            static_dir: tmp.join("static"),
+            mode: forge_core::BuildMode::Poc,
+        };
+        let findings = UnbuiltRoutePhase.run(&ctx).expect("run");
+        assert_eq!(findings.len(), 1, "expected one unbuilt-route finding");
+        let adv = &findings[0].advocacy;
+        assert!(!adv.why.is_empty(), "must carry .why()");
+        assert!(
+            adv.substrate_fix.contains("cms/")
+                || adv.substrate_fix.contains("remove the dead link"),
+            ".fix() must name the substrate-correct action: {:?}",
+            adv.substrate_fix
+        );
+        assert_eq!(adv.skill.as_deref(), Some("author-cms-content"));
+        assert!(adv.anti_pattern.is_some(), "must carry .avoid()");
+        let _ = fs::remove_dir_all(&tmp);
     }
 
     #[test]
