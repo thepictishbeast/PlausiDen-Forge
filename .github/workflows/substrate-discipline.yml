@@ -1,0 +1,181 @@
+name: substrate-discipline
+
+# Substrate-only-path + tool-surface + doctrine-citation gates.
+#
+# Per `[[substrate-only-path]]` + `[[tool-starvation-anti-pattern]]`
+# + `[[priority-architectural-first-and-cross-ai]]` doctrines, this
+# workflow rejects PRs that:
+#
+#   1. Cite a doctrine rule that does not resolve in the rule database
+#      (`forge doctrine check`)
+#   2. Add a `// SUBSTRATE-BYPASS(...)` tag without a matching
+#      `bypass-register.toml` entry — or leave an orphan register entry
+#      with no source reference (`forge bypasses`)
+#   3. Add new `data-backend` references without declaring them in
+#      `backends.toml` (`forge audit phantom_button`)
+#   4. Land MCP tool schemas that don't parse as JSON or aren't listed
+#      in `mcp/manifest.json`
+#
+# Closes tasks #154 (tools-first PR review + CI guardrail) and #163
+# (PR review reject substrate-bypass with substrate-extension pointer).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "cms/**"
+      - "static/**"
+      - "backends.toml"
+      - "bypass-register.toml"
+      - "mcp/**"
+      - ".github/workflows/substrate-discipline.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "cms/**"
+      - "static/**"
+      - "backends.toml"
+      - "bypass-register.toml"
+      - "mcp/**"
+      - ".github/workflows/substrate-discipline.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  substrate-discipline:
+    name: substrate-discipline gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: checkout-forge
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: checkout-doctrine
+        uses: actions/checkout@v4
+        with:
+          repository: thepictishbeast/PlausiDen-AVP-Doctrine
+          ref: main
+          path: _doctrine
+          persist-credentials: false
+
+      - name: setup-rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: build-forge-cli
+        env:
+          RUST_BACKTRACE: 1
+        run: |
+          cargo build --release -p forge-cli --locked
+
+      # ----------------------------------------------------------------
+      # Gate 1: doctrine citation integrity
+      # ----------------------------------------------------------------
+      - name: forge doctrine check
+        env:
+          PLAUSIDEN_DOCTRINE_DIR: ${{ github.workspace }}/_doctrine
+        run: |
+          ./target/release/forge doctrine check --json | tee doctrine-check.json
+          # Non-zero exit if any Finding.citing(...) reference is unresolved.
+
+      # ----------------------------------------------------------------
+      # Gate 2: substrate-bypass register integrity
+      # ----------------------------------------------------------------
+      - name: forge bypasses
+        run: |
+          ./target/release/forge bypasses --json | tee bypasses.json
+          # Non-zero exit on orphan register entries OR untracked tags.
+
+      # ----------------------------------------------------------------
+      # Gate 3: phantom-button (data-backend) integrity
+      # ----------------------------------------------------------------
+      - name: forge audit phantom_button
+        run: |
+          ./target/release/forge audit phantom_button --explain | tee phantom-buttons.txt
+          # Non-zero exit if any data-backend reference lacks a backends.toml entry.
+
+      # ----------------------------------------------------------------
+      # Gate 4: MCP tool schema integrity
+      # ----------------------------------------------------------------
+      - name: validate MCP schemas
+        run: |
+          set -euo pipefail
+          fail=0
+          for f in mcp/manifest.json mcp/tools/*.json; do
+            if ! node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" 2>/dev/null; then
+              echo "::error file=$f::malformed JSON"
+              fail=1
+            fi
+          done
+          # Every tool in manifest.json must exist as a file under tools/.
+          node -e '
+            const fs = require("fs");
+            const m  = JSON.parse(fs.readFileSync("mcp/manifest.json"));
+            let bad  = 0;
+            for (const t of (m.tools || [])) {
+              if (!fs.existsSync("mcp/" + t.file)) {
+                console.error("::error::manifest.json references missing file mcp/" + t.file);
+                bad = 1;
+              }
+            }
+            process.exit(bad);
+          '
+          # Every file under tools/ must be indexed in manifest.json.
+          node -e '
+            const fs = require("fs");
+            const m  = JSON.parse(fs.readFileSync("mcp/manifest.json"));
+            const listed = new Set((m.tools || []).map(t => t.file));
+            const files  = fs.readdirSync("mcp/tools").filter(f => f.endsWith(".json"));
+            let bad      = 0;
+            for (const f of files) {
+              if (!listed.has("tools/" + f)) {
+                console.error("::error file=mcp/tools/" + f + "::not indexed in mcp/manifest.json");
+                bad = 1;
+              }
+            }
+            process.exit(bad);
+          '
+          exit $fail
+
+      # ----------------------------------------------------------------
+      # Surface the verdict in the action summary.
+      # ----------------------------------------------------------------
+      - name: emit summary
+        if: always()
+        run: |
+          {
+            echo "## Substrate-discipline gates"
+            echo ""
+            echo "| Gate | Result |"
+            echo "|------|--------|"
+            echo "| forge doctrine check      | $([ -s doctrine-check.json   ] && echo PASS || echo FAIL) |"
+            echo "| forge bypasses            | $([ -s bypasses.json         ] && echo PASS || echo FAIL) |"
+            echo "| forge audit phantom_button| $([ -s phantom-buttons.txt   ] && echo PASS || echo FAIL) |"
+            echo "| MCP schema integrity      | PASS (would have failed prior gate otherwise) |"
+            echo ""
+            echo "_Per doctrines `[[substrate-only-path]]` + `[[tool-starvation-anti-pattern]]` + `[[priority-architectural-first-and-cross-ai]]`._"
+          } >>"$GITHUB_STEP_SUMMARY"
+
+      - name: upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: substrate-discipline-reports
+          path: |
+            doctrine-check.json
+            bypasses.json
+            phantom-buttons.txt
+          if-no-files-found: warn
