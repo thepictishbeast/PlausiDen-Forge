@@ -10,19 +10,7 @@
     {
       "phase": "tokens",
       "path": "about.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "about.html",
       "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "contact.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
     },
     {
@@ -34,19 +22,7 @@
     {
       "phase": "tokens",
       "path": "encrypted-inquiry.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "encrypted-inquiry.html",
       "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "field-notes.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
     },
     {
@@ -58,19 +34,7 @@
     {
       "phase": "tokens",
       "path": "index.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "index.html",
       "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "prosperity-club.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
     },
     {
@@ -82,19 +46,7 @@
     {
       "phase": "tokens",
       "path": "quote.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "quote.html",
       "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "services.html",
-      "message": "raw px values: 14px 44px 9999px 999px",
       "severity": "warn"
     },
     {
@@ -106,25 +58,25 @@
     {
       "phase": "perf_budget",
       "path": "prosperity-club.html",
-      "message": "21.0K HTML > 20.0K budget — audit blocks / split route",
+      "message": "21.2K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "services.html",
-      "message": "20.7K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.9K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "field-notes.html",
-      "message": "20.3K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.5K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "20.6K HTML > 20.0K budget — audit blocks / split route",
+      "message": "20.8K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -711,9 +663,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 118,
+  "warn_count": 110,
   "duration_ms": 16,
-  "prev_hash": "826e72ae95e1d6cc2b2b721f56f365d848329fc9f8a4e95c023ff2ce2436ad91",
-  "chain_length": 137,
-  "started": "2026-05-20T01:14:09.292344511Z"
+  "prev_hash": "a4d0b54b7aee4600223990c8d440442efe9d222fd97a110ff069398fbf47cb11",
+  "chain_length": 139,
+  "started": "2026-05-20T01:27:33.17560916Z"
 }
