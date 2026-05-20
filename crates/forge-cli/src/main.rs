@@ -72,6 +72,7 @@ use forge_phases::seo::SeoPhase;
 use forge_phases::semver_enforcement::SemverEnforcementPhase;
 use forge_phases::site_identity_conformance::SiteIdentityConformancePhase;
 use forge_phases::sri::SriPhase;
+use forge_phases::theme_variation_required::ThemeVariationRequiredPhase;
 use forge_phases::structured_data::StructuredDataPhase;
 use forge_phases::substrate_purity::SubstratePurityPhase;
 use forge_phases::theme_consistency::ThemeConsistencyPhase;
@@ -1355,6 +1356,7 @@ fn run() -> Result<ExitCode> {
         // docs/VARIATION_GUARANTEES.md.
         Box::new(EditorialPurityGatePhase::default()),
         Box::new(SiteIdentityConformancePhase::default()),
+        Box::new(ThemeVariationRequiredPhase::default()),
         Box::new(VoiceProfileAuditPhase::default()),
         Box::new(MoodLockPhase::default()),
         Box::new(CompositionLineagePhase::default()),

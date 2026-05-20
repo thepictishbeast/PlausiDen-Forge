@@ -98,6 +98,10 @@ drift_budget = 15
 name = "light"
 required = true
 
+[[site_identity.theme_variant]]
+name = "amoled"
+required = false
+
 # uniqueness_gate not enabled by default — needs registry seeded
 # first via `forge fingerprint register` (CLI command lands later).
 # [uniqueness_gate]
