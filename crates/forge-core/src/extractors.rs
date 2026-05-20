@@ -89,4 +89,5 @@ pub mod motion;
 pub mod palette;
 pub mod sections;
 pub mod spacing;
+pub mod structural;
 pub mod typography;
