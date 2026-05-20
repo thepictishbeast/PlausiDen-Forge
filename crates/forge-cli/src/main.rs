@@ -61,6 +61,7 @@ use forge_phases::network_target_enforcement::NetworkTargetEnforcementPhase;
 use forge_phases::hunted_tier::HuntedTierPhase;
 use forge_phases::noscript_strict::NoscriptStrictPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
+use forge_phases::pattern_emergence::PatternEmergencePhase;
 use forge_phases::pattern_entropy::PatternEntropyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
 use forge_phases::primitive_exhaustion::PrimitiveExhaustionPhase;
@@ -1404,6 +1405,7 @@ fn run() -> Result<ExitCode> {
         Box::new(PrimitiveExhaustionPhase::default()),
         Box::new(DifferentiationBudgetPhase::default()),
         Box::new(ReseedingCadencePhase::default()),
+        Box::new(PatternEmergencePhase::default()),
         Box::new(UniquenessGatePhase::default()),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
         // infra issues surface earlier; runtime-only regressions
