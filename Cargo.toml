@@ -128,6 +128,13 @@ members = [
     # i18n / theming / security / sovereignty / performance /
     # reliability / discipline). Companion to orient-core.
     "crates/loom-traits",
+    # migration-core (task #139): typed migration framework per
+    # AVP-Doctrine VERSION_DISCIPLINE.md. Registry types
+    # (MigrationEntry / MigrationRegistry) + Migration trait +
+    # ChangeCategory enum + well-formedness audits. Crypto
+    # signature verification stub (full integration cross-wires
+    # via manifest-attest in a follow-on capability request).
+    "crates/migration-core",
     # T64: manifest-attest — consolidated signing layer for every
     # PlausiDen artifact. Ed25519 today; ML-DSA hybrid lands in #65.
     "crates/manifest-attest",

@@ -1,0 +1,17 @@
+[package]
+name = "migration-core"
+version = "0.1.0"
+publish = false  # workspace-internal; never published to crates.io
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "migration-core — typed migration framework per PlausiDen-AVP-Doctrine/VERSION_DISCIPLINE.md. Registry types (MigrationEntry / MigrationRegistry) + Migration trait + ChangeCategory enum + verification of registry well-formedness. Crypto signature verification stub (full integration follows in manifest-attest cross-wiring)."
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+toml = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
