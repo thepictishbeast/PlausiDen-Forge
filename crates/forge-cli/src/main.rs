@@ -977,11 +977,18 @@ enum AttestAction {
         /// chain-of-trust break.
         #[arg(long, default_value_t = false)]
         force: bool,
+        /// JSON output (cross-AI consumable per docs-008). Closes #200.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
     /// Print the public key in base64 form. Stable identifier
     /// for an external auditor pinning trust to this forge
     /// instance.
-    Pubkey,
+    Pubkey {
+        /// JSON output (cross-AI consumable per docs-008). Closes #200.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// T91 (third wiring): print the operator-facing key
     /// fingerprint — `base64url(SHA256(public-key-bytes))[..16]`,
     /// computed via manifest-attest's `KeyFingerprint`.
@@ -989,7 +996,11 @@ enum AttestAction {
     /// Use the fingerprint as the short stable identifier in
     /// log lines + attestation metadata when the full
     /// public-key base64 is too long to display.
-    Fingerprint,
+    Fingerprint {
+        /// JSON output (cross-AI consumable per docs-008). Closes #200.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -1757,13 +1768,25 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
     let key_path = reports_dir.join("attest-key.b64");
     let pub_path = reports_dir.join("attest-pubkey.b64");
     match action {
-        AttestAction::Init { force } => {
+        AttestAction::Init { force, json } => {
             if key_path.exists() && !force {
-                eprintln!(
-                    "forge attest init: {} already exists; pass --force to overwrite \
-                     (chain-of-trust will break for any verifier pinned to the old key)",
-                    key_path.display()
-                );
+                if *json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status": "fail",
+                            "stage": "init",
+                            "error": format!("{} already exists; pass --force to overwrite", key_path.display()),
+                            "advisory": "chain-of-trust will break for any verifier pinned to the old key"
+                        })
+                    );
+                } else {
+                    eprintln!(
+                        "forge attest init: {} already exists; pass --force to overwrite \
+                         (chain-of-trust will break for any verifier pinned to the old key)",
+                        key_path.display()
+                    );
+                }
                 return Ok(ExitCode::from(1));
             }
             let key = forge_core::attest::generate_keypair();
@@ -1781,32 +1804,78 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
             }
             std::fs::write(&pub_path, &pub_b64)
                 .with_context(|| format!("write {}", pub_path.display()))?;
-            println!("forge attest init:");
-            println!("  ok    private key → {} (mode 0600)", key_path.display());
-            println!("  ok    public  key → {}", pub_path.display());
-            println!("  pubkey: {pub_b64}");
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "key_path": key_path.display().to_string(),
+                        "pub_path": pub_path.display().to_string(),
+                        "key_mode": "0600",
+                        "pubkey": pub_b64
+                    })
+                );
+            } else {
+                println!("forge attest init:");
+                println!("  ok    private key → {} (mode 0600)", key_path.display());
+                println!("  ok    public  key → {}", pub_path.display());
+                println!("  pubkey: {pub_b64}");
+            }
             Ok(ExitCode::SUCCESS)
         }
-        AttestAction::Pubkey => {
+        AttestAction::Pubkey { json } => {
             if !pub_path.is_file() {
-                eprintln!(
-                    "forge attest pubkey: no {} — run `forge attest init` first",
-                    pub_path.display()
-                );
+                if *json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status": "fail",
+                            "stage": "pubkey",
+                            "error": format!("no {} — run `forge attest init` first", pub_path.display())
+                        })
+                    );
+                } else {
+                    eprintln!(
+                        "forge attest pubkey: no {} — run `forge attest init` first",
+                        pub_path.display()
+                    );
+                }
                 return Ok(ExitCode::from(1));
             }
             let s = std::fs::read_to_string(&pub_path)
                 .with_context(|| format!("read {}", pub_path.display()))?;
-            print!("{}", s.trim());
-            println!();
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "pub_path": pub_path.display().to_string(),
+                        "pubkey": s.trim()
+                    })
+                );
+            } else {
+                print!("{}", s.trim());
+                println!();
+            }
             Ok(ExitCode::SUCCESS)
         }
-        AttestAction::Fingerprint => {
+        AttestAction::Fingerprint { json } => {
             if !pub_path.is_file() {
-                eprintln!(
-                    "forge attest fingerprint: no {} — run `forge attest init` first",
-                    pub_path.display()
-                );
+                if *json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status": "fail",
+                            "stage": "fingerprint",
+                            "error": format!("no {} — run `forge attest init` first", pub_path.display())
+                        })
+                    );
+                } else {
+                    eprintln!(
+                        "forge attest fingerprint: no {} — run `forge attest init` first",
+                        pub_path.display()
+                    );
+                }
                 return Ok(ExitCode::from(1));
             }
             let s = std::fs::read_to_string(&pub_path)
@@ -1822,7 +1891,18 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
                 .or_else(|_| base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(trimmed))
                 .with_context(|| format!("decode base64 pubkey from {}", pub_path.display()))?;
             let fp = manifest_attest::KeyFingerprint::of_verifying_key_bytes(&bytes);
-            println!("{}", fp.as_str());
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "pub_path": pub_path.display().to_string(),
+                        "fingerprint": fp.as_str()
+                    })
+                );
+            } else {
+                println!("{}", fp.as_str());
+            }
             Ok(ExitCode::SUCCESS)
         }
     }
@@ -3320,16 +3400,16 @@ mod attest_fingerprint_tests {
     #[test]
     fn fingerprint_succeeds_against_a_freshly_generated_key() {
         let td = TempDir::new().unwrap();
-        let init_code = run_attest(td.path(), &AttestAction::Init { force: false }).unwrap();
+        let init_code = run_attest(td.path(), &AttestAction::Init { force: false, json: false }).unwrap();
         assert_eq!(init_code, ExitCode::SUCCESS);
-        let fp_code = run_attest(td.path(), &AttestAction::Fingerprint).unwrap();
+        let fp_code = run_attest(td.path(), &AttestAction::Fingerprint { json: false }).unwrap();
         assert_eq!(fp_code, ExitCode::SUCCESS);
     }
 
     #[test]
     fn fingerprint_errors_when_no_key_exists() {
         let td = TempDir::new().unwrap();
-        let code = run_attest(td.path(), &AttestAction::Fingerprint).unwrap();
+        let code = run_attest(td.path(), &AttestAction::Fingerprint { json: false }).unwrap();
         assert_eq!(code, ExitCode::from(1));
     }
 }

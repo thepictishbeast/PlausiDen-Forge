@@ -459,15 +459,20 @@ Exit code: `0` on `status="ok"`, `1` on strict findings (production mode), `2` o
 Originally 8 subcommands; closed via task #200 batches:
 
 1. **`forge verify`** — ✓ closed (chain integrity envelope; signature summary nested)
-2. `forge attest sign` — pending (signature metadata envelope)
-3. `forge attest fingerprint` — pending (pubkey fingerprint envelope)
-4. **`forge audit secrets`** — ✓ closed (matches[] with path + rule)
-5. `forge audit phantom_button` — n/a (this is a Forge build phase, not a CLI subcommand; emits via the report JSON)
-6. `forge audit external_assets` — n/a (same — Forge build phase, in-report)
-7. `forge fix` — pending (apply-result envelope)
-8. `loom sync` / `loom deploy hetzner` — Loom-side; out of scope here.
+2. `forge attest sign` — n/a (there's no separate `attest sign` subcommand; signing happens automatically in `forge build` when a key exists. `forge attest init` / `pubkey` / `fingerprint` are the actual subcommands, all closed below)
+3. **`forge attest init`** — ✓ closed (`{status, key_path, pub_path, key_mode, pubkey}`)
+4. **`forge attest pubkey`** — ✓ closed (`{status, pub_path, pubkey}`)
+5. **`forge attest fingerprint`** — ✓ closed (`{status, pub_path, fingerprint}`)
+6. **`forge audit secrets`** — ✓ closed (matches[] with path + rule)
+7. `forge audit phantom_button` — n/a (this is a Forge build phase, not a CLI subcommand; emits via the report JSON)
+8. `forge audit external_assets` — n/a (same — Forge build phase, in-report)
+9. `forge audit mutants` — pending small addition; pattern from #4 directly applicable
+10. `forge fix` — pending substantial refactor (the function has many print-statement branches); pattern from #1 directly applicable
+11. `loom sync` / `loom deploy hetzner` — Loom-side; out of scope here.
 
-**Currently 4 still-pending Forge-side gaps** (attest sign, attest fingerprint, audit mutants, fix). Refactor pattern from `forge verify` + `forge audit secrets` is now established for the remaining ones.
+**5 sites closed in #200**, 3 reclassified as n/a, 2 still pending (`audit mutants` + `fix`). Refactor pattern from `forge verify` + `forge audit secrets` + the 3 attest subcommands is sufficient for the remaining ones — each is a mechanical extension.
+
+Per `[[backward-compat-version-discipline]]`: adding `--json` is a Cat 2 additive change. New consumers may pass `--json`; legacy callers continue to get text output (default `--json false`).
 
 ---
 
