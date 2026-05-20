@@ -47,8 +47,8 @@
     ],
     "contact": {
       "heading": "Prosperity Club",
-      "phone": "Contact via website",
-      "email": "info@prosperityclub.com",
+      "phone": "(435) 632-6399",
+      "email": "deborah@prosperityclub.com",
       "address": "Online financial education",
       "jurisdiction": "USA + Canada"
     },
@@ -65,6 +65,11 @@
     {"label": "About",           "href": "/about/",            "data_backend": "view-about"}
   ],
   "sections": [
+    {
+      "kind": "announcement_bar",
+      "text": "Email: deborah@prosperityclub.com  •  Phone: (435) 632-6399",
+      "tone": "success"
+    },
     {
       "kind": "image_hero",
       "align": "start",
