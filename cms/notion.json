@@ -1,0 +1,121 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Notion — The AI workspace that works for you",
+  "description": "Build Custom Agents, search across all your apps, and automate busywork. The AI workspace where teams get more done, faster.",
+  "brand": "Notion",
+  "chrome": "page_shell",
+  "theme": "light",
+  "nav_actions": [
+    {"label": "notion.com", "href": "https://www.notion.com/", "data_backend": "cta-platform"}
+  ],
+  "path": "/notion.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Product",
+        "links": [
+          {"label": "Workspace",   "href": "/notion-workspace/", "data_backend": "view-platform"},
+          {"label": "Agents",      "href": "/notion-agents/",   "data_backend": "view-platform"},
+          {"label": "Search",      "href": "/notion-search/",   "data_backend": "view-platform"},
+          {"label": "Calendar",    "href": "/notion-calendar/", "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Reference",
+        "links": [
+          {"label": "notion.com",  "href": "https://www.notion.com/",          "data_backend": "cta-platform"},
+          {"label": "Help",        "href": "https://www.notion.com/help",      "data_backend": "view-docs"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Notion approximation",
+      "phone": "Forge-static mirror",
+      "email": "approximation@plausiden.com",
+      "address": "Authored from SSR-extractable copy",
+      "jurisdiction": "Pixel-rep rotation"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 Forge-static approximation of notion.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Notion Labs, Inc."
+  },
+  "nav_links": [
+    {"label": "Product",   "href": "/notion-product/",  "data_backend": "view-platform"},
+    {"label": "Customers", "href": "/notion-customers/","data_backend": "view-platform"},
+    {"label": "Pricing",   "href": "/notion-pricing/",  "data_backend": "view-pricing"},
+    {"label": "Help",      "href": "https://www.notion.com/help", "data_backend": "view-docs"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Notion — Forge static mirror",
+      "title": "The AI workspace that works for you.",
+      "lede": "Build Custom Agents, search across all your apps, and automate busywork. The AI workspace where teams get more done, faster.",
+      "cta": {
+        "label": "notion.com",
+        "href": "https://www.notion.com/",
+        "data_backend": "cta-platform"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating collaborative workspace.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge-static approximation of notion.com authored from SSR-extractable headings + meta description. Pixel-rep rotation target per PlausiDen-Forge #222. Not affiliated with Notion; the substrate uses Notion as a reference shape for the editorial_purity_gate's workspace + agents audit."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "Meet the night shift. Notion agents keep work moving 24/7 — capturing knowledge, answering questions, and pushing projects forward while you sleep. Trusted by 98% of the Forbes Cloud 100.",
+      "attribution": "notion.com, SSR-extracted",
+      "emphasis": "display"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Keep work moving 24/7.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Automate",
+          "value": "Automate repetitive work for your team.",
+          "hint": "Agent flows that take a meeting note and route it to the right project, generate the status update, and prompt the assignee — without a templated form to fill in."
+        },
+        {
+          "key": "Answer",
+          "value": "Answers questions instantly using knowledge you already have.",
+          "hint": "Vector-indexed across the workspace + connected apps. Permission-respecting; the agent can't surface a doc the asker can't read."
+        },
+        {
+          "key": "Triage",
+          "value": "Assigns, prioritizes, and routes tasks on its own.",
+          "hint": "Project rules (escalation thresholds, owner-pool fallbacks, blocking dependencies) executed by the agent so the human queue stays small."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "AI features that compound."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Notion's substrate is the typed block — every doc, database row, calendar entry, and chat message is the same primitive shape. AI features compose against that single substrate rather than fragmented per-surface SDKs. The reference shape: one substrate beats N integrated tools."
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Reference",
+      "title": "Open the live Notion site.",
+      "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
+      "cta": {"label": "notion.com", "href": "https://www.notion.com/", "data_backend": "cta-platform"}
+    }
+  ]
+}

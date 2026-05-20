@@ -1,0 +1,144 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Anthropic — AI safety company building reliable, interpretable, steerable AI systems",
+  "description": "At Anthropic, we build AI to serve humanity's long-term well-being. Maker of Claude.",
+  "brand": "Anthropic",
+  "chrome": "page_shell",
+  "theme": "warm",
+  "nav_actions": [
+    {"label": "anthropic.com", "href": "https://www.anthropic.com/", "data_backend": "cta-platform"}
+  ],
+  "path": "/anthropic.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Products",
+        "links": [
+          {"label": "Claude",            "href": "/anthropic-claude/",      "data_backend": "view-platform"},
+          {"label": "Claude API",        "href": "/anthropic-api/",         "data_backend": "view-platform"},
+          {"label": "Claude Code",       "href": "/anthropic-claude-code/", "data_backend": "view-platform"},
+          {"label": "Claude Opus 4.7",   "href": "/anthropic-opus/",        "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Research",
+        "links": [
+          {"label": "Responsible Scaling Policy", "href": "https://www.anthropic.com/rsp",          "data_backend": "view-docs"},
+          {"label": "Core views on AI safety",    "href": "https://www.anthropic.com/safety",       "data_backend": "view-docs"},
+          {"label": "Anthropic Academy",          "href": "https://www.anthropic.com/academy",      "data_backend": "view-docs"},
+          {"label": "Economic Index",             "href": "https://www.anthropic.com/economic-index", "data_backend": "view-docs"}
+        ]
+      },
+      {
+        "heading": "Reference",
+        "links": [
+          {"label": "anthropic.com", "href": "https://www.anthropic.com/", "data_backend": "cta-platform"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Anthropic approximation",
+      "phone": "Forge-static mirror",
+      "email": "approximation@plausiden.com",
+      "address": "Authored from SSR-extractable copy",
+      "jurisdiction": "Pixel-rep rotation"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 Forge-static approximation of anthropic.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Anthropic PBC."
+  },
+  "nav_links": [
+    {"label": "Claude",   "href": "/anthropic-claude/",   "data_backend": "view-platform"},
+    {"label": "Research", "href": "/anthropic-research/", "data_backend": "view-docs"},
+    {"label": "Company",  "href": "/anthropic-company/",  "data_backend": "view-about"},
+    {"label": "Careers",  "href": "/anthropic-careers/",  "data_backend": "view-platform"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Anthropic — Forge static mirror",
+      "title": "Claude is a space to think.",
+      "lede": "At Anthropic, we build AI to serve humanity's long-term well-being.",
+      "cta": {
+        "label": "anthropic.com",
+        "href": "https://www.anthropic.com/",
+        "data_backend": "cta-platform"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating thoughtful AI research.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge-static approximation of anthropic.com authored from SSR-extractable headings + meta description. Pixel-rep rotation target per PlausiDen-Forge #222. Not affiliated with Anthropic; the substrate uses Anthropic as a reference shape for the editorial_purity_gate's research-org audit (Anthropic ships a near-editorial-press hero shape that the gate considers a positive reference rather than a SaaS-marketing target)."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "At Anthropic, we build AI to serve humanity's long-term well-being.",
+      "attribution": "anthropic.com, SSR-extracted",
+      "emphasis": "display"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Latest releases + research.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Opus 4.7",
+          "value": "Claude Opus 4.7 — flagship model.",
+          "hint": "Frontier reasoning + coding + agent capability. Same model family as Claude Code's default."
+        },
+        {
+          "key": "RSP",
+          "value": "Responsible Scaling Policy.",
+          "hint": "Published commitment to capability thresholds + the corresponding safety mitigations that must be in place before training crosses them. The reference shape for AI lab governance."
+        },
+        {
+          "key": "Constitution",
+          "value": "Claude's Constitution.",
+          "hint": "Published principles + the constitutional-AI training method that derives behavior from them. Auditable from the outside."
+        },
+        {
+          "key": "Index",
+          "value": "Anthropic's Economic Index.",
+          "hint": "Public dataset tracking how AI is used in the real economy. Same dataset the Anthropic policy team uses internally — published rather than hoarded."
+        },
+        {
+          "key": "Academy",
+          "value": "Anthropic Academy: Build and Learn with Claude.",
+          "hint": "Free curriculum on building with Claude. Developer-facing rather than research-facing — same substrate, different audience."
+        },
+        {
+          "key": "Glasswing",
+          "value": "Project Glasswing (preview).",
+          "hint": "Anthropic's research initiative on transparency tooling. The substrate makes AI behavior legible to non-researchers."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Claude on Mars."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Anthropic's branding chooses long-horizon framing over per-quarter feature drops. The Claude on Mars campaign — and the substrate it represents — is what an AI lab that's optimizing for the next century looks like, not the next earnings call."
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Reference",
+      "title": "Open the live Anthropic site.",
+      "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
+      "cta": {"label": "anthropic.com", "href": "https://www.anthropic.com/", "data_backend": "cta-platform"}
+    }
+  ]
+}
