@@ -60,6 +60,7 @@
 use std::fs;
 use std::path::Path;
 
+use forge_core::tenant_corpus::TenantCorpus;
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 use serde_json::Value;
 
@@ -229,6 +230,14 @@ impl Phase for DensityAuditPhase {
             return Ok(findings);
         };
         let tolerance = read_tolerance(&ctx.root).unwrap_or(1);
+        // Per-tenant density_override per [[per-tenant-corpora-doctrine]].
+        // REPLACE semantics: when a page path matches an override
+        // pattern, the empirical classification is REPLACED by the
+        // operator's declared tier. Tenants use this when their
+        // intent for a particular page-pattern is known + the
+        // heuristic doesn't capture it (e.g. blog/* is dense even
+        // when individual posts are short).
+        let tenant = TenantCorpus::load(&ctx.root);
         let cms_dir = ctx.root.join("cms");
         if !cms_dir.is_dir() {
             return Ok(findings);
@@ -253,10 +262,26 @@ impl Phase for DensityAuditPhase {
             let Ok(value) = serde_json::from_str::<Value>(&raw) else {
                 continue;
             };
+            // Compute the effective tier: tenant override if matches,
+            // else empirical classification.
             let empirical = classify_page(&value);
-            let distance = (empirical.ordinal() - target.ordinal()).abs();
+            let cms_relative = make_cms_relative(&ctx.root, &path);
+            let overridden = tenant.as_ref().and_then(|t| {
+                t.density_override.iter().find_map(|ov| {
+                    if glob_match(&ov.pattern, &cms_relative) {
+                        DensityTier::parse(&ov.tier).map(|tier| (tier, ov.pattern.as_str()))
+                    } else {
+                        None
+                    }
+                })
+            });
+            let (effective, override_note) = match overridden {
+                Some((tier, pattern)) => (tier, format!(" (tenant-corpus override matched pattern `{pattern}`)")),
+                None => (empirical, String::new()),
+            };
+            let distance = (effective.ordinal() - target.ordinal()).abs();
             if distance > tolerance {
-                let direction = if empirical.ordinal() < target.ordinal() {
+                let direction = if effective.ordinal() < target.ordinal() {
                     "sparser"
                 } else {
                     "denser"
@@ -265,8 +290,8 @@ impl Phase for DensityAuditPhase {
                     self.name(),
                     path.display().to_string(),
                     format!(
-                        "density_audit — page measures as `{}` but `[composition] target_density = \"{}\"` was declared (distance {distance}, tolerance {tolerance}). Page is {direction} than the declared target; either revise the page's section composition or adjust the target.",
-                        empirical.slug(),
+                        "density_audit — page measures as `{}` but `[composition] target_density = \"{}\"` was declared (distance {distance}, tolerance {tolerance}){override_note}. Page is {direction} than the declared target; either revise the page's section composition or adjust the target.",
+                        effective.slug(),
                         target.slug()
                     ),
                 ));
@@ -274,6 +299,59 @@ impl Phase for DensityAuditPhase {
         }
         Ok(findings)
     }
+}
+
+/// Make a cms-root-relative path string from an absolute path.
+/// Used so density_override patterns can match `cms/blog/*.json`
+/// regardless of the absolute root location.
+fn make_cms_relative(root: &Path, abs: &Path) -> String {
+    abs.strip_prefix(root)
+        .map(|p| p.to_string_lossy().replace('\\', "/"))
+        .unwrap_or_else(|_| abs.to_string_lossy().to_string())
+}
+
+/// Minimal glob: only `*` is special, treated as `.*` (greedy
+/// match). Pattern is anchored to BOTH ends. Empty pattern
+/// matches nothing.
+///
+/// Matches the subset of glob semantics density_override patterns
+/// need: `cms/blog/*.json` style. No `**`, no `?`, no `[...]`
+/// character classes — minimal so the matcher is auditable.
+#[must_use]
+pub(crate) fn glob_match(pattern: &str, path: &str) -> bool {
+    if pattern.is_empty() {
+        return path.is_empty();
+    }
+    let parts: Vec<&str> = pattern.split('*').collect();
+    if parts.len() == 1 {
+        // No * — exact match.
+        return pattern == path;
+    }
+    // First segment must prefix.
+    let Some(rest) = path.strip_prefix(parts[0]) else {
+        return false;
+    };
+    let mut cursor = rest;
+    for (i, seg) in parts.iter().enumerate().skip(1) {
+        let is_last = i == parts.len() - 1;
+        if seg.is_empty() {
+            // Pattern ended with * — anything left over matches.
+            if is_last {
+                return true;
+            }
+            continue;
+        }
+        let Some(found) = cursor.find(seg) else {
+            return false;
+        };
+        cursor = &cursor[found + seg.len()..];
+        if is_last && !cursor.is_empty() {
+            // Pattern ends with this segment but path has more
+            // characters after the match → must be exact tail.
+            return false;
+        }
+    }
+    true
 }
 
 /// Read `[composition] target_density = "..."` from forge.toml.
@@ -442,6 +520,51 @@ mod tests {
         let tier = classify_page(&page);
         // 6 body sections, ~120 chars avg → Comfortable.
         assert_eq!(tier, DensityTier::Comfortable);
+    }
+
+    // glob_match — minimal pattern matcher for density_override.
+
+    #[test]
+    fn glob_no_star_is_exact_match() {
+        assert!(glob_match("cms/index.json", "cms/index.json"));
+        assert!(!glob_match("cms/index.json", "cms/other.json"));
+        assert!(!glob_match("cms/index.json", "prefix/cms/index.json"));
+    }
+
+    #[test]
+    fn glob_trailing_star_matches_any_suffix() {
+        assert!(glob_match("cms/blog/*", "cms/blog/post-1.json"));
+        assert!(glob_match("cms/blog/*", "cms/blog/2026/post.json"));
+        assert!(!glob_match("cms/blog/*", "cms/index.json"));
+    }
+
+    #[test]
+    fn glob_middle_star_matches_inner() {
+        assert!(glob_match("cms/blog/*.json", "cms/blog/post-1.json"));
+        assert!(glob_match("cms/blog/*.json", "cms/blog/index.json"));
+        assert!(!glob_match("cms/blog/*.json", "cms/blog/post-1.md"));
+        assert!(!glob_match("cms/blog/*.json", "cms/other/post.json"));
+    }
+
+    #[test]
+    fn glob_multiple_stars_match_in_order() {
+        assert!(glob_match("cms/*/index.*", "cms/blog/index.json"));
+        assert!(glob_match("cms/*/index.*", "cms/admin/index.html"));
+        assert!(!glob_match("cms/*/index.*", "cms/blog/post.json"));
+    }
+
+    #[test]
+    fn glob_leading_star_matches_any_prefix() {
+        assert!(glob_match("*/index.json", "cms/index.json"));
+        assert!(glob_match("*/index.json", "deeply/nested/path/index.json"));
+        assert!(!glob_match("*/index.json", "index.json"));
+    }
+
+    #[test]
+    fn glob_empty_pattern_only_matches_empty() {
+        assert!(glob_match("", ""));
+        assert!(!glob_match("", "x"));
+        assert!(!glob_match("x", ""));
     }
 
     #[test]
