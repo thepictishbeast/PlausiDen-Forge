@@ -693,6 +693,61 @@
       ],
       "type": "object"
     },
+    "CmsCodeShellLine": {
+      "description": "One line of a `CodeShell` transcript. Owned-string variant of the `loom_components` primitive's `CodeShellLine<'a>`.",
+      "properties": {
+        "kind": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/CmsCodeShellLineKind"
+            }
+          ],
+          "description": "Line role."
+        },
+        "text": {
+          "description": "Line text. Rendered as-is via Maud (auto-escaped).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "text"
+      ],
+      "type": "object"
+    },
+    "CmsCodeShellLineKind": {
+      "description": "Semantic role of a single line in [`CmsSection::CodeShell`]. Mirrors `loom_components::code_shell::CodeShellLineKind`.",
+      "oneOf": [
+        {
+          "description": "User-typed shell command. Renders with the prompt prefix.",
+          "enum": [
+            "command"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Program output. Indented to align with the command text.",
+          "enum": [
+            "output"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Annotation by the author. Dimmed + italic, prefixed with `#`.",
+          "enum": [
+            "comment"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Error line. Picks up the warn / error color.",
+          "enum": [
+            "error"
+          ],
+          "type": "string"
+        }
+      ]
+    },
     "CmsComposerSize": {
       "description": "Mirror of [`ComposerSize`].",
       "oneOf": [
@@ -1399,7 +1454,7 @@
       ]
     },
     "CmsSection": {
-      "description": "One section of a page. Adding a variant requires a paired renderer arm in [`render_section`] and a unit test.",
+      "description": "One section of a page. Adding a variant requires a paired renderer arm in [`render_section`] and a unit test.\n\n**Doc convention for variants:** every variant carries a one-line docstring explaining its purpose. Inline-struct fields on each variant are self-documenting via their type signature + the JSON-schema name (e.g., `children_html: String` on `Container` is exactly what it says) — per-field docs are only added when a field's meaning is NOT obvious from `<name>: <type>` alone (constraints, units, encoding format). The blanket `#[allow(missing_docs)]` below avoids the maintenance tax of 300+ noise-tier doc comments on the catalogue expansion; new variants ARE expected to carry per-field docs for any non-self-evident shape.",
       "oneOf": [
         {
           "additionalProperties": false,
@@ -1444,6 +1499,66 @@
           "required": [
             "kind",
             "title"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Editorial asymmetric hero — the substrate-aware sibling of [`CmsSection::Hero`]. Where `Hero` ships the canonical centered SaaS shape (eyebrow pill, gradient overlay, animate-fade-in chain), `HeroEditorial` is the editorial 2-column composition: monospace kicker, dominant headline, lede that sets its own measure via `max-w-prose`, optional CTA, optional right-column decoration. No SaaS-trope ornaments emitted.\n\nWire shape mirrors [`loom_components::HeroEditorial`]; the CMS authors a section, the renderer emits editorial markup.",
+          "properties": {
+            "background": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroEditorialBackground"
+                }
+              ],
+              "default": "slate",
+              "description": "Background tone. Accepts `slate` (default), `plain`, or `amoled` (true-black)."
+            },
+            "cta": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/HeroCta"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional primary CTA."
+            },
+            "headline": {
+              "description": "Headline body. Renders as the dominant typographic mass.",
+              "type": "string"
+            },
+            "headline_accent": {
+              "description": "Optional accent fragment rendered after the headline in brand primary color.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kicker": {
+              "description": "Plain uppercase monospace metadata line above the headline (e.g., `\"DISPATCH · 2026-05-20\"`). NOT a pill.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "enum": [
+                "hero_editorial"
+              ],
+              "type": "string"
+            },
+            "lede": {
+              "description": "Lede paragraph. Use long-form editorial prose; the renderer lets prose set its own measure.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "headline",
+            "kind",
+            "lede"
           ],
           "type": "object"
         },
@@ -1771,6 +1886,13 @@
           "additionalProperties": false,
           "description": "A heading. Level constrained to 2-6 (h1 is owned by the page-shell template, not section content). T36 (2026-05-14): `level` is a typed `HeadingLevel` enum so out-of-range values are uncompilable AND parse-failed at the JSON boundary — no runtime clamp surface.",
           "properties": {
+            "id": {
+              "description": "Optional id attribute — lets the heading serve as a jump-link anchor target (`href=\"#that-id\"`). Slug- validated via [`SlugName`] when present so we never emit a freeform attribute value into the DOM.\n\n2026-05-20 substrate addition: without this slot, every page that uses `/page.html#section` in a nav link triggers a link-check phase strict-fail. Adding the slot lets cms authors declare a typed anchor next to the heading it labels.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "kind": {
               "enum": [
                 "heading"
@@ -1809,6 +1931,15 @@
           "additionalProperties": false,
           "description": "FORGE_ROADMAP item 41 — typed key/value list (definition-list shape). Renders as a `<dl>` with one `<dt>/<dd>` pair per item; optional `hint` shows as a muted span under the value. Use cases: \"Settings\", \"Match details\", \"Spec sheet\", \"Receipt fields\", \"Profile facts\" — anywhere a label-and-value row stack would otherwise be hand-rolled markup.",
           "properties": {
+            "density": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/KvPairDensity"
+                }
+              ],
+              "default": "comfortable",
+              "description": "Layout density. Defaults to `comfortable`. Mirrors the loom-components KvPairCard density knob; affects vertical rhythm inside each item."
+            },
             "heading": {
               "description": "Optional heading (rendered as h2 above the list).",
               "type": [
@@ -1828,6 +1959,15 @@
                 "kv_pair"
               ],
               "type": "string"
+            },
+            "tone": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/KvPairTone"
+                }
+              ],
+              "default": "slate",
+              "description": "Color tone. Defaults to `slate`. `amoled` honors `[[dark-theme-amoled-true-black]]` for OLED rendering."
             }
           },
           "required": [
@@ -1940,6 +2080,62 @@
         },
         {
           "additionalProperties": false,
+          "description": "Typed-line terminal transcript — the substrate-aware sibling of [`CmsSection::Code`]. Where `Code` is a single flat body string with a `terminal` flag, `CodeShell` carries per-line semantic role annotation (Command / Output / Comment / Error) so the skin can color + indent each line by its meaning. Wire shape mirrors [`loom_components::CodeShell`].\n\nUse cases: forge build audit-chain proof, configuration walk- throughs, terminal-style decoration inside a HeroEditorial.",
+          "properties": {
+            "chrome": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CodeShellChrome"
+                }
+              ],
+              "default": "minimal",
+              "description": "Chrome treatment: `minimal` (default) or `header`."
+            },
+            "kind": {
+              "enum": [
+                "code_shell"
+              ],
+              "type": "string"
+            },
+            "lines": {
+              "description": "Transcript lines in order.",
+              "items": {
+                "$ref": "#/definitions/CmsCodeShellLine"
+              },
+              "type": "array"
+            },
+            "prompt": {
+              "description": "Prompt prefix for `Command` lines. `None` defaults to `$`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "description": "Header title — shell name, filename, or label. Only emitted when `chrome` is `Header`.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tone": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/CodeShellTone"
+                }
+              ],
+              "default": "slate",
+              "description": "Color tone: `slate` (default) or `amoled` (true-black)."
+            }
+          },
+          "required": [
+            "kind",
+            "lines"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
           "description": "Full-bleed image/gradient hero. Larger + more visually ambitious than [`CmsSection::Hero`]; spans the viewport width breaking out of the standard content max-width. Use for top-of-page landing sections that need atmosphere.",
           "properties": {
             "after_cta": {
@@ -1949,6 +2145,15 @@
                 "$ref": "#/definitions/CmsSection"
               },
               "type": "array"
+            },
+            "align": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroAlign"
+                }
+              ],
+              "default": "center",
+              "description": "Text + content alignment. Default is `Center` (SaaS hero posture). Editorial sites can opt out via `Start` for left-aligned headline + lede + cta — the substrate emits a `data-align` attribute the skin keys on.\n\n2026-05-20 substrate-de-consumer-shaping addition. Northbrook Observatory ships with `align: \"start\"` to avoid the SaaS-trope centered hero."
             },
             "background": {
               "allOf": [
@@ -2335,6 +2540,15 @@
           "additionalProperties": false,
           "description": "Full-width call-to-action band. Sits at the bottom of marketing pages just above the footer.",
           "properties": {
+            "align": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/HeroAlign"
+                }
+              ],
+              "default": "center",
+              "description": "Text + content alignment. Default is `Center` (SaaS CTA-band posture); editorial sites can opt out via `Start` for left-aligned. Same `HeroAlign` enum reused so the cms author has one mental model across hero + cta sections.\n\n2026-05-20 substrate-de-consumer-shaping addition."
+            },
             "background": {
               "allOf": [
                 {
@@ -2388,7 +2602,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "Editorial pull-quote. Large display-italic body, optional attribution underneath. Distinct from `Quote` which is a testimonial-card shape.",
+          "description": "Editorial pull-quote. Editorial-mark composition — left-border rule, no card chrome, no decorative quote-mark glyphs. Distinct from `Quote` which is the testimonial-card shape.\n\nWire-extended in this commit to mirror [`loom_components::PullQuote`]: `cite_url`, `emphasis`, and `tone` ship as additive fields with serde defaults so the existing two-field shape (`body` + `attribution`) keeps parsing.",
           "properties": {
             "attribution": {
               "description": "Optional attribution (e.g. \"Jane Doe, CTO @ Acme\").",
@@ -2398,14 +2612,39 @@
               ]
             },
             "body": {
-              "description": "Body of the quote.",
+              "description": "Body of the quote. Multi-paragraph bodies split on `\\n\\n` into separate `<p>` tags inside the `<blockquote>`.",
               "type": "string"
+            },
+            "cite_url": {
+              "description": "Optional source URL — rendered into the `cite=` attribute on `<blockquote>` per the HTML spec for machine-readable provenance.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "emphasis": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/PullQuoteEmphasis"
+                }
+              ],
+              "default": "inline",
+              "description": "Emphasis tier: `inline` (text-xl/2xl) or `display` (text-2xl/3xl/4xl). Defaults to `inline`."
             },
             "kind": {
               "enum": [
                 "pull_quote"
               ],
               "type": "string"
+            },
+            "tone": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/PullQuoteTone"
+                }
+              ],
+              "default": "slate",
+              "description": "Color tone: `slate` (default) or `amoled` (true-black)."
             }
           },
           "required": [
@@ -5975,6 +6214,44 @@
       ],
       "type": "object"
     },
+    "CodeShellChrome": {
+      "description": "Chrome treatment for [`CmsSection::CodeShell`]. Mirrors `loom_components::code_shell::CodeShellChrome`.",
+      "oneOf": [
+        {
+          "description": "No header — just the code block, framed by a single border.",
+          "enum": [
+            "minimal"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Text-only header showing the shell name or filename. No traffic-light circles, no gradient.",
+          "enum": [
+            "header"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "CodeShellTone": {
+      "description": "Tone for [`CmsSection::CodeShell`]. Mirrors `loom_components::code_shell::CodeShellTone`.",
+      "oneOf": [
+        {
+          "description": "Slate-900 ink on slate-50 surface.",
+          "enum": [
+            "slate"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Slate-100 ink on AMOLED true-black surface.",
+          "enum": [
+            "amoled"
+          ],
+          "type": "string"
+        }
+      ]
+    },
     "CommentItem": {
       "additionalProperties": false,
       "description": "One comment in a thread.",
@@ -6361,6 +6638,25 @@
       ],
       "type": "integer"
     },
+    "HeroAlign": {
+      "description": "Text + content alignment for [`CmsSection::ImageHero`]. Default is `Center` (existing SaaS-hero posture); editorial sites opt out via `Start` for left-aligned headline + lede + cta.\n\nSubstrate-de-consumer-shaping doctrine: the substrate ships the posture; the cms author chooses whether to take it. Backwards compatible — existing CmsPage JSON that omits `align` keeps rendering centered.",
+      "oneOf": [
+        {
+          "description": "Headline + lede + cta centered. SaaS-marketing default.",
+          "enum": [
+            "center"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Left-aligned editorial posture. Use for editorial content sites where centered marketing copy reads as ad-tier.",
+          "enum": [
+            "start"
+          ],
+          "type": "string"
+        }
+      ]
+    },
     "HeroBackground": {
       "description": "Backdrop kind for hero-class sections.",
       "oneOf": [
@@ -6494,6 +6790,32 @@
       ],
       "type": "object"
     },
+    "HeroEditorialBackground": {
+      "description": "Background tone for [`CmsSection::HeroEditorial`].\n\nMirrors `loom_components::hero::HeroEditorialBackground`. `Slate` is the recommended default — lets content carry the page. `Amoled` honors `[[dark-theme-amoled-true-black]]` for OLED pixels-off rendering.",
+      "oneOf": [
+        {
+          "description": "Plain slate-50.",
+          "enum": [
+            "slate"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Plain white.",
+          "enum": [
+            "plain"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "AMOLED true-black (`#000`).",
+          "enum": [
+            "amoled"
+          ],
+          "type": "string"
+        }
+      ]
+    },
     "HeroHeight": {
       "description": "Visual-height ramp for hero sections.",
       "oneOf": [
@@ -6515,6 +6837,51 @@
           "description": "Tall — about 80vh, only for top-of-funnel landings.",
           "enum": [
             "tall"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "KvPairDensity": {
+      "description": "Layout density for [`CmsSection::KvPair`]. Mirrors `loom_components::card::KvPairDensity`. Affects vertical rhythm inside each item; horizontal sizing is the grid's job.",
+      "oneOf": [
+        {
+          "description": "Tight rhythm — for grids of 4-6 items with short values.",
+          "enum": [
+            "compact"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Default rhythm — most KV grids.",
+          "enum": [
+            "comfortable"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Generous rhythm — for grids of 2-3 items with long values.",
+          "enum": [
+            "spacious"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "KvPairTone": {
+      "description": "Color tone for [`CmsSection::KvPair`]. Mirrors `loom_components::card::KvPairTone`.",
+      "oneOf": [
+        {
+          "description": "Slate text on light surface.",
+          "enum": [
+            "slate"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Slate-100 ink on AMOLED true-black surface.",
+          "enum": [
+            "amoled"
           ],
           "type": "string"
         }
@@ -6984,6 +7351,44 @@
         "price"
       ],
       "type": "object"
+    },
+    "PullQuoteEmphasis": {
+      "description": "Emphasis tier for [`CmsSection::PullQuote`]. Mirrors `loom_components::pull_quote::PullQuoteEmphasis`.",
+      "oneOf": [
+        {
+          "description": "Inline-with-body voice. `text-xl md:text-2xl`.",
+          "enum": [
+            "inline"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Hero-side / decoration-slot voice. `text-2xl md:text-3xl lg:text-4xl`.",
+          "enum": [
+            "display"
+          ],
+          "type": "string"
+        }
+      ]
+    },
+    "PullQuoteTone": {
+      "description": "Color tone for [`CmsSection::PullQuote`]. Mirrors `loom_components::pull_quote::PullQuoteTone`.",
+      "oneOf": [
+        {
+          "description": "Slate text on light surface.",
+          "enum": [
+            "slate"
+          ],
+          "type": "string"
+        },
+        {
+          "description": "Slate-100 ink on AMOLED true-black surface.",
+          "enum": [
+            "amoled"
+          ],
+          "type": "string"
+        }
+      ]
     },
     "ReactionItem": {
       "additionalProperties": false,
