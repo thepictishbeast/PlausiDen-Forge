@@ -26,6 +26,7 @@ pub mod editorial_purity_gate;
 pub mod pattern_entropy;
 pub mod site_identity_conformance;
 pub mod uniqueness_gate;
+pub mod voice_profile_audit;
 pub mod placeholder_value_audit;
 pub mod source_list_audit;
 pub mod asset_optimization;

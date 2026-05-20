@@ -78,6 +78,7 @@ use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
 use forge_phases::uniqueness_gate::UniquenessGatePhase;
 use forge_phases::validate_cms::ValidateCmsPhase;
+use forge_phases::voice_profile_audit::VoiceProfileAuditPhase;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -1350,6 +1351,7 @@ fn run() -> Result<ExitCode> {
         // docs/VARIATION_GUARANTEES.md.
         Box::new(EditorialPurityGatePhase::default()),
         Box::new(SiteIdentityConformancePhase::default()),
+        Box::new(VoiceProfileAuditPhase::default()),
         Box::new(PatternEntropyPhase::default()),
         Box::new(UniquenessGatePhase::default()),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
