@@ -35,6 +35,7 @@ pub mod identity_transition;
 pub mod pipeline;
 pub mod progress_events;
 pub mod provenance;
+pub mod reference_capture;
 pub mod session_context;
 pub mod site_identity;
 pub mod skill_telemetry;
