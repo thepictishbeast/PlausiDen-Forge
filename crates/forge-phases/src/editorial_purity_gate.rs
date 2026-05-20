@@ -184,10 +184,30 @@ fn check_section(
                 .and_then(|v| v.as_array())
                 .map(Vec::len)
                 .unwrap_or(0);
-            if columns >= 3 || items_len >= 3 {
+            // Read the decoration variant. `editorial` + `minimal`
+            // are the substrate-correct opt-outs from the SaaS-card
+            // chrome (gradient icon tile, hover lift, shadow). The
+            // gate exists to flag the *decorated* (default) trope
+            // shape; editorial-decorated grids ARE the substrate's
+            // intended dense-feature-grid surface — they were the
+            // workaround target operators built `KvPairCard` walls
+            // to avoid, which inverted the design.
+            //
+            // Surfaced 2026-05-20 via the 11-site Forge-static
+            // rotation (#222): every site that needed a 3-4 column
+            // dense feature grid was forced into kv_pair workarounds
+            // because feature_spotlight tripped this gate regardless
+            // of decoration. The fix: only flag `decorated` (the
+            // actual trope).
+            let decoration = section
+                .get("decoration")
+                .and_then(|v| v.as_str())
+                .unwrap_or("decorated");
+            let is_saas_chrome = decoration == "decorated";
+            if (columns >= 3 || items_len >= 3) && is_saas_chrome {
                 push(
                     "editorial-purity.feature-spotlight-grid",
-                    format!("`FeatureSpotlight` with {} columns / {} items — the 3-column icon-tile-card grid is THE SaaS-marketing trope. Use `KvPairCard` dense info panels instead.", columns, items_len),
+                    format!("`FeatureSpotlight` with {} columns / {} items + decoration=decorated — the 3-column icon-tile-card grid IS the SaaS-marketing trope. Either: (a) set `decoration: \"editorial\"` (strip card chrome, typography only) OR (b) use `KvPairCard` dense info panels instead.", columns, items_len),
                     findings,
                 );
             }
@@ -570,6 +590,58 @@ mod tests {
         assert!(findings
             .iter()
             .any(|f| f.message.contains("feature-spotlight-grid")));
+    }
+
+    #[test]
+    fn feature_spotlight_3_columns_editorial_decoration_silent() {
+        // Surfaced 2026-05-20 via #222 rotation: feature_spotlight
+        // with decoration: "editorial" is the substrate-correct
+        // dense grid (typography only, no SaaS chrome). The gate
+        // must NOT flag it.
+        let page = json!({
+            "sections": [{
+                "kind": "feature_spotlight",
+                "columns": 4,
+                "decoration": "editorial",
+                "items": [
+                    {"title": "Item 1"},
+                    {"title": "Item 2"},
+                    {"title": "Item 3"},
+                    {"title": "Item 4"}
+                ]
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.message.contains("feature-spotlight-grid")),
+            "editorial-decorated grid must not fire the SaaS-trope gate; got {findings:?}"
+        );
+    }
+
+    #[test]
+    fn feature_spotlight_3_columns_minimal_decoration_silent() {
+        // Same logic for `minimal` — tight grid, no card chrome.
+        let page = json!({
+            "sections": [{
+                "kind": "feature_spotlight",
+                "columns": 3,
+                "decoration": "minimal",
+                "items": [
+                    {"title": "One"},
+                    {"title": "Two"},
+                    {"title": "Three"}
+                ]
+            }]
+        });
+        let findings = run_check_enforced(page);
+        assert!(
+            !findings
+                .iter()
+                .any(|f| f.message.contains("feature-spotlight-grid")),
+            "minimal-decorated grid must not fire the SaaS-trope gate; got {findings:?}"
+        );
     }
 
     #[test]
