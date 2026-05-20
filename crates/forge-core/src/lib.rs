@@ -31,6 +31,7 @@ pub mod diagnostic;
 pub mod fingerprint;
 pub mod fingerprint_migration;
 pub mod fingerprint_registry;
+pub mod identity_transition;
 pub mod pipeline;
 pub mod provenance;
 pub mod site_identity;
