@@ -63,6 +63,7 @@ use forge_phases::noscript_strict::NoscriptStrictPhase;
 use forge_phases::path_consistency::PathConsistencyPhase;
 use forge_phases::pattern_entropy::PatternEntropyPhase;
 use forge_phases::perf_budget::PerfBudgetPhase;
+use forge_phases::reseeding_cadence::ReseedingCadencePhase;
 use forge_phases::phantom_button::PhantomButtonPhase;
 use forge_phases::print_stylesheet::PrintStylesheetPhase;
 use forge_phases::reader_safety::ReaderSafetyPhase;
@@ -1400,6 +1401,7 @@ fn run() -> Result<ExitCode> {
         Box::new(ForbiddenPatternsPhase::default()),
         Box::new(PatternEntropyPhase::default()),
         Box::new(DifferentiationBudgetPhase::default()),
+        Box::new(ReseedingCadencePhase::default()),
         Box::new(UniquenessGatePhase::default()),
         // T52 (2026-05-06): runtime audit runs LAST. Build-
         // infra issues surface earlier; runtime-only regressions
