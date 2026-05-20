@@ -1278,10 +1278,18 @@ fn print_finding(f: &Finding) {
         Severity::Warn => "warn    ",
         _ => "STRICT  ",
     };
-    if f.path.is_empty() {
-        println!("  {}{}: {}", label, f.phase, f.message);
+    let rule_suffix = if f.enforces_rules.is_empty() {
+        String::new()
     } else {
-        println!("  {}{}: {} — {}", label, f.phase, f.path, f.message);
+        // Per task #177: cite the AVP-Doctrine rule ids the finding
+        // enforces so the reader can `forge doctrine query --rule <id>`
+        // to see rationale + the rest of the enforcement contract.
+        format!("  ({})", f.enforces_rules.join(", "))
+    };
+    if f.path.is_empty() {
+        println!("  {}{}: {}{}", label, f.phase, f.message, rule_suffix);
+    } else {
+        println!("  {}{}: {} — {}{}", label, f.phase, f.path, f.message, rule_suffix);
     }
 }
 

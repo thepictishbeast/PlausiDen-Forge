@@ -49,23 +49,36 @@ impl Phase for PhantomButtonPhase {
                 unwired += 1;
             }
             if unwired > 0 {
-                findings.push(Finding::warn(
-                    self.name(),
-                    n.clone(),
-                    format!(
-                        "{unwired} button(s) with no data-backend (UI not declared in backends.toml)"
-                    ),
-                ));
+                findings.push(
+                    Finding::warn(
+                        self.name(),
+                        n.clone(),
+                        format!(
+                            "{unwired} button(s) with no data-backend (UI not declared in backends.toml)"
+                        ),
+                    )
+                    .citing(["sec-007"]),
+                );
             }
 
             // Every declared data-backend must exist in backends.toml.
             for key in extract_data_backends(body) {
                 if !declared.contains(&key) {
-                    findings.push(Finding::strict(
-                        self.name(),
-                        n.clone(),
-                        format!("data-backend=\"{key}\" not declared in backends.toml — broken UI"),
-                    ));
+                    findings.push(
+                        Finding::strict(
+                            self.name(),
+                            n.clone(),
+                            format!(
+                                "data-backend=\"{key}\" not declared in backends.toml — broken UI"
+                            ),
+                        )
+                        // Per task #177: phantom_button enforces sec-007
+                        // (AI-exposed capabilities explicitly declared
+                        // in manifest) — the same declarative requirement
+                        // applies to UI capabilities exposed via
+                        // data-backend slugs.
+                        .citing(["sec-007"]),
+                    );
                 }
             }
         }

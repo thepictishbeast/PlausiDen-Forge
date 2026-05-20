@@ -98,6 +98,12 @@ pub enum BuildMode {
 /// Findings flow up to the runner which collects them into a
 /// [`BuildReport`]. The runner decides exit code by walking the
 /// findings + applying [`Severity::blocks_in`].
+///
+/// `enforces_rules` (task #177) lets a finding cite the doctrine
+/// rule ids it enforces, so consumers can trace finding → doctrine
+/// → rationale via `forge doctrine query --rule <id>`. Optional;
+/// rules-aware phases populate it, legacy phases leave it empty
+/// during migration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Finding {
     /// Phase that produced this finding (e.g. "tokens", "csp").
@@ -111,6 +117,17 @@ pub struct Finding {
     /// Severity at the moment of detection (before mode-driven
     /// upgrade).
     pub severity: Severity,
+    /// AVP-Doctrine rule ids this finding cites (e.g. `["prim-001",
+    /// "a11y-004"]`). Empty for findings that don't (yet) map to
+    /// codified rules. Surfaced in reports as "(rule-XXX)" so
+    /// consumers can run `forge doctrine query --rule <id>` to read
+    /// the rule's rationale + enforcement contract.
+    ///
+    /// Skipped from JSON when empty so legacy reports stay
+    /// byte-identical (per [[backward-compat-version-discipline]]
+    /// additive change classification).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub enforces_rules: Vec<String>,
 }
 
 impl Finding {
@@ -126,6 +143,7 @@ impl Finding {
             path: path.into(),
             message: message.into(),
             severity: Severity::Strict,
+            enforces_rules: Vec::new(),
         }
     }
 
@@ -141,7 +159,23 @@ impl Finding {
             path: path.into(),
             message: message.into(),
             severity: Severity::Warn,
+            enforces_rules: Vec::new(),
         }
+    }
+
+    /// Attach one or more AVP-Doctrine rule ids to this finding so
+    /// consumers can trace it back to the codified rationale.
+    /// Returns `self` for chained construction:
+    /// `Finding::strict(...).citing(["prim-001"])`.
+    #[must_use]
+    pub fn citing<I, S>(mut self, rule_ids: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.enforces_rules
+            .extend(rule_ids.into_iter().map(Into::into));
+        self
     }
 }
 
