@@ -138,10 +138,22 @@ pub fn load(root: &Path, opts: &LoadOptions) -> SessionContext {
 
 /// Read cache if fresh; else compute + write. Returns the
 /// payload. Cache writes are best-effort — failures fall through
-/// to the freshly-computed context.
+/// to the freshly-computed context. Uses [`default_cache_path`];
+/// callers that need test isolation should use [`load_cached_at`].
 pub fn load_cached(root: &Path, opts: &LoadOptions, ttl_seconds: u64) -> SessionContext {
-    let cache_path = default_cache_path();
-    if let Ok(body) = fs::read_to_string(&cache_path) {
+    load_cached_at(root, opts, ttl_seconds, &default_cache_path())
+}
+
+/// Like [`load_cached`] but with a caller-supplied cache path.
+/// Used by tests so each test owns its own cache file and
+/// parallel test execution doesn't cross-contaminate.
+pub fn load_cached_at(
+    root: &Path,
+    opts: &LoadOptions,
+    ttl_seconds: u64,
+    cache_path: &Path,
+) -> SessionContext {
+    if let Ok(body) = fs::read_to_string(cache_path) {
         if let Ok(cached) = serde_json::from_str::<SessionContext>(&body) {
             let now = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -157,7 +169,7 @@ pub fn load_cached(root: &Path, opts: &LoadOptions, ttl_seconds: u64) -> Session
     }
     let fresh = load(root, opts);
     if let Ok(body) = serde_json::to_string(&fresh) {
-        let _ = fs::write(&cache_path, body);
+        let _ = fs::write(cache_path, body);
     }
     fresh
 }
@@ -349,13 +361,14 @@ tenant_id = "t"
     #[test]
     fn cache_writes_and_reads_back_within_ttl() {
         let root = temp_root("cache");
+        let cache = root.join("test-cache.json");
         fs::write(
             root.join("forge.toml"),
             "[site_identity]\nsite_id = \"cached\"\n",
         )
         .unwrap();
-        let _ = invalidate_cache();
-        let ctx1 = load_cached(&root, &LoadOptions::default(), 60);
+        let _ = fs::remove_file(&cache);
+        let ctx1 = load_cached_at(&root, &LoadOptions::default(), 60, &cache);
         assert_eq!(ctx1.identity.site_id.as_deref(), Some("cached"));
 
         // Mutate forge.toml — but within TTL, cache should still
@@ -365,12 +378,12 @@ tenant_id = "t"
             "[site_identity]\nsite_id = \"changed\"\n",
         )
         .unwrap();
-        let ctx2 = load_cached(&root, &LoadOptions::default(), 60);
+        let ctx2 = load_cached_at(&root, &LoadOptions::default(), 60, &cache);
         assert_eq!(ctx2.identity.site_id.as_deref(), Some("cached"));
 
         // Invalidate; next read picks up the change.
-        invalidate_cache().unwrap();
-        let ctx3 = load_cached(&root, &LoadOptions::default(), 60);
+        let _ = fs::remove_file(&cache);
+        let ctx3 = load_cached_at(&root, &LoadOptions::default(), 60, &cache);
         assert_eq!(ctx3.identity.site_id.as_deref(), Some("changed"));
         let _ = fs::remove_dir_all(&root);
     }
@@ -378,20 +391,21 @@ tenant_id = "t"
     #[test]
     fn cache_invalidated_when_ttl_zero() {
         let root = temp_root("ttl-zero");
+        let cache = root.join("test-cache.json");
         fs::write(
             root.join("forge.toml"),
             "[site_identity]\nsite_id = \"a\"\n",
         )
         .unwrap();
-        let _ = invalidate_cache();
-        let _ = load_cached(&root, &LoadOptions::default(), 60);
+        let _ = fs::remove_file(&cache);
+        let _ = load_cached_at(&root, &LoadOptions::default(), 60, &cache);
         fs::write(
             root.join("forge.toml"),
             "[site_identity]\nsite_id = \"b\"\n",
         )
         .unwrap();
         // TTL 0 = always stale → re-compute.
-        let ctx = load_cached(&root, &LoadOptions::default(), 0);
+        let ctx = load_cached_at(&root, &LoadOptions::default(), 0, &cache);
         assert_eq!(ctx.identity.site_id.as_deref(), Some("b"));
         let _ = fs::remove_dir_all(&root);
     }
