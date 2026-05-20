@@ -122,6 +122,12 @@ members = [
     # Objective fully typed; remaining 10 orientations (compliance,
     # sovereignty, risk, resource, etc.) land per #191-#195.
     "crates/orient-core",
+    # loom-traits (task #167): typed projection of the PlausiDen
+    # trait DAG per AVP-Doctrine TRAIT_DAG.md. 54 traits across 11
+    # categories (visibility / interaction / a11y / responsive /
+    # i18n / theming / security / sovereignty / performance /
+    # reliability / discipline). Companion to orient-core.
+    "crates/loom-traits",
     # T64: manifest-attest — consolidated signing layer for every
     # PlausiDen artifact. Ed25519 today; ML-DSA hybrid lands in #65.
     "crates/manifest-attest",

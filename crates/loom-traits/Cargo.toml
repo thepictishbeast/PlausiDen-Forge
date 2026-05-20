@@ -1,0 +1,15 @@
+[package]
+name = "loom-traits"
+version = "0.1.0"
+publish = false  # workspace-internal; never published to crates.io
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "loom-traits — typed projection of the PlausiDen trait DAG per PlausiDen-AVP-Doctrine/TRAIT_DAG.md. 54 traits across 11 orthogonal categories (visibility / interaction / a11y / responsive / i18n / theming / security / sovereignty / performance / reliability / discipline). Closed enum + serde + category metadata. Companion to orient-core: traits encode entity *capabilities*, orientations classify entities along *axes of meaning*."
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+serde_json = { workspace = true }
