@@ -89,40 +89,31 @@
       "text": "Prosperity Club is a dependable source for financial education. Free articles, a member Masterclass, and one-to-one Risk Management — written for working and middle-class readers in the US and Canada."
     },
     {
-      "kind": "sub_heading",
-      "text": "What social class do I belong to?",
-      "level": 3
-    },
-    {
-      "kind": "paragraph",
-      "text": "Learning about social class allows you to better understand where you stand, so that you can take the right steps towards prosperity. From income to education levels to job opportunities, social class can significantly impact your day-to-day life."
-    },
-    {
-      "kind": "sub_heading",
-      "text": "Why insurance is essential for financial well-being.",
-      "level": 3
-    },
-    {
-      "kind": "paragraph",
-      "text": "Insurance for your home, car, and other valuable items protects your belongings. Keep an inventory of your belongings and store important documents safely. Create a budget by tracking expenses, and consider working with a financial advisor to plan for your retirement."
-    },
-    {
-      "kind": "sub_heading",
-      "text": "Understanding the basics of investing.",
-      "level": 3
-    },
-    {
-      "kind": "paragraph",
-      "text": "Investing can seem complex and intimidating, but understanding the basics can set you on a path to smarter financial decisions. Learning about different types of investments, understanding your goals, creating a diversified portfolio, and utilizing different strategies can help you become a better investor."
-    },
-    {
-      "kind": "sub_heading",
-      "text": "Hi, I am Deborah Armstrong.",
-      "level": 3
-    },
-    {
-      "kind": "paragraph",
-      "text": "A licensed insurance agent who sells life, health, and property/casualty products. Prosperity Club was established by a passionate woman who found her way through a bleak financial situation by educating herself in the world of finance — and decided to make that education available to others."
+      "kind": "kv_pair",
+      "heading": "What we cover.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Social class",
+          "value": "What social class do I belong to?",
+          "hint": "Learning about social class allows you to better understand where you stand, so that you can take the right steps towards prosperity. From income to education levels to job opportunities, social class can significantly impact your day-to-day life."
+        },
+        {
+          "key": "Insurance",
+          "value": "Why insurance is essential for financial well-being.",
+          "hint": "Insurance for your home, car, and other valuables protects what you own. Track expenses, store documents safely, and consider working with a financial advisor to plan for retirement."
+        },
+        {
+          "key": "Investing",
+          "value": "Understanding the basics of investing.",
+          "hint": "Investing can seem complex and intimidating, but understanding the basics can set you on a path to smarter financial decisions. Learn about types of investments, your goals, and diversification."
+        },
+        {
+          "key": "About",
+          "value": "Hi, I am Deborah Armstrong.",
+          "hint": "A licensed insurance agent who sells life, health, and property/casualty products. Prosperity Club was established by a passionate woman who found her way through a bleak financial situation by educating herself in finance."
+        }
+      ]
     },
     {
       "kind": "heading",
