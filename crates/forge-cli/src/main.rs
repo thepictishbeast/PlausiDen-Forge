@@ -184,6 +184,9 @@ enum Cmd {
         /// print only).
         #[arg(long, default_value_t = false)]
         apply: bool,
+        /// JSON output (cross-AI consumable per docs-008). Closes #200.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
     /// T33: manifest-keystone gate. Loads phases.toml + backends.toml
     /// from the project root, projects through manifest-core, and
@@ -494,6 +497,9 @@ enum AuditAction {
         /// Default false: just read existing mutants.out/.
         #[arg(long, default_value_t = false)]
         run: bool,
+        /// JSON output (cross-AI consumable per docs-008). Closes #200.
+        #[arg(long, default_value_t = false)]
+        json: bool,
         /// Crate to test under `--run`. Defaults to forge-core.
         #[arg(long, default_value = "forge-core")]
         crate_name: String,
@@ -1059,7 +1065,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Verify { chain, signatures, json }) => return run_verify(&root, *chain, *signatures, *json),
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
-        Some(Cmd::Fix { apply }) => return run_fix(&root, *apply),
+        Some(Cmd::Fix { apply, json }) => return run_fix(&root, *apply, *json),
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
         Some(Cmd::Privacy { action }) => return run_privacy(&root, action),
         Some(Cmd::TrustSafety { action }) => return run_trust_safety(&root, action),
@@ -2082,6 +2088,7 @@ fn run_audit_mutants(
     run: bool,
     crate_name: &str,
     threshold: f64,
+    json: bool,
 ) -> Result<ExitCode> {
     if run {
         // Optional cargo-mutants invocation. SECURITY: arg-vec
@@ -2093,12 +2100,25 @@ fn run_audit_mutants(
         match status {
             Ok(s) if s.success() => {}
             Ok(s) => {
-                eprintln!(
-                    "forge audit mutants: cargo mutants exited {s} (continuing to parse outcomes)"
-                );
+                if !json {
+                    eprintln!(
+                        "forge audit mutants: cargo mutants exited {s} (continuing to parse outcomes)"
+                    );
+                }
             }
             Err(e) => {
-                eprintln!("forge audit mutants: cargo mutants failed: {e}");
+                if json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status":"fatal",
+                            "stage":"cargo_mutants",
+                            "error": e.to_string(),
+                        })
+                    );
+                } else {
+                    eprintln!("forge audit mutants: cargo mutants failed: {e}");
+                }
                 return Ok(ExitCode::from(2));
             }
         }
@@ -2106,17 +2126,40 @@ fn run_audit_mutants(
     let outcomes_path = root.join("mutants.out").join("outcomes.json");
     if !outcomes_path.is_file() {
         if run {
-            eprintln!(
-                "forge audit mutants: cargo mutants ran but {} missing — \
-                 the version may write outcomes to a different path",
-                outcomes_path.display()
-            );
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status":"fatal",
+                        "stage":"locate_outcomes",
+                        "outcomes_path": outcomes_path.display().to_string(),
+                        "error":"cargo mutants ran but outcomes.json missing",
+                    })
+                );
+            } else {
+                eprintln!(
+                    "forge audit mutants: cargo mutants ran but {} missing — \
+                     the version may write outcomes to a different path",
+                    outcomes_path.display()
+                );
+            }
             return Ok(ExitCode::from(2));
         }
-        println!(
-            "forge audit mutants: no {} yet — run with --run to generate",
-            outcomes_path.display()
-        );
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status":"empty",
+                    "outcomes_path": outcomes_path.display().to_string(),
+                    "reason":"no mutants.out/outcomes.json yet — run with --run to generate",
+                })
+            );
+        } else {
+            println!(
+                "forge audit mutants: no {} yet — run with --run to generate",
+                outcomes_path.display()
+            );
+        }
         return Ok(ExitCode::SUCCESS);
     }
     let raw = std::fs::read_to_string(&outcomes_path)
@@ -2126,28 +2169,50 @@ fn run_audit_mutants(
     let summary = MutantsSummary::from_outcomes(&parsed);
     let rate = summary.survival_rate();
 
-    println!("forge audit mutants:");
-    println!("  caught     {}", summary.caught);
-    println!("  survived   {}", summary.survived);
-    println!("  unviable   {}", summary.unviable);
-    println!("  timeout    {}", summary.timeout);
-    if summary.other > 0 {
-        println!("  other      {}", summary.other);
+    if json {
+        let status = if rate <= threshold { "ok" } else { "fail" };
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": status,
+                "outcomes_path": outcomes_path.display().to_string(),
+                "caught": summary.caught,
+                "survived": summary.survived,
+                "unviable": summary.unviable,
+                "timeout": summary.timeout,
+                "other": summary.other,
+                "survival_rate_pct": rate,
+                "threshold_pct": threshold,
+            })
+        );
+    } else {
+        println!("forge audit mutants:");
+        println!("  caught     {}", summary.caught);
+        println!("  survived   {}", summary.survived);
+        println!("  unviable   {}", summary.unviable);
+        println!("  timeout    {}", summary.timeout);
+        if summary.other > 0 {
+            println!("  other      {}", summary.other);
+        }
+        println!(
+            "  survival rate: {:.1}%  (threshold: {:.1}%)",
+            rate, threshold
+        );
     }
-    println!(
-        "  survival rate: {:.1}%  (threshold: {:.1}%)",
-        rate, threshold
-    );
 
     if rate <= threshold {
-        println!("  ok      survival ≤ threshold (AVP-2 Tier 6 met)");
+        if !json {
+            println!("  ok      survival ≤ threshold (AVP-2 Tier 6 met)");
+        }
         Ok(ExitCode::SUCCESS)
     } else {
-        eprintln!(
-            "  FAIL    survival {rate:.1}% > threshold {threshold:.1}% — \
-             tests do not constrain {} survived mutations",
-            summary.survived
-        );
+        if !json {
+            eprintln!(
+                "  FAIL    survival {rate:.1}% > threshold {threshold:.1}% — \
+                 tests do not constrain {} survived mutations",
+                summary.survived
+            );
+        }
         Ok(ExitCode::from(1))
     }
 }
@@ -2156,9 +2221,10 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
     match action {
         AuditAction::Mutants {
             run,
+            json,
             crate_name,
             threshold,
-        } => run_audit_mutants(root, *run, crate_name, *threshold),
+        } => run_audit_mutants(root, *run, crate_name, *threshold, *json),
         AuditAction::InitHook { force } => cmd_audit_init_hook(root, *force),
         AuditAction::Secrets { paths, explain, json } => {
             let scan_targets: Vec<std::path::PathBuf> = if paths.is_empty() {
@@ -2324,7 +2390,7 @@ release:
 /// build report. v1 ships ONE fixer (security_txt) and the
 /// framework for adding more. Dry-run by default; `--apply`
 /// writes.
-fn run_fix(root: &std::path::Path, apply: bool) -> Result<ExitCode> {
+fn run_fix(root: &std::path::Path, apply: bool, json: bool) -> Result<ExitCode> {
     // Locate the latest build report.
     let reports_dir = root.join("reports");
     let mut reports: Vec<std::path::PathBuf> = std::fs::read_dir(&reports_dir)
@@ -2339,9 +2405,20 @@ fn run_fix(root: &std::path::Path, apply: bool) -> Result<ExitCode> {
         })
         .collect();
     if reports.is_empty() {
-        eprintln!(
-            "forge fix: no reports/build-*.json found — run `forge build` first then re-run."
-        );
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "fatal",
+                    "stage": "locate_report",
+                    "error": "no reports/build-*.json found — run `forge build` first"
+                })
+            );
+        } else {
+            eprintln!(
+                "forge fix: no reports/build-*.json found — run `forge build` first then re-run."
+            );
+        }
         return Ok(ExitCode::from(2));
     }
     reports.sort();
@@ -2373,46 +2450,111 @@ fn run_fix(root: &std::path::Path, apply: bool) -> Result<ExitCode> {
         let _ = message;
     }
 
+    let latest_name = latest.file_name().unwrap_or_default().to_string_lossy().into_owned();
+
     if planned.is_empty() {
-        println!(
-            "forge fix: no auto-fixable findings in {} — nothing to do.",
-            latest.file_name().unwrap_or_default().to_string_lossy()
-        );
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "ok",
+                    "report": latest_name,
+                    "planned": 0,
+                    "applied": 0,
+                    "actions": []
+                })
+            );
+        } else {
+            println!(
+                "forge fix: no auto-fixable findings in {latest_name} — nothing to do."
+            );
+        }
         return Ok(ExitCode::SUCCESS);
     }
 
-    println!(
-        "forge fix: {} auto-fixable finding(s) in {} (mode={}):",
-        planned.len(),
-        latest.file_name().unwrap_or_default().to_string_lossy(),
-        if apply { "apply" } else { "dry-run" }
-    );
+    if !json {
+        println!(
+            "forge fix: {} auto-fixable finding(s) in {latest_name} (mode={}):",
+            planned.len(),
+            if apply { "apply" } else { "dry-run" }
+        );
+    }
     let mut applied = 0usize;
+    let mut action_records: Vec<serde_json::Value> = Vec::new();
     for action in &planned {
         let summary = action.summary();
         if apply {
             match action.apply(root) {
                 Ok(()) => {
-                    println!("  [applied]  {summary}");
                     applied += 1;
+                    if json {
+                        action_records.push(serde_json::json!({
+                            "summary": summary,
+                            "state": "applied"
+                        }));
+                    } else {
+                        println!("  [applied]  {summary}");
+                    }
                 }
                 Err(e) => {
-                    eprintln!("  [failed]   {summary}: {e}");
+                    if json {
+                        action_records.push(serde_json::json!({
+                            "summary": summary,
+                            "state": "failed",
+                            "error": e.to_string()
+                        }));
+                    } else {
+                        eprintln!("  [failed]   {summary}: {e}");
+                    }
                 }
             }
+        } else if json {
+            action_records.push(serde_json::json!({
+                "summary": summary,
+                "state": "proposed"
+            }));
         } else {
             println!("  [proposed] {summary}");
         }
     }
 
     if apply {
-        println!(
-            "\nforge fix: applied {applied} of {} fix(es). Re-run `forge build` to verify.",
-            planned.len()
-        );
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "ok",
+                    "mode": "apply",
+                    "report": latest_name,
+                    "planned": planned.len(),
+                    "applied": applied,
+                    "actions": action_records
+                })
+            );
+        } else {
+            println!(
+                "\nforge fix: applied {applied} of {} fix(es). Re-run `forge build` to verify.",
+                planned.len()
+            );
+        }
         Ok(ExitCode::SUCCESS)
     } else {
-        println!("\nDry-run only — re-run with `--apply` to write the fixes.");
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "fail",
+                    "mode": "dry-run",
+                    "report": latest_name,
+                    "planned": planned.len(),
+                    "applied": 0,
+                    "actions": action_records,
+                    "advisory": "Re-run with --apply to write the fixes."
+                })
+            );
+        } else {
+            println!("\nDry-run only — re-run with `--apply` to write the fixes.");
+        }
         // Exit 1 so CI pipelines piping `forge fix` see "stuff to
         // fix" without the operator needing a separate flag.
         Ok(ExitCode::from(1))

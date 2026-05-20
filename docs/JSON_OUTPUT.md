@@ -456,21 +456,21 @@ Exit code: `0` on `status="ok"`, `1` on strict findings (production mode), `2` o
 
 ## Gaps (follow-on work)
 
-Originally 8 subcommands; closed via task #200 batches:
+Originally 8 subcommands flagged; **all resolved**:
 
-1. **`forge verify`** — ✓ closed (chain integrity envelope; signature summary nested)
-2. `forge attest sign` — n/a (there's no separate `attest sign` subcommand; signing happens automatically in `forge build` when a key exists. `forge attest init` / `pubkey` / `fingerprint` are the actual subcommands, all closed below)
-3. **`forge attest init`** — ✓ closed (`{status, key_path, pub_path, key_mode, pubkey}`)
-4. **`forge attest pubkey`** — ✓ closed (`{status, pub_path, pubkey}`)
-5. **`forge attest fingerprint`** — ✓ closed (`{status, pub_path, fingerprint}`)
-6. **`forge audit secrets`** — ✓ closed (matches[] with path + rule)
-7. `forge audit phantom_button` — n/a (this is a Forge build phase, not a CLI subcommand; emits via the report JSON)
-8. `forge audit external_assets` — n/a (same — Forge build phase, in-report)
-9. `forge audit mutants` — pending small addition; pattern from #4 directly applicable
-10. `forge fix` — pending substantial refactor (the function has many print-statement branches); pattern from #1 directly applicable
+1. **`forge verify`** — ✓ closed (chain integrity envelope; signature summary nested).
+2. `forge attest sign` — n/a (there's no separate `attest sign` subcommand; signing happens automatically in `forge build` when a key exists).
+3. **`forge attest init`** — ✓ closed (`{status, key_path, pub_path, key_mode, pubkey}`).
+4. **`forge attest pubkey`** — ✓ closed (`{status, pub_path, pubkey}`).
+5. **`forge attest fingerprint`** — ✓ closed (`{status, pub_path, fingerprint}`).
+6. **`forge audit secrets`** — ✓ closed (matches[] with path + rule).
+7. `forge audit phantom_button` — n/a (Forge build phase, not CLI subcommand; emits via build-report JSON).
+8. `forge audit external_assets` — n/a (same — Forge build phase, in-report).
+9. **`forge audit mutants`** — ✓ closed (`{status, caught, survived, unviable, timeout, other, survival_rate_pct, threshold_pct}`).
+10. **`forge fix`** — ✓ closed (`{status, mode: "apply"|"dry-run", report, planned, applied, actions: [{summary, state, error?}]}`).
 11. `loom sync` / `loom deploy hetzner` — Loom-side; out of scope here.
 
-**5 sites closed in #200**, 3 reclassified as n/a, 2 still pending (`audit mutants` + `fix`). Refactor pattern from `forge verify` + `forge audit secrets` + the 3 attest subcommands is sufficient for the remaining ones — each is a mechanical extension.
+**Task #200 fully closed.** 7 Forge-side subcommands now emit `--json`; 3 reclassified as n/a (one no-op subcommand + two build phases). Every CLI surface that has machine-consumable output now offers it via `--json`.
 
 Per `[[backward-compat-version-discipline]]`: adding `--json` is a Cat 2 additive change. New consumers may pass `--json`; legacy callers continue to get text output (default `--json false`).
 
