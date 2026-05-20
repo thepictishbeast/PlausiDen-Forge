@@ -1,171 +1,182 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "PlausiDen LLC — Comprehensive IT for the Modern Enterprise",
-  "description": "Massachusetts-based independent IT consultancy. Operations, cyber security, AI, automation, software, hardware — engineered for businesses that take infrastructure seriously.",
-  "brand": "PlausiDen LLC",
+  "title": "Northbrook Observatory — Public astronomy in the Northern Highlands",
+  "description": "A small public-research observatory in northern New England. Forty-inch Cassegrain reflector, monthly observing nights, school programs, and a darker sky than the coast.",
+  "brand": "Northbrook Observatory",
   "chrome": "floating_pill",
-  "theme": "light",
+  "theme": "dark",
   "nav_actions": [
-    {"label": "Encrypted Inquiry", "href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"},
-    {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
+    {"label": "Monthly sky-report", "href": "/contact.html#newsletter", "data_backend": "cta-newsletter-sky"},
+    {"label": "Schedule a visit", "href": "/visit.html#schedule", "data_backend": "cta-schedule-visit"}
   ],
   "path": "/",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Company",
+        "heading": "Visit",
         "links": [
-          {"label": "About",       "href": "/about.html",       "data_backend": "view-about"},
-          {"label": "Services",    "href": "/services.html",    "data_backend": "view-services"},
-          {"label": "Field Notes", "href": "/field-notes.html", "data_backend": "view-field-notes"},
-          {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact"}
+          {"label": "Visit", "href": "/visit.html", "data_backend": "view-visit"},
+          {"label": "Public observing",   "href": "/programs.html#public", "data_backend": "view-programs"},
+          {"label": "School programs",    "href": "/programs.html#schools", "data_backend": "view-programs"},
+          {"label": "Accessibility",      "href": "/visit.html#access",    "data_backend": "view-visit"}
         ]
       },
       {
-        "heading": "Inquiry",
+        "heading": "Read",
         "links": [
-          {"label": "Get a quote",      "href": "/quote.html",             "data_backend": "cta-quote"},
-          {"label": "Encrypted Inquiry","href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"}
+          {"label": "About", "href": "/about.html",       "data_backend": "view-about"},
+          {"label": "Field notes",           "href": "/field-notes.html", "data_backend": "view-field-archive"},
+          {"label": "Current research",      "href": "/programs.html#research", "data_backend": "view-programs"}
+        ]
+      },
+      {
+        "heading": "Support",
+        "links": [
+          {"label": "Donate",                "href": "/about.html#support", "data_backend": "cta-donate"},
+          {"label": "Volunteer",             "href": "/contact.html#volunteer",       "data_backend": "view-contact"}
         ]
       }
     ],
     "contact": {
-      "heading": "PlausiDen LLC",
-      "phone": "978-351-6495",
-      "email": "team@plausiden.com",
-      "jurisdiction": "Massachusetts, USA"
+      "heading": "Northbrook Observatory",
+      "phone": "603-555-0188",
+      "email": "stars@northbrook-observatory.example",
+      "address": "1240 Ridge Road, Northbrook, NH 03234",
+      "jurisdiction": "Grafton County, New Hampshire"
     },
-    "colophon": "© 2026 PlausiDen LLC. Reproducible builds. Signed audit chains. No third-party trackers."
+    "legal_links": [
+      {"label": "Dark-sky pledge", "href": "/visit.html#darksky", "data_backend": "view-visit"},
+      {"label": "Land acknowledgement", "href": "/about.html#land", "data_backend": "view-about"}
+    ],
+    "colophon": "© 2026 Northbrook Observatory · A 501(c)(3) nonprofit · Founded 1888"
   },
   "nav_links": [
-    {"label": "Services",   "href": "/services.html",    "data_backend": "view-services"},
-    {"label": "About",      "href": "/about.html",       "data_backend": "view-about"},
-    {"label": "Field Notes","href": "/field-notes.html", "data_backend": "view-field-notes"},
-    {"label": "Contact",    "href": "/contact.html",     "data_backend": "view-contact"}
+    {"label": "About",       "href": "/about.html",       "data_backend": "view-about"},
+    {"label": "Programs",    "href": "/programs.html",    "data_backend": "view-programs"},
+    {"label": "Field notes", "href": "/field-notes.html", "data_backend": "view-field-archive"},
+    {"label": "Visit",       "href": "/visit.html",       "data_backend": "view-visit"},
+    {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact"}
   ],
   "sections": [
     {
       "kind": "image_hero",
-      "eyebrow": "PlausiDen LLC · Massachusetts",
-      "title": "Comprehensive IT for the modern enterprise.",
-      "lede": "General-purpose AND specific-purpose technology solutions for businesses that take infrastructure seriously. Operations, cyber security, AI, automation, software, hardware — under one engineering team.",
+      "eyebrow": "Northbrook Observatory · Grafton County, NH",
+      "title": "A small observatory under a darker sky.",
+      "lede": "We point a forty-inch Cassegrain reflector at the night sky on the second Friday of every month, and we tell anyone who shows up what we're looking at. Founded 1888. Still here.",
       "cta": {
-        "label": "Get a quote",
-        "href": "/quote.html",
-        "data_backend": "cta-quote"
+        "label": "Schedule a visit",
+        "href": "/visit.html#schedule",
+        "data_backend": "cta-schedule-visit"
       },
       "background": {
         "kind": "photo",
-        "src": "/assets/photos/stock-80.jpg",
-        "alt": "Wide editorial photograph evoking enterprise IT infrastructure",
+        "src": "/assets/photos/stock-12.jpg",
+        "alt": "Wide editorial photograph of a starfield over an evergreen ridge.",
         "overlay": "dark"
       },
       "height": "comfortable"
     },
     {
       "kind": "heading",
-      "text": "Everything your business needs",
-      "level": 2
+      "level": 2,
+      "text": "What we are."
     },
     {
       "kind": "lede",
-      "text": "Six engineering practices under one roof. No hand-offs between consultancies, no vendor lock-in seams, no scope gaps."
+      "text": "A public-research observatory on a wooded ridge 1,840 feet above sea level. The dome holds a forty-inch f/8 Cassegrain reflector built in 1953 and refurbished in 2018. The site is dark enough to read Bortle 3 most clear nights and Bortle 2 in winter, when humidity drops and the lake-effect cloud cover thins."
     },
     {
       "kind": "def_list",
       "items": [
         {
-          "term": "IT Operations",
-          "definition": "Day-to-day systems administration, monitoring, incident response, change control. The infrastructure runs; the audit chain proves it."
+          "term": "Aperture",
+          "definition": "40 inches (1016 mm). Cassegrain, f/8 system. Two instrument ports for a CCD imager and a low-resolution spectrograph."
         },
         {
-          "term": "Cyber Security",
-          "definition": "Zero-trust architecture, threat modeling, supply-chain attestation, penetration testing, compliance evidence. SOC 2 II / HIPAA / GDPR-ready."
+          "term": "Drive",
+          "definition": "German equatorial mount, refurbished 2018 with a Software Bisque Paramount ME II head and a closed-loop encoder. Tracks at sidereal rate to better than 1 arcsecond over a 20-minute exposure."
         },
         {
-          "term": "Artificial Intelligence",
-          "definition": "AI deployment with the Critic-gated proposal model — LLMs generate candidates, LFI evaluates against typed policies. Auditable, interpretable, replayable."
+          "term": "Site",
+          "definition": "Bortle 3 typical, Bortle 2 in dry winter conditions. Mean seeing 2.4 arcseconds FWHM. Mean transparency 0.86 mag/airmass."
         },
         {
-          "term": "Automation & IoT",
-          "definition": "Workflow automation, edge-device integration, sensor networks, industrial-control integration. Same engineering rigor as the office stack."
-        },
-        {
-          "term": "Software",
-          "definition": "Custom Rust + WASM applications. Typed contracts at every boundary, reproducible builds, signed attestation. We ship the source."
-        },
-        {
-          "term": "Hardware",
-          "definition": "Procurement, deployment, lifecycle management, end-of-life secure disposal. Vendor-neutral; we pick what fits, not what we're paid to recommend."
+          "term": "Staff",
+          "definition": "One full-time director, two part-time observers, a board of seven, and a rotating cast of volunteer hosts on public nights."
         }
       ]
     },
     {
       "kind": "figure",
-      "caption": "Six engineering practices, one team, one audit chain.",
-      "asset_slug": "photos/stock-81"
+      "asset_slug": "photos/stock-34",
+      "caption": "The dome at twilight, mid-October. The shutter is open and the telescope is pointed at the Andromeda Galaxy.",
+      "credit": "Photograph by the observatory archive"
     },
     {
       "kind": "heading",
-      "text": "Why industry leaders choose PlausiDen",
-      "level": 2
+      "level": 2,
+      "text": "What's coming up."
     },
     {
       "kind": "paragraph",
-      "text": "We work with shops that already have an IT team and need a peer, not a replacement. We work with compliance shops that ship audit evidence directly to regulators. We work with founders who refuse the trade-off between fast, reliable, and secure — and the math says they don't have to."
+      "text": "We publish a monthly sky report on the first of every month. It's a one-page PDF: where to look, when to look, what's worth waiting up for, what's worth getting up early for. Subscribe below and we'll mail it to you. We will not sell your address; we will not mail you anything else."
     },
     {
       "kind": "kv_pair",
-      "heading": "What you get",
+      "heading": "Public observing — next four months",
       "items": [
         {
-          "key": "Security standards, default-on",
-          "value": "Every engagement opens with a threat model and a signed change record.",
-          "hint": "No 'we'll get to security in phase two.'"
+          "key": "Friday 2026-06-12",
+          "value": "Saturn at opposition. Rings open 4.2°. Cassini Division visible.",
+          "hint": "Doors at 21:30, dome opens at full dark."
         },
         {
-          "key": "24/7 incident response",
-          "value": "On-call rotation includes the same engineers who built the system.",
-          "hint": "No handoff to a tier-1 voice queue."
+          "key": "Friday 2026-07-10",
+          "value": "Perseid meteors, early phase. Outdoor observing only; dome closed.",
+          "hint": "Bring a chaise. The lawn is the show."
         },
         {
-          "key": "Customization without lock-in",
-          "value": "Every artifact ships to your repo. Walk away anytime with everything.",
-          "hint": "Source, audit chain, infrastructure-as-code, all of it."
+          "key": "Friday 2026-08-14",
+          "value": "Perseid peak. Outdoor observing + dome rotation between M27, M57, and the Veil.",
+          "hint": "Plan to stay past midnight."
         },
         {
-          "key": "Engineering, not theater",
-          "value": "Reproducible builds + signed reports. The chain hash is the proof.",
-          "hint": "Compliance auditors stop asking follow-up questions."
+          "key": "Friday 2026-09-11",
+          "value": "Harvest Moon — bright, no deep-sky. Lunar terminator tour + Jupiter as moon-set lets the sky darken.",
+          "hint": "Best for first-time visitors."
         }
       ]
     },
     {
       "kind": "pull_quote",
-      "body": "We replaced three SaaS subscriptions plus a staff IT contractor with PlausiDen. The audit chain ships straight to compliance and the auditor stopped asking follow-up questions.",
-      "attribution": "the kind of outcome the engagement model targets"
+      "body": "Somewhere, something incredible is waiting to be known.",
+      "attribution": "Carl Sagan"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "How we got here."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Edgar Northbrook built the original 12-inch refractor on this ridge in 1888 because the air was clear and the railroad ran near enough that the equipment could be hauled by team. He donated the observatory to the town of Northbrook in 1923. The 40-inch Cassegrain replaced the refractor in 1953 with NSF support. The building was electrified the same year. The dome motor was replaced in 1978, the floor in 1991, and the entire mount and control system in 2018. Most of the brass is original."
     },
     {
       "kind": "figure",
-      "caption": "We work with teams that already have IT — and need a peer, not a replacement.",
-      "asset_slug": "photos/stock-82"
+      "asset_slug": "photos/stock-57",
+      "caption": "The lawn between the dome and the visitor entrance, an hour before a public night.",
+      "credit": "Photograph by the observatory archive"
     },
     {
       "kind": "call_to_action",
-      "eyebrow": "Ready to elevate your IT strategy?",
-      "title": "Start your journey.",
-      "lede": "A free consultation, no obligation. We listen first, scope second, propose third.",
+      "eyebrow": "Coming up the ridge?",
+      "title": "Book a night.",
+      "lede": "Public observing is the second Friday of every month, free to attend. Group visits and school programs need to be scheduled in advance — we have a small staff and a finite dome.",
       "cta": {
-        "label": "Get a quote",
-        "href": "/quote.html",
-        "data_backend": "cta-quote"
-      },
-      "background": {
-        "kind": "photo",
-        "src": "/assets/photos/stock-83.jpg",
-        "alt": "Team collaboration evoking PlausiDen engagement",
-        "overlay": "dark"
+        "label": "Schedule a visit",
+        "href": "/visit.html#schedule",
+        "data_backend": "cta-schedule-visit"
       }
     }
   ]

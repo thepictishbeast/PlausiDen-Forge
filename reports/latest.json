@@ -21,12 +21,6 @@
     },
     {
       "phase": "tokens",
-      "path": "encrypted-inquiry.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
       "path": "field-notes.html",
       "message": "raw hex color in HTML",
       "severity": "warn"
@@ -39,32 +33,26 @@
     },
     {
       "phase": "tokens",
-      "path": "prosperity-club.html",
+      "path": "programs.html",
       "message": "raw hex color in HTML",
       "severity": "warn"
     },
     {
       "phase": "tokens",
-      "path": "quote.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
-    },
-    {
-      "phase": "tokens",
-      "path": "services.html",
+      "path": "visit.html",
       "message": "raw hex color in HTML",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
-      "path": "prosperity-club.html",
-      "message": "21.2K HTML > 20.0K budget — audit blocks / split route",
+      "path": "visit.html",
+      "message": "25.3K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
       "phase": "perf_budget",
-      "path": "services.html",
-      "message": "20.9K HTML > 20.0K budget — audit blocks / split route",
+      "path": "contact.html",
+      "message": "20.8K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -76,7 +64,19 @@
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "20.8K HTML > 20.0K budget — audit blocks / split route",
+      "message": "22.1K HTML > 20.0K budget — audit blocks / split route",
+      "severity": "warn"
+    },
+    {
+      "phase": "perf_budget",
+      "path": "about.html",
+      "message": "23.5K HTML > 20.0K budget — audit blocks / split route",
+      "severity": "warn"
+    },
+    {
+      "phase": "perf_budget",
+      "path": "programs.html",
+      "message": "23.1K HTML > 20.0K budget — audit blocks / split route",
       "severity": "warn"
     },
     {
@@ -111,12 +111,6 @@
     },
     {
       "phase": "sri",
-      "path": "encrypted-inquiry.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
       "path": "field-notes.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
@@ -129,19 +123,13 @@
     },
     {
       "phase": "sri",
-      "path": "prosperity-club.html",
+      "path": "programs.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
     {
       "phase": "sri",
-      "path": "quote.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "services.html",
+      "path": "visit.html",
       "message": "link → loom-skin.css has no integrity attribute",
       "severity": "warn"
     },
@@ -196,6 +184,18 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[cta-donate] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-encrypted-inquiry] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[cta-encrypted-inquiry] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
@@ -209,6 +209,12 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-github] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-newsletter-sky] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -250,7 +256,19 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[cta-quote] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[cta-quote] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[cta-schedule-visit] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
@@ -328,7 +346,19 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[prosperity-cta-contact] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[prosperity-cta-contact] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-about] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -340,13 +370,31 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[prosperity-view-blog] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[prosperity-view-blog] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[prosperity-view-contact] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[prosperity-view-contact] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-finance] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -370,7 +418,19 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[prosperity-view-prosper] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[prosperity-view-prosper] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[prosperity-view-resources] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -449,6 +509,18 @@
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-docs] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-field-archive] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-field-notes] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
     {
@@ -544,6 +616,18 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[view-programs] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-services] declared but no UI references it (dead spec)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[view-services] declared but impl_files is empty (PARTIAL — stub)",
       "severity": "warn"
     },
@@ -610,6 +694,12 @@
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
+      "message": "[view-visit] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
       "message": "[view-why] declared but no UI references it (dead spec)",
       "severity": "warn"
     },
@@ -620,42 +710,6 @@
       "severity": "warn"
     },
     {
-      "phase": "unbuilt_route",
-      "path": "prosperity-club.html",
-      "message": "href=\"/prosperity-about.html\" → static/prosperity-about.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "prosperity-club.html",
-      "message": "href=\"/prosperity-prosper.html\" → static/prosperity-prosper.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "prosperity-club.html",
-      "message": "href=\"/prosperity-blog.html\" → static/prosperity-blog.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "prosperity-club.html",
-      "message": "href=\"/prosperity-finance.html\" → static/prosperity-finance.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "prosperity-club.html",
-      "message": "href=\"/prosperity-resources.html\" → static/prosperity-resources.html does not exist",
-      "severity": "warn"
-    },
-    {
-      "phase": "unbuilt_route",
-      "path": "prosperity-club.html",
-      "message": "href=\"/prosperity-contact.html\" → static/prosperity-contact.html does not exist",
-      "severity": "warn"
-    },
-    {
       "phase": "crawl",
       "path": "127.0.0.1:8123",
       "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
@@ -663,9 +717,9 @@
     }
   ],
   "strict_count": 0,
-  "warn_count": 110,
-  "duration_ms": 16,
-  "prev_hash": "a4d0b54b7aee4600223990c8d440442efe9d222fd97a110ff069398fbf47cb11",
-  "chain_length": 139,
-  "started": "2026-05-20T01:27:33.17560916Z"
+  "warn_count": 119,
+  "duration_ms": 10,
+  "prev_hash": "1330ccc0c0ab558be1da5c8c501ac8798c73e5be483e9d8e3b86a7b56d8fe92b",
+  "chain_length": 149,
+  "started": "2026-05-20T01:50:10.008179638Z"
 }

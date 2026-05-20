@@ -291,3 +291,45 @@ method = "POST"
 path = "/prosperity-contact"
 purpose = "Prosperity Club CTA: contact form submit"
 impl_files = []
+
+# ============================================================
+# Northbrook Observatory — dev.plausiden.com new site (PoC).
+# Fictional public-research observatory in northern New England.
+# Replaces the prior IT consultancy site as the demo target.
+# ============================================================
+
+[backends.view-programs]
+method = "GET"
+path = "/programs.html"
+purpose = "Northbrook: public programs + school + research"
+impl_files = []
+
+[backends.view-visit]
+method = "GET"
+path = "/visit.html"
+purpose = "Northbrook: directions + hours + accessibility"
+impl_files = []
+
+[backends.cta-schedule-visit]
+method = "GET"
+path = "/visit.html#schedule"
+purpose = "Northbrook CTA: book a public observing night"
+impl_files = []
+
+[backends.cta-newsletter-sky]
+method = "GET"
+path = "/contact.html#newsletter"
+purpose = "Northbrook CTA: subscribe to monthly sky-report"
+impl_files = []
+
+[backends.cta-donate]
+method = "GET"
+path = "/about.html#support"
+purpose = "Northbrook CTA: support the observatory (donations)"
+impl_files = []
+
+[backends.view-field-archive]
+method = "GET"
+path = "/field-notes.html"
+purpose = "Northbrook: archive of staff dispatches"
+impl_files = []

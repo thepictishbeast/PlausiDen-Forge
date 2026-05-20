@@ -1,135 +1,157 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Field Notes — PlausiDen LLC",
-  "description": "Engineering notes from PlausiDen engagements. Threat models, architecture decisions, audit-chain proofs, and the practical mathematics of running infrastructure that doesn't rot.",
-  "brand": "PlausiDen LLC",
+  "title": "Field notes — Northbrook Observatory",
+  "description": "Staff dispatches from the dome — observing reports, telescope-time logs, equipment notes, and the occasional essay on what we look at and why.",
+  "brand": "Northbrook Observatory",
   "chrome": "floating_pill",
-  "theme": "light",
+  "theme": "dark",
   "nav_actions": [
-    {"label": "Encrypted Inquiry", "href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"},
-    {"label": "Get a quote", "href": "/quote.html", "data_backend": "cta-quote"}
+    {"label": "Monthly sky-report", "href": "/contact.html#newsletter", "data_backend": "cta-newsletter-sky"},
+    {"label": "Schedule a visit", "href": "/visit.html#schedule", "data_backend": "cta-schedule-visit"}
   ],
   "path": "/field-notes.html",
   "site_origin": "https://dev.plausiden.com",
   "footer": {
     "columns": [
       {
-        "heading": "Company",
+        "heading": "Visit",
         "links": [
-          {"label": "About",       "href": "/about.html",       "data_backend": "view-about"},
-          {"label": "Services",    "href": "/services.html",    "data_backend": "view-services"},
-          {"label": "Field Notes", "href": "/field-notes.html", "data_backend": "view-field-notes"},
-          {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact"}
+          {"label": "Visit", "href": "/visit.html", "data_backend": "view-visit"},
+          {"label": "Public observing",   "href": "/programs.html#public", "data_backend": "view-programs"},
+          {"label": "School programs",    "href": "/programs.html#schools", "data_backend": "view-programs"},
+          {"label": "Accessibility",      "href": "/visit.html#access",    "data_backend": "view-visit"}
         ]
       },
       {
-        "heading": "Inquiry",
+        "heading": "Read",
         "links": [
-          {"label": "Get a quote",      "href": "/quote.html",             "data_backend": "cta-quote"},
-          {"label": "Encrypted Inquiry","href": "/encrypted-inquiry.html", "data_backend": "cta-encrypted-inquiry"}
+          {"label": "About", "href": "/about.html",       "data_backend": "view-about"},
+          {"label": "Field notes",           "href": "/field-notes.html", "data_backend": "view-field-archive"},
+          {"label": "Current research",      "href": "/programs.html#research", "data_backend": "view-programs"}
+        ]
+      },
+      {
+        "heading": "Support",
+        "links": [
+          {"label": "Donate",                "href": "/about.html#support", "data_backend": "cta-donate"},
+          {"label": "Volunteer",             "href": "/contact.html#volunteer",       "data_backend": "view-contact"}
         ]
       }
     ],
     "contact": {
-      "heading": "PlausiDen LLC",
-      "phone": "978-351-6495",
-      "email": "team@plausiden.com",
-      "jurisdiction": "Massachusetts, USA"
+      "heading": "Northbrook Observatory",
+      "phone": "603-555-0188",
+      "email": "stars@northbrook-observatory.example",
+      "address": "1240 Ridge Road, Northbrook, NH 03234",
+      "jurisdiction": "Grafton County, New Hampshire"
     },
-    "colophon": "© 2026 PlausiDen LLC. Reproducible builds. Signed audit chains. No third-party trackers."
+    "legal_links": [
+      {"label": "Dark-sky pledge", "href": "/visit.html#darksky", "data_backend": "view-visit"},
+      {"label": "Land acknowledgement", "href": "/about.html#land", "data_backend": "view-about"}
+    ],
+    "colophon": "© 2026 Northbrook Observatory · A 501(c)(3) nonprofit · Founded 1888"
   },
   "nav_links": [
-    {"label": "Services",   "href": "/services.html",    "data_backend": "view-services"},
-    {"label": "About",      "href": "/about.html",       "data_backend": "view-about"},
-    {"label": "Field Notes","href": "/field-notes.html", "data_backend": "view-field-notes", "current": true},
-    {"label": "Contact",    "href": "/contact.html",     "data_backend": "view-contact"}
+    {"label": "About",       "href": "/about.html",       "data_backend": "view-about"},
+    {"label": "Programs",    "href": "/programs.html",    "data_backend": "view-programs"},
+    {"label": "Field notes", "href": "/field-notes.html", "data_backend": "view-field-archive", "current": true},
+    {"label": "Visit",       "href": "/visit.html",       "data_backend": "view-visit"},
+    {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact"}
   ],
   "sections": [
     {
       "kind": "image_hero",
-      "eyebrow": "Field Notes",
-      "title": "Engineering notes from the wire.",
-      "lede": "Anonymized lessons from real engagements. Threat models, architecture decisions, audit-chain proofs, and the mathematics of infrastructure that doesn't rot. No listicles, no top-ten-trends, no clickbait — just what we learned by shipping.",
+      "eyebrow": "Field notes",
+      "title": "Dispatches from the dome.",
+      "lede": "What we looked at, what we saw, what surprised us, what the weather did. Updated when there is something to say — typically the week after a public observing night or after a research session.",
       "background": {
         "kind": "photo",
-        "src": "/assets/photos/stock-71.jpg",
-        "alt": "Wide editorial photograph evoking engineering notes + craft",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph of star-trails over the observatory ridge.",
         "overlay": "dark"
       },
       "height": "compact"
     },
     {
-      "kind": "figure",
-      "caption": "Each post traces a real engagement decision — what we tried, what didn't work, what shipped.",
-      "asset_slug": "photos/stock-12"
-    },
-    {
       "kind": "heading",
-      "text": "Recent notes",
-      "level": 2
+      "level": 2,
+      "text": "Recent."
     },
     {
-      "kind": "lede",
-      "text": "Anonymized client work, threat-model thinking, and architectural decisions we believe transfer."
+      "kind": "kicker",
+      "text": "2026-05-09 · Hannah Reyes"
     },
     {
-      "kind": "def_list",
-      "items": [
-        {
-          "term": "The audit chain that ended a quarterly compliance call",
-          "definition": "Healthcare client; SOC 2 II + HIPAA. We replaced their consultant-prepared evidence binder with a Merkle-chained, Ed25519-signed build report that the auditor accepted on first read. Quarterly meeting now takes 12 minutes instead of 90."
-        },
-        {
-          "term": "Why we refuse \"AI everywhere\" engagements",
-          "definition": "A retail client asked for \"AI integration into our stack.\" We pushed back: which specific workflow, and what's a 30% improvement worth there? The answer was a 90-minute scoping conversation, a 6-week engagement on one workflow (returns triage), and 41% measured throughput gain. Not 'AI integration' — AI on the exact problem AI fits."
-        },
-        {
-          "term": "Catching CVSS 4.0 in the supply chain",
-          "definition": "Financial-advisor SaaS, sub-30-person shop. Two transitive Rust deps surfaced as CVSS 4.0 critical in the cargo-deny phase one Tuesday morning. We patched, signed, and shipped before the client's quarterly compliance window. No customer-facing impact; the audit chain proves it."
-        },
-        {
-          "term": "Why the runbook is the deliverable",
-          "definition": "Legal client; sole-practitioner office. We engineered their Microsoft 365 + line-of-business stack. The reason they hired us a second time wasn't the engineering — it was the runbook. When a paralegal needed to onboard a new attorney while the partner was on vacation, the runbook covered it. No emergency call to us."
-        },
-        {
-          "term": "Threat modeling at the espresso machine",
-          "definition": "Industrial client; food-and-beverage logistics. The OT/IT segmentation engagement opened with: \"can you read the temperature off the espresso machines from outside the building?\" Yes. Could anyone else? Apparently yes. We segmented the OT network and the cafeteria-grade IoT is no longer reachable from the open internet."
-        },
-        {
-          "term": "SLSA-attested SBOMs, the silent way they fail",
-          "definition": "Our own supply-chain CI was emitting zero SBOMs for weeks because the glob path mismatched cargo-cyclonedx's per-crate output. We caught it during a quarterly audit of our own audit chain. We mention this because every shop should audit their own audit chain at the same cadence as their compliance audit."
-        }
-      ]
-    },
-    {
-      "kind": "figure",
-      "caption": "Field Notes are anonymized but specific. No identifiable client; every detail of the decision is real.",
-      "asset_slug": "photos/stock-79"
-    },
-    {
-      "kind": "pull_quote",
-      "body": "Field Notes are anonymized but specific. The names and industries are obscured; the architectural decisions and the math are not.",
-      "attribution": "editorial policy"
-    },
-    {
-      "kind": "heading",
-      "text": "Who reads this",
-      "level": 2
+      "kind": "sub_heading",
+      "text": "Catching M51 in the spring drift.",
+      "level": 3
     },
     {
       "kind": "paragraph",
-      "text": "We write for the technical decision-maker who already knows the platforms and the buzzwords and wants to see the work. If you're shopping IT consultancies, the Field Notes give you a clearer view of how we think than any case-study PDF. If you're an internal-IT lead curious how peers structure engagements, we hope they're useful too."
+      "text": "The Whirlpool was due south at 22:40 local on the night of the May public — Ursa Major's tail high, transparency 0.91 mag/airmass per the boundary-layer sensor. We rotated the dome ten degrees east of meridian to clear a tree on the south horizon and started a 20-minute integration at 300mm focal-reducer. The companion NGC 5195 separates cleanly even on the live frame; six visitors stayed past the end of the night to watch the integration finish."
     },
     {
-      "kind": "call_to_action",
-      "eyebrow": "Have a problem worth a Field Note?",
-      "title": "Bring us in.",
-      "lede": "Every Field Note starts with a scoped engagement. The notes are anonymized; the engagements are real.",
-      "cta": {
-        "label": "Get a quote",
-        "href": "/quote.html",
-        "data_backend": "cta-quote"
-      }
+      "kind": "figure",
+      "asset_slug": "photos/stock-71",
+      "caption": "Single 20-minute stack of M51, faintly tinged warm by the bayer pattern at the CCD. The companion NGC 5195 is visible above-right of the primary spiral.",
+      "credit": "T. Okafor / Northbrook Observatory, 2026"
+    },
+    {
+      "kind": "kicker",
+      "text": "2026-04-22 · Marc Belanger"
+    },
+    {
+      "kind": "sub_heading",
+      "text": "What we saw of the Lyrids.",
+      "level": 3
+    },
+    {
+      "kind": "paragraph",
+      "text": "Twenty-one meteors in 90 minutes outdoors on the night of the 21st, ZHR-equivalent around 14 — short of the forecast 18, but the radiant was still climbing when transparency went down at 04:30. The brightest fireball at 03:51 left a five-second train; three of us had the same reaction at the same time, which is unusual. Recorded magnitudes are in the AAVSO log."
+    },
+    {
+      "kind": "kicker",
+      "text": "2026-03-15 · Hannah Reyes"
+    },
+    {
+      "kind": "sub_heading",
+      "text": "Variable-star photometry: the next 18 months.",
+      "level": 3
+    },
+    {
+      "kind": "paragraph",
+      "text": "We've been folded into the AAVSO BSM Berry South campaign — the southern-hemisphere version was instrumented out, the northern version needed a second-site cross-check, and we have the right aperture, the right declination range, and (now) the right cadence. The campaign targets are a mix of eclipsing binaries with century-scale period drift and a handful of recurring novae that AAVSO would like a tighter outburst-detection net on. Public-night impact: none. The dome reads-out the full plate solve in 90 seconds, which means we can run BSM exposures BETWEEN public observing targets without interrupting visitors."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "We get less than 40 photometric nights a year. The campaign asks for 20. That math works.",
+      "attribution": "Hannah Reyes, in conversation with AAVSO"
+    },
+    {
+      "kind": "kicker",
+      "text": "2026-02-04 · Tess Okafor"
+    },
+    {
+      "kind": "sub_heading",
+      "text": "The imager pipeline, rewritten in Rust.",
+      "level": 3
+    },
+    {
+      "kind": "paragraph",
+      "text": "We swapped the imaging pipeline from a Python pipeline that took two hours to plate-solve a night's frames to a Rust crate that does it in eight minutes on the same hardware. The science output is the same — bias / dark / flat / stack / wcs-fit / photometry on each AAVSO target — but the operator console now finishes before sunrise, so visitor prints can be ready by the next public night. Source is on the observatory's git mirror; happy to take pull requests."
+    },
+    {
+      "kind": "kicker",
+      "text": "2026-01-09 · Hannah Reyes"
+    },
+    {
+      "kind": "sub_heading",
+      "text": "Bortle 1, briefly.",
+      "level": 3
+    },
+    {
+      "kind": "paragraph",
+      "text": "The arctic outflow on the second of January dropped the surface dewpoint to -23°C and the boundary-layer aerosol to zero. The 21:00 SQM reading was 21.94 mag/arcsec² — Bortle 1, by the rounding rules — for the first time in nine years of continuous monitoring. The Milky Way cast a shadow on the snow at zenith. We left the dome closed and stood outside for forty minutes. Nobody said anything."
     }
   ]
 }
