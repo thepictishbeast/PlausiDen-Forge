@@ -1,0 +1,20 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Substrate Discipline doctrine
+    url: https://github.com/thepictishbeast/PlausiDen-AVP-Doctrine/blob/main/SUBSTRATE_DISCIPLINE.md
+    about: |
+      Read this first before filing a capability request. The substrate
+      is the only path; the workflow for surfacing gaps is documented
+      here, including the heavyweight substrate-bypass register for
+      genuine emergencies.
+  - name: Doctrine rule database
+    url: https://github.com/thepictishbeast/PlausiDen-AVP-Doctrine/tree/main/doctrine/rules
+    about: |
+      71 codified rules across build / primitives / security / testing /
+      docs / logging / perf / content / accessibility. Query live with
+      `forge doctrine query --rule <id>`.
+  - name: Forge AGENTS.md
+    url: https://github.com/thepictishbeast/PlausiDen-Forge/blob/main/AGENTS.md
+    about: |
+      Tool inventory + anti-patterns + canonical defaults. Read first
+      when working in PlausiDen-Forge.

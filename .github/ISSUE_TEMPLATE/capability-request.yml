@@ -1,0 +1,199 @@
+name: Capability request — substrate gap
+description: |
+  File a capability request when you hit a substrate gap: the substrate
+  cannot currently do something a site / capability / operator needs,
+  and the right path forward is to ADD the capability to the substrate
+  (Forge / Loom / *-core / CMS) rather than hand-code around it.
+title: "[capability] <short description>"
+labels: ["capability-request", "substrate-gap"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## What this is for
+
+        Per [`SUBSTRATE_DISCIPLINE.md`](https://github.com/thepictishbeast/PlausiDen-AVP-Doctrine/blob/main/SUBSTRATE_DISCIPLINE.md):
+        **the substrate is the only path**. When site work hits a wall
+        because the substrate doesn't currently support something, the
+        right response is to file this issue — not hand-code a one-off.
+
+        A capability request is a typed declaration: *what is needed*,
+        *why*, *what site / feature is currently blocked*, and a
+        *proposed contract* for the new capability. The proposal is
+        an interface (props, audit gates, accessibility behavior),
+        not an implementation.
+
+        See also: [doctrine rule build-007](https://github.com/thepictishbeast/PlausiDen-AVP-Doctrine/blob/main/doctrine/rules/build.toml)
+        on the substrate-bypass register (the heavyweight emergency
+        workflow when this capability genuinely cannot be added in time).
+
+  - type: dropdown
+    id: substrate-layer
+    attributes:
+      label: Substrate layer
+      description: Which layer of the substrate does this capability belong in?
+      multiple: false
+      options:
+        - "Loom primitive (new UI component or variant)"
+        - "Loom theme (new theme / palette / motion / type pack)"
+        - "Forge phase (new audit / validation)"
+        - "Forge subcommand (new operator-facing tool)"
+        - "*-core typed surface (privacy / trust-safety / domains / forms / federation / email / commerce / memberships / etc.)"
+        - "CMS schema field (new content type or field)"
+        - "Crawler detector axis (new runtime audit)"
+        - "MCP tool (new AI-callable capability)"
+        - "Doctrine rule (new codified standard)"
+        - "Cross-cutting trait (new orthogonal trait)"
+        - "Manifest declaration (new capability flag)"
+        - "Other / unclear"
+    validations:
+      required: true
+
+  - type: textarea
+    id: needed
+    attributes:
+      label: What's needed
+      description: |
+        One-paragraph description of the missing primitive / phase /
+        capability. Be specific. "Better hero" is not enough; "a hero
+        variant that places a left-aligned editorial headline next to
+        a right-aligned secondary content slot with a typed code-block
+        decoration" is.
+      placeholder: |
+        e.g., "A typed `icon_bar` Loom primitive that emits a top-of-page
+        strip with phone + email contact slots, with `--editorial` and
+        `--centered` variants per the prim-009 default-left-align rule."
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: |
+        What site work or operator workflow is currently blocked or
+        being routed-around because this doesn't exist? Cite specific
+        examples — site name, route, feature — not "in general."
+      placeholder: |
+        e.g., "Blocked: prosperityclub.com pixel-reproduction needs the
+        top-bar icon strip to match the Beauty PT theme. Without this
+        primitive, the workaround is hand-rolled HTML/CSS, which
+        violates substrate-only-path doctrine."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-contract
+    attributes:
+      label: Proposed contract
+      description: |
+        Typed interface. Props with constrained variants, audit-gate
+        requirements, accessibility behavior, theme behavior. Not an
+        implementation — the *shape* the substrate would project.
+
+        For Loom primitives, include: variant enum, slot structure,
+        default trait set (per prim-001), accessible-name slot (per
+        prim-008), responsive behavior contract.
+
+        For Forge phases, include: input it consumes, finding types
+        emitted (with severity classification), rule(s) it enforces
+        (per docs-002, rule-cite via Finding.citing).
+
+        For *-core surfaces, include: the typed struct shape, validate()
+        invariants, serde behavior (deny_unknown_fields per sec-001).
+      placeholder: |
+        e.g.,
+        ```
+        IconBar {
+            variant: IconBarVariant::{Floating, Embedded, Sticky},
+            alignment: HorizontalAlign::Start  (default; --centered opt-in)
+            slots: Vec<IconSlot {
+                icon: IconKind,
+                primary_text: String,
+                secondary_text: Option<String>,
+                href: Option<String>,  // data-backend required if Some
+            }>,
+            traits: [Interactive (if any slot has href), MobileFriendly,
+                     RTLAware, RespectsReducedMotion, ThemeAware],
+        }
+        ```
+    validations:
+      required: true
+
+  - type: input
+    id: blocked-by-site
+    attributes:
+      label: Blocked-by site / feature
+      description: |
+        Link to the specific site, route, or feature work that surfaced
+        this gap. This is what unblocks when the capability lands.
+      placeholder: "https://dev.plausiden.com/some-route OR cms/prosperityclub-icon-bar.json branch"
+    validations:
+      required: false
+
+  - type: textarea
+    id: related-rules-and-traits
+    attributes:
+      label: Related doctrine rules and traits
+      description: |
+        Which AVP-Doctrine rules apply to the new capability? Which
+        traits would the new primitive declare?
+
+        Use `forge doctrine for <path>` to see rules applicable to
+        the target crate.
+      placeholder: |
+        Rules: prim-001 (default-required traits), prim-008 (accessible-name slot), prim-009 (default-left-align), a11y-001 (keyboard-operable).
+        Traits: Interactive, Focusable, KeyboardOperable, ScreenReaderAccessible, MobileFriendly, RTLAware, RespectsReducedMotion, ThemeAware.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: substrate-bypass-active
+    attributes:
+      label: Is there a substrate-bypass active for this gap?
+      description: |
+        If site work is currently shipping with an inline
+        `// SUBSTRATE-BYPASS(issue-id): ...` tag because this
+        capability doesn't exist yet, mention it. Run
+        `forge doctrine exceptions` to see the active register.
+      multiple: false
+      options:
+        - "No bypass active"
+        - "Yes — bypass active in code"
+        - "No, but proposing a bypass while this is implemented"
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: |
+        What does it mean for this capability to be "done"? Concrete
+        signals: tests pass, demo site builds, audit phases verify,
+        backwards-compat preserved.
+      placeholder: |
+        - [ ] Primitive lands in `loom-cms-render::CmsSection` enum
+        - [ ] Default + variant CSS in `loom-tokens/src/skin.css`
+        - [ ] Property tests at variant-deserialization boundary
+        - [ ] Visual regression fixtures at 390/768/1280 viewports
+        - [ ] `forge doctrine for crates/loom-cms-render` includes
+              the new primitive's manifest entry
+        - [ ] Demo site (dev.plausiden.com/icon-bar-demo) builds
+              strict-clean
+        - [ ] Companion AGENTS.md tool inventory updated same PR
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: discipline
+    attributes:
+      label: Substrate discipline check
+      options:
+        - label: "I've confirmed the substrate doesn't already provide this (checked existing primitives / phases / *-core / cms-schema)."
+          required: true
+        - label: "I've named the proposed contract as an interface, not an implementation."
+          required: true
+        - label: "I understand this will be reviewed against the canonical defaults; any non-canonical lib needs an ADR per `SUBSTRATE_DISCIPLINE.md`."
+          required: true
