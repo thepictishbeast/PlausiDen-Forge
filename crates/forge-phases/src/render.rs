@@ -290,8 +290,33 @@ impl Phase for RenderPhase {
         // Avoids one disk-fsync per build when the design system
         // hasn't changed, and matters when Forge runs on a watch
         // loop or in a sandbox with rate-limited writes.
+        // Prepend the SYNC-FROM-LOOM marker line so loom_sync gate
+        // sees the freshly-written bytes as authoritatively synced.
+        // The gate computes sha384(LOOM_PATH/loom-tokens/src/skin.css)
+        // and compares to the marker — since Forge embeds the same
+        // SKIN_CSS bytes via the loom-tokens crate dep, the hash
+        // computed over `skin_bytes` here matches Loom's source. No
+        // separate `forge --sync-loom` needed; every `forge build`
+        // produces a properly-marked file. (Surfaced via loom_sync
+        // gate finding "no SYNC-FROM-LOOM marker" on every build.)
         let skin_path = ctx.static_dir.join("loom-skin.css");
-        let skin_bytes = loom_tokens::SKIN_CSS.as_bytes();
+        let skin_raw = loom_tokens::SKIN_CSS.as_bytes();
+        use sha2::Digest as _;
+        let mut hasher = sha2::Sha384::new();
+        hasher.update(skin_raw);
+        let digest = hasher.finalize();
+        use base64::Engine as _;
+        let digest_b64 = base64::engine::general_purpose::STANDARD.encode(digest);
+        let marker = format!(
+            "/* SYNC-FROM-LOOM:sha384-{digest_b64} — auto-synced by forge render at build */\n"
+        );
+        let skin_with_marker = {
+            let mut buf = Vec::with_capacity(marker.len() + skin_raw.len());
+            buf.extend_from_slice(marker.as_bytes());
+            buf.extend_from_slice(skin_raw);
+            buf
+        };
+        let skin_bytes: &[u8] = &skin_with_marker;
         let needs_write = match std::fs::read(&skin_path) {
             Ok(existing) => existing != skin_bytes,
             Err(_) => true, // missing / unreadable → write
