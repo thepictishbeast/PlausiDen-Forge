@@ -44,33 +44,62 @@ impl Phase for SriPhase {
                 }
                 let disk_path = ctx.static_dir.join(basename);
                 if !disk_path.exists() {
-                    findings.push(Finding::warn(
-                        self.name(),
-                        file.name.clone(),
-                        format!("{} → {} on disk missing (broken link)", tag.kind, basename),
-                    ));
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            file.name.clone(),
+                            format!("{} → {} on disk missing (broken link)", tag.kind, basename),
+                        )
+                        .citing(["sec-005"])
+                        .why("HTML references an asset that does not exist on disk; in production this is a 404 in production, in dev mode it's an unsigned fetch attempt")
+                        .fix(format!(
+                            "either remove the {} reference from the page-shell template OR ensure forge build emits {basename} to static/ — check that the Loom emission pipeline produced it",
+                            tag.kind
+                        ))
+                        .skill("add-loom-primitive"),
+                    );
                     continue;
                 }
 
                 match tag.integrity.as_deref() {
                     None => {
-                        findings.push(Finding::warn(
-                            self.name(),
-                            file.name.clone(),
-                            format!("{} → {} has no integrity attribute", tag.kind, basename),
-                        ));
+                        findings.push(
+                            Finding::warn(
+                                self.name(),
+                                file.name.clone(),
+                                format!("{} → {} has no integrity attribute", tag.kind, basename),
+                            )
+                            .citing(["sec-005"])
+                            .why("subresource without an `integrity=\"sha384-...\"` attribute can be silently swapped at the CDN / proxy layer; tampered code executes in the browser")
+                            .fix(format!(
+                                "the Loom page-shell template should emit `integrity=\"sha384-{{hash}}\"` alongside every {} reference; forge_phases::sri computes the expected hash",
+                                tag.kind
+                            ))
+                            .skill("add-loom-primitive")
+                            .avoid("don't hand-add integrity hashes to static/ HTML — they regenerate every build; emit from the substrate"),
+                        );
                     }
                     Some(declared) => {
                         let expected = compute_sri(&disk_path, self.name())?;
                         if declared != expected {
-                            findings.push(Finding::strict(
-                                self.name(),
-                                file.name.clone(),
-                                format!(
-                                    "{} → {}: integrity mismatch (declared {declared}, expected {expected})",
-                                    tag.kind, basename
-                                ),
-                            ));
+                            findings.push(
+                                Finding::strict(
+                                    self.name(),
+                                    file.name.clone(),
+                                    format!(
+                                        "{} → {}: integrity mismatch (declared {declared}, expected {expected})",
+                                        tag.kind, basename
+                                    ),
+                                )
+                                .citing(["sec-005"])
+                                .why("HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited")
+                                .fix(format!(
+                                    "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-{}` from the on-disk content. Do NOT hand-edit the integrity in static/",
+                                    &expected[..16]
+                                ))
+                                .skill("add-loom-primitive")
+                                .avoid("don't paste integrity hashes from anywhere except `forge build` output"),
+                            );
                         }
                     }
                 }

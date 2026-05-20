@@ -41,44 +41,78 @@ impl Phase for IdStrategyPhase {
             }
             for (id, count) in counts {
                 if count > 1 {
-                    findings.push(Finding::strict(
-                        self.name(),
-                        n.clone(),
-                        format!("duplicate id=\"{id}\" ({count} occurrences)"),
-                    ));
+                    findings.push(
+                        Finding::strict(
+                            self.name(),
+                            n.clone(),
+                            format!("duplicate id=\"{id}\" ({count} occurrences)"),
+                        )
+                        .citing(["a11y-001"])
+                        .why("HTML ids must be unique; duplicates break label/for, aria-labelledby, skip-link, and anchor-jump navigation")
+                        .fix(format!(
+                            "the Loom primitives that emit `id=\"{id}\"` must produce stable unique ids — check section-id generation in cms/<page>.json + the corresponding Loom render path"
+                        ))
+                        .skill("add-loom-primitive"),
+                    );
                 }
             }
 
             // 2. <label for="X"> resolves.
             for for_id in extract_label_for(body) {
                 if !id_set.contains(for_id.as_str()) {
-                    findings.push(Finding::strict(
-                        self.name(),
-                        n.clone(),
-                        format!("<label for=\"{for_id}\"> has no matching id"),
-                    ));
+                    findings.push(
+                        Finding::strict(
+                            self.name(),
+                            n.clone(),
+                            format!("<label for=\"{for_id}\"> has no matching id"),
+                        )
+                        .citing(["a11y-001"])
+                        .why("a `<label for>` pointing at no id leaves the labelled input unannounced to screen readers + breaks click-the-label focus behavior")
+                        .fix(format!(
+                            "either the form-input primitive must emit `id=\"{for_id}\"`, OR the label's `for` should match the input's actual id — fix in the Loom form-input primitive, not in the rendered HTML"
+                        ))
+                        .skill("add-loom-primitive"),
+                    );
                 }
             }
 
             // 3. aria-* references resolve.
             for (attr, token) in extract_aria_refs(body) {
                 if !id_set.contains(token.as_str()) {
-                    findings.push(Finding::strict(
-                        self.name(),
-                        n.clone(),
-                        format!("{attr}=\"{token}\" has no matching id"),
-                    ));
+                    findings.push(
+                        Finding::strict(
+                            self.name(),
+                            n.clone(),
+                            format!("{attr}=\"{token}\" has no matching id"),
+                        )
+                        .citing(["a11y-001"])
+                        .why(format!(
+                            "aria attribute references a non-existent id; the ARIA relationship (described-by / labelledby / controls) silently breaks"
+                        ))
+                        .fix(format!(
+                            "either the referenced element must emit `id=\"{token}\"`, OR the {attr} value should point at an existing id — fix the Loom primitive that emits the {attr} attribute"
+                        ))
+                        .skill("add-loom-primitive"),
+                    );
                 }
             }
 
             // 4. Skip-link target resolves.
             for target in extract_skiplinks(body) {
                 if !id_set.contains(target.as_str()) {
-                    findings.push(Finding::strict(
-                        self.name(),
-                        n.clone(),
-                        format!("skip-link href=\"#{target}\" has no matching id"),
-                    ));
+                    findings.push(
+                        Finding::strict(
+                            self.name(),
+                            n.clone(),
+                            format!("skip-link href=\"#{target}\" has no matching id"),
+                        )
+                        .citing(["a11y-001"])
+                        .why("the keyboard skip-link's target element does not exist; pressing the skip-link does nothing for keyboard / SR users")
+                        .fix(format!(
+                            "the Loom page-shell skip-link emitter should reference the same id as the main-content element — typically `id=\"{target}\"` on `<main>` or the page's primary content wrapper"
+                        ))
+                        .skill("add-loom-primitive"),
+                    );
                 }
             }
         }

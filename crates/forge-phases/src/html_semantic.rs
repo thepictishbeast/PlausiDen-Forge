@@ -35,27 +35,42 @@ impl Phase for HtmlSemanticPhase {
         for file in files {
             let count = count_inline_styles(&file.body);
             if count > 0 {
-                findings.push(Finding::strict(
-                    self.name(),
-                    file.name.clone(),
-                    format!("{count} inline style=\"...\" attribute(s); migrate to skin.css class"),
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        file.name.clone(),
+                        format!("{count} inline style=\"...\" attribute(s)"),
+                    )
+                    .citing(["prim-006", "prim-007"])
+                    .why("inline styles bypass the typed loom-tokens theme system; they don't respect dark mode, AMOLED, prefers-reduced-motion, or RTL — and they can't be CSP-sandboxed cleanly")
+                    .fix("the Loom primitive that emitted this HTML needs a variant or skin.css class that captures the styling intent; remove the style= attribute from the primitive's render emission")
+                    .skill("add-loom-primitive")
+                    .avoid("don't sed/grep style= attributes out of static/ — the build re-emits them; fix the source in loom-cms-render"),
+                );
             }
             // T67: <div role="<landmark>"> → use the semantic
             // element. One finding per matched role per file
             // (de-duped) so the report stays readable on a
             // page that repeats the mistake many times.
             for hit in find_div_landmark_roles(&file.body) {
-                findings.push(Finding::strict(
-                    self.name(),
-                    file.name.clone(),
-                    format!(
-                        "<div role=\"{role}\"> ({count}× in this file) — replace with <{element}>",
-                        role = hit.role,
-                        count = hit.count,
-                        element = hit.suggested_element,
-                    ),
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        file.name.clone(),
+                        format!(
+                            "<div role=\"{role}\"> ({count}× in this file)",
+                            role = hit.role,
+                            count = hit.count,
+                        ),
+                    )
+                    .citing(["a11y-001"])
+                    .why("screen readers treat semantic elements (<nav>, <main>, <header>, <footer>, <article>) and ARIA-role divs differently; the semantic element is more reliably announced")
+                    .fix(format!(
+                        "in the Loom primitive that emits this element, replace `<div role=\"{}\">` with `<{}>` — same semantics, better SR support, fewer bytes",
+                        hit.role, hit.suggested_element
+                    ))
+                    .skill("add-loom-primitive"),
+                );
             }
         }
 
@@ -333,18 +348,23 @@ mod tests {
             mode: forge_core::BuildMode::Poc,
         };
         let findings = HtmlSemanticPhase.run(&ctx).expect("run");
-        let messages: Vec<_> = findings.iter().map(|f| f.message.as_str()).collect();
+        // Per task #201: message identifies the role; the recommended
+        // replacement element lives in advocacy.substrate_fix.
+        let role_and_fix: Vec<(String, String)> = findings
+            .iter()
+            .map(|f| (f.message.clone(), f.advocacy.substrate_fix.clone()))
+            .collect();
         assert!(
-            messages
+            role_and_fix
                 .iter()
-                .any(|m| m.contains("banner") && m.contains("<header>")),
-            "missing banner→header finding: {messages:?}"
+                .any(|(m, fix)| m.contains("banner") && fix.contains("<header>")),
+            "missing banner→header finding (advocacy.fix should suggest <header>): {role_and_fix:?}"
         );
         assert!(
-            messages
+            role_and_fix
                 .iter()
-                .any(|m| m.contains("main") && m.contains("<main>")),
-            "missing main→main finding: {messages:?}"
+                .any(|(m, fix)| m.contains("\"main\"") && fix.contains("<main>")),
+            "missing main→main finding (advocacy.fix should suggest <main>): {role_and_fix:?}"
         );
         let _ = std::fs::remove_dir_all(&tmp);
     }
