@@ -1,0 +1,19 @@
+{
+  "name": "forge_content_validate",
+  "description": "Validate cms/*.json files against the typed CmsPage schema (mirrored from PlausiDen-Loom's loom-cms-render). Catches unknown section variants, missing required fields, and structural drift before the build pipeline encounters them. Faster feedback than running the full `forge build`. Reads `cms-schema.json` and applies serde(deny_unknown_fields) at every boundary per AVP-Doctrine rule sec-001.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "Specific cms file to validate. Default: every cms/*.json under the forge root."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

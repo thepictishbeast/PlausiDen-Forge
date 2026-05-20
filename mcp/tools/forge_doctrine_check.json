@@ -1,0 +1,23 @@
+{
+  "name": "forge_doctrine_check",
+  "description": "Verify that every rule-id cited via Finding.citing(...) in the workspace resolves to an existing rule in the doctrine database. Catches typos, references to deprecated rules, and orphan citations. Non-zero exit if any citation fails to resolve. Run this in CI on every commit per AVP-Doctrine rule docs-005.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "source_dir": {
+        "type": "string",
+        "description": "Source tree to scan. Defaults to 'crates/' under the forge root."
+      },
+      "doctrine_dir": {
+        "type": "string",
+        "description": "Override the AVP-Doctrine directory."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

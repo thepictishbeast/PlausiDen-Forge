@@ -1,0 +1,23 @@
+{
+  "name": "forge_bypasses",
+  "description": "Cross-reference the substrate-bypass register (bypass-register.toml) against `// SUBSTRATE-BYPASS(<id>): <reason>` tags in source. Reports: bypasses declared in code without a register entry, register entries without code references, expired bypass deadlines. Use this to enforce that every genuine emergency bypass is heavyweight + visible + tracked toward decommission. Per `[[substrate-only-path]]`.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "register": {
+        "type": "string",
+        "description": "Path to the bypass-register.toml. Defaults to '<root>/bypass-register.toml'."
+      },
+      "source_dir": {
+        "type": "string",
+        "description": "Source tree to scan. Defaults to '<root>/crates'."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

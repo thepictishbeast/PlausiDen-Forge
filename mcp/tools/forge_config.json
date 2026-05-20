@@ -1,0 +1,19 @@
+{
+  "name": "forge_config",
+  "description": "Run every typed-config gate at once: manifest (phases.toml + backends.toml), privacy (privacy.toml), trust-safety, domains, forms, federation, email, commerce, memberships, audit-log. Each gate validates its TOML/JSON config against its `*-core` typed surface. Use this before deploy to catch config drift. Returns a per-gate status + failure detail.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "root": {
+        "type": "string",
+        "description": "Override the workspace root."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

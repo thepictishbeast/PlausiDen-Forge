@@ -6,6 +6,8 @@ Orientation for any AI agent (Claude or otherwise) working in this repository. R
 
 > Cross-repo orientation: see [PLAUSIDEN_ECOSYSTEM.md](./PLAUSIDEN_ECOSYSTEM.md) for how this repo relates to PlausiDen-Loom / Crawler / Annotator / CMS / Canon / Meta / AVP-Doctrine / LFI / Forge-LFI.
 
+> Tool surface for AI clients (Claude / Gemini / other MCP-capable agents): see [mcp/README.md](./mcp/README.md). Tool schemas at `mcp/tools/*.json`, manifest at `mcp/manifest.json`. Cross-AI consumable — no agent-specific extensions.
+
 ---
 
 ## RULE 0 — The substrate is the only path (LOAD-BEARING)

@@ -1,0 +1,115 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/server-manifest.json",
+  "name": "plausiden-forge",
+  "version": "0.1.0",
+  "description": "MCP tool surface for the PlausiDen ecosystem (Forge / Loom / Crawler). Cross-AI consumable per `[[priority-architectural-first-and-cross-ai]]` — Claude / Gemini / other agents read identical schemas. Mount this via your client's MCP integration to get typed access to the substrate's audit + build + doctrine + content + journey tools.",
+  "doctrine_references": [
+    "docs-008 — structured JSON output across platform tools",
+    "tool-starvation-anti-pattern — reach for substrate tools before bash/grep",
+    "priority-architectural-first-and-cross-ai — cross-AI tooling format-agnostic"
+  ],
+  "tools": [
+    {
+      "name": "forge_orient",
+      "file": "tools/forge_orient.json",
+      "category": "session_start"
+    },
+    {
+      "name": "forge_build",
+      "file": "tools/forge_build.json",
+      "category": "build"
+    },
+    {
+      "name": "forge_doctrine_query",
+      "file": "tools/forge_doctrine_query.json",
+      "category": "doctrine"
+    },
+    {
+      "name": "forge_doctrine_for",
+      "file": "tools/forge_doctrine_for.json",
+      "category": "doctrine"
+    },
+    {
+      "name": "forge_doctrine_check",
+      "file": "tools/forge_doctrine_check.json",
+      "category": "doctrine"
+    },
+    {
+      "name": "forge_doctrine_lifecycle",
+      "file": "tools/forge_doctrine_lifecycle.json",
+      "category": "doctrine"
+    },
+    {
+      "name": "forge_doctrine_render",
+      "file": "tools/forge_doctrine_render.json",
+      "category": "doctrine"
+    },
+    {
+      "name": "forge_audit_secrets",
+      "file": "tools/forge_audit_secrets.json",
+      "category": "audit"
+    },
+    {
+      "name": "forge_audit_phantom_button",
+      "file": "tools/forge_audit_phantom_button.json",
+      "category": "audit"
+    },
+    {
+      "name": "forge_verify",
+      "file": "tools/forge_verify.json",
+      "category": "attestation"
+    },
+    {
+      "name": "forge_bypasses",
+      "file": "tools/forge_bypasses.json",
+      "category": "substrate_discipline"
+    },
+    {
+      "name": "forge_config",
+      "file": "tools/forge_config.json",
+      "category": "config_validation"
+    },
+    {
+      "name": "forge_content_validate",
+      "file": "tools/forge_content_validate.json",
+      "category": "content"
+    },
+    {
+      "name": "loom_validate",
+      "file": "tools/loom_validate.json",
+      "category": "content"
+    },
+    {
+      "name": "loom_sync",
+      "file": "tools/loom_sync.json",
+      "category": "build"
+    },
+    {
+      "name": "crawler_journey",
+      "file": "tools/crawler_journey.json",
+      "category": "runtime_audit"
+    }
+  ],
+  "categories": {
+    "session_start": "Reach for these at the start of any work session.",
+    "build": "Build pipeline + render artifacts.",
+    "doctrine": "Read + cite the AVP-Doctrine rule database.",
+    "audit": "Out-of-pipeline scans for fast feedback.",
+    "attestation": "Cryptographic build provenance.",
+    "substrate_discipline": "Substrate-only-path enforcement.",
+    "config_validation": "Typed-config gate enforcement.",
+    "content": "CMS content lifecycle + validation.",
+    "runtime_audit": "Post-build runtime-DOM verification via Crawler."
+  },
+  "agent_guidance": {
+    "first_action": "Call forge_orient at session start for affordance inventory + scoped doctrine rules.",
+    "before_writing_code": "Call forge_doctrine_for with the target path to learn which rules govern the change.",
+    "before_committing": "Call forge_doctrine_check + forge_audit_secrets + forge_build (production mode).",
+    "anti_patterns": [
+      "Do not hand-roll JSON-RPC wrappers around forge subcommands — the typed schemas in tools/ are canonical.",
+      "Do not add Claude-specific extensions to a tool's input schema — preserve cross-AI parity.",
+      "Do not duplicate command help text in tool descriptions — link to TOOLS.md and the cited doctrine rule.",
+      "Do not add a new tool without updating manifest.json + AGENTS.md + TOOLS.md in the same commit."
+    ]
+  }
+}

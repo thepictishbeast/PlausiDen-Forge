@@ -1,0 +1,23 @@
+{
+  "name": "loom_validate",
+  "description": "Validate CMS JSON content against the typed CmsPage schema in PlausiDen-Loom. Lives in the Loom repo as the canonical typed-content gate; Forge calls it via `forge content validate` (see also forge_content_validate). Use this from the Loom side when iterating on the schema itself; use forge_content_validate from the Forge side when iterating on site content.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "Specific cms file to validate."
+      },
+      "schema": {
+        "type": "string",
+        "description": "Override schema path. Default: cms-schema.json in the current directory."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": ["path"]
+  }
+}

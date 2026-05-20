@@ -1,0 +1,24 @@
+{
+  "name": "forge_audit_phantom_button",
+  "description": "Scan rendered HTML for elements declaring a data-backend slug that isn't declared in backends.toml. Catches dead CTA buttons, broken form actions, and orphan-action elements. Use this instead of `grep -r 'data-backend' static/` — the substrate-native tool understands the typed backend registry. Per AVP-Doctrine rule sec-007.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "explain": {
+        "type": "boolean",
+        "description": "For each phantom button, name the file + line + suggested fix.",
+        "default": false
+      },
+      "root": {
+        "type": "string",
+        "description": "Override the workspace root."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

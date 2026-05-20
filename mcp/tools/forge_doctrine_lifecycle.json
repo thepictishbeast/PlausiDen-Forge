@@ -1,0 +1,19 @@
+{
+  "name": "forge_doctrine_lifecycle",
+  "description": "Audit the lifecycle state of every rule in the doctrine database. Groups by experimental / stable / deprecated, validates that deprecated rules carry deprecated_at + replaced_by, and reports rules ready for promotion (experimental → stable). Use this when reviewing whether a rule trial has been long enough to promote, or to identify rules pending decommission.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "doctrine_dir": {
+        "type": "string",
+        "description": "Override the AVP-Doctrine directory."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

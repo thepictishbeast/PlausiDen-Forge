@@ -1,0 +1,32 @@
+{
+  "name": "crawler_journey",
+  "description": "Run a typed Crawler journey: chromiumoxide-driven sequence of goto + screenshot + dom_assert + detector_axis steps against a target URL. Captures runtime-DOM state (post-JS) at named viewports (390 / 768 / 1280 for the canonical responsive sweep). Use this for: visual regression baselines, runtime-detector audits (broken text / hidden elements / low contrast / overflow), pixel-by-pixel reproduction validation. Output lands in runs/<journey>-<timestamp>/. Per `[[crawler-stays-general-purpose]]`: the journey schema is consumer-agnostic.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "journey": {
+        "type": "string",
+        "description": "Path to the journey JSON file describing the steps."
+      },
+      "headless": {
+        "type": "boolean",
+        "description": "Run chromium headless. Always true in CI.",
+        "default": true
+      },
+      "viewport": {
+        "type": "string",
+        "description": "Override the journey's declared viewport. Format: 'WxH', e.g. '1280x900'."
+      },
+      "output": {
+        "type": "string",
+        "description": "Override the runs/ directory."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit machine-readable journey result JSON.",
+        "default": true
+      }
+    },
+    "required": ["journey"]
+  }
+}

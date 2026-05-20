@@ -27,6 +27,19 @@ forge watch --debounce-ms 500 --max-rebuilds 100
 
 ---
 
+## MCP tool surface (for AI clients)
+
+Cross-AI consumable Model Context Protocol tool definitions live in `mcp/`:
+
+- **`mcp/manifest.json`** — server manifest indexing every declared tool, with categories + agent guidance.
+- **`mcp/tools/*.json`** — one input schema per tool. Read by Claude / Gemini / Cursor / other MCP-capable clients.
+- **`mcp/README.md`** — how to mount the surface from your client.
+- **`make mcp-list`** — print every declared tool + one-line description.
+
+The MCP surface is a typed projection of the CLI surface; the CLI is the authoritative implementation. Per `[[priority-architectural-first-and-cross-ai]]`: no Claude-specific extensions, identical schemas for every agent.
+
+---
+
 ## Orient (session-start meta-tool)
 
 ### `forge orient`

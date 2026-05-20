@@ -1,0 +1,23 @@
+{
+  "name": "forge_orient",
+  "description": "Session-start meta-tool. Prints a single brief that synthesizes everything an AI agent needs to make good tool selections in the PlausiDen-Forge repo: Rule 0 (substrate-only-path), affordance inventory (AGENTS.md / TOOLS.md / Makefile / skills / capability-request workflow), canonical defaults (axum/tokio/sqlx/maud/serde-deny_unknown/Ed25519/ML-DSA/clap/anyhow-thiserror/proptest/tracing), doctrine rules applicable to a scoped path, skill map for common tasks, and anti-pattern reminders. Replaces the aspirational 'read AGENTS.md, then TOOLS.md, then doctrine, then...' with one mechanical step. Always reach for this first when starting work in PlausiDen-Forge.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "for_path": {
+        "type": "string",
+        "description": "Optional path within the workspace. When provided, scopes the doctrine-rules section to rules whose applies_to entries match path-derived context tokens. Example: 'crates/forge-phases' surfaces rules tagged with that crate."
+      },
+      "doctrine_dir": {
+        "type": "string",
+        "description": "Override the AVP-Doctrine directory. Defaults to a sibling directory PlausiDen-AVP-Doctrine, or the PLAUSIDEN_DOCTRINE_DIR env var if set."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text. Recommended for AI consumption.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

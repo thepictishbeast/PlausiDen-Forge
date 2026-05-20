@@ -1,0 +1,24 @@
+{
+  "name": "forge_verify",
+  "description": "Walk reports/build-*.json, assert Merkle chain integrity of consecutive build reports. Optionally verify Ed25519 signatures from `forge attest sign`. Use this to confirm a deploy bundle's build provenance has not been tampered with. Per AVP-Doctrine rule build-005.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "chain": {
+        "type": "boolean",
+        "description": "Verify chain integrity (default true).",
+        "default": true
+      },
+      "signatures": {
+        "type": "boolean",
+        "description": "Also verify Ed25519 signatures attached to each report.",
+        "default": false
+      },
+      "root": {
+        "type": "string",
+        "description": "Override the workspace root."
+      }
+    },
+    "required": []
+  }
+}

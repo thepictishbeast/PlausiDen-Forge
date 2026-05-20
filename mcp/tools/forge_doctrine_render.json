@@ -1,0 +1,18 @@
+{
+  "name": "forge_doctrine_render",
+  "description": "Render the full doctrine database as a single Markdown document suitable for publishing at docs.plausiden.com/doctrine. Pure projection from the typed TOML rules — no AI dependency. Per AVP-Doctrine rule docs-004: every architectural decision has an ADR; this command projects the live rule database into human-readable doc form so the published doctrine stays in sync with code-enforced doctrine.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "out": {
+        "type": "string",
+        "description": "Output Markdown path. Default: 'docs/doctrine.md' under the forge root."
+      },
+      "doctrine_dir": {
+        "type": "string",
+        "description": "Override the AVP-Doctrine directory."
+      }
+    },
+    "required": []
+  }
+}

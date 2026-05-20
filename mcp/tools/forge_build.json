@@ -1,0 +1,24 @@
+{
+  "name": "forge_build",
+  "description": "Run the full Forge audit pipeline against the current site. Reads cms/*.json, applies every configured phase (tokens, html_semantic, contrast, csp, label_consistency, link_check, phantom_button, substrate_purity, etc.), and writes static/ output plus reports/build-<id>.json. In production mode strict findings must equal zero or the build fails per AVP-Doctrine rule build-001. Returns the build report path and a summary of findings by severity. Use this to validate a CMS edit + render output simultaneously.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string",
+        "enum": ["poc", "production", "hybrid", "dynamic"],
+        "description": "Build mode. 'production' enforces strict findings == 0. 'poc' is permissive (default for iteration). 'hybrid' = SPA-augmented static. 'dynamic' = full runtime.",
+        "default": "poc"
+      },
+      "json_report": {
+        "type": "string",
+        "description": "Optional path to emit a machine-readable findings report alongside the terminal output."
+      },
+      "root": {
+        "type": "string",
+        "description": "Override the Forge root (where forge.toml lives). Defaults to current working directory."
+      }
+    },
+    "required": []
+  }
+}

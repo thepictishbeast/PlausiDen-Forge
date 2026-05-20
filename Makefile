@@ -110,6 +110,20 @@ bypasses: release ## Substrate-bypass register cross-reference.
 orient: release ## Session-start meta-tool: affordances + Rule 0 + canonical defaults + scoped doctrine.
 	$(FORGE) orient
 
+.PHONY: mcp-list
+mcp-list: ## List MCP tool definitions (cross-AI consumable JSON schemas in mcp/tools/).
+	@printf '\n\033[1mPlausiDen MCP tool surface\033[0m\n\n'
+	@printf 'Manifest:  mcp/manifest.json\n'
+	@printf 'Tools:     mcp/tools/*.json\n'
+	@printf 'README:    mcp/README.md\n\n'
+	@printf 'Declared tools:\n'
+	@for f in mcp/tools/*.json; do                                                  \
+	    name=$$(node -e "console.log(JSON.parse(require('fs').readFileSync('$$f')).name)" 2>/dev/null); \
+	    desc=$$(node -e "let d=JSON.parse(require('fs').readFileSync('$$f')).description; console.log(d.length>80?d.slice(0,77)+'...':d)" 2>/dev/null); \
+	    printf '  \033[36m%-32s\033[0m %s\n' "$$name" "$$desc";                     \
+	done
+	@printf '\nCross-AI consumable: Claude / Gemini / other MCP clients read identical schemas.\n\n'
+
 .PHONY: audit-secrets
 audit-secrets: release ## Scan staged changes for credential leaks.
 	$(FORGE) audit secrets --explain

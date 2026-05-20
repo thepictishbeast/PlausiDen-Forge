@@ -1,0 +1,15 @@
+{
+  "name": "loom_sync",
+  "description": "Sync Loom-side artifacts into the Forge build. With --regenerate, re-emits skin.css from current loom-tokens token values. Use this after editing loom-tokens/src/skin.css or token-variable definitions and you need the consuming site (via Forge) to pick up the change. Note: per task #144, until the chronic gate is closed, this may require a commit-push-repin cycle from Loom unless the local [patch] override is active.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "regenerate": {
+        "type": "boolean",
+        "description": "Regenerate skin.css from current token-variable definitions.",
+        "default": false
+      }
+    },
+    "required": []
+  }
+}

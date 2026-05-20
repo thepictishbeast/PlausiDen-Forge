@@ -1,0 +1,38 @@
+{
+  "name": "forge_doctrine_query",
+  "description": "Query the AVP-Doctrine rule database (71 rules across 9 domains: build / primitives / security / testing / docs / logging / perf / content / accessibility). Returns the full rule triple (statement + rationale + enforcement) for matching rules. Use this when you need to know what a cited rule means, what enforces it, or what rules apply to a domain. Cross-reference with forge_doctrine_for to filter by path applicability.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "rule": {
+        "type": "string",
+        "description": "Specific rule id to fetch, e.g. 'prim-009' or 'sec-007'."
+      },
+      "domain": {
+        "type": "string",
+        "enum": ["build", "primitives", "security", "testing", "docs", "logging", "perf", "content", "accessibility"],
+        "description": "Filter to a single domain."
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["strict", "warn", "informational", "experimental"],
+        "description": "Filter by severity."
+      },
+      "lifecycle": {
+        "type": "string",
+        "enum": ["experimental", "stable", "deprecated"],
+        "description": "Filter by lifecycle stage."
+      },
+      "search": {
+        "type": "string",
+        "description": "Substring match against rule name + statement."
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": []
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "forge_doctrine_for",
+  "description": "List the AVP-Doctrine rules applicable to a specific path in the workspace. Derives context tokens from the path components (crate name + directory + leaf filename) and matches them against each rule's applies_to entries. Use this before editing code to know which rules govern the change — these rule ids should be cited in any Findings the new code emits (via Finding.citing). Output is sorted by rule id for deterministic comparison across runs.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "Filesystem path within the workspace. Examples: 'crates/forge-phases', 'crates/loom-cms-render/src/lib.rs', 'cms/index.json'."
+      },
+      "terse": {
+        "type": "boolean",
+        "description": "One-line-per-rule output (id + name only). Useful for citation lookup.",
+        "default": false
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Emit JSON instead of human-readable text.",
+        "default": true
+      }
+    },
+    "required": ["path"]
+  }
+}
