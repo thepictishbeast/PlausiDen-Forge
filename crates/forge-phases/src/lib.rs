@@ -54,6 +54,7 @@ pub mod reader_safety;
 pub mod render;
 pub mod required_pages;
 pub mod self_check;
+pub mod semver_enforcement;
 pub mod seo;
 pub mod sri;
 pub mod structured_data;
