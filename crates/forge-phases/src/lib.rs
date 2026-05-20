@@ -37,6 +37,7 @@ pub mod substrate_self_audit;
 pub mod theme_variation_required;
 pub mod uniqueness_gate;
 pub mod voice_profile_audit;
+pub mod zone_constraints;
 pub mod placeholder_value_audit;
 pub mod source_list_audit;
 pub mod asset_optimization;

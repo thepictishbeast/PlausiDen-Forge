@@ -88,6 +88,7 @@ use forge_phases::unbuilt_route::UnbuiltRoutePhase;
 use forge_phases::uniqueness_gate::UniquenessGatePhase;
 use forge_phases::validate_cms::ValidateCmsPhase;
 use forge_phases::voice_profile_audit::VoiceProfileAuditPhase;
+use forge_phases::zone_constraints::ZoneConstraintsPhase;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -1397,6 +1398,7 @@ fn run() -> Result<ExitCode> {
         Box::new(SiteIdentityConformancePhase::default()),
         Box::new(IdentityCoherencePhase::default()),
         Box::new(ThemeVariationRequiredPhase::default()),
+        Box::new(ZoneConstraintsPhase::default()),
         Box::new(VoiceProfileAuditPhase::default()),
         Box::new(MoodLockPhase::default()),
         Box::new(CompositionLineagePhase::default()),
