@@ -75,18 +75,38 @@ $ ls -l static/loom*.css
 
 ---
 
-### 3. **SUBSTRATE GAP** — `substrate_purity` phase exists but is NOT registered in the build runner
+### 3. ~~**SUBSTRATE GAP**~~ — `substrate_purity` phase **now wired** in the runner (task #202 closed)
 
-The phase implementation lives at `crates/forge-phases/src/substrate_purity.rs` (added in task #156). The runner `forge-cli/src/main.rs` does not register it among the phases that execute on `forge build`. Confirmed via:
+Original audit observation: the phase implementation lived at `crates/forge-phases/src/substrate_purity.rs` (added in #156) but was not registered in `forge-cli/src/main.rs`.
 
-```bash
-$ grep -n "substrate_purity::\|SubstratePurityPhase" /home/paul/projects/PlausiDen-Forge/crates/forge-cli/src/main.rs
-(no results — un-registered)
+**Resolved in #202**: `SubstratePurityPhase` is now registered. `forge build` runs it after `LoomSyncPhase`. Confirmed clean on current `static/`.
+
+**Surprising re-discovery**: re-reading the phase's `canonical_emission_allowlist()` shows the allowlist **explicitly accepts** every file flagged in §1 and §2:
+
+```rust
+// crates/forge-phases/src/substrate_purity.rs § canonical_emission_allowlist
+s.insert("loom-skin.css");
+s.insert("loom.css");
+s.insert("loom-tokens.css");
+s.insert("loom-critical.css");
+s.insert("loom-fallback.css");
+s.insert("loom-runtime.js");
+s.insert("loom-runtime.wasm");
+s.insert("loom-runtime.wasm.gz");
+s.insert("loom-runtime.wasm.br");
+s.insert("robots.txt");
+s.insert("sitemap.xml");
+s.insert("favicon.svg");
+s.insert("favicon.ico");
+s.insert("eruda.min.js");  // dev-mode error overlay (poc mode only)
 ```
 
-**Why this matters**: the violations in §1 and §2 above should have been caught by `substrate_purity` at build time. They aren't, because the phase doesn't run. The defensive doctrine ships but the gate is open.
+So findings §1 (eruda.min.js) and §2 (parallel loom-*.css) are **not doctrine violations under the current phase contract** — they're allowlist-tolerated. The original audit was strict-mode-correct but stricter than the substrate's actual enforcement posture.
 
-**Migration target**: register `SubstratePurityPhase` in the runner's phase registration block. Bounded follow-on; would be one PR. Filed below as task #202 follow-on.
+**Cleanup-candidate status**, not strict findings:
+
+- `eruda.min.js` is explicitly poc-mode-only per the inline comment, but the gate that "gets it out of production builds" is "a separate phase" that isn't fully wired. In production mode, it currently still ships. That's a sub-finding worth investigating but not a violation today.
+- `loom.css` + the 4 stale variants are allowlisted as historical/legacy artifacts. They take up 120 KB of deploy weight that's never referenced; cleaning them up is a perf-budget concern, not a doctrine concern.
 
 ---
 
@@ -136,6 +156,11 @@ Per `[[substrate-only-path]]` + `SUBSTRATE_DISCIPLINE.md`:
 
 ---
 
-## Follow-on task filed
+## Follow-on tasks
 
-`#202 [substrate-purity-runner-wire]` — register `SubstratePurityPhase` in `forge-cli` runner so substrate_purity actually runs on `forge build`. Bounded one-PR change. Without this, the substrate_purity defensive doctrine is documented but unenforced. (Recommended priority: high — it's the gate that prevents both findings above from recurring.)
+`#202 [substrate-purity-runner-wire]` — **CLOSED**. `SubstratePurityPhase` is now registered in the runner; `forge build` exercises it on every invocation.
+
+Surfaced new investigation candidates (would file via capability-request if pursued):
+
+- **Production-mode gate for eruda.min.js**: the inline comment says "separate phase gates it out of production builds." Verify the gate exists or file a capability-request to add one. Without that gate, the dev-overlay ships to operators using `--mode production`.
+- **Stale loom-CSS cleanup**: 120 KB of `loom.css` + `loom-tokens.css` + `loom-fallback.css` + `loom-critical.css` survive in static/ but no rendered HTML references them. Document deletion in a tooling task or remove from the allowlist if no Loom emitter still produces them.

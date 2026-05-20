@@ -65,6 +65,7 @@ use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
 use forge_phases::sri::SriPhase;
 use forge_phases::structured_data::StructuredDataPhase;
+use forge_phases::substrate_purity::SubstratePurityPhase;
 use forge_phases::theme_consistency::ThemeConsistencyPhase;
 use forge_phases::theme_contrast::ThemeContrastPhase;
 use forge_phases::tokens::TokensPhase;
@@ -1112,6 +1113,15 @@ fn run() -> Result<ExitCode> {
         // actionable location.
         Box::new(ValidateCmsPhase),
         Box::new(LoomSyncPhase),
+        // phase_substrate_purity (task #156, wired #202): walks
+        // static/ and refuses any CSS/JS/WASM asset not in the
+        // canonical Forge/Loom emission allowlist. Catches hand-
+        // vendored assets (third-party debug consoles, stale
+        // pre-pipeline CSS, ad-hoc curl + cp drops) before they
+        // reach production. Cites doctrine rules build-007 +
+        // prim-006. Per [[substrate-only-path]]: every gap is
+        // a substrate change.
+        Box::new(SubstratePurityPhase),
         // T70c (2026-05-14): regenerate static HTML from cms/*.json
         // BEFORE every lint phase runs. Without this, edits to
         // cms/ or to loom-cms-render's page_shell don't show up
