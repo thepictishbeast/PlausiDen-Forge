@@ -42,6 +42,7 @@
 use std::fs;
 use std::path::Path;
 
+use forge_core::tenant_corpus::TenantCorpus;
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 use serde_json::Value;
 
@@ -56,6 +57,31 @@ impl Phase for AestheticDistinctivenessPhase {
 
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
         let mut findings = Vec::new();
+        // Layer tenant-corpus extensions on top of the baseline
+        // per [[per-tenant-corpora-doctrine]] / commit 534f02c.
+        let tenant = TenantCorpus::load(&ctx.root);
+        let tenant_extras: Vec<&str> = tenant
+            .as_ref()
+            .map(|t| t.extra_jargon.iter().map(String::as_str).collect())
+            .unwrap_or_default();
+        let tenant_suppress: Vec<&str> = tenant
+            .as_ref()
+            .map(|t| t.suppress_jargon.iter().map(String::as_str).collect())
+            .unwrap_or_default();
+        // Operator-typo guard: a suppress entry that doesn't match
+        // any baseline phrase emits a warn finding so the operator
+        // knows their suppression is dead.
+        for sup in &tenant_suppress {
+            if !JARGON_PHRASES.contains(sup) {
+                findings.push(Finding::warn(
+                    self.name(),
+                    "forge.toml".to_owned(),
+                    format!(
+                        "tenant_corpus.suppress_jargon — entry `{sup}` does not match any baseline jargon phrase; check for a typo, or remove the entry."
+                    ),
+                ));
+            }
+        }
         let cms_dir = ctx.root.join("cms");
         if !cms_dir.is_dir() {
             return Ok(findings);
@@ -80,13 +106,27 @@ impl Phase for AestheticDistinctivenessPhase {
             let Ok(value) = serde_json::from_str::<Value>(&raw) else {
                 continue;
             };
-            check_page(&path, &value, &mut findings, self.name());
+            check_page(
+                &path,
+                &value,
+                &tenant_extras,
+                &tenant_suppress,
+                &mut findings,
+                self.name(),
+            );
         }
         Ok(findings)
     }
 }
 
-fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'static str) {
+fn check_page(
+    path: &Path,
+    page: &Value,
+    tenant_extras: &[&str],
+    tenant_suppress: &[&str],
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
     let Some(sections) = page.get("sections").and_then(|s| s.as_array()) else {
         return;
     };
@@ -94,7 +134,14 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
 
     check_sparse_page(sections, &path_disp, findings, phase);
     check_scaffold_only(sections, &path_disp, findings, phase);
-    check_corporate_jargon(sections, &path_disp, findings, phase);
+    check_corporate_jargon(
+        sections,
+        &path_disp,
+        tenant_extras,
+        tenant_suppress,
+        findings,
+        phase,
+    );
 
     for (index, section) in sections.iter().enumerate() {
         let kind = section.get("kind").and_then(|k| k.as_str()).unwrap_or("");
@@ -511,15 +558,30 @@ fn classify_jargon(phrase: &str) -> &'static str {
 fn check_corporate_jargon(
     sections: &[Value],
     path: &str,
+    tenant_extras: &[&str],
+    tenant_suppress: &[&str],
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
     let mut hits: Vec<String> = Vec::new();
     collect_text(sections, &mut |t| {
         let lower = t.to_lowercase();
+        // Baseline phrases, minus tenant suppress.
         for phrase in JARGON_PHRASES {
+            if tenant_suppress.contains(phrase) {
+                continue;
+            }
             if lower.contains(phrase) {
                 hits.push((*phrase).to_owned());
+            }
+        }
+        // Tenant extra phrases (additive). Matched lowercase
+        // against the lowered body text — same shape as the
+        // baseline scan.
+        for phrase in tenant_extras {
+            let lower_phrase = phrase.to_lowercase();
+            if lower.contains(&lower_phrase) {
+                hits.push(phrase.to_string());
             }
         }
     });
@@ -1222,7 +1284,7 @@ mod tests {
             ]
         });
         let mut findings = vec![];
-        check_page(Path::new("test.json"), &page, &mut findings, "aesthetic_distinctiveness");
+        check_page(Path::new("test.json"), &page, &[], &[], &mut findings, "aesthetic_distinctiveness");
         assert!(findings.iter().any(|f| f.message.contains("sparse_page")));
     }
 
@@ -1236,7 +1298,7 @@ mod tests {
             ]
         });
         let mut findings = vec![];
-        check_page(Path::new("test.json"), &page, &mut findings, "aesthetic_distinctiveness");
+        check_page(Path::new("test.json"), &page, &[], &[], &mut findings, "aesthetic_distinctiveness");
         assert!(findings.iter().any(|f| f.message.contains("scaffold_only")));
     }
 
@@ -1319,12 +1381,100 @@ mod tests {
     }
 
     #[test]
+    fn tenant_corpus_extra_jargon_phrases_fire() {
+        // Operator declared "the Acme advantage" as a tenant-extra
+        // jargon phrase; content matching it should fire the
+        // detector alongside any baseline hits.
+        let sections = vec![json!({
+            "kind": "paragraph",
+            "text": "Try the Acme advantage today and join us."
+        })];
+        let mut findings = vec![];
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &["the Acme advantage"],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert_eq!(findings.len(), 1);
+        let msg = &findings[0].message;
+        assert!(msg.contains("the Acme advantage"));
+    }
+
+    #[test]
+    fn tenant_corpus_extra_jargon_case_insensitive_match() {
+        // Tenant extras match lowercased, like the baseline scan.
+        let sections = vec![json!({
+            "kind": "paragraph",
+            "text": "EMBRACE THE SYNERGY"
+        })];
+        let mut findings = vec![];
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &["embrace the synergy"],
+            &[],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains("embrace the synergy"));
+    }
+
+    #[test]
+    fn tenant_corpus_suppress_removes_baseline_phrase() {
+        // Tenant suppresses "transform your" because they run an
+        // actual transformation business. Content with that phrase
+        // shouldn't fire.
+        let sections = vec![json!({
+            "kind": "paragraph",
+            "text": "We will transform your industry."
+        })];
+        let mut findings = vec![];
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &["transform your"],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn tenant_corpus_suppress_leaves_other_baseline_intact() {
+        // Suppress one phrase, keep others. Content with the
+        // suppressed phrase + a non-suppressed one should fire
+        // ONLY for the non-suppressed.
+        let sections = vec![json!({
+            "kind": "paragraph",
+            "text": "We will transform your best-in-class workflow."
+        })];
+        let mut findings = vec![];
+        check_corporate_jargon(
+            &sections,
+            "test",
+            &[],
+            &["transform your"],
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert_eq!(findings.len(), 1);
+        let msg = &findings[0].message;
+        assert!(msg.contains("best-in-class"));
+        assert!(!msg.contains("transform your"));
+    }
+
+    #[test]
     fn corporate_jargon_warns_on_known_phrases() {
         let sections = vec![
             json!({"kind": "paragraph", "text": "Our best-in-class platform delivers a seamless integration."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         let msg = &findings[0].message;
         assert!(msg.contains("corporate_jargon"));
         assert!(msg.contains("best-in-class"));
@@ -1341,7 +1491,7 @@ mod tests {
             json!({"kind": "paragraph", "text": "Supercharge your workflow and unleash your team's potential."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         let msg = &findings[0].message;
         assert!(msg.contains("amplifier:"));
         assert!(msg.contains("supercharge"));
@@ -1354,7 +1504,7 @@ mod tests {
             json!({"kind": "heading", "text": "Welcome to the future of work."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         let msg = &findings[0].message;
         assert!(msg.contains("future-of:"));
         assert!(msg.contains("the future of work"));
@@ -1366,7 +1516,7 @@ mod tests {
             json!({"kind": "paragraph", "text": "An AI-powered platform for blockchain-powered teams."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         let msg = &findings[0].message;
         assert!(msg.contains("ai-buzzword:"));
         assert!(msg.contains("ai-powered"));
@@ -1379,7 +1529,7 @@ mod tests {
             json!({"kind": "paragraph", "text": "Our world-class engineering team is industry-leading."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         let msg = &findings[0].message;
         assert!(msg.contains("superlative:"));
         assert!(msg.contains("world-class"));
@@ -1394,7 +1544,7 @@ mod tests {
             json!({"kind": "paragraph", "text": "Let's circle back on the synergies after the deep dive."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         let msg = &findings[0].message;
         assert!(msg.contains("business-jargon:"));
         assert!(msg.contains("circle back"));
@@ -1410,7 +1560,7 @@ mod tests {
             json!({"kind": "paragraph", "text": "Supercharge your workflow with our world-class AI-powered platform."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         assert_eq!(findings.len(), 1, "should emit exactly one finding even with multi-category slop");
         let msg = &findings[0].message;
         assert!(msg.contains("amplifier:"));
@@ -1426,7 +1576,7 @@ mod tests {
             json!({"kind": "paragraph", "text": "Typed contracts. Audited at every commit. Reproducible builds."}),
         ];
         let mut findings = vec![];
-        check_corporate_jargon(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        check_corporate_jargon(&sections, "test", &[], &[], &mut findings, "aesthetic_distinctiveness");
         assert!(findings.is_empty());
     }
 
