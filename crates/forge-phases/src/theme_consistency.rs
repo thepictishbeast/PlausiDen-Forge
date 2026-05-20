@@ -145,28 +145,54 @@ impl ThemeFinding {
                 PHASE,
                 token.as_str(),
                 format!(
-                    "{} consumed via var() but has no definition in base :root \
-                     — silent first-paint failure on the default theme",
+                    "{} consumed via var() but has no definition in base :root",
                     token.as_str(),
                 ),
-            ),
+            )
+            .citing(["prim-007"])
+            .why("a token consumed via var() with no :root definition shows a silent first-paint failure on the default theme — the user sees fallback or empty values")
+            .fix(format!(
+                "add `{}: <value>;` to the base `:root {{ ... }}` block in loom-tokens/src/skin.css",
+                token.as_str()
+            ))
+            .skill("add-loom-primitive")
+            .avoid("don't patch the rendered static/loom-tokens.css — it's a build artifact"),
             ThemeFinding::MissingFromTheme { theme, token } => Finding::warn(
                 PHASE,
                 token.as_str(),
                 format!(
-                    "theme {theme:?} omits token {} (will inherit base — confirm intentional)",
+                    "theme {theme:?} omits token {}",
                     token.as_str(),
                 ),
-            ),
+            )
+            .citing(["prim-007"])
+            .why(format!(
+                "theme `{theme:?}` doesn't override token `{}`; it will inherit the base value — confirm that's the intent or add a theme-specific override",
+                token.as_str()
+            ))
+            .fix(format!(
+                "add `{}: <theme-specific-value>;` to the `:root[data-theme=\"{theme}\"]` block in skin.css if the base value isn't right for this theme",
+                token.as_str()
+            ))
+            .skill("add-loom-primitive"),
             ThemeFinding::OrphanInTheme { theme, token } => Finding::warn(
                 PHASE,
                 token.as_str(),
                 format!(
-                    "theme {theme:?} declares token {} not in base \
-                     (orphan — base default missing for cascade fallback)",
+                    "theme {theme:?} declares token {} not in base",
                     token.as_str(),
                 ),
-            ),
+            )
+            .citing(["prim-007"])
+            .why(format!(
+                "theme `{theme:?}` declares token `{}` but the base `:root` has no default; if a user switches to a theme that doesn't declare the token, the cascade falls back to no value at all",
+                token.as_str()
+            ))
+            .fix(format!(
+                "add a base default `{}: <fallback>;` to the `:root {{ ... }}` block in skin.css. The theme override stays as-is",
+                token.as_str()
+            ))
+            .skill("add-loom-primitive"),
         }
     }
 }
@@ -423,11 +449,17 @@ impl Phase for ThemeConsistencyPhase {
         tracing::debug!(static_dir = ?ctx.static_dir, "theme_consistency: enter");
         let Some(skin) = resolve_skin(&ctx.static_dir) else {
             tracing::warn!("theme_consistency: no loom.css / loom-skin.css in static/");
-            return Ok(vec![Finding::warn(
-                "theme_consistency",
-                "static/",
-                "no loom.css or loom-skin.css found — theme drift not verified",
-            )]);
+            return Ok(vec![
+                Finding::warn(
+                    "theme_consistency",
+                    "static/",
+                    "no loom.css or loom-skin.css found — theme drift not verified",
+                )
+                .citing(["prim-007"])
+                .why("without the loom-emitted skin.css, the theme-consistency gate can't verify cascade integrity; the build is shipping unchecked theme behavior")
+                .fix("ensure `forge build` runs the render phase first (it emits skin.css to static/); if `loom sync --regenerate` was skipped, run it before the next forge build")
+                .skill("add-loom-primitive"),
+            ]);
         };
         let raw = std::fs::read_to_string(&skin).map_err(|source| BuildError::Io {
             context: format!("read {}", skin.display()),

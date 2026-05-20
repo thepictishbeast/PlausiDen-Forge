@@ -68,27 +68,38 @@ impl ValidateCmsFinding {
                     .map(|p| p.display().to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
-                Some(Finding::strict(
-                    PHASE,
-                    "loom-cli",
-                    format!(
-                        "loom binary not found (searched: {paths}) — \
-                         run `cargo build --release -p loom-cli` in PlausiDen-Loom \
-                         or set LOOM_BIN env"
-                    ),
-                ))
+                Some(
+                    Finding::strict(
+                        PHASE,
+                        "loom-cli",
+                        format!("loom binary not found (searched: {paths})"),
+                    )
+                    .citing(["build-001"])
+                    .why("the loom binary is needed to validate cms/*.json against the canonical schema; without it the substrate can't enforce CMS shape at build time")
+                    .fix("run `cargo build --release -p loom-cli` in PlausiDen-Loom, OR set the LOOM_BIN env var to an existing binary path")
+                    .skill("add-loom-primitive"),
+                )
             }
-            Self::FileInvalid { path, message } => {
-                Some(Finding::strict(PHASE, path.clone(), message.clone()))
-            }
+            Self::FileInvalid { path, message } => Some(
+                Finding::strict(PHASE, path.clone(), message.clone())
+                    .citing(["sec-001"])
+                    .why("cms file fails typed-schema validation; the substrate's serde(deny_unknown_fields) boundary rejected it")
+                    .fix("read the error message above; fix the unknown / missing / mistyped field in the offending cms file. Cross-reference cms-schema.json for the canonical shape")
+                    .skill("author-cms-content"),
+            ),
             Self::LoomErrored {
                 exit_code,
                 stderr_excerpt,
-            } => Some(Finding::strict(
-                PHASE,
-                "loom validate",
-                format!("loom validate errored (exit {exit_code}): {stderr_excerpt}"),
-            )),
+            } => Some(
+                Finding::strict(
+                    PHASE,
+                    "loom validate",
+                    format!("loom validate errored (exit {exit_code}): {stderr_excerpt}"),
+                )
+                .citing(["build-001"])
+                .why("`loom validate` itself crashed or returned non-zero — the CMS schema gate can't run, so any invalid content is unverified")
+                .fix("check the stderr excerpt for the root cause; likely fixes: rebuild loom-cli (cargo build --release -p loom-cli), update loom git dep in Cargo.toml, OR file a capability-request if the loom binary contract changed"),
+            ),
         }
     }
 }
