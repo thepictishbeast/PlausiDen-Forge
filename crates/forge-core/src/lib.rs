@@ -37,6 +37,7 @@ pub mod pipeline;
 pub mod progress_events;
 pub mod provenance;
 pub mod reference_capture;
+pub mod reference_composition;
 pub mod reference_mapping;
 pub mod session_context;
 pub mod site_identity;
