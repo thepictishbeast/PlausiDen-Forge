@@ -68,9 +68,9 @@
     {
       "kind": "image_hero",
       "align": "start",
-      "eyebrow": "Financial education",
-      "title": "Build wealth on terms you can actually use.",
-      "lede": "Most financial advice assumes you already have money. Prosperity Club walks you through the parts no one teaches: how insurance and tax strategy compound over decades, how the wealthy actually keep what they earn, and how ordinary people can apply the same tools at their own scale.",
+      "eyebrow": "Prosperity Club",
+      "title": "Welcome to Prosperity Club",
+      "lede": "Helping People Achieve Their Prosperity Goals.",
       "background": {
         "kind": "photo",
         "src": "/assets/photos/stock-66.jpg",
@@ -82,38 +82,64 @@
     {
       "kind": "heading",
       "level": 2,
-      "text": "Start here."
+      "text": "What we cover."
     },
     {
       "kind": "paragraph",
-      "text": "Three deep-dives on the topics most readers come back to. Each is free, sourced, and written for working and middle-class readers in the US and Canada."
+      "text": "Prosperity Club is a dependable source for financial education. Free articles, a member Masterclass, and one-to-one Risk Management — written for working and middle-class readers in the US and Canada."
     },
     {
       "kind": "sub_heading",
-      "text": "Why your job pays you less than you're worth.",
+      "text": "What social class do I belong to?",
       "level": 3
     },
     {
       "kind": "paragraph",
-      "text": "The minimum wage today is worth 40% less than it was in 1968. A household earning $75,000 can only afford 21% of home listings. The wage-housing gap has compounded into a generational shift the headlines mostly miss."
+      "text": "Learning about social class allows you to better understand where you stand, so that you can take the right steps towards prosperity. From income to education levels to job opportunities, social class can significantly impact your day-to-day life."
     },
     {
       "kind": "sub_heading",
-      "text": "What the wealthy do that you can do too.",
+      "text": "Why insurance is essential for financial well-being.",
       "level": 3
     },
     {
       "kind": "paragraph",
-      "text": "Buy, Borrow, Die. 1031 exchanges. Roth IRA + HSA stacking. None of these are loopholes — they are statutes written into the tax code, often for over a century. The article walks through each in plain language and where ordinary investors can apply the same principles."
+      "text": "Insurance for your home, car, and other valuable items protects your belongings. Keep an inventory of your belongings and store important documents safely. Create a budget by tracking expenses, and consider working with a financial advisor to plan for your retirement."
     },
     {
       "kind": "sub_heading",
-      "text": "Insurance, the foundation everyone skips.",
+      "text": "Understanding the basics of investing.",
       "level": 3
     },
     {
       "kind": "paragraph",
-      "text": "Before maximizing returns, protect what you have. Disability, life, health, home/renters, auto — covered honestly, including which products are oversold and which are quietly load-bearing."
+      "text": "Investing can seem complex and intimidating, but understanding the basics can set you on a path to smarter financial decisions. Learning about different types of investments, understanding your goals, creating a diversified portfolio, and utilizing different strategies can help you become a better investor."
+    },
+    {
+      "kind": "sub_heading",
+      "text": "Hi, I am Deborah Armstrong.",
+      "level": 3
+    },
+    {
+      "kind": "paragraph",
+      "text": "A licensed insurance agent who sells life, health, and property/casualty products. Prosperity Club was established by a passionate woman who found her way through a bleak financial situation by educating herself in the world of finance — and decided to make that education available to others."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "About Prosperity Club."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Prosperity Club accesses experts in different fields to help you understand the roadblocks that keep you from succeeding and what you can do about it. The great thing about online education is that we help you get the financial education you need through our own educational resources or that of others we find beneficial."
+    },
+    {
+      "kind": "paragraph",
+      "text": "For people moving up the socio-economic ladder, you will have the opportunity to learn how to manage income, invest safely, and find the educational help you need. Prosperity Club works as a repository of financial knowledge and education where you can learn how to better manage your money."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Prosperity Club helps uncover the why of expenses and identifies what actions you can take to reduce them without changing your lifestyle. Budgets do not resolve financial spending or obligation — attaching dollar amounts to each expense is not how to reduce expenses. Tracking expenses uncovers the underlying reasons why you are spending on certain things."
     },
     {
       "kind": "pull_quote",
