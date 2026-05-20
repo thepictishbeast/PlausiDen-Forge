@@ -325,7 +325,7 @@ mod tests {
         let key = generate_keypair();
         let path = std::env::temp_dir().join(format!("emerge-single-{}", std::process::id()));
         let _ = fs::remove_file(&path);
-        append(&path, "s", "t", sample_fingerprint(1), "ts", &key).unwrap();
+        append(&path, "s", "t", sample_fingerprint(1), "2026-05-20T12:00:00Z", &key).unwrap();
         let entries = read_all(&path).unwrap();
         assert_eq!(avg_pairwise_distance(&entries), 0.0);
         let _ = fs::remove_file(&path);
@@ -337,7 +337,8 @@ mod tests {
         let path = std::env::temp_dir().join(format!("emerge-distinct-{}", std::process::id()));
         let _ = fs::remove_file(&path);
         for i in 0..5 {
-            append(&path, &format!("s{i}"), "t", sample_fingerprint(i as u32 + 10), "ts", &key).unwrap();
+            let ts = format!("2026-05-20T12:00:{i:02}Z");
+            append(&path, &format!("s{i}"), "t", sample_fingerprint(i as u32 + 10), &ts, &key).unwrap();
         }
         let entries = read_all(&path).unwrap();
         let avg = avg_pairwise_distance(&entries);

@@ -1537,9 +1537,16 @@ fn run() -> Result<ExitCode> {
     ];
 
     let started = std::time::Instant::now();
-    let started_iso = time::OffsetDateTime::now_utc()
-        .format(&time::format_description::well_known::Rfc3339)
-        .unwrap_or_else(|_| String::from("?"));
+    // Use the substrate's canonical RFC-3339 UTC formatter so the
+    // BuildReport.started field matches the same wire shape every
+    // other persistence boundary already enforces (forge_core::
+    // iso_time::is_canonical_rfc3339_utc). The time crate's
+    // Rfc3339 well-known emits fractional seconds + an explicit
+    // offset (e.g. "2026-05-20T13:45:09.123456789+00:00") which
+    // is RFC 3339-compliant but NOT the substrate's pinned form
+    // and would be rejected by the validator if it ever ran over
+    // these reports.
+    let started_iso = forge_core::iso_time::current_rfc3339_utc();
 
     // T24 cycle 2 (advances #576): opt-in type-state pipeline.
     // FORGE_PIPELINE=1 routes the same phases through
@@ -1644,7 +1651,10 @@ fn run() -> Result<ExitCode> {
     // AND update reports/latest.json. If reports/ doesn't exist,
     // create it.
     let _ = std::fs::create_dir_all(&reports_dir);
-    let ts_compact = report.started.replace([':', '-'], "").replace('.', "");
+    // Canonical RFC-3339 has no '.' (no fractional seconds); the
+    // colon + dash strip alone yields a filesystem-safe filename
+    // like "20260520T134509Z".
+    let ts_compact = report.started.replace([':', '-'], "");
     let build_path = reports_dir.join(format!("build-{ts_compact}.json"));
     let latest_path = reports_dir.join("latest.json");
     let serialized = serde_json::to_string_pretty(&report).context("serialize report")?;
