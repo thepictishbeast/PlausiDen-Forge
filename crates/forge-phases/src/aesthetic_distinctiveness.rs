@@ -124,6 +124,7 @@ fn check_page(path: &Path, page: &Value, findings: &mut Vec<Finding>, phase: &'s
     check_short_paragraph_dominance(sections, &path_disp, findings, phase);
     check_adjacent_section_repetition(sections, &path_disp, findings, phase);
     check_emoji_in_body(sections, &path_disp, findings, phase);
+    check_identical_section_text(sections, &path_disp, findings, phase);
 }
 
 fn check_sparse_page(
@@ -1025,6 +1026,84 @@ fn check_emoji_in_body(
     ));
 }
 
+/// `identical_section_text` — flag byte-identical body text across
+/// multiple sections. Copy-paste filler signal.
+///
+/// Most legitimate pages don't ship the same paragraph twice. When
+/// two sections carry the byte-identical body text it usually means:
+/// 1. A scaffolding template stub the operator forgot to fill in.
+/// 2. Copy-paste filler used to bulk up a thin page.
+/// 3. A template-author error where placeholder text leaked into
+///    multiple variants.
+///
+/// Skip rules:
+/// * Bodies shorter than 20 chars — headings / eyebrows / kicker
+///   text legitimately repeat at the surface level; the
+///   `adjacent_section_repetition` check covers structural patterns.
+/// * Whitespace-only bodies — collapses to empty after trim.
+///
+/// Heuristic:
+/// 1. Walk sections; for each `paragraph` / `lede` / `quote` /
+///    `pull_quote`, extract the body text.
+/// 2. Group by trimmed-lowercased text.
+/// 3. Flag any text that appears 2+ times.
+fn check_identical_section_text(
+    sections: &[Value],
+    path: &str,
+    findings: &mut Vec<Finding>,
+    phase: &'static str,
+) {
+    const MIN_LEN: usize = 20;
+
+    let mut groups: std::collections::BTreeMap<String, Vec<usize>> =
+        std::collections::BTreeMap::new();
+    for (idx, s) in sections.iter().enumerate() {
+        let Some(kind) = s.get("kind").and_then(|k| k.as_str()) else {
+            continue;
+        };
+        // Body-text-bearing sections we audit. Exclude heading /
+        // sub_heading — short labels are expected to repeat.
+        if !matches!(
+            kind,
+            "paragraph" | "lede" | "quote" | "pull_quote" | "epigraph"
+        ) {
+            continue;
+        }
+        let body = s
+            .get("text")
+            .and_then(|t| t.as_str())
+            .or_else(|| s.get("body").and_then(|b| b.as_str()))
+            .unwrap_or("")
+            .trim();
+        if body.len() < MIN_LEN {
+            continue;
+        }
+        groups.entry(body.to_lowercase()).or_default().push(idx);
+    }
+
+    let duplicates: Vec<(&String, &Vec<usize>)> = groups
+        .iter()
+        .filter(|(_, indices)| indices.len() >= 2)
+        .collect();
+    if duplicates.is_empty() {
+        return;
+    }
+    // Use the first duplicate as the worst-offender fingerprint.
+    let (first_body, first_indices) = duplicates[0];
+    let snippet: String = first_body.chars().take(80).collect();
+    findings.push(Finding::warn(
+        phase,
+        path.to_owned(),
+        format!(
+            "identical_section_text: {} distinct body text(s) appear in 2+ sections each. Copy-paste filler signal — operator likely scaffolded a section then never filled it in, OR pasted body text twice. Worst case: {} occurrence(s) of \"{}\" at section indices {:?}. Replace duplicates with unique authored copy.",
+            duplicates.len(),
+            first_indices.len(),
+            snippet,
+            first_indices,
+        ),
+    ));
+}
+
 /// Walk every string-valued field across the JSON tree of the
 /// given sections and call `visit` with each. Used by detectors
 /// that look at full-page text rather than per-section structure.
@@ -1673,5 +1752,102 @@ mod tests {
         assert!(!msg.contains("🔥"));
         // Total count is 5.
         assert!(msg.contains("5 emoji"));
+    }
+
+    #[test]
+    fn identical_section_text_warns_on_duplicate_paragraph_body() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "The substrate carries the page composition."}),
+            json!({"kind": "heading", "text": "Section"}),
+            json!({"kind": "paragraph", "text": "The substrate carries the page composition."}),
+        ];
+        let mut findings = vec![];
+        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        let msg = &findings[0].message;
+        assert!(msg.contains("identical_section_text"));
+        assert!(msg.contains("2 occurrence"));
+        assert!(msg.contains("the substrate carries"));
+    }
+
+    #[test]
+    fn identical_section_text_silent_on_short_repeats() {
+        // Bodies < 20 chars are exempt (headings / eyebrows
+        // legitimately repeat at the surface level).
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Yes."}),
+            json!({"kind": "paragraph", "text": "Yes."}),
+        ];
+        let mut findings = vec![];
+        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn identical_section_text_case_insensitive_match() {
+        // Same text different case still flagged — likely copy/paste
+        // that picked up an upstream capitalization tweak.
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "Editorial composition replaces SaaS marketing."}),
+            json!({"kind": "paragraph", "text": "editorial composition replaces saas marketing."}),
+        ];
+        let mut findings = vec![];
+        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains("2 occurrence"));
+    }
+
+    #[test]
+    fn identical_section_text_silent_on_clean_page() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "First unique paragraph explains the why."}),
+            json!({"kind": "paragraph", "text": "Second unique paragraph names a concrete example."}),
+            json!({"kind": "paragraph", "text": "Third unique paragraph closes with the call to action."}),
+        ];
+        let mut findings = vec![];
+        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings.is_empty());
+    }
+
+    #[test]
+    fn identical_section_text_handles_pull_quote_body_field() {
+        // pull_quote carries its text in `body`, not `text`.
+        let sections = vec![
+            json!({"kind": "pull_quote", "body": "The same editorial pull quote shipped twice by mistake."}),
+            json!({"kind": "paragraph", "text": "Different body content here entirely."}),
+            json!({"kind": "pull_quote", "body": "The same editorial pull quote shipped twice by mistake."}),
+        ];
+        let mut findings = vec![];
+        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains("2 occurrence"));
+    }
+
+    #[test]
+    fn identical_section_text_reports_section_indices() {
+        let sections = vec![
+            json!({"kind": "heading", "text": "Intro"}),
+            json!({"kind": "paragraph", "text": "Filler text that gets duplicated below."}),
+            json!({"kind": "heading", "text": "Outro"}),
+            json!({"kind": "paragraph", "text": "Filler text that gets duplicated below."}),
+        ];
+        let mut findings = vec![];
+        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        assert!(findings[0].message.contains("[1, 3]"));
+    }
+
+    #[test]
+    fn identical_section_text_multiple_distinct_duplicates_reported() {
+        let sections = vec![
+            json!({"kind": "paragraph", "text": "First paragraph text that is long enough."}),
+            json!({"kind": "paragraph", "text": "Second paragraph text that differs enough."}),
+            json!({"kind": "paragraph", "text": "First paragraph text that is long enough."}),
+            json!({"kind": "paragraph", "text": "Second paragraph text that differs enough."}),
+        ];
+        let mut findings = vec![];
+        check_identical_section_text(&sections, "test", &mut findings, "aesthetic_distinctiveness");
+        let msg = &findings[0].message;
+        // Two distinct duplicated bodies — count surfaces.
+        assert!(msg.contains("2 distinct body text"));
     }
 }
