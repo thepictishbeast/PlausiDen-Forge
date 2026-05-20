@@ -604,17 +604,42 @@ fn check_corporate_jargon(
         .iter()
         .map(|(cat, phrases)| format!("{cat}: [{}]", phrases.join(", ")))
         .collect();
-    findings.push(Finding::warn(
-        phase,
-        path.to_owned(),
-        format!(
-            "corporate_jargon: page text contains {} SaaS-cliché phrase(s) across {} categor{}: {}. These read as filler — substitute concrete claims that name a real thing the operator can point to.",
-            hits.len(),
-            by_cat.len(),
-            if by_cat.len() == 1 { "y" } else { "ies" },
-            cat_summary.join(" · ")
+    findings.push(
+        Finding::warn(
+            phase,
+            path.to_owned(),
+            format!(
+                "corporate_jargon: page text contains {} SaaS-cliché phrase(s) across {} categor{}: {}. These read as filler — substitute concrete claims that name a real thing the operator can point to.",
+                hits.len(),
+                by_cat.len(),
+                if by_cat.len() == 1 { "y" } else { "ies" },
+                cat_summary.join(" · ")
+            ),
+        )
+        .why(
+            "SaaS-cliché phrases (\"elevate your\", \"AI-powered\", \"world-class\", \
+             \"amplify\", \"unleash\") signal absent thought to readers who've seen them on \
+             dozens of comparable sites — they read past as background noise rather than \
+             evidence the page actually delivers anything. Editorial-press writing replaces \
+             each cliché with the concrete claim the cliché was gesturing at.",
+        )
+        .fix(
+            "rewrite each flagged phrase to a concrete claim that names a real artifact: \
+             instead of \"AI-powered platform\" write the actual mechanism (e.g. \
+             \"vector-indexed search across uploaded docs\"); instead of \"world-class \
+             expertise\" name the specific credential (e.g. \"24 years building payment \
+             rails at scale\"); instead of \"elevate your strategy\" describe the change \
+             the reader will see (e.g. \"a one-week consultation that produces a written \
+             recommendation\")",
+        )
+        .skill("author-cms-content")
+        .avoid(
+            "don't suppress the warn or add the phrase to the per-tenant suppress list — \
+             the gate exists precisely because SaaS clichés erode the substrate's editorial \
+             voice; suppressing them site-by-site undoes the cross-site signal the gate \
+             provides",
         ),
-    ));
+    );
 }
 
 fn check_vague_eyebrow(

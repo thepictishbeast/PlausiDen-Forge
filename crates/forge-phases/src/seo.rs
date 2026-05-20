@@ -113,17 +113,52 @@ impl Phase for SeoPhase {
             if let Some(title) = extract_title(body) {
                 let tlen = title.chars().count();
                 if tlen < 20 {
-                    findings.push(Finding::warn(
-                        self.name(),
-                        n.clone(),
-                        format!("title too short ({tlen} chars; aim 30-60 for SERP)"),
-                    ));
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            n.clone(),
+                            format!("title too short ({tlen} chars; aim 30-60 for SERP)"),
+                        )
+                        .why(
+                            "search-engine result pages truncate titles outside the 30-60 \
+                             char band; titles under 20 chars also rank weaker because \
+                             they carry less query-match signal than properly-loaded titles",
+                        )
+                        .fix(
+                            "rewrite the cms/<page>.json `title` field to 30-60 chars by \
+                             adding the brand suffix (e.g. \"Page Name — Site Brand\") or \
+                             expanding to include the page's primary keyword phrase",
+                        )
+                        .skill("author-cms-content")
+                        .avoid(
+                            "don't pad the title with filler words to hit the lower bound — \
+                             the SERP signal degrades on keyword-stuffed titles too",
+                        ),
+                    );
                 } else if tlen > 70 {
-                    findings.push(Finding::warn(
-                        self.name(),
-                        n.clone(),
-                        format!("title too long ({tlen} chars; truncated in SERP at ~60)"),
-                    ));
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            n.clone(),
+                            format!("title too long ({tlen} chars; truncated in SERP at ~60)"),
+                        )
+                        .why(
+                            "search-engine result pages truncate titles at ~60 chars on \
+                             desktop and ~50 on mobile; readers see only the prefix, \
+                             which loses any keyword signal that fell past the cutoff",
+                        )
+                        .fix(
+                            "shorten the cms/<page>.json `title` field to 30-60 chars; \
+                             move secondary phrasing into the meta `description` (160 \
+                             chars budget) where SERPs render the full body",
+                        )
+                        .skill("author-cms-content")
+                        .avoid(
+                            "don't keep the long title because it reads better in the \
+                             browser tab — SERP truncation costs you the search-click, \
+                             which is more readers than tab-title readers",
+                        ),
+                    );
                 }
             }
             // Img without alt.
