@@ -146,13 +146,20 @@ A sweep across emission sites in `forge-cli`, `forge-phases`, `forge-core`, `loo
 |------|--------|-------------|
 | **Done — this doc** | ✓ | Advocacy template + Advocacy trait sketch + audit of current state |
 | Phase 1 | ✓ landed at 9ee5851 | Advocacy struct + WithAdvocacy trait + Finding builders + 7 unit tests; phantom_button retrofit + print_finding renderer |
-| Phase 2 | ✓ closed — 20 forge-phases carry Advocacy: a11y_landmarks / asset_optimization / backend_coverage / contrast / csp / external_assets / html_semantic / id_strategy / label_consistency / link_check / loom_lint / phantom_button / semver_enforcement / sri / substrate_purity / theme_consistency / tokens / trait_consistency / trait_implications / validate_cms. The originally-targeted 17 ◐ emission sites are met; subsequent phases retrofitted by the same pattern as they landed. | Pattern is self-sustaining: new Findings ship Advocacy by convention. |
-| Phase 3 | pending | Refactor the 3 ✗ emission sites |
-| Phase 4 | pending | JSON output emits `advocacy` field per `docs/JSON_OUTPUT.md`; consumer schemas updated (automatic via serde; needs schema doc + MCP tool description update) |
-| Phase 5 | pending | Loom + Crawler emission sites adopt the same trait (cross-repo) |
-| CI guardrail | pending | A lint that refuses new `Finding::new(...)` without an `Advocacy` (after Phase 2 majority lands) |
+| Phase 2 | ✓ closed — 25 forge-phases carry Advocacy: a11y_landmarks / asset_optimization / backend_coverage / contrast / **crawl** (751daaf) / csp / external_assets / html_semantic / id_strategy / label_consistency / link_check / **loom_lint** / **loom_sync** (f94b40b) / **perf_budget** (40ac6d8) / phantom_button / **render** (10ee2aa, c20a9b9) / semver_enforcement / sri / substrate_purity / theme_consistency / tokens / trait_consistency / trait_implications / **unbuilt_route** (40ac6d8) / validate_cms. The originally-targeted 17 ◐ emission sites are met; subsequent phases retrofitted by the same pattern as they landed. | Pattern is self-sustaining: new Findings ship Advocacy by convention. |
+| Phase 3 | ✓ closed — the `crawl` retrofit (751daaf) covered "crawler --journey ... step failure", the most-cited ✗ row. The remaining ✗ rows fold into Phase 5 (Crawler-side emission) where the chromiumoxide runner lands. | All `crawl` CrawlFinding variants (CrawlerMissing / JourneyMissing / DevServerDown / OpaqueFailure / CrawlerErrored / AxisRegression) carry .why/.fix/.avoid. |
+| Phase 4 | ✓ landed — `Finding.advocacy` already serializes via serde under `#[serde(default, skip_serializing_if = "Advocacy::is_empty")]`. JSON consumers see `advocacy` whenever populated; absent when empty (legacy reports stay byte-identical per backward-compat doctrine). | No schema changes needed; consumers opt in by inspecting the field. |
+| Phase 5 | partial — Crawler-side `crawler-reference-capture` contract crate (6396317 + 377fdad) ships with iso_time-validated wire shape but doesn't yet emit Findings (it's a contract crate, runner-side emission tracked at #301). Loom-side adoption pending. | Cross-repo discipline shape pinned; emission lands as runner work completes. |
+| Discipline metric | ✓ landed at ef1e15f | `BuildReport.findings_missing_advocacy() / advocacy_populated_count() / phases_missing_advocacy()` + a build-summary line: `advocacy coverage: 180/180 (100%) — 0 phase(s) with gaps`. Surfaces the gap as a tracked signal so a retrofit pass can target the right phase. Discipline metric, NOT a gate — the build still passes without advocacy. |
+| CI guardrail | pending | A lint that refuses new `Finding::new(...)` without an `Advocacy` (after Phase 2 majority lands). The discipline metric above is the lighter-touch alternative; consider whether the metric being load-bearing makes the strict gate redundant. |
 
 Each phase is a small bounded task; total ~10-15 PRs across the substrate.
+
+### Coverage on the active build surface
+
+As of 2026-05-20 the prosperityclub.com build emits **180 findings, 180 with advocacy populated (100% coverage), 0 phases with gaps**. This is the first time the substrate has hit full advocacy parity since the doctrine was authored.
+
+Dormant phases (those that don't fire on the active build) still have advocacy gaps — see `cargo grep 'Finding::warn\|Finding::strict' -L '.why('` across `forge-phases/src/`. The discipline metric will surface those as gap phases the moment they activate on a new corpus.
 
 ---
 
