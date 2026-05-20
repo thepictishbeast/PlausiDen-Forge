@@ -22,6 +22,7 @@ pub mod aesthetic_distinctiveness;
 pub mod annotation_review;
 pub mod density_audit;
 pub mod disclosure_audit;
+pub mod editorial_purity_gate;
 pub mod placeholder_value_audit;
 pub mod source_list_audit;
 pub mod asset_optimization;
