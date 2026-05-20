@@ -221,12 +221,25 @@ impl Phase for RenderPhase {
         // never serves to a live page. Same atomic_write helper
         // the HTML pages use. Failures surface as BuildError::Io
         // (no silent skip).
+        //
+        // Issue #8 fix (2026-05-20): skip the write when the
+        // existing file already matches the current SKIN_CSS bytes.
+        // Avoids one disk-fsync per build when the design system
+        // hasn't changed, and matters when Forge runs on a watch
+        // loop or in a sandbox with rate-limited writes.
         let skin_path = ctx.static_dir.join("loom-skin.css");
-        if let Err(e) = atomic_write(&skin_path, loom_tokens::SKIN_CSS.as_bytes()) {
-            return Err(BuildError::Io {
-                context: format!("render write {}", skin_path.display()),
-                source: e,
-            });
+        let skin_bytes = loom_tokens::SKIN_CSS.as_bytes();
+        let needs_write = match std::fs::read(&skin_path) {
+            Ok(existing) => existing != skin_bytes,
+            Err(_) => true, // missing / unreadable → write
+        };
+        if needs_write {
+            if let Err(e) = atomic_write(&skin_path, skin_bytes) {
+                return Err(BuildError::Io {
+                    context: format!("render write {}", skin_path.display()),
+                    source: e,
+                });
+            }
         }
 
         tracing::info!(

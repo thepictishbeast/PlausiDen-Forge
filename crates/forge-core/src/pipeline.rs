@@ -177,7 +177,13 @@ pub struct RenderedArtifacts {
     /// Emitted JS files.
     pub js_files: Vec<PathBuf>,
     /// Hashed-asset filename map: `{logical → physical}`.
-    pub asset_map: Vec<(String, String)>,
+    ///
+    /// Issue #8 fix (2026-05-20): was `Vec<(String, String)>` which
+    /// gave `O(N)` lookups. Switched to `HashMap` so any future
+    /// SRI-/integrity-style consumer that wants to resolve
+    /// `index.html` → `index.7f3a9.html` doesn't degrade with site
+    /// size. No current consumers — change is forward-compat only.
+    pub asset_map: std::collections::HashMap<String, String>,
 }
 
 /// What audit collects (in addition to the pipeline-wide
