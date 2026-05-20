@@ -47,6 +47,7 @@
 use std::fs;
 use std::path::Path;
 
+use forge_core::tenant_corpus::TenantCorpus;
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
 
 /// `hunted_tier` phase implementation.
@@ -76,6 +77,16 @@ impl Phase for HuntedTierPhase {
                 "hunted_tier — `[security] tier = \"hunted\"` requires `[noscript_strict] enabled = true` (or LOOM_NOSCRIPT_MODE=1 in env). The hunted tier is a meta-policy; its zero-JS guarantee comes from noscript_strict. Enable it.".to_owned(),
             ));
         }
+        // Layer tenant-corpus extra_body_leak_markers on top of
+        // the baseline per [[per-tenant-corpora-doctrine]]. Allows
+        // operators to extend the client-state-API scan with
+        // tenant-specific markers (e.g. IndexedDB.open, FileSystem
+        // API, app-specific globals) without forking the substrate.
+        let tenant = TenantCorpus::load(&ctx.root);
+        let tenant_extra_markers: Vec<&str> = tenant
+            .as_ref()
+            .map(|t| t.extra_body_leak_markers.iter().map(String::as_str).collect())
+            .unwrap_or_default();
         // Body-text scan for client-state API references.
         let static_dir = &ctx.static_dir;
         if static_dir.is_dir() {
@@ -96,6 +107,7 @@ impl Phase for HuntedTierPhase {
                     context: format!("read {}", path.display()),
                     source: e,
                 })?;
+                // Baseline markers first.
                 for marker in BODY_LEAK_MARKERS {
                     if raw.contains(marker) {
                         findings.push(Finding::strict(
@@ -103,6 +115,20 @@ impl Phase for HuntedTierPhase {
                             path.display().to_string(),
                             format!(
                                 "hunted_tier — rendered HTML contains the literal `{marker}`, which suggests the page expects client-side state. Under hunted tier the build assumes ZERO client state. If this is innocent body copy (e.g. an article ABOUT localStorage), opt out by setting `[security] tier = \"strict\"` for that build instead."
+                            ),
+                        ));
+                    }
+                }
+                // Tenant-extra markers (additive). Tagged with
+                // (tenant-corpus) in the message so reports
+                // distinguish operator-configured from baseline.
+                for marker in &tenant_extra_markers {
+                    if raw.contains(*marker) {
+                        findings.push(Finding::strict(
+                            self.name(),
+                            path.display().to_string(),
+                            format!(
+                                "hunted_tier (tenant-corpus) — rendered HTML contains the literal `{marker}`, configured as an extra body-leak marker for this tenant. Same posture as baseline markers: under hunted tier the build assumes ZERO client state."
                             ),
                         ));
                     }
@@ -217,6 +243,116 @@ mod tests {
         assert!(read_noscript_strict_enabled(&dir));
         let _ = fs::remove_file(dir.join("forge.toml"));
         let _ = fs::remove_dir(&dir);
+    }
+
+    fn run_phase_in(dir: &Path) -> Vec<Finding> {
+        let ctx = BuildCtx {
+            root: dir.to_path_buf(),
+            static_dir: dir.join("static"),
+            mode: forge_core::BuildMode::Static,
+        };
+        HuntedTierPhase
+            .run(&ctx)
+            .expect("hunted_tier run should not error in test fixture")
+    }
+
+    fn write_fixture(dir: &Path, forge_toml: &str, static_html: &[(&str, &str)]) {
+        let _ = fs::create_dir_all(dir);
+        let _ = fs::create_dir_all(dir.join("static"));
+        let _ = fs::write(dir.join("forge.toml"), forge_toml);
+        for (name, body) in static_html {
+            let _ = fs::write(dir.join("static").join(name), body);
+        }
+    }
+
+    #[test]
+    fn tenant_extra_body_leak_marker_fires_strict() {
+        // forge.toml declares hunted tier + noscript_strict + a
+        // tenant-extra marker. A static/*.html that contains the
+        // tenant-extra string fires a strict finding tagged with
+        // (tenant-corpus).
+        let dir = temp_dir("tenant-extra-marker");
+        write_fixture(
+            &dir,
+            r#"[security]
+tier = "hunted"
+
+[noscript_strict]
+enabled = true
+
+[tenant_corpus]
+extra_body_leak_markers = ["indexedDB.open"]
+"#,
+            &[("foo.html", "<html><body>indexedDB.open(...)</body></html>")],
+        );
+        let findings = run_phase_in(&dir);
+        assert!(
+            findings.iter().any(|f| f.message.contains("(tenant-corpus)")
+                && f.message.contains("indexedDB.open")),
+            "expected tenant-corpus finding for indexedDB.open: {:?}",
+            findings.iter().map(|f| &f.message).collect::<Vec<_>>()
+        );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn baseline_and_tenant_extras_are_additive() {
+        // Static HTML contains BOTH a baseline marker (localStorage.)
+        // AND a tenant-extra marker (indexedDB.open). Both fire.
+        let dir = temp_dir("additive");
+        write_fixture(
+            &dir,
+            r#"[security]
+tier = "hunted"
+
+[noscript_strict]
+enabled = true
+
+[tenant_corpus]
+extra_body_leak_markers = ["indexedDB.open"]
+"#,
+            &[(
+                "foo.html",
+                "<p>localStorage.foo</p><p>indexedDB.open()</p>",
+            )],
+        );
+        let findings = run_phase_in(&dir);
+        // 1 baseline (localStorage.) + 1 tenant (indexedDB.open) = 2
+        let baseline_hits = findings
+            .iter()
+            .filter(|f| f.message.contains("localStorage.") && !f.message.contains("(tenant-corpus)"))
+            .count();
+        let tenant_hits = findings
+            .iter()
+            .filter(|f| f.message.contains("(tenant-corpus)") && f.message.contains("indexedDB.open"))
+            .count();
+        assert_eq!(baseline_hits, 1, "baseline localStorage hit expected once");
+        assert_eq!(tenant_hits, 1, "tenant indexedDB.open hit expected once");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn no_tenant_corpus_falls_through_to_baseline_only() {
+        // No [tenant_corpus] section → tenant_extra_markers empty
+        // → only baseline scan runs. Adding a string that ONLY a
+        // hypothetical tenant marker would match should NOT fire.
+        let dir = temp_dir("no-tenant");
+        write_fixture(
+            &dir,
+            r#"[security]
+tier = "hunted"
+
+[noscript_strict]
+enabled = true
+"#,
+            &[("foo.html", "<p>indexedDB.open(...)</p>")],
+        );
+        let findings = run_phase_in(&dir);
+        assert!(
+            !findings.iter().any(|f| f.message.contains("indexedDB.open")),
+            "indexedDB.open isn't in baseline markers; without tenant extension, no finding"
+        );
+        let _ = fs::remove_dir_all(&dir);
     }
 
     #[test]
