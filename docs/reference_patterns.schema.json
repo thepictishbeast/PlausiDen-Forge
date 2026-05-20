@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pattern library catalog (#269)",
+  "description": "Bridges per-axis extractor outputs to substrate-native Loom primitives. Mapping engine (#273) walks this catalog.",
+  "type": "object",
+  "required": ["spec", "patterns"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "spec": { "type": "string", "enum": ["v1"] },
+    "description": { "type": "string" },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "trope", "source_signals", "substrate_target"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"
+          },
+          "name": { "type": "string" },
+          "trope": {
+            "type": "boolean",
+            "description": "True iff this pattern is a SaaS shape that gets translated to a substrate-native counterpart."
+          },
+          "source_signals": {
+            "type": "object",
+            "description": "Free-form signal sketch describing the SHAPE that triggers this pattern. Mapping engine evaluates against extractor output.",
+            "additionalProperties": true
+          },
+          "substrate_target": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "CmsSection slug the mapping engine emits when this pattern matches."
+          },
+          "substrate_variant_hint": {
+            "type": "string",
+            "description": "Optional variant string passed through to the emitted SectionSpec."
+          },
+          "rejected_alternatives": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "CmsSection slugs the engine refuses to emit for this pattern even on high confidence."
+          },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

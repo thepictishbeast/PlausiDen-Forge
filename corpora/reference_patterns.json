@@ -1,0 +1,223 @@
+{
+  "$schema": "../docs/reference_patterns.schema.json",
+  "spec": "v1",
+  "description": "Pattern library catalog (#269). Bridges the per-axis extractor outputs (#264-#272) to substrate-native Loom primitives. Each entry maps a recognizable reference-site compositional pattern to its preferred substrate counterpart. The mapping engine (#273) walks this catalog to translate extracted signals into a SiteSpec.\n\nDesign principle: opinionated translation. SaaS tropes in the reference get mapped to their editorial counterparts (feature_spotlight 3-col → kv_pair, stat_band → sparkline, testimonial-card → pull_quote). Per docs/REFERENCE_MATCHING.md.",
+  "patterns": [
+    {
+      "id": "centered-single-line-hero",
+      "name": "Centered single-line SaaS hero",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "hero_editorial",
+        "text_chars_max": 60,
+        "above_fold": true,
+        "alignment_centered": true
+      },
+      "substrate_target": "hero_editorial",
+      "substrate_variant_hint": "background=editorial",
+      "rejected_alternatives": ["hero"],
+      "notes": "When the reference shows a single-line centered hero, the mapping engine emits hero_editorial with an asymmetric layout and a monospace kicker — editorial counterpart, not faithful copy. Per editorial_purity_gate."
+    },
+    {
+      "id": "asymmetric-editorial-hero",
+      "name": "Asymmetric editorial hero",
+      "trope": false,
+      "source_signals": {
+        "sections_pattern": "hero_editorial",
+        "text_chars_min": 80,
+        "above_fold": true,
+        "has_kicker": true
+      },
+      "substrate_target": "hero_editorial",
+      "substrate_variant_hint": "",
+      "rejected_alternatives": [],
+      "notes": "Already substrate-native; mapping engine accepts the reference's choice."
+    },
+    {
+      "id": "split-hero-with-code",
+      "name": "Split hero with code visual",
+      "trope": false,
+      "source_signals": {
+        "sections_pattern": "hero_editorial",
+        "above_fold": true,
+        "has_code": true,
+        "width_split_ratio_min": 0.4
+      },
+      "substrate_target": "split_hero",
+      "substrate_variant_hint": "visual=code",
+      "rejected_alternatives": [],
+      "notes": "Technical-product tier signature. Stripe / Linear / Vercel."
+    },
+    {
+      "id": "feature-spotlight-3-col-grid",
+      "name": "Feature spotlight 3-column grid (SaaS trope)",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "feature_spotlight",
+        "columns_min": 3,
+        "items_min": 3
+      },
+      "substrate_target": "kv_pair",
+      "substrate_variant_hint": "density=dense",
+      "rejected_alternatives": ["feature_spotlight"],
+      "notes": "Per editorial_purity_gate trope dictionary: the 3-column icon-tile grid maps to kv_pair dense info panels."
+    },
+    {
+      "id": "stat-band-numbers-that-compose",
+      "name": "Stat band — 'Numbers that' (SaaS trope)",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "stat_band",
+        "stats_count_min": 3
+      },
+      "substrate_target": "sparkline",
+      "substrate_variant_hint": "per_stat",
+      "rejected_alternatives": ["stat_band"],
+      "notes": "Per editorial_purity_gate: the 99.99% / 10M+ stat band maps to per-metric sparklines or histograms. Editorial signal, not marketing pressure."
+    },
+    {
+      "id": "pricing-with-most-popular-badge",
+      "name": "Pricing with highlighted-tier badge (SaaS trope)",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "pricing",
+        "has_highlighted_tier": true
+      },
+      "substrate_target": "kv_pair",
+      "substrate_variant_hint": "table",
+      "rejected_alternatives": ["pricing"],
+      "notes": "Pricing maps to a tier-vs-feature kv_pair table without the highlighted-tier upsell badge. Per pricing_editorial template."
+    },
+    {
+      "id": "testimonial-card-with-avatar",
+      "name": "Testimonial card with avatar (SaaS trope)",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "testimonial",
+        "has_avatar": true
+      },
+      "substrate_target": "pull_quote",
+      "substrate_variant_hint": "",
+      "rejected_alternatives": ["testimonial"],
+      "notes": "Per editorial_purity_gate: avatar-circle testimonial card maps to editorial pull_quote with body + plain attribution."
+    },
+    {
+      "id": "long-form-paragraph-anchor",
+      "name": "Long-form paragraph with pull-quote anchor",
+      "trope": false,
+      "source_signals": {
+        "sections_pattern": "paragraph",
+        "paragraph_count_min": 4,
+        "has_pull_quote": true
+      },
+      "substrate_target": "paragraph",
+      "substrate_variant_hint": "with_anchor",
+      "rejected_alternatives": [],
+      "notes": "Editorial reading-first composition; substrate-native."
+    },
+    {
+      "id": "image-hero-photographic",
+      "name": "Image hero — photographic",
+      "trope": false,
+      "source_signals": {
+        "sections_pattern": "image_hero",
+        "above_fold": true,
+        "has_image": true,
+        "text_chars_max": 200
+      },
+      "substrate_target": "image_hero",
+      "substrate_variant_hint": "",
+      "rejected_alternatives": [],
+      "notes": "Substrate-native; accepted as-is."
+    },
+    {
+      "id": "code-block-editorial",
+      "name": "Code block — editorial inline",
+      "trope": false,
+      "source_signals": {
+        "sections_pattern": "code",
+        "code_count_min": 1
+      },
+      "substrate_target": "code",
+      "substrate_variant_hint": "",
+      "rejected_alternatives": [],
+      "notes": "Technical-tier signature; substrate-native."
+    },
+    {
+      "id": "cookie-notice-dismiss-only",
+      "name": "Cookie notice — dismiss-only (GDPR violation)",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "cookie_notice",
+        "reject_label_empty": true
+      },
+      "substrate_target": "cookie_notice",
+      "substrate_variant_hint": "balanced",
+      "rejected_alternatives": [],
+      "notes": "Per editorial_purity_gate: the reject button must be as prominent as accept. Mapping engine rewrites with a full reject_label."
+    },
+    {
+      "id": "marquee-logo-wall",
+      "name": "Marquee logo wall — 'Trusted by'",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "marquee",
+        "logo_count_min": 4
+      },
+      "substrate_target": "kv_pair",
+      "substrate_variant_hint": "logo_grid_static",
+      "rejected_alternatives": ["marquee"],
+      "notes": "Static logo grid instead of scrolling marquee; editorial counterpart."
+    },
+    {
+      "id": "cta-band-gradient-pre-footer",
+      "name": "CTA band with gradient + dual buttons (SaaS trope)",
+      "trope": true,
+      "source_signals": {
+        "sections_pattern": "call_to_action",
+        "has_gradient": true,
+        "button_count_min": 2,
+        "below_fold": true
+      },
+      "substrate_target": "call_to_action",
+      "substrate_variant_hint": "editorial_solid",
+      "rejected_alternatives": [],
+      "notes": "Drop gradient backdrop + reduce to single-CTA; editorial restraint."
+    },
+    {
+      "id": "section-heading-only",
+      "name": "Section heading — standalone",
+      "trope": false,
+      "source_signals": {
+        "sections_pattern": "section_heading",
+        "heading_only": true
+      },
+      "substrate_target": "section_heading",
+      "substrate_variant_hint": "",
+      "rejected_alternatives": [],
+      "notes": "Substrate-native; pass-through."
+    },
+    {
+      "id": "form-contact-honest",
+      "name": "Contact form — honest labels",
+      "trope": false,
+      "source_signals": {
+        "sections_pattern": "form",
+        "form_count_min": 1,
+        "no_marketing_copy": true
+      },
+      "substrate_target": "form",
+      "substrate_variant_hint": "",
+      "rejected_alternatives": [],
+      "notes": "Substrate-native; accepted."
+    }
+  ],
+  "notes": [
+    "Each pattern entry's `trope: true` marks it as a SaaS shape that gets translated to a substrate-native counterpart. Per docs/EDITORIAL_PURITY.md.",
+    "`source_signals` is a sketch — actual mapping (#273) uses extractor output to evaluate. Keys here describe the SHAPE that triggers the pattern, not a strict JSON Schema.",
+    "`substrate_target` is the slug of the substrate-native CmsSection kind the mapping emits.",
+    "`substrate_variant_hint` is an optional variant string passed through to the synthesized SectionSpec.",
+    "`rejected_alternatives` documents which CmsSection kinds the engine refuses to emit even when extractor confidence is high — preserves the editorial-purity contract.",
+    "Per [[backward-compat-version-discipline]]: spec=v1. New patterns land additive; renaming an id breaks the mapping engine."
+  ]
+}
