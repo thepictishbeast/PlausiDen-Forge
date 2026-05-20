@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Skill-driven workflow library (#287)",
+  "description": "Canonical catalog of substrate workflows. Each skill is a named, parameterizable procedure with declared preconditions, side effects, and success criteria.",
+  "type": "object",
+  "required": ["spec", "skills"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "spec": { "type": "string", "enum": ["v1"] },
+    "description": { "type": "string" },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "slug",
+          "name",
+          "category",
+          "preconditions",
+          "steps",
+          "side_effects",
+          "success_criteria"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"
+          },
+          "name": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": [
+              "variation-arc",
+              "controlled-mutability",
+              "substrate-extension",
+              "content-authoring",
+              "reference-matching",
+              "attestation",
+              "doctrine",
+              "meta"
+            ]
+          },
+          "preconditions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "steps": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "side_effects": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "success_criteria": { "type": "string" },
+          "doctrine_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "related_tools": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "$schema": "../docs/skills.schema.json",
+  "spec": "v1",
+  "description": "Skill-driven workflow library (#287). Canonical catalog of substrate workflows that Claude (and other AI agents) can invoke via the MCP typed-tool surface (#284). Each skill is a named, parameterizable procedure with declared preconditions, side effects, and success criteria. Mirrors the page-types library (#250) but for substrate OPERATIONS rather than CONTENT.",
+  "skills": [
+    {
+      "slug": "variation-resolution",
+      "name": "Resolve a uniqueness_gate / mood_lock / pattern_entropy finding",
+      "category": "variation-arc",
+      "preconditions": [
+        "forge.toml has [site_identity] declared",
+        "Most recent forge build produced strict findings citing var-* or pattern-* or theme-*"
+      ],
+      "steps": [
+        "Run `forge build` to capture current findings.",
+        "For each variation-arc finding (var-001..var-002, pattern-001..pattern-502, theme-101..theme-103, mood-001..mood-002, ident-201..ident-206): read the advocacy.fix line.",
+        "Edit cms/*.json or forge.toml per the substrate-fix; never disable the gate.",
+        "Re-run `forge build`. Iterate until findings clear OR the gate's threshold is raised in forge.toml with operator approval."
+      ],
+      "side_effects": ["modifies cms/*.json", "may modify forge.toml [site_identity] or [<gate>] sections"],
+      "success_criteria": "forge build returns 0 strict findings on the variation arc.",
+      "doctrine_refs": ["docs/VARIATION_GUARANTEES.md", "docs/SUBSTRATE_ERRORS.md"],
+      "related_tools": ["forge.build", "forge.fingerprint.verify", "forge.identity.show"]
+    },
+    {
+      "slug": "identity-transition",
+      "name": "Atomic identity change",
+      "category": "controlled-mutability",
+      "preconditions": [
+        "Operator has decided to change one or more [site_identity] axes",
+        "reports/attest-key.b64 exists (sign the transition record)"
+      ],
+      "steps": [
+        "Snapshot current identity via `forge identity show --json`. Save the identity_hash.",
+        "Edit forge.toml [site_identity] axis(es) to the new value(s).",
+        "Run `forge identity show --json` again. Confirm new identity_hash differs.",
+        "Call forge_core::identity_transition::classify_diff(prev, next). Confirm IdentityDiff::is_atomic() returns true. If not, add the missing cascade-partner change (e.g. voice.tier change requires allowed/forbidden primitives change).",
+        "Construct an IdentityTransition record, sign with reports/attest-key.b64, append to reports/identity-transitions.jsonl.",
+        "Run `forge build`. Iterate on identity_coherence findings until clean."
+      ],
+      "side_effects": [
+        "modifies forge.toml",
+        "appends to reports/identity-transitions.jsonl",
+        "modifies allowed/forbidden_primitives lists (per atomic-change discipline)"
+      ],
+      "success_criteria": "forge build passes + transition signature verifies.",
+      "doctrine_refs": ["docs/VARIATION_GUARANTEES.md"],
+      "related_tools": ["forge.identity.show", "forge.identity.verify"]
+    },
+    {
+      "slug": "add-loom-primitive",
+      "name": "Add a new substrate primitive to Loom",
+      "category": "substrate-extension",
+      "preconditions": [
+        "Working tree on PlausiDen-Loom is clean",
+        "The new primitive has been justified per [[substrate-only-path]] (gap in existing vocabulary, not a workaround)"
+      ],
+      "steps": [
+        "Add a new CmsSection variant to loom-cms-render with serde rename_all=\"snake_case\".",
+        "Add a corresponding Maud template in loom-cms-render/src/primitives/<name>.rs.",
+        "Add CSS for the primitive in loom-skin/src/primitives/<name>.css.",
+        "Bump loom-cms-render's primitive_count constant.",
+        "Run cargo test -p loom-cms-render and confirm new tests pass.",
+        "Update docs/traits-catalog.md with the new primitive's mood-affinity classification.",
+        "Run cargo test from /home/paul/projects/PlausiDen-Forge to confirm Forge can render the new primitive (loom-sync phase pulls the latest)."
+      ],
+      "side_effects": [
+        "adds files to PlausiDen-Loom",
+        "modifies loom CSS bundle",
+        "may modify forge-phases mood_lock affinity tables"
+      ],
+      "success_criteria": "primitive renders in Loom + passes Forge build with [editorial_purity] enforce=true.",
+      "doctrine_refs": ["docs/ARCHITECTURE_PRINCIPLES.md", "docs/EDITORIAL_PURITY.md"],
+      "related_tools": ["loom.cms.render", "forge.build"]
+    },
+    {
+      "slug": "author-cms-content",
+      "name": "Author CMS content for a new page",
+      "category": "content-authoring",
+      "preconditions": [
+        "forge.toml [site_identity] declared",
+        "Target content_type slug exists in [[site_identity.content_type]]",
+        "Page-type template selected from corpora/page_types.json"
+      ],
+      "steps": [
+        "Pick a template from corpora/page_types.json matching the target content_type.",
+        "Create cms/<slug>.json with the template's section_signature filled in.",
+        "Populate text fields (title, body, lede) — keep voice within the declared [site_identity.voice].tier.",
+        "Run `forge build`. Iterate on findings from voice_profile_audit (#241), zone_constraints (#254), pattern_entropy (#236), composition_lineage (#244)."
+      ],
+      "side_effects": ["creates cms/<slug>.json"],
+      "success_criteria": "forge build passes for the new page.",
+      "doctrine_refs": ["docs/VARIATION_GUARANTEES.md", "corpora/page_types.json"],
+      "related_tools": ["forge.build", "loom.cms.render"]
+    },
+    {
+      "slug": "fingerprint-register",
+      "name": "Register a fingerprint to the platform registry",
+      "category": "variation-arc",
+      "preconditions": [
+        "forge build produces 0 strict findings",
+        "reports/attest-key.b64 exists",
+        "Operator confirms this build represents the canonical state of the site"
+      ],
+      "steps": [
+        "Compute the current SiteFingerprint via forge_core::fingerprint (walks cms/*.json).",
+        "Open reports/attest-key.b64 to load the Ed25519 SigningKey.",
+        "Call forge_core::fingerprint_registry::append(path, site_id, tenant_id, fingerprint, timestamp, &key).",
+        "Run `forge fingerprint verify` to confirm chain integrity after the append."
+      ],
+      "side_effects": ["appends to registry/fingerprints.jsonl"],
+      "success_criteria": "fingerprint append succeeds + chain verify passes.",
+      "doctrine_refs": ["docs/VARIATION_GUARANTEES.md"],
+      "related_tools": ["forge.fingerprint.verify", "forge.fingerprint.list", "forge.attest.pubkey"]
+    },
+    {
+      "slug": "reference-match",
+      "name": "Synthesize a site spec from a reference URL",
+      "category": "reference-matching",
+      "preconditions": [
+        "Crawler binary built + Loom + Forge built",
+        "Reference URL accessible from the build host"
+      ],
+      "steps": [
+        "Invoke crawler.capture(url, viewports=[390,768,1280]). Saves to capture_dir.",
+        "Run per-axis extractors (#264-#272) against capture_dir. Each emits its structured AxisResult.",
+        "Pipe AxisResults through forge_core::reference_match::map() to produce a spec.",
+        "Show spec preview to operator; iterate on token/primitive/voice overrides.",
+        "Run forge_core::reference_match::synthesize() to emit cms/*.json + forge.toml updates.",
+        "Run `forge build`. Iterate on variation-arc findings until clean."
+      ],
+      "side_effects": [
+        "writes capture_dir under /tmp or operator-supplied",
+        "writes cms/*.json + updates forge.toml"
+      ],
+      "success_criteria": "forge build passes + visual diff vs reference at 3 viewports within operator-acceptable threshold.",
+      "doctrine_refs": ["docs/REFERENCE_MATCHING.md"],
+      "related_tools": ["crawler.capture", "forge.build"]
+    },
+    {
+      "slug": "attest-rotate-key",
+      "name": "Rotate the attestation Ed25519 keypair",
+      "category": "attestation",
+      "preconditions": [
+        "Operator decides to rotate (e.g. key suspected compromised, scheduled rotation)",
+        "Existing reports/attest-pubkey.b64 backed up if downstream verifiers pin it"
+      ],
+      "steps": [
+        "Backup existing reports/attest-key.b64 + reports/attest-pubkey.b64 with timestamped suffix.",
+        "Run `forge attest init --force` to generate new keypair.",
+        "Sign a 'rotation-witness' record into reports/identity-transitions.jsonl noting the rotation event.",
+        "Publish new pubkey to downstream verifiers + update plausiden.com /.well-known/pubkey.",
+        "Run `forge fingerprint verify --signatures` with old pubkey to confirm prior chain still verifies (signatures from before rotation use old key)."
+      ],
+      "side_effects": [
+        "overwrites reports/attest-key.b64 + reports/attest-pubkey.b64",
+        "appends rotation-witness to reports/identity-transitions.jsonl",
+        "publishes new pubkey to public well-known path"
+      ],
+      "success_criteria": "new pubkey works for fresh signs + old pubkey verifies prior chain entries.",
+      "doctrine_refs": ["docs/SUBSTRATE_ERRORS.md"],
+      "related_tools": ["forge.attest.init", "forge.attest.pubkey", "forge.fingerprint.verify"]
+    },
+    {
+      "slug": "doctrine-review",
+      "name": "Add or revise a doctrine rule",
+      "category": "doctrine",
+      "preconditions": [
+        "Working tree on PlausiDen-AVP-Doctrine is clean",
+        "Operator has identified a substrate behavior that should be enforced or relaxed"
+      ],
+      "steps": [
+        "Open PlausiDen-AVP-Doctrine/standing-orders.",
+        "Pick a stable rule_id namespace (prim-NNN, sec-NNN, a11y-NNN, etc.).",
+        "Write rule_id + statement + rationale + enforcement (the SUBSTRATE_ERRORS.md triple shape).",
+        "Cross-reference from any Forge phases that should cite this rule via .citing([rule_id]).",
+        "Commit + push.",
+        "Run `forge doctrine query --rule <id>` to confirm the rule resolves."
+      ],
+      "side_effects": ["adds files to PlausiDen-AVP-Doctrine"],
+      "success_criteria": "doctrine query resolves; findings citing the rule render the rationale.",
+      "doctrine_refs": ["docs/SUBSTRATE_ERRORS.md"],
+      "related_tools": ["forge.doctrine.query"]
+    },
+    {
+      "slug": "pixel-reproduction-rotation",
+      "name": "Pixel reproduction loop for a reference site",
+      "category": "reference-matching",
+      "preconditions": [
+        "Crawler + Forge + firefox-esr installed",
+        "Target site URL is in corpora/reference_baseline.json"
+      ],
+      "steps": [
+        "Use reference-match skill to generate initial cms/ + forge.toml.",
+        "Run `forge build`. Deploy to /var/www/dev.plausiden.com (rsync from PlausiDen-Forge/static/).",
+        "Screenshot reference site at 390/768/1280 px via Crawler.",
+        "Screenshot dev.plausiden.com at the same viewports via firefox-esr --headless.",
+        "Diff visually (operator review or perceptual-hash distance).",
+        "Identify gaps: missing primitives, off-palette tokens, wrong density.",
+        "Add missing primitives to Loom (substrate, not site-specific). Adjust tokens. Iterate.",
+        "When perceptual match is within operator-acceptable threshold, register fingerprint."
+      ],
+      "side_effects": [
+        "many cms/ + forge.toml edits",
+        "may add Loom primitives",
+        "deploys to /var/www/dev.plausiden.com"
+      ],
+      "success_criteria": "perceptual diff < operator threshold at all 3 viewports AND forge build passes.",
+      "doctrine_refs": ["docs/PIXEL_REPRODUCTION_ROTATION.md", "docs/REFERENCE_MATCHING.md"],
+      "related_tools": ["crawler.capture", "forge.build", "loom.cms.render"]
+    },
+    {
+      "slug": "task-triage",
+      "name": "Triage the substrate backlog",
+      "category": "meta",
+      "preconditions": ["Backlog has 30+ pending tasks"],
+      "steps": [
+        "Run TaskList (or equivalent).",
+        "Classify each task per docs/ARCHITECTURAL_THREADS.md: shipped / in-progress / pending-load-bearing / pending-enumerative / pending-speculative.",
+        "Mark `status=deleted` for subsumed tasks.",
+        "Mark `status=deleted` for speculative tasks that block on un-shipped infrastructure (file a follow-on note when the dependency lands).",
+        "Re-classify cross-arc tasks to their correct arc.",
+        "Update docs/ARCHITECTURAL_THREADS.md to reflect the cleanup."
+      ],
+      "side_effects": ["task state changes", "edits docs/ARCHITECTURAL_THREADS.md"],
+      "success_criteria": "active task count reflects real remaining substrate work, not enumerative dumps.",
+      "doctrine_refs": ["docs/ARCHITECTURAL_THREADS.md"],
+      "related_tools": []
+    }
+  ],
+  "notes": [
+    "Categories: variation-arc / controlled-mutability / substrate-extension / content-authoring / reference-matching / attestation / doctrine / meta.",
+    "Each skill's steps list is the canonical procedure. Variations are operator discretion; substantive deviations should propose a new skill_slug rather than mutating the canonical one.",
+    "Skills MUST cite the doctrine docs they implement via doctrine_refs. Future #279 generality-assessment ensures every skill's procedure is generic across tenants.",
+    "Per [[backward-compat-version-discipline]]: skill_slug + category + preconditions + side_effects + success_criteria is the wire shape. Renaming a slug breaks consumer scripts; deprecate via removal with 1-version overlap.",
+    "Future MCP server impl invokes skills via the `skills.invoke` tool (#284) and records each invocation via skill_telemetry (#278)."
+  ]
+}
