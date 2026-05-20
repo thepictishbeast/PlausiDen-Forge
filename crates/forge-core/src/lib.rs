@@ -686,6 +686,58 @@ impl BuildReport {
         phases.dedup();
         phases
     }
+
+    /// Aggregate findings by phase, returning a tally per phase
+    /// sorted by strict_count desc → total count desc → phase
+    /// name. Stable output across runs with identical findings
+    /// so downstream tooling (JSON consumers, CI dashboards)
+    /// can diff cleanly.
+    ///
+    /// Mirrors `crawler_report::Report::summarize_by_kind` so
+    /// the two reporters offer a symmetric "give me the top-N
+    /// noise sources" API.
+    ///
+    /// Phases with zero findings are omitted from the output.
+    #[must_use]
+    pub fn summarize_by_phase(&self) -> Vec<PhaseTally> {
+        use std::collections::BTreeMap;
+        let mut by_phase: BTreeMap<String, (u32, u32)> = BTreeMap::new();
+        for f in &self.findings {
+            let entry = by_phase.entry(f.phase.clone()).or_insert((0, 0));
+            entry.0 = entry.0.saturating_add(1);
+            if matches!(f.severity, Severity::Strict) {
+                entry.1 = entry.1.saturating_add(1);
+            }
+        }
+        let mut out: Vec<PhaseTally> = by_phase
+            .into_iter()
+            .map(|(phase, (count, strict_count))| PhaseTally {
+                phase,
+                count,
+                strict_count,
+            })
+            .collect();
+        out.sort_by(|a, b| {
+            b.strict_count
+                .cmp(&a.strict_count)
+                .then(b.count.cmp(&a.count))
+                .then(a.phase.cmp(&b.phase))
+        });
+        out
+    }
+}
+
+/// One row of the per-phase aggregation output for
+/// `BuildReport::summarize_by_phase`.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub struct PhaseTally {
+    /// Phase name (`"tokens"` / `"unbuilt_route"` / ...).
+    pub phase: String,
+    /// Total findings emitted by this phase.
+    pub count: u32,
+    /// Subset of `count` carrying `Severity::Strict`.
+    pub strict_count: u32,
 }
 
 #[cfg(test)]
@@ -939,6 +991,61 @@ mod tests {
             !json.contains("\"advocacy\""),
             "empty advocacy should be skipped to keep legacy reports byte-identical: {json}"
         );
+    }
+
+    #[test]
+    fn summarize_by_phase_groups_and_sorts_by_strict_then_count() {
+        let mut r = BuildReport::default();
+        r.push(Finding::strict("phase_a", "/a", "msg"));
+        r.push(Finding::warn("phase_a", "/a", "msg"));
+        r.push(Finding::warn("phase_b", "/b", "msg"));
+        r.push(Finding::warn("phase_b", "/b", "msg"));
+        r.push(Finding::warn("phase_b", "/b", "msg"));
+        r.push(Finding::warn("phase_c", "/c", "msg"));
+
+        let s = r.summarize_by_phase();
+        assert_eq!(s.len(), 3);
+        // phase_a has a Strict → sorts first regardless of count.
+        assert_eq!(s[0].phase, "phase_a");
+        assert_eq!(s[0].strict_count, 1);
+        assert_eq!(s[0].count, 2);
+        // phase_b (3 warns, 0 strict) > phase_c (1 warn).
+        assert_eq!(s[1].phase, "phase_b");
+        assert_eq!(s[1].count, 3);
+        assert_eq!(s[2].phase, "phase_c");
+        assert_eq!(s[2].count, 1);
+    }
+
+    #[test]
+    fn summarize_by_phase_empty_report() {
+        let r = BuildReport::default();
+        assert!(r.summarize_by_phase().is_empty());
+    }
+
+    #[test]
+    fn summarize_by_phase_tie_broken_by_name() {
+        let mut r = BuildReport::default();
+        r.push(Finding::warn("zeta_phase", "/z", "msg"));
+        r.push(Finding::warn("alpha_phase", "/a", "msg"));
+
+        let s = r.summarize_by_phase();
+        // Both have count=1, strict=0 — sort by name ascending.
+        assert_eq!(s[0].phase, "alpha_phase");
+        assert_eq!(s[1].phase, "zeta_phase");
+    }
+
+    #[test]
+    fn phase_tally_round_trips_json() {
+        let t = PhaseTally {
+            phase: "tokens".to_owned(),
+            count: 4,
+            strict_count: 1,
+        };
+        let json = serde_json::to_string(&t).expect("ser");
+        let back: PhaseTally = serde_json::from_str(&json).expect("de");
+        assert_eq!(back, t);
+        // kebab-case wire shape.
+        assert!(json.contains("\"strict-count\":1"), "got: {json}");
     }
 
     #[test]
