@@ -145,6 +145,15 @@ pub enum RegistryError {
         /// Spec the entry was computed against.
         actual: FingerprintSpec,
     },
+    /// Timestamp argument is not the substrate's canonical
+    /// RFC-3339 UTC form (`YYYY-MM-DDTHH:MM:SSZ`, 20 chars).
+    /// Rejected at the wire boundary so a malformed string can
+    /// never get baked into the hash chain.
+    #[error("invalid RFC-3339 UTC timestamp: {provided:?} (expected YYYY-MM-DDTHH:MM:SSZ)")]
+    BadTimestamp {
+        /// The string the caller passed.
+        provided: String,
+    },
 }
 
 /// Compute the SHA-256 hash of an entry's canonical bytes.
@@ -226,6 +235,14 @@ pub fn append(
     timestamp: &str,
     signing_key: &SigningKey,
 ) -> Result<FingerprintRegistryEntry, RegistryError> {
+    // Wire-boundary check — once a string is baked into the
+    // canonical hash, it can never be repaired without breaking
+    // the chain. Reject non-canonical timestamps up front.
+    if !crate::iso_time::is_canonical_rfc3339_utc(timestamp) {
+        return Err(RegistryError::BadTimestamp {
+            provided: timestamp.to_owned(),
+        });
+    }
     let prior = read_last_entry(path)?;
     let (sequence, prev_hash) = match &prior {
         Some(p) => (p.sequence + 1, Some(p.hash.clone())),
@@ -494,6 +511,34 @@ mod tests {
     }
 
     #[test]
+    fn append_rejects_malformed_timestamp() {
+        let path = temp_path("bad-timestamp");
+        let key = generate_keypair();
+        // Various off-canonical shapes the validator should reject.
+        for bad in [
+            "",
+            "2026-05-20",
+            "2026/05/20T12:00:00Z",
+            "2026-05-20T12:00:00",        // missing Z
+            "2026-05-20t12:00:00Z",       // lowercase t
+            "2026-05-20T12:00:00.5Z",     // fractional seconds
+            "2026-05-20T12:00:00+00:00",  // explicit offset
+        ] {
+            let r = append(&path, "site-a", "t", sample_fp(1), bad, &key);
+            match r {
+                Err(RegistryError::BadTimestamp { provided }) => {
+                    assert_eq!(provided, bad);
+                }
+                other => panic!("expected BadTimestamp for {bad:?}, got {other:?}"),
+            }
+        }
+        // Bad-timestamp rejection must happen BEFORE any file
+        // write — the registry path should not exist.
+        assert!(!path.exists());
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
     fn append_chains_subsequent_entries() {
         let path = temp_path("chain");
         let key = generate_keypair();
@@ -585,9 +630,9 @@ mod tests {
     fn find_near_duplicates_returns_entries_below_threshold() {
         let path = temp_path("near-dup");
         let key = generate_keypair();
-        append(&path, "site-1", "t", sample_fp(1), "t1", &key).unwrap();
-        append(&path, "site-2", "t", sample_fp(2), "t2", &key).unwrap();
-        append(&path, "site-3", "t", sample_fp(99), "t3", &key).unwrap();
+        append(&path, "site-1", "t", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
+        append(&path, "site-2", "t", sample_fp(2), "2026-05-20T12:01:00Z", &key).unwrap();
+        append(&path, "site-3", "t", sample_fp(99), "2026-05-20T12:02:00Z", &key).unwrap();
         let candidate = sample_fp(1);
         let matches = find_near_duplicates(&path, &candidate, 4).unwrap();
         // site-1 should be exact match (distance 0); site-2 should
@@ -603,9 +648,9 @@ mod tests {
     fn for_tenant_filters_by_tenant_id() {
         let path = temp_path("tenant-filter");
         let key = generate_keypair();
-        append(&path, "site-a", "tenant-1", sample_fp(1), "t1", &key).unwrap();
-        append(&path, "site-b", "tenant-2", sample_fp(2), "t2", &key).unwrap();
-        append(&path, "site-c", "tenant-1", sample_fp(3), "t3", &key).unwrap();
+        append(&path, "site-a", "tenant-1", sample_fp(1), "2026-05-20T12:00:00Z", &key).unwrap();
+        append(&path, "site-b", "tenant-2", sample_fp(2), "2026-05-20T12:01:00Z", &key).unwrap();
+        append(&path, "site-c", "tenant-1", sample_fp(3), "2026-05-20T12:02:00Z", &key).unwrap();
         let t1 = for_tenant(&path, "tenant-1").unwrap();
         assert_eq!(t1.len(), 2);
         let t2 = for_tenant(&path, "tenant-2").unwrap();
