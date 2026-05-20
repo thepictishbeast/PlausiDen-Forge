@@ -27,6 +27,24 @@ forge watch --debounce-ms 500 --max-rebuilds 100
 
 ---
 
+## Orient (session-start meta-tool)
+
+### `forge orient`
+Single command that synthesizes everything an AI agent (Claude, Gemini, other) needs at session start: Rule 0 (substrate-only-path), affordance inventory (AGENTS.md / TOOLS.md / Makefile / skills / capability-request workflow), canonical defaults, scoped doctrine rules, skill map, and anti-pattern reminders.
+
+Replaces the aspirational "read AGENTS.md, then TOOLS.md, then doctrine, then…" with one mechanical step. Per `[[tool-starvation-anti-pattern]]` + `[[priority-architectural-first-and-cross-ai]]`.
+
+```
+forge orient                          # human-readable session brief
+forge orient --json                   # machine-readable for AI tool-use
+forge orient --for crates/forge-phases  # scope doctrine rules to a subtree
+forge orient --doctrine-dir <path>    # override AVP-Doctrine location
+```
+
+JSON output is the cross-AI consumable surface (Claude / Gemini / other agents). No agent-specific extensions; common schema.
+
+---
+
 ## Audit (out-of-pipeline, fast feedback)
 
 ### `forge audit <action>`

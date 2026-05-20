@@ -410,6 +410,39 @@ enum Cmd {
         #[arg(long, default_value_t = false)]
         json: bool,
     },
+    /// `forge orient` — session-start meta-tool for AI agents.
+    ///
+    /// Single command that prints everything an AI agent needs to make
+    /// good tool selections in this codebase: AGENTS.md location +
+    /// TOOLS.md location + applicable doctrine rules + active task
+    /// queue summary + canonical defaults + anti-pattern reminders.
+    ///
+    /// Per `[[priority-architectural-first-and-cross-ai]]` doctrine
+    /// + `[[tool-starvation-anti-pattern]]`: make the discipline
+    /// mechanical rather than aspirational. Reading AGENTS.md + TOOLS.md
+    /// + doctrine is the right thing to do at session start;
+    /// `forge orient` makes it one command.
+    ///
+    /// Designed to be cross-AI consumable (Claude, Gemini, other agents)
+    /// — JSON output mode per docs-008.
+    ///
+    /// Example:
+    ///   forge orient                    # human-readable session brief
+    ///   forge orient --json             # machine-readable for AI tool-use
+    ///   forge orient --for crates/forge-phases  # scope to a specific path
+    Orient {
+        /// Optional scope: a specific path within the workspace. Surfaces
+        /// the doctrine rules applicable to that path (via the same
+        /// matcher as `forge doctrine for`).
+        #[arg(long, value_name = "PATH")]
+        r#for: Option<PathBuf>,
+        /// Path to AVP-Doctrine root.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// JSON output (cross-AI consumable).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1012,6 +1045,13 @@ fn run() -> Result<ExitCode> {
             debounce_ms,
             max_rebuilds,
         }) => return run_watch(&root, *debounce_ms, *max_rebuilds),
+        Some(Cmd::Orient {
+            r#for,
+            doctrine_dir,
+            json,
+        }) => {
+            return run_orient(&root, r#for.as_deref(), doctrine_dir.as_deref(), *json);
+        }
         Some(Cmd::Build) | None => {}
     }
 
@@ -6890,6 +6930,212 @@ fn run_bypasses(
         Ok(ExitCode::SUCCESS)
     }
 }
+
+// ----------------------------------------------------------------
+// `forge orient` — task #152.
+//
+// Cross-AI session-start meta-tool. Prints a single brief that
+// answers: where are the affordances (AGENTS.md / TOOLS.md /
+// Makefile / skills/), what is Rule 0 (substrate-only-path),
+// which canonical defaults apply, which doctrine rules apply at
+// the scoped path, and what anti-patterns to avoid.
+//
+// Per [[priority-architectural-first-and-cross-ai]] +
+// [[tool-starvation-anti-pattern]]: replaces the aspirational
+// "read AGENTS.md, then TOOLS.md, then doctrine, then ..." with
+// one mechanical command. JSON output is cross-AI consumable
+// (Claude / Gemini / other agents).
+// ----------------------------------------------------------------
+
+fn run_orient(
+    forge_root: &std::path::Path,
+    scope: Option<&std::path::Path>,
+    doctrine_dir: Option<&std::path::Path>,
+    json: bool,
+) -> Result<ExitCode> {
+    let scope_path = scope.unwrap_or(forge_root);
+    let doctrine_dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+
+    // Affordance inventory: which files exist at the forge root.
+    let affordances = orient_affordances(forge_root);
+
+    // Doctrine context: rules applicable at the scope path.
+    let (doctrine_status, applicable_rules) = match doctrine_core::load_from_dir(&doctrine_dir) {
+        Ok(db) => {
+            let needles = path_context_needles(scope_path);
+            let mut matches: Vec<OrientRuleRef> = db
+                .all()
+                .iter()
+                .filter(|r| applies_to_matches(&r.applies_to, &needles))
+                .map(|r| OrientRuleRef {
+                    id: r.id.clone(),
+                    name: r.name.clone(),
+                    severity: severity_label(r.severity).to_string(),
+                    lifecycle: lifecycle_label(r.lifecycle).to_string(),
+                })
+                .collect();
+            matches.sort_by(|a, b| a.id.cmp(&b.id));
+            ("loaded", matches)
+        }
+        Err(e) => {
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status":"degraded",
+                        "stage":"load_doctrine",
+                        "error":e.to_string(),
+                        "doctrine_dir": doctrine_dir.display().to_string(),
+                    })
+                );
+                return Ok(ExitCode::from(1));
+            }
+            ("unavailable", Vec::<OrientRuleRef>::new())
+        }
+    };
+
+    if json {
+        let payload = serde_json::json!({
+            "status": "ok",
+            "scope": scope_path.display().to_string(),
+            "forge_root": forge_root.display().to_string(),
+            "doctrine": {
+                "dir": doctrine_dir.display().to_string(),
+                "status": doctrine_status,
+                "applicable_rules": applicable_rules,
+            },
+            "affordances": affordances,
+            "rule_zero": ORIENT_RULE_ZERO,
+            "canonical_defaults": ORIENT_CANONICAL_DEFAULTS,
+            "anti_patterns": ORIENT_ANTI_PATTERNS,
+            "skills_for_common_tasks": ORIENT_SKILL_MAP,
+        });
+        println!("{}", serde_json::to_string_pretty(&payload)?);
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    // Human-readable output.
+    println!("# forge orient — session brief\n");
+    println!("Scope:       {}", scope_path.display());
+    println!("Forge root:  {}", forge_root.display());
+    println!("Doctrine:    {} ({})\n", doctrine_dir.display(), doctrine_status);
+
+    println!("## Rule 0 — substrate-only-path");
+    println!("{}\n", ORIENT_RULE_ZERO);
+
+    println!("## Affordances (read these first)");
+    for (label, present) in &affordances {
+        let mark = if *present { "✓" } else { "·" };
+        println!("  {mark} {label}");
+    }
+    println!();
+
+    println!("## Canonical defaults");
+    for line in ORIENT_CANONICAL_DEFAULTS.lines() {
+        println!("  {line}");
+    }
+    println!();
+
+    println!("## Skills for common tasks");
+    for (task, skill) in ORIENT_SKILL_MAP {
+        println!("  {task:<28} → skills/{skill}/SKILL.md");
+    }
+    println!();
+
+    println!("## Anti-patterns (do NOT do these)");
+    for line in ORIENT_ANTI_PATTERNS.lines() {
+        println!("  {line}");
+    }
+    println!();
+
+    println!(
+        "## Doctrine rules applicable to {} ({} rules)",
+        scope_path.display(),
+        applicable_rules.len()
+    );
+    if applicable_rules.is_empty() {
+        println!("  (no rules match this scope — try `forge doctrine query --domain <name>`)");
+    } else {
+        for r in &applicable_rules {
+            println!(
+                "  {} — {}  [{}/{}]",
+                r.id, r.name, r.severity, r.lifecycle
+            );
+        }
+    }
+    println!();
+
+    println!("Next step: `forge doctrine for {} --terse` for citation-ready rule list.", scope_path.display());
+
+    Ok(ExitCode::SUCCESS)
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+struct OrientRuleRef {
+    id: String,
+    name: String,
+    severity: String,
+    lifecycle: String,
+}
+
+/// Inventory of affordance files at the forge root. The display name
+/// is paired with whether the file currently exists.
+fn orient_affordances(forge_root: &std::path::Path) -> Vec<(String, bool)> {
+    let candidates = [
+        "AGENTS.md",
+        "TOOLS.md",
+        "Makefile",
+        "skills/README.md",
+        "docs/CAPABILITY_REQUEST_WORKFLOW.md",
+        ".github/ISSUE_TEMPLATE/capability-request.yml",
+        "bypass-register.toml",
+        "templates/README.md",
+    ];
+    candidates
+        .iter()
+        .map(|name| {
+            let exists = forge_root.join(name).exists();
+            ((*name).to_string(), exists)
+        })
+        .collect()
+}
+
+const ORIENT_RULE_ZERO: &str = concat!(
+    "Hand-coding HTML / CSS / JS in site repos is forbidden. Every gap is a substrate ",
+    "change: file a capability-request, extend Loom (primitive/variant), extend Forge (phase), ",
+    "or extend doctrine. The substrate_purity phase enforces this. ",
+    "See SUBSTRATE_DISCIPLINE.md."
+);
+
+const ORIENT_CANONICAL_DEFAULTS: &str = "\
+HTTP service     : axum + tokio + tower
+Async runtime    : tokio (multi-thread)
+DB               : sqlx (compile-time-checked)
+HTML/templating  : maud (typed, compile-time)
+Serialization    : serde + deny_unknown_fields at every input boundary
+Crypto signing   : ed25519-dalek + ML-DSA (post-quantum) where dual-stack
+CLI              : clap (derive)
+Errors           : anyhow (binaries) / thiserror (library boundary)
+Property tests   : proptest
+Logging          : tracing + structured JSON output
+Forbid           : unsafe_code (forge crates), unwrap/expect outside tests";
+
+const ORIENT_ANTI_PATTERNS: &str = "\
+✗ curl + cp into static/ — Forge phase substrate_purity will flag
+✗ inline <style> or hand-authored .css — extend loom-tokens skin.css
+✗ ad-hoc String enums — closed enum + serde rename_all
+✗ raw px/hex/rgb in content — use loom-token vars
+✗ adding ProjectXFoo primitives — generalize to variants (rule prim-012)
+✗ skipping AGENTS.md / TOOLS.md / make help on session start
+✗ bash/grep before forge / loom / make / mcp — tool starvation";
+
+const ORIENT_SKILL_MAP: &[(&str, &str)] = &[
+    ("Add a Forge phase",       "add-forge-phase"),
+    ("Add a Loom primitive",    "add-loom-primitive"),
+    ("Author CMS content",      "author-cms-content"),
+    ("Reproduce a live site",   "pixel-reproduce-site"),
+    ("Extend doctrine rules",   "extend-doctrine-rules"),
+];
 
 /// Walk `root` for `// SUBSTRATE-BYPASS(<id>): <reason>` tags in .rs
 /// files. Returns one BypassTag per occurrence.

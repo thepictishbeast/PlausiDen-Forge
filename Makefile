@@ -106,6 +106,10 @@ doctrine-lifecycle: release ## Audit rule lifecycle (experimental / stable / dep
 bypasses: release ## Substrate-bypass register cross-reference.
 	$(FORGE) bypasses
 
+.PHONY: orient
+orient: release ## Session-start meta-tool: affordances + Rule 0 + canonical defaults + scoped doctrine.
+	$(FORGE) orient
+
 .PHONY: audit-secrets
 audit-secrets: release ## Scan staged changes for credential leaks.
 	$(FORGE) audit secrets --explain
