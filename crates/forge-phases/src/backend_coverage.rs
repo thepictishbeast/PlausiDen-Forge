@@ -26,11 +26,17 @@ impl Phase for BackendCoveragePhase {
         let backends_path = ctx.root.join("backends.toml");
         let mut findings = Vec::new();
         if !backends_path.exists() {
-            findings.push(Finding::warn(
-                self.name(),
-                "*",
-                "no backends.toml — UI ↔ backend mapping unverified",
-            ));
+            findings.push(
+                Finding::warn(
+                    self.name(),
+                    "*",
+                    "no backends.toml — UI ↔ backend mapping unverified",
+                )
+                .citing(["sec-007"])
+                .why("without backends.toml the phantom_button + backend_coverage gates can't enforce capability declarations; UI buttons without backing data-backend slugs ship silently broken")
+                .fix("create `backends.toml` at the project root with one `[[backend]] id = \"...\" kind = \"...\" endpoint = \"...\"` entry per UI affordance that needs server wiring")
+                .skill("author-cms-content"),
+            );
             return Ok(findings);
         }
         let toml_text = fs::read_to_string(&backends_path).map_err(|e| BuildError::Io {
@@ -51,18 +57,34 @@ impl Phase for BackendCoveragePhase {
 
         for name in &declared {
             if !all_refs.contains(name) {
-                findings.push(Finding::warn(
-                    self.name(),
-                    "backends.toml",
-                    format!("[{name}] declared but no UI references it (dead spec)"),
-                ));
+                findings.push(
+                    Finding::warn(
+                        self.name(),
+                        "backends.toml",
+                        format!("[{name}] declared but no UI references it (dead spec)"),
+                    )
+                    .citing(["sec-007"])
+                    .why("a backend declared but unused signals either a deleted UI affordance that left the spec behind, or a planned UI that was never wired. Either way: dead spec drift")
+                    .fix(format!(
+                        "either: (a) remove [[backend]] id = \"{name}\" from backends.toml if the UI affordance is gone, OR (b) wire a UI element with `data-backend=\"{name}\"` if the spec is still planned"
+                    ))
+                    .skill("author-cms-content"),
+                );
             }
             if stubs.contains(name) {
-                findings.push(Finding::warn(
-                    self.name(),
-                    "backends.toml",
-                    format!("[{name}] declared but impl_files is empty (PARTIAL — stub)"),
-                ));
+                findings.push(
+                    Finding::warn(
+                        self.name(),
+                        "backends.toml",
+                        format!("[{name}] declared but impl_files is empty (PARTIAL — stub)"),
+                    )
+                    .citing(["sec-007"])
+                    .why("a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to")
+                    .fix(format!(
+                        "populate impl_files for [{name}] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned"
+                    ))
+                    .skill("author-cms-content"),
+                );
             }
         }
         Ok(findings)

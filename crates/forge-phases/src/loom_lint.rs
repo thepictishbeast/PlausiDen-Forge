@@ -55,23 +55,36 @@ fn violation_to_finding(phase: &'static str, v: &CssViolation) -> Finding {
             phase,
             path_display,
             format!(
-                "{line}: raw colour literal — wrap in var(--loom-color-*) or move to :root: {matched}"
+                "{line}: raw colour literal: {matched}"
             ),
-        ),
+        )
+        .citing(["prim-007"])
+        .why("raw color literals bypass loom-tokens' theme cascade; primitives that hard-code colors don't render correctly in light + dark + amoled themes")
+        .fix(format!("wrap `{matched}` in `var(--loom-color-*)` or define the color as a token in loom-tokens/src/skin.css and reference it"))
+        .skill("add-loom-primitive")
+        .avoid("don't edit the static/loom-skin.css output — it's a build artifact regenerated from loom-tokens source"),
         CssViolationKind::RawSpacing => Finding::warn(
             phase,
             path_display,
             format!(
-                "{line}: raw spacing literal — consider var(--loom-space-*): {matched}"
+                "{line}: raw spacing literal: {matched}"
             ),
-        ),
+        )
+        .citing(["prim-007"])
+        .why("raw spacing values (px / em / pt) bypass the loom-space-* scale; primitives lose responsive + density-aware behavior")
+        .fix(format!("use `var(--loom-space-N)` (N = 0..16 on the canonical scale) in place of `{matched}`"))
+        .skill("add-loom-primitive"),
         CssViolationKind::RawTime => Finding::warn(
             phase,
             path_display,
             format!(
-                "{line}: raw time literal — consider var(--loom-motion-*): {matched}"
+                "{line}: raw time literal: {matched}"
             ),
-        ),
+        )
+        .citing(["prim-007"])
+        .why("raw time values bypass loom-motion tokens; primitives don't respect prefers-reduced-motion + tenant-level motion overrides")
+        .fix(format!("use `var(--loom-motion-duration-*)` or `var(--loom-motion-ease-*)` in place of `{matched}`"))
+        .skill("add-loom-primitive"),
     }
 }
 

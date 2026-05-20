@@ -47,19 +47,33 @@ impl Phase for TokensPhase {
             // 1. Raw px values (excluding common SVG fragment sizes).
             let bad_px: Vec<String> = scan_px(&body_no_decls);
             if !bad_px.is_empty() {
-                findings.push(Finding::warn(
-                    self.name(),
-                    file.name.clone(),
-                    format!("raw px values: {}", bad_px.join(" ")),
-                ));
+                findings.push(
+                    Finding::warn(
+                        self.name(),
+                        file.name.clone(),
+                        format!("raw px values: {}", bad_px.join(" ")),
+                    )
+                    .citing(["prim-007"])
+                    .why("raw px values bypass loom-tokens' theme cascade; a primitive that hard-codes px doesn't respond to user preferences (font scale, density, prefers-reduced-motion implications)")
+                    .fix("replace each raw px with a `var(--loom-space-N)` reference. If no token exists for the desired value, file a capability-request to extend loom-tokens — never inline the literal")
+                    .skill("add-loom-primitive")
+                    .avoid("don't sed-replace px → rem in static/ output — the file is build-emitted; fix in PlausiDen-Loom/loom-tokens/src/skin.css"),
+                );
             }
             // 2. Raw hex colors anywhere except meta CSP + SVG.
             if scan_hex_outside_svg_csp(&body_no_decls) {
-                findings.push(Finding::warn(
-                    self.name(),
-                    file.name.clone(),
-                    "raw hex color in HTML",
-                ));
+                findings.push(
+                    Finding::warn(
+                        self.name(),
+                        file.name.clone(),
+                        "raw hex color in HTML",
+                    )
+                    .citing(["prim-007"])
+                    .why("raw hex colors bypass the theme system; the same primitive can't render correctly in light + dark + amoled themes")
+                    .fix("use a loom-tokens color variable: `var(--loom-color-accent)` / `var(--loom-color-text-primary)` / etc. Define new colors in loom-tokens skin.css, not inline")
+                    .skill("add-loom-primitive")
+                    .avoid("don't add the hex to a CSS-in-JS string or to inline style attribute — both bypass the theme cascade"),
+                );
             }
         }
 
