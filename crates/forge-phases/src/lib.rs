@@ -62,5 +62,6 @@ pub mod substrate_purity;
 pub mod theme_consistency;
 pub mod theme_contrast;
 pub mod tokens;
+pub mod trait_consistency;
 pub mod unbuilt_route;
 pub mod validate_cms;

@@ -577,6 +577,151 @@ pub fn render_markdown_catalog() -> String {
     out
 }
 
+/// Entity class for the substrate's default-required-trait table
+/// per `TRAIT_DAG.md` § Default-required traits per entity class.
+///
+/// The class determines which trait set the manifest consistency
+/// check (`verify_projection`) enforces.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+pub enum EntityClass {
+    /// Loom primitive declared as Visible. Requires the 8
+    /// default-required traits returned by
+    /// `Trait::loom_visible_defaults()`.
+    LoomVisiblePrimitive,
+    /// Loom primitive declared as both Visible and Interactive.
+    /// Requires `loom_visible_defaults()` + the 3 cascade traits
+    /// from `loom_interactive_defaults()`.
+    LoomInteractivePrimitive,
+    /// CMS section. Requires NoSiteSpecific + Manifested + Versioned.
+    CmsSection,
+    /// Forge audit phase. Requires DoctrineCited + PropertyTested +
+    /// FailsClosed.
+    ForgePhase,
+    /// Crawler runtime detector. Requires Manifested + PropertyTested
+    /// + RegressionFixtured.
+    CrawlerDetector,
+    /// `*-core` typed-surface crate. Requires Manifested + Versioned +
+    /// PropertyTested + FailsClosed.
+    CoreType,
+}
+
+impl EntityClass {
+    /// Default-required trait set for this entity class per
+    /// `TRAIT_DAG.md`. The manifest consistency check refuses any
+    /// projection that omits any of these traits.
+    #[must_use]
+    pub fn required_traits(self) -> Vec<Trait> {
+        match self {
+            Self::LoomVisiblePrimitive => Trait::loom_visible_defaults().to_vec(),
+            Self::LoomInteractivePrimitive => {
+                let mut v = Trait::loom_visible_defaults().to_vec();
+                v.extend_from_slice(Trait::loom_interactive_defaults());
+                v
+            }
+            Self::CmsSection => vec![
+                Trait::NoSiteSpecific,
+                Trait::Manifested,
+                Trait::Versioned,
+            ],
+            Self::ForgePhase => vec![
+                Trait::DoctrineCited,
+                Trait::PropertyTested,
+                Trait::FailsClosed,
+            ],
+            Self::CrawlerDetector => vec![
+                Trait::Manifested,
+                Trait::PropertyTested,
+                Trait::RegressionFixtured,
+            ],
+            Self::CoreType => vec![
+                Trait::Manifested,
+                Trait::Versioned,
+                Trait::PropertyTested,
+                Trait::FailsClosed,
+            ],
+        }
+    }
+}
+
+/// A single entity's trait declaration projected into the manifest.
+/// Per `[[manifest-layer-is-the-keystone]]`: traits project through
+/// the manifest, not duplicated in Rust source. Closes part of
+/// `#171 [trait-v6]`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TraitProjection {
+    /// Stable entity slug (e.g. "Loom.Primitive.Hero" or
+    /// "Forge.Phase.Contrast"). Matches the `object` field of an
+    /// `OrientationProjection` for the same entity.
+    pub entity_id: String,
+    /// The entity class — determines which default-required trait
+    /// set the consistency check enforces.
+    pub entity_class: EntityClass,
+    /// Declared traits.
+    pub traits: TraitSet,
+}
+
+/// A trait that the entity's class requires but the projection
+/// did not declare. Surfaced by `verify_projection`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MissingTrait {
+    /// The required trait that was missing.
+    pub required: Trait,
+    /// The entity_id (copied for batched audit reports).
+    pub entity_id: String,
+}
+
+/// Verify a projection against its entity-class default-required
+/// trait set. Returns the list of missing traits; empty Vec = ok.
+///
+/// Closes part of `#171 [trait-v6]`. Used by the Forge
+/// `trait_consistency` phase to refuse manifests that don't
+/// satisfy the class invariants.
+#[must_use]
+pub fn verify_projection(p: &TraitProjection) -> Vec<MissingTrait> {
+    let required = p.entity_class.required_traits();
+    required
+        .into_iter()
+        .filter(|t| !p.traits.contains(*t))
+        .map(|required| MissingTrait {
+            required,
+            entity_id: p.entity_id.clone(),
+        })
+        .collect()
+}
+
+/// The full trait manifest — every entity's projection.
+/// Per `[[manifest-layer-is-the-keystone]]`: this is THE canonical
+/// projection for trait declarations across the platform.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TraitManifest {
+    /// Manifest version for backcompat per VERSION_DISCIPLINE.md.
+    /// Defaults to "1.0.0" if absent on read.
+    #[serde(default = "default_manifest_version")]
+    pub schema_version: String,
+    /// All entity projections.
+    #[serde(default)]
+    pub projections: Vec<TraitProjection>,
+}
+
+fn default_manifest_version() -> String {
+    "1.0.0".into()
+}
+
+/// Audit the whole manifest. Returns the flattened list of missing
+/// traits across every projection; empty Vec = clean.
+#[must_use]
+pub fn verify_manifest(m: &TraitManifest) -> Vec<MissingTrait> {
+    let mut missing = Vec::new();
+    for p in &m.projections {
+        missing.extend(verify_projection(p));
+    }
+    missing
+}
+
 /// A set of traits an entity declares. Wraps `Vec<Trait>` with
 /// helpers for subset / superset queries used by Forge audit
 /// phases ("does this primitive satisfy the Loom Visible defaults?").
@@ -868,5 +1013,164 @@ mod tests {
         let a = render_markdown_catalog();
         let b = render_markdown_catalog();
         assert_eq!(a, b);
+    }
+
+    // -----------------------------------------------------------------
+    // Manifest projection + consistency check tests — task #171
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn entity_class_loom_visible_returns_eight_defaults() {
+        let req = EntityClass::LoomVisiblePrimitive.required_traits();
+        assert_eq!(req.len(), 8);
+        for t in Trait::loom_visible_defaults() {
+            assert!(req.contains(t));
+        }
+    }
+
+    #[test]
+    fn entity_class_loom_interactive_returns_eleven() {
+        // Cascade: 8 Visible defaults + 3 Interactive cascade = 11.
+        let req = EntityClass::LoomInteractivePrimitive.required_traits();
+        assert_eq!(req.len(), 11);
+        assert!(req.contains(&Trait::Focusable));
+        assert!(req.contains(&Trait::KeyboardOperable));
+        assert!(req.contains(&Trait::ScreenReaderAccessible));
+        // Visible defaults still present.
+        assert!(req.contains(&Trait::MobileFriendly));
+    }
+
+    #[test]
+    fn verify_projection_clean_when_all_required_declared() {
+        let p = TraitProjection {
+            entity_id: "Loom.Primitive.Hero".into(),
+            entity_class: EntityClass::LoomVisiblePrimitive,
+            traits: TraitSet::from_slice(Trait::loom_visible_defaults()),
+        };
+        let missing = verify_projection(&p);
+        assert!(
+            missing.is_empty(),
+            "expected clean, got missing: {missing:?}"
+        );
+    }
+
+    #[test]
+    fn verify_projection_reports_missing_required_traits() {
+        let p = TraitProjection {
+            entity_id: "Loom.Primitive.SloppyHero".into(),
+            entity_class: EntityClass::LoomVisiblePrimitive,
+            traits: TraitSet::from_slice(&[
+                Trait::MobileFriendly,
+                Trait::RtlAware,
+                // missing six others including ReducedMotionAware
+            ]),
+        };
+        let missing = verify_projection(&p);
+        // Six required traits missing.
+        assert_eq!(missing.len(), 6);
+        let missing_traits: Vec<Trait> = missing.iter().map(|m| m.required).collect();
+        assert!(missing_traits.contains(&Trait::ReducedMotionAware));
+        assert!(missing_traits.contains(&Trait::ThemeAware));
+        assert!(missing_traits.contains(&Trait::DoctrineCited));
+        // Each MissingTrait carries the entity_id for batched reports.
+        for m in &missing {
+            assert_eq!(m.entity_id, "Loom.Primitive.SloppyHero");
+        }
+    }
+
+    #[test]
+    fn verify_projection_handles_each_entity_class() {
+        // Forge phase needs 3 traits.
+        let phase = TraitProjection {
+            entity_id: "Forge.Phase.Contrast".into(),
+            entity_class: EntityClass::ForgePhase,
+            traits: TraitSet::from_slice(&[
+                Trait::DoctrineCited,
+                Trait::PropertyTested,
+                Trait::FailsClosed,
+            ]),
+        };
+        assert!(verify_projection(&phase).is_empty());
+
+        // CmsSection needs 3 traits.
+        let section = TraitProjection {
+            entity_id: "Cms.Section.PullQuote".into(),
+            entity_class: EntityClass::CmsSection,
+            traits: TraitSet::from_slice(&[
+                Trait::NoSiteSpecific,
+                Trait::Manifested,
+                Trait::Versioned,
+            ]),
+        };
+        assert!(verify_projection(&section).is_empty());
+
+        // CrawlerDetector missing one.
+        let detector = TraitProjection {
+            entity_id: "Crawler.Detector.Contrast".into(),
+            entity_class: EntityClass::CrawlerDetector,
+            traits: TraitSet::from_slice(&[Trait::Manifested, Trait::PropertyTested]),
+        };
+        let missing = verify_projection(&detector);
+        assert_eq!(missing.len(), 1);
+        assert_eq!(missing[0].required, Trait::RegressionFixtured);
+    }
+
+    #[test]
+    fn verify_manifest_aggregates_missing_across_entities() {
+        let m = TraitManifest {
+            schema_version: "1.0.0".into(),
+            projections: vec![
+                TraitProjection {
+                    entity_id: "Loom.Primitive.Clean".into(),
+                    entity_class: EntityClass::LoomVisiblePrimitive,
+                    traits: TraitSet::from_slice(Trait::loom_visible_defaults()),
+                },
+                TraitProjection {
+                    entity_id: "Loom.Primitive.Sloppy".into(),
+                    entity_class: EntityClass::LoomVisiblePrimitive,
+                    traits: TraitSet::from_slice(&[Trait::MobileFriendly]),
+                },
+            ],
+        };
+        let missing = verify_manifest(&m);
+        // Sloppy is missing 7; Clean missing 0. So 7 total.
+        assert_eq!(missing.len(), 7);
+        for m in &missing {
+            assert_eq!(m.entity_id, "Loom.Primitive.Sloppy");
+        }
+    }
+
+    #[test]
+    fn manifest_serde_roundtrips_with_version_and_projections() {
+        let m = TraitManifest {
+            schema_version: "1.0.0".into(),
+            projections: vec![TraitProjection {
+                entity_id: "Loom.Primitive.Hero".into(),
+                entity_class: EntityClass::LoomVisiblePrimitive,
+                traits: TraitSet::from_slice(&[Trait::MobileFriendly, Trait::Versioned]),
+            }],
+        };
+        let json = serde_json::to_string(&m).expect("serialize");
+        let back: TraitManifest = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.schema_version, "1.0.0");
+        assert_eq!(back.projections.len(), 1);
+        assert_eq!(back.projections[0].entity_id, "Loom.Primitive.Hero");
+    }
+
+    #[test]
+    fn manifest_deserialize_supplies_default_version() {
+        // Per VERSION_DISCIPLINE.md additive change: omitting
+        // schema_version reads as 1.0.0 (the only released schema).
+        let json = r#"{"projections":[]}"#;
+        let m: TraitManifest = serde_json::from_str(json).expect("deserialize");
+        assert_eq!(m.schema_version, "1.0.0");
+        assert!(m.projections.is_empty());
+    }
+
+    #[test]
+    fn manifest_rejects_unknown_field() {
+        let json = r#"{"schema_version":"1.0.0","made_up":"x"}"#;
+        let r: Result<TraitManifest, _> = serde_json::from_str(json);
+        assert!(r.is_err());
     }
 }

@@ -8,6 +8,9 @@ license.workspace = true
 
 [dependencies]
 forge-core = { path = "../forge-core" }
+# loom-traits (task #167): typed projection of the trait DAG.
+# Consumed by trait_consistency phase (#171) to verify the manifest.
+loom-traits = { path = "../loom-traits" }
 sha2 = { workspace = true }
 base64 = { workspace = true }
 thiserror = { workspace = true }
