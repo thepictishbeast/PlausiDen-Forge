@@ -63,10 +63,13 @@ use forge_phases::render::RenderPhase;
 use forge_phases::required_pages::RequiredPagesPhase;
 use forge_phases::self_check::SelfCheckPhase;
 use forge_phases::seo::SeoPhase;
+use forge_phases::semver_enforcement::SemverEnforcementPhase;
 use forge_phases::sri::SriPhase;
 use forge_phases::structured_data::StructuredDataPhase;
 use forge_phases::substrate_purity::SubstratePurityPhase;
 use forge_phases::theme_consistency::ThemeConsistencyPhase;
+use forge_phases::trait_consistency::TraitConsistencyPhase;
+use forge_phases::trait_implications::TraitImplicationsPhase;
 use forge_phases::theme_contrast::ThemeContrastPhase;
 use forge_phases::tokens::TokensPhase;
 use forge_phases::unbuilt_route::UnbuiltRoutePhase;
@@ -1145,6 +1148,23 @@ fn run() -> Result<ExitCode> {
         // prim-006. Per [[substrate-only-path]]: every gap is
         // a substrate change.
         Box::new(SubstratePurityPhase),
+        // phase_semver_enforcement (task #138): verify every
+        // PlausiDen artifact carries a well-formed version field.
+        // Walks forge.toml [platform] block, backends.toml
+        // schema_version, cms/*.json version field, and
+        // mcp/manifest.json. Per AVP-Doctrine
+        // VERSION_DISCIPLINE.md.
+        Box::new(SemverEnforcementPhase),
+        // phase_trait_consistency (task #171): read
+        // trait-manifest.{toml,json} at project root + verify
+        // every entity declares its entity-class default-required
+        // trait set. Silent skip when no manifest present (pre-
+        // migration sites aren't gated).
+        Box::new(TraitConsistencyPhase),
+        // phase_trait_implications (task #169): same manifest,
+        // verify implication structure + mutual-exclusion pairs
+        // (e.g. `local` → `private`; `client-only` ⊕ `server-only`).
+        Box::new(TraitImplicationsPhase),
         // T70c (2026-05-14): regenerate static HTML from cms/*.json
         // BEFORE every lint phase runs. Without this, edits to
         // cms/ or to loom-cms-render's page_shell don't show up
