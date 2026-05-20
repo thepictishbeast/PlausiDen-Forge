@@ -223,6 +223,39 @@ pixel-rep-diff: ## Print a compact diff of two manifests written by pixel-rep. R
 PIXEL_REP_DIFF_OUT      ?= $(CRAWLER_REPO_DIR)/runs/$(PIXEL_REP_SLUG)-diff
 PIXEL_REP_FUZZ          ?= 5%
 
+.PHONY: pixel-rep-rotation
+pixel-rep-rotation: ## Walk every captured slug under runs/ + print a rotation summary table.
+	@printf '\n\033[1mpixel-rep rotation summary\033[0m\n  (every <slug>+<slug>-forge pair in $(CRAWLER_REPO_DIR)/runs/)\n\n'
+	@printf '  %-24s %-6s %-6s %-6s\n' 'slug' '390' '768' '1280'
+	@printf '  %-24s %-6s %-6s %-6s\n' '----' '---' '---' '----'
+	@for live_dir in $(CRAWLER_REPO_DIR)/runs/*/; do \
+	    slug=$$(basename $$live_dir); \
+	    case "$$slug" in *-forge|*-diff) continue ;; esac; \
+	    forge_dir=$(CRAWLER_REPO_DIR)/runs/$$slug-forge; \
+	    [ -d $$forge_dir ] || continue; \
+	    cols=""; \
+	    for vp in 390 768 1280; do \
+	        live_png=$$live_dir/$$vp.png; \
+	        forge_png=$$forge_dir/$$vp.png; \
+	        if [ -f $$live_png ] && [ -f $$forge_png ]; then \
+	            live_h=$$(magick identify -format '%h' $$live_png 2>/dev/null); \
+	            forge_canvas=/tmp/pixel-rep-canvas-$$$$.png; \
+	            magick $$forge_png -gravity north -background white \
+	                -extent $${vp}x$$live_h $$forge_canvas 2>/dev/null; \
+	            ae=$$(magick compare -metric AE -fuzz $(PIXEL_REP_FUZZ) \
+	                  $$live_png $$forge_canvas null: 2>&1); \
+	            total=$$(awk "BEGIN { print $$vp * $$live_h }"); \
+	            pct=$$(awk "BEGIN { printf \"%.0f\", $$ae * 100 / $$total }"); \
+	            cols=$$(printf '%s %5s%%' "$$cols" "$$pct"); \
+	            rm -f $$forge_canvas; \
+	        else \
+	            cols=$$(printf '%s %5s ' "$$cols" "-"); \
+	        fi; \
+	    done; \
+	    printf '  %-24s%s\n' $$slug "$$cols"; \
+	done
+	@printf '\n  (lower %% = closer pixel match between live and Forge mirror)\n\n'
+
 .PHONY: pixel-rep-visual-diff
 pixel-rep-visual-diff: ## Visual pixel-diff via ImageMagick. Emits diff PNGs + AE counts.
 	@command -v magick >/dev/null 2>&1 || (echo "ImageMagick not installed (need 'magick' on PATH)" && exit 2)
