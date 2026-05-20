@@ -217,6 +217,49 @@ Auto-apply mechanical findings from latest build report.
 
 ---
 
+## Codegen (complete-Rust-stack runtime generator)
+
+### `forge codegen --dry-run`
+Walks `cms/*.json` + `backends.toml`, prints the planned generated-crate file set + stage summary. Use to preview before writing.
+
+### `forge codegen --out <DIR>`
+Generates a complete Cargo crate that turns every CmsPage into a typed `async fn render_<slug>() -> Html<String>` handler. axum + tokio + serde + loom-cms-render stack. Five stages (handler-scaffold, router-assembly, crate-manifest, persistence-layer, smoke-tests). Generated crate is self-verifying — `cargo test` on the output runs one smoke test per page proving every route returns 200 + non-empty body.
+
+Options:
+- `--crate-name <NAME>` override (default: project root basename, kebab-cased)
+- `--dry-run` print plan only, don't write
+
+See `crates/forge-codegen/src/lib.rs` for the stage shapes.
+
+---
+
+## Pixel reproduction (Forge #218 / rotation work)
+
+These targets live in the Makefile, not `forge` itself, because they wrap multiple binaries (Crawler + ImageMagick).
+
+### `make pixel-rep`
+Capture live URL + local Forge mirror at 390/768/1280px via Crawler's `--capture-reference`. Outputs land under `../PlausiDen-Crawler/runs/<slug>/` (live) and `<slug>-forge/` (mirror).
+
+Overrides:
+- `PIXEL_REP_SLUG=stripe`
+- `PIXEL_REP_SITE_URL=https://stripe.com/`
+- `PIXEL_REP_FORGE_PATH=/stripe.html` (default `/`)
+
+End-to-end cycle on prosperity-club: ~17 seconds.
+
+### `make pixel-rep-diff SLUG=<slug>`
+Compact file-size delta table for a captured slug.
+
+### `make pixel-rep-visual-diff SLUG=<slug>`
+ImageMagick `compare -metric AE -fuzz 5%` against the captured pair. Emits diff PNGs with red-overlay marking changed pixels + per-viewport pixel-diff count + % of live area.
+
+### `make pixel-rep-rotation`
+Walks every `<slug>+<slug>-forge` pair under `runs/` and prints a compact per-site pixel-diff summary table. Auto-updates as new captures land.
+
+Per-site analysis docs live in `docs/PIXEL_REP_<SLUG>.md`. Rotation summary doc: `docs/PIXEL_REP_ROTATION.md`.
+
+---
+
 ## Global flags
 
 Apply to every subcommand:
