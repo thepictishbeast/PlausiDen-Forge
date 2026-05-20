@@ -886,6 +886,34 @@ enum DoctrineAction {
         #[arg(long, default_value_t = false)]
         json: bool,
     },
+    /// Audit `.citing(...)` references in the workspace for citations
+    /// of deprecated rules. Per AVP-Doctrine `VERSION_DISCIPLINE.md` §
+    /// Lifecycle of a deprecation: deprecated rules emit a warning
+    /// when cited (the "flag" phase before "require" lands in the
+    /// next major release).
+    ///
+    /// Walks the same source tree as `forge doctrine check` and looks
+    /// up each cited rule's lifecycle. Citations of `Deprecated`
+    /// rules emit one warning per site with advocacy pointing at
+    /// `replaced_by` if present.
+    ///
+    /// Exit codes:
+    ///   0 — no citations of deprecated rules
+    ///   1 — at least one citation of a deprecated rule (warning)
+    ///   2 — fatal (doctrine dir / parse error)
+    ///
+    /// Closes task #142 (backcompat-v6).
+    DeprecationAudit {
+        /// Path to AVP-Doctrine root.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// Directory to scan for `.citing([...])` patterns.
+        #[arg(long)]
+        source_dir: Option<PathBuf>,
+        /// JSON output (cross-AI consumable per docs-008).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -5533,6 +5561,135 @@ fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result
             *json,
             forge_root,
         ),
+        DoctrineAction::DeprecationAudit {
+            doctrine_dir,
+            source_dir,
+            json,
+        } => run_doctrine_deprecation_audit(
+            doctrine_dir.as_deref(),
+            source_dir.as_deref(),
+            *json,
+            forge_root,
+        ),
+    }
+}
+
+// ----------------------------------------------------------------
+// `forge doctrine deprecation-audit` — task #142.
+//
+// Walks `.citing([...])` references in the workspace; for each
+// citation, looks up the rule's lifecycle; emits a warning per
+// citation of a Deprecated rule. Per VERSION_DISCIPLINE.md
+// § Lifecycle of a deprecation flag-phase: deprecated rules
+// surface as warnings before next-major refusal.
+// ----------------------------------------------------------------
+
+fn run_doctrine_deprecation_audit(
+    doctrine_dir: Option<&std::path::Path>,
+    source_dir: Option<&std::path::Path>,
+    json: bool,
+    forge_root: &std::path::Path,
+) -> Result<ExitCode> {
+    let dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+    let db = match doctrine_core::load_from_dir(&dir) {
+        Ok(d) => d,
+        Err(e) => {
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status":"fatal",
+                        "stage":"load_database",
+                        "error":e.to_string(),
+                    })
+                );
+            } else {
+                eprintln!("forge doctrine deprecation-audit: failed to load doctrine — {e}");
+            }
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    let scan_root = source_dir
+        .map(std::path::Path::to_path_buf)
+        .unwrap_or_else(|| forge_root.join("crates"));
+    let citations = collect_citations(&scan_root);
+
+    // For each citation, look up the rule + check lifecycle.
+    #[derive(serde::Serialize)]
+    struct DeprecatedCitation<'a> {
+        file: String,
+        line: usize,
+        rule_id: &'a str,
+        deprecated_at: Option<&'a str>,
+        replaced_by: Option<&'a str>,
+    }
+
+    let mut deprecated_citations: Vec<DeprecatedCitation> = Vec::new();
+    for c in &citations {
+        let Some(rule) = db.by_id(&c.rule_id) else {
+            // Orphan citations are doctrine check's problem.
+            continue;
+        };
+        if rule.lifecycle == doctrine_core::Lifecycle::Deprecated {
+            deprecated_citations.push(DeprecatedCitation {
+                file: c.file.display().to_string(),
+                line: c.line,
+                rule_id: &c.rule_id,
+                deprecated_at: rule.deprecated_at.as_deref(),
+                replaced_by: rule.replaced_by.as_deref(),
+            });
+        }
+    }
+
+    if json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": if deprecated_citations.is_empty() { "ok" } else { "warn" },
+                "scan_root": scan_root.display().to_string(),
+                "doctrine_dir": dir.display().to_string(),
+                "citations_scanned": citations.len(),
+                "deprecated_citations": deprecated_citations,
+            })
+        );
+    } else if deprecated_citations.is_empty() {
+        println!(
+            "forge doctrine deprecation-audit: clean — scanned {} citation(s); no deprecated rules cited",
+            citations.len()
+        );
+    } else {
+        println!(
+            "forge doctrine deprecation-audit: {} deprecated citation(s) (of {} total scanned)",
+            deprecated_citations.len(),
+            citations.len()
+        );
+        for d in &deprecated_citations {
+            print!(
+                "  {}:{} cites `{}` (deprecated",
+                d.file, d.line, d.rule_id
+            );
+            if let Some(t) = d.deprecated_at {
+                print!(" at {t}");
+            }
+            print!(")");
+            if let Some(r) = d.replaced_by {
+                print!(" → replace with `{r}`");
+            }
+            println!();
+        }
+        println!();
+        println!("Per VERSION_DISCIPLINE.md § Lifecycle of a deprecation:");
+        println!(
+            "  These are 'flag' phase findings. Next major release will refuse citations \
+             of these rules. Migrate now."
+        );
+    }
+
+    if deprecated_citations.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
     }
 }
 
