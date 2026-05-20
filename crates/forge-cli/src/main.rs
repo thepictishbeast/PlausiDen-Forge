@@ -44,6 +44,7 @@ use forge_phases::dynamic_runtime::DynamicRuntimePhase;
 use forge_phases::editorial_purity_gate::EditorialPurityGatePhase;
 use forge_phases::composition_lineage::CompositionLineagePhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
+use forge_phases::forbidden_patterns::ForbiddenPatternsPhase;
 use forge_phases::mood_lock::MoodLockPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
@@ -1356,6 +1357,7 @@ fn run() -> Result<ExitCode> {
         Box::new(VoiceProfileAuditPhase::default()),
         Box::new(MoodLockPhase::default()),
         Box::new(CompositionLineagePhase::default()),
+        Box::new(ForbiddenPatternsPhase::default()),
         Box::new(PatternEntropyPhase::default()),
         Box::new(UniquenessGatePhase::default()),
         // T52 (2026-05-06): runtime audit runs LAST. Build-

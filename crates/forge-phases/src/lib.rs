@@ -24,6 +24,7 @@ pub mod density_audit;
 pub mod disclosure_audit;
 pub mod composition_lineage;
 pub mod editorial_purity_gate;
+pub mod forbidden_patterns;
 pub mod mood_lock;
 pub mod pattern_entropy;
 pub mod site_identity_conformance;
