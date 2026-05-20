@@ -116,6 +116,24 @@ pub struct PrimitiveOccurrence {
     pub page: String,
 }
 
+impl PrimitiveOccurrence {
+    /// Construct a primitive occurrence. Provided because the
+    /// struct is `#[non_exhaustive]`, so external crates cannot
+    /// use struct-literal construction.
+    #[must_use]
+    pub fn new(
+        kind: impl Into<String>,
+        variant: impl Into<String>,
+        page: impl Into<String>,
+    ) -> Self {
+        Self {
+            kind: kind.into(),
+            variant: variant.into(),
+            page: page.into(),
+        }
+    }
+}
+
 /// One token override declared by the site's identity.
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -124,6 +142,17 @@ pub struct TokenOverride {
     pub name: String,
     /// Token value as a stable canonical string.
     pub value: String,
+}
+
+impl TokenOverride {
+    /// Construct a token override.
+    #[must_use]
+    pub fn new(name: impl Into<String>, value: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            value: value.into(),
+        }
+    }
 }
 
 /// Content silhouette for one page — captures structural shape
@@ -146,6 +175,24 @@ pub struct ContentSilhouette {
     pub heading_hierarchy: String,
 }
 
+impl ContentSilhouette {
+    /// Construct a content silhouette.
+    #[must_use]
+    pub fn new(
+        total_chars_bucket: u32,
+        paragraph_count: u32,
+        list_item_count: u32,
+        heading_hierarchy: impl Into<String>,
+    ) -> Self {
+        Self {
+            total_chars_bucket,
+            paragraph_count,
+            list_item_count,
+            heading_hierarchy: heading_hierarchy.into(),
+        }
+    }
+}
+
 /// Composition rhythm for one page.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -155,6 +202,17 @@ pub struct CompositionRhythm {
     /// Bucketed density tier (Sparse / Comfortable / Dense /
     /// Extreme) — see DensityTier in density_audit.
     pub density_tier: String,
+}
+
+impl CompositionRhythm {
+    /// Construct a composition rhythm.
+    #[must_use]
+    pub fn new(section_count: u32, density_tier: impl Into<String>) -> Self {
+        Self {
+            section_count,
+            density_tier: density_tier.into(),
+        }
+    }
 }
 
 /// Asset distribution for the whole site.
@@ -167,6 +225,18 @@ pub struct AssetDistribution {
     pub video_count: u32,
     /// Interactive element count (forms, modals, dialogs).
     pub interactive_count: u32,
+}
+
+impl AssetDistribution {
+    /// Construct an asset distribution.
+    #[must_use]
+    pub fn new(image_count: u32, video_count: u32, interactive_count: u32) -> Self {
+        Self {
+            image_count,
+            video_count,
+            interactive_count,
+        }
+    }
 }
 
 /// Canonical site fingerprint. Computed deterministically from
@@ -198,6 +268,28 @@ pub struct SiteFingerprint {
 }
 
 impl SiteFingerprint {
+    /// Construct a full site fingerprint. Provided because the
+    /// struct is `#[non_exhaustive]`, so external crates (forge-
+    /// phases, forge-cli) cannot use struct-literal construction.
+    #[must_use]
+    pub fn new(
+        spec: FingerprintSpec,
+        primitives: Vec<PrimitiveOccurrence>,
+        token_overrides: Vec<TokenOverride>,
+        silhouettes: BTreeMap<String, ContentSilhouette>,
+        rhythms: BTreeMap<String, CompositionRhythm>,
+        assets: AssetDistribution,
+    ) -> Self {
+        Self {
+            spec,
+            primitives,
+            token_overrides,
+            silhouettes,
+            rhythms,
+            assets,
+        }
+    }
+
     /// SHA-256 commitment over the canonical serialization. The
     /// 256-bit hash the registry stores; matches the column used
     /// for exact-duplicate detection. Two fingerprints with the
