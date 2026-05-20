@@ -155,6 +155,17 @@ pub enum CaptureError {
         /// Spec carried by the loaded payload.
         actual: CaptureSpec,
     },
+    /// Timestamp field is not the substrate's canonical RFC-3339
+    /// UTC form (`YYYY-MM-DDTHH:MM:SSZ`, 20 chars). Rejected on
+    /// write so no malformed string lands in a persisted manifest.
+    #[error("invalid RFC-3339 UTC timestamp in {field}: {provided:?} (expected YYYY-MM-DDTHH:MM:SSZ)")]
+    BadTimestamp {
+        /// Which field carried the bad value (e.g. `"updated_at"`
+        /// or `"captures[2].captured_at"`).
+        field: String,
+        /// The string that failed validation.
+        provided: String,
+    },
 }
 
 impl ReferenceCapture {
@@ -207,12 +218,36 @@ impl CaptureManifest {
     }
 
     /// Write a manifest JSON file to disk (pretty-printed).
+    /// Validates timestamp fields up front — a manifest with a
+    /// non-canonical timestamp never reaches disk.
     pub fn write(&self, path: &Path) -> Result<(), CaptureError> {
+        self.validate_timestamps()?;
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
         let body = serde_json::to_string_pretty(self)?;
         fs::write(path, body)?;
+        Ok(())
+    }
+
+    /// Walk the manifest's timestamp fields and reject anything
+    /// that is not canonical RFC-3339 UTC. Exposed pub so callers
+    /// can validate without committing to a write.
+    pub fn validate_timestamps(&self) -> Result<(), CaptureError> {
+        if !crate::iso_time::is_canonical_rfc3339_utc(&self.updated_at) {
+            return Err(CaptureError::BadTimestamp {
+                field: "updated_at".to_owned(),
+                provided: self.updated_at.clone(),
+            });
+        }
+        for (idx, cap) in self.captures.iter().enumerate() {
+            if !crate::iso_time::is_canonical_rfc3339_utc(&cap.captured_at) {
+                return Err(CaptureError::BadTimestamp {
+                    field: format!("captures[{idx}].captured_at"),
+                    provided: cap.captured_at.clone(),
+                });
+            }
+        }
         Ok(())
     }
 
@@ -265,6 +300,7 @@ mod tests {
     fn manifest_write_and_read_round_trip() {
         let dir = temp_dir("round-trip");
         let mut m = CaptureManifest::new("test-site", "https://test.example");
+        m.updated_at = "2026-05-20T13:00:00Z".to_owned();
         m.captures.push(ReferenceCapture::new(
             "https://test.example",
             "2026-05-20T00:00:00Z",
@@ -306,9 +342,44 @@ mod tests {
     fn manifest_write_creates_missing_parent_dir() {
         let dir = temp_dir("create-parent");
         let nested = dir.join("nested/deeper/manifest.json");
-        let m = CaptureManifest::new("s", "https://x");
+        let mut m = CaptureManifest::new("s", "https://x");
+        m.updated_at = "2026-05-20T13:00:00Z".to_owned();
         m.write(&nested).unwrap();
         assert!(nested.is_file());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn write_rejects_empty_updated_at() {
+        let dir = temp_dir("bad-updated-at");
+        let path = dir.join("manifest.json");
+        let m = CaptureManifest::new("s", "https://x");
+        match m.write(&path) {
+            Err(CaptureError::BadTimestamp { field, provided }) => {
+                assert_eq!(field, "updated_at");
+                assert!(provided.is_empty());
+            }
+            other => panic!("expected BadTimestamp, got {other:?}"),
+        }
+        assert!(!path.exists(), "manifest must not land on disk on failure");
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn write_rejects_bad_capture_timestamp() {
+        let dir = temp_dir("bad-capture-at");
+        let path = dir.join("manifest.json");
+        let mut m = CaptureManifest::new("s", "https://x");
+        m.updated_at = "2026-05-20T13:00:00Z".to_owned();
+        m.captures.push(ReferenceCapture::new("https://x", "yesterday", 1280));
+        match m.write(&path) {
+            Err(CaptureError::BadTimestamp { field, provided }) => {
+                assert_eq!(field, "captures[0].captured_at");
+                assert_eq!(provided, "yesterday");
+            }
+            other => panic!("expected BadTimestamp, got {other:?}"),
+        }
+        assert!(!path.exists());
         let _ = fs::remove_dir_all(&dir);
     }
 
