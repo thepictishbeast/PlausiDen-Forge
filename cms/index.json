@@ -153,6 +153,11 @@
           "key": "Cash on hand",
           "value": "Keep most of what you earn.",
           "hint": "Have enough money to pay for the necessities, build an emergency fund, invest, and enjoy life. Keeping most of your income is the most important step to being prosperous and planning for retirement."
+        },
+        {
+          "key": "Risk before return",
+          "value": "Protect what you have before chasing returns.",
+          "hint": "Disability, life, health, home/renters, auto — covered honestly, including which products are oversold and which are quietly load-bearing. The foundation under every investment decision, not an after-thought."
         }
       ]
     },
