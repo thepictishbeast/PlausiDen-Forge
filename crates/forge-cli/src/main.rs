@@ -644,6 +644,30 @@ enum ConfigAction {
 
 #[derive(Subcommand, Debug)]
 enum DoctrineAction {
+    /// Render the full doctrine database as a single Markdown
+    /// document suitable for publishing at
+    /// `docs.plausiden.com/doctrine` (or any static-site path).
+    ///
+    /// Output: categorized by domain, each rule rendered as a
+    /// section with the full statement+rationale+enforcement
+    /// triple plus metadata (severity, lifecycle, applies_to,
+    /// related_traits, references). Cross-links by anchor id.
+    ///
+    /// Generated content has no AI dependency (per
+    /// `[[deterministic-first-lfi-optional]]`) — it's a pure
+    /// projection of the typed TOML rules.
+    ///
+    /// Exit codes:
+    ///   0 — rendered successfully (always, unless db load fails)
+    ///   2 — fatal (doctrine dir missing / parse error)
+    Render {
+        /// Path to AVP-Doctrine root.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// Output file. If omitted, writes to stdout.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
     /// Surface the doctrine rules applicable to a specific path
     /// (crate, file, directory). Walks every loaded rule and
     /// matches its `applies_to` entries against the path.
@@ -5325,6 +5349,9 @@ fn run_assets_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
 
 fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result<ExitCode> {
     match action {
+        DoctrineAction::Render { doctrine_dir, out } => {
+            run_doctrine_render(doctrine_dir.as_deref(), out.as_deref(), forge_root)
+        }
         DoctrineAction::For {
             path,
             doctrine_dir,
@@ -6187,6 +6214,226 @@ fn applies_to_matches(applies_to: &[String], needles: &[String]) -> bool {
         }
     }
     false
+}
+
+// ----------------------------------------------------------------
+// `forge doctrine render` — task #180.
+//
+// Renders the full doctrine database as a single Markdown document
+// suitable for publishing at docs.plausiden.com/doctrine. Pure
+// projection of the typed TOML rules; no AI dependency per
+// [[deterministic-first-lfi-optional]].
+// ----------------------------------------------------------------
+
+fn run_doctrine_render(
+    doctrine_dir: Option<&std::path::Path>,
+    out: Option<&std::path::Path>,
+    forge_root: &std::path::Path,
+) -> Result<ExitCode> {
+    let dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+    let db = match doctrine_core::load_from_dir(&dir) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("forge doctrine render: failed to load doctrine — {e}");
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    let md = render_doctrine_markdown(&db);
+
+    match out {
+        Some(p) => {
+            std::fs::write(p, &md).with_context(|| format!("writing {}", p.display()))?;
+            eprintln!(
+                "forge doctrine render: wrote {} bytes ({} rules across {} domains) to {}",
+                md.len(),
+                db.len(),
+                count_domains(&db),
+                p.display()
+            );
+        }
+        None => {
+            print!("{md}");
+        }
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+fn count_domains(db: &doctrine_core::DoctrineDatabase) -> usize {
+    let mut domains: Vec<doctrine_core::Domain> = db.all().iter().map(|r| r.domain).collect();
+    domains.sort_by_key(|d| domain_label(*d));
+    domains.dedup();
+    domains.len()
+}
+
+fn render_doctrine_markdown(db: &doctrine_core::DoctrineDatabase) -> String {
+    let mut buf = String::new();
+    buf.push_str("# PlausiDen Doctrine\n\n");
+    buf.push_str(
+        "Canonical rule database for the PlausiDen substrate. \
+         Generated from `PlausiDen-AVP-Doctrine/doctrine/rules/*.toml` by \
+         `forge doctrine render`. Every rule carries a statement, \
+         rationale, and enforcement triple; consult \
+         `forge doctrine query --rule <id>` to view any rule live.\n\n",
+    );
+    buf.push_str(&format!(
+        "**{} rules across {} domains.**\n\n",
+        db.len(),
+        count_domains(db)
+    ));
+
+    // Table of contents.
+    buf.push_str("## Table of contents\n\n");
+    for &domain in doctrine_core::Domain::all() {
+        let count = db.by_domain(domain).count();
+        if count == 0 {
+            continue;
+        }
+        buf.push_str(&format!(
+            "- [{} ({} rules)](#{})\n",
+            domain_label(domain),
+            count,
+            domain_anchor(domain),
+        ));
+    }
+    buf.push('\n');
+
+    // Per-domain sections.
+    for &domain in doctrine_core::Domain::all() {
+        let mut rules: Vec<&doctrine_core::Rule> = db.by_domain(domain).collect();
+        if rules.is_empty() {
+            continue;
+        }
+        rules.sort_by(|a, b| a.id.cmp(&b.id));
+        buf.push_str(&format!(
+            "## {} <a id=\"{}\"></a>\n\n",
+            domain_label(domain),
+            domain_anchor(domain),
+        ));
+        for r in rules {
+            render_rule_markdown(r, &mut buf);
+        }
+    }
+
+    buf.push_str("---\n\n");
+    buf.push_str(
+        "_Generated by `forge doctrine render`. \
+         To propose a rule change, edit \
+         `PlausiDen-AVP-Doctrine/doctrine/rules/<domain>.toml`. \
+         Lifecycle transitions go through PR review per \
+         [[backward-compat-version-discipline]]._\n",
+    );
+    buf
+}
+
+fn render_rule_markdown(r: &doctrine_core::Rule, buf: &mut String) {
+    buf.push_str(&format!(
+        "### `{}` — {} <a id=\"rule-{}\"></a>\n\n",
+        r.id, r.name, r.id
+    ));
+    buf.push_str(&format!(
+        "**Severity:** `{}` · **Lifecycle:** `{}`",
+        severity_label(r.severity),
+        lifecycle_label(r.lifecycle),
+    ));
+    if let Some(deprecated) = &r.deprecated_at {
+        buf.push_str(&format!(" · **Deprecated:** {deprecated}"));
+        if let Some(replacement) = &r.replaced_by {
+            buf.push_str(&format!(
+                " → [`{replacement}`](#rule-{replacement})",
+            ));
+        }
+    }
+    buf.push_str("\n\n");
+
+    buf.push_str("**Statement.** ");
+    buf.push_str(r.statement.trim());
+    buf.push_str("\n\n");
+
+    buf.push_str("**Rationale.**\n\n");
+    for line in r.rationale.trim().lines() {
+        buf.push_str("> ");
+        buf.push_str(line);
+        buf.push('\n');
+    }
+    buf.push('\n');
+
+    buf.push_str("**Enforcement.**\n\n");
+    for e in &r.enforcement {
+        buf.push_str("- ");
+        buf.push_str(e);
+        buf.push('\n');
+    }
+    buf.push('\n');
+
+    if !r.applies_to.is_empty() {
+        buf.push_str("**Applies to:** ");
+        let last = r.applies_to.len() - 1;
+        for (i, a) in r.applies_to.iter().enumerate() {
+            buf.push('`');
+            buf.push_str(a);
+            buf.push('`');
+            if i < last {
+                buf.push_str(", ");
+            }
+        }
+        buf.push_str("\n\n");
+    }
+    if !r.related_traits.is_empty() {
+        buf.push_str("**Related traits:** ");
+        let last = r.related_traits.len() - 1;
+        for (i, t) in r.related_traits.iter().enumerate() {
+            buf.push('`');
+            buf.push_str(t);
+            buf.push('`');
+            if i < last {
+                buf.push_str(", ");
+            }
+        }
+        buf.push_str("\n\n");
+    }
+    if !r.references.is_empty() {
+        buf.push_str("**References:** ");
+        let last = r.references.len() - 1;
+        for (i, r_) in r.references.iter().enumerate() {
+            buf.push_str(r_);
+            if i < last {
+                buf.push_str(" · ");
+            }
+        }
+        buf.push_str("\n\n");
+    }
+    buf.push_str("---\n\n");
+}
+
+fn domain_label(domain: doctrine_core::Domain) -> &'static str {
+    match domain {
+        doctrine_core::Domain::Build => "Build",
+        doctrine_core::Domain::Primitives => "Primitives",
+        doctrine_core::Domain::Security => "Security",
+        doctrine_core::Domain::Testing => "Testing",
+        doctrine_core::Domain::Docs => "Documentation",
+        doctrine_core::Domain::Logging => "Logging",
+        doctrine_core::Domain::Perf => "Performance",
+        doctrine_core::Domain::Content => "Content",
+        doctrine_core::Domain::Accessibility => "Accessibility",
+        _ => "Other",
+    }
+}
+
+fn domain_anchor(domain: doctrine_core::Domain) -> &'static str {
+    match domain {
+        doctrine_core::Domain::Build => "domain-build",
+        doctrine_core::Domain::Primitives => "domain-primitives",
+        doctrine_core::Domain::Security => "domain-security",
+        doctrine_core::Domain::Testing => "domain-testing",
+        doctrine_core::Domain::Docs => "domain-docs",
+        doctrine_core::Domain::Logging => "domain-logging",
+        doctrine_core::Domain::Perf => "domain-perf",
+        doctrine_core::Domain::Content => "domain-content",
+        doctrine_core::Domain::Accessibility => "domain-accessibility",
+        _ => "domain-other",
+    }
 }
 
 /// Strict rule-id pattern: kebab-case word(s) + `-NNN` numeric
