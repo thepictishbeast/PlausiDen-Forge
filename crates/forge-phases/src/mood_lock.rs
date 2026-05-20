@@ -152,8 +152,10 @@ impl Phase for MoodLockPhase {
     }
 }
 
-/// Per-mood affinity profile.
+/// Per-mood affinity profile. `aligned` is retained for future
+/// scoring extensions (currently drift is contradicting-only).
 struct MoodAffinity {
+    #[allow(dead_code)]
     aligned: &'static [&'static str],
     contradicting: &'static [&'static str],
 }

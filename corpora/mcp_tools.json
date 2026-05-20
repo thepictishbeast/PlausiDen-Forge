@@ -1,0 +1,366 @@
+{
+  "$schema": "../docs/mcp_tools.schema.json",
+  "spec": "v1",
+  "description": "MCP typed-tool surface catalog (#284). Declares the substrate operations a Model Context Protocol server exposes to Claude + other AI tooling. The catalog is the canonical source of truth: MCP server impl reads this file; substrate gates can refuse calls to tools not in the catalog.",
+  "tools": [
+    {
+      "slug": "forge.build",
+      "name": "Run forge build",
+      "category": "substrate",
+      "description": "Execute the full Forge build pipeline. Walks every phase from validate_cms through the variation gates and renders + audits the site. Equivalent to `forge build` from the CLI.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "mode": { "type": "string", "enum": ["poc", "production"], "default": "poc" },
+          "json": { "type": "boolean", "default": true }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] },
+          "strict_count": { "type": "integer" },
+          "warn_count": { "type": "integer" },
+          "report_path": { "type": "string" }
+        }
+      },
+      "read_only": false,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "forge.identity.show",
+      "name": "Show current site identity",
+      "category": "introspection",
+      "description": "Compute the current SHA-256 hash of the [site_identity] section of forge.toml and surface key fields (site_id, tenant_id, voice tier, mood primary, density, theme variants, allowed/forbidden primitives).",
+      "inputs": { "type": "object", "properties": {} },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "site_id": { "type": "string" },
+          "tenant_id": { "type": "string" },
+          "identity_hash": { "type": "string" },
+          "voice_tier": { "type": "string" },
+          "mood_primary": { "type": "string" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "forge.identity.history",
+      "name": "List identity provenance history",
+      "category": "introspection",
+      "description": "Enumerate reports/provenance-*.json entries sorted by timestamp; each entry carries the identity_hash + fingerprint commitment + Ed25519 signature.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer" },
+          "entries": { "type": "array" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "forge.identity.verify",
+      "name": "Verify provenance signature",
+      "category": "attestation",
+      "description": "Verify an Ed25519 signature on a provenance file against reports/attest-pubkey.b64. Returns ok / fail; on fail, includes the verification error.",
+      "inputs": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string" }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] },
+          "identity_hash": { "type": "string" },
+          "site_id": { "type": "string" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "forge.fingerprint.verify",
+      "name": "Verify fingerprint registry chain",
+      "category": "attestation",
+      "description": "Walk the Merkle-chained fingerprint registry, validating each entry's hash + prev_hash + (optional) Ed25519 signatures.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "registry_path": { "type": "string", "default": "registry/fingerprints.jsonl" },
+          "signatures": { "type": "boolean", "default": false }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] },
+          "entries": { "type": "integer" },
+          "chain_valid": { "type": "boolean" },
+          "signatures_verified": { "type": "boolean" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "forge.fingerprint.list",
+      "name": "List fingerprint registry entries",
+      "category": "introspection",
+      "description": "Enumerate registry entries; supports tenant filter.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "registry_path": { "type": "string", "default": "registry/fingerprints.jsonl" },
+          "tenant": { "type": "string" }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer" },
+          "entries": { "type": "array" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "forge.attest.init",
+      "name": "Initialize attestation keypair",
+      "category": "attestation",
+      "description": "Generate an Ed25519 keypair and write to reports/attest-key.b64 (private, mode 0600) + reports/attest-pubkey.b64 (public). Refuses to overwrite without force=true.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "force": { "type": "boolean", "default": false }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] },
+          "pubkey": { "type": "string" }
+        }
+      },
+      "read_only": false,
+      "requires_signed_session": true
+    },
+    {
+      "slug": "forge.attest.pubkey",
+      "name": "Read attestation public key",
+      "category": "attestation",
+      "description": "Return the base64 public key from reports/attest-pubkey.b64 for external auditor pinning.",
+      "inputs": { "type": "object", "properties": {} },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "pubkey": { "type": "string" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "forge.doctrine.query",
+      "name": "Query AVP-Doctrine rule",
+      "category": "introspection",
+      "description": "Look up a doctrine rule by id (e.g. `prim-001`) and return statement + rationale + enforcement contract.",
+      "inputs": {
+        "type": "object",
+        "required": ["rule_id"],
+        "properties": {
+          "rule_id": { "type": "string" }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "rule_id": { "type": "string" },
+          "statement": { "type": "string" },
+          "rationale": { "type": "string" },
+          "enforcement": { "type": "string" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "loom.cms.render",
+      "name": "Render CMS to HTML",
+      "category": "substrate",
+      "description": "Invoke Loom's cms-render against one cms/*.json file or the whole directory; emits static/<slug>.html via the canonical page_shell.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "cms_path": { "type": "string" }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] },
+          "html_paths": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "read_only": false,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "crawler.capture",
+      "name": "Capture reference site",
+      "category": "reference-matching",
+      "description": "Drive Crawler to fetch + screenshot + structure a reference URL at the declared viewports. Output feeds the reference-matching arc (#263-#274).",
+      "inputs": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": { "type": "string", "format": "uri" },
+          "viewports": {
+            "type": "array",
+            "items": { "type": "integer" },
+            "default": [390, 768, 1280]
+          }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] },
+          "capture_dir": { "type": "string" }
+        }
+      },
+      "read_only": false,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "skills.invoke",
+      "name": "Invoke a skill",
+      "category": "automation",
+      "description": "Run a substrate skill by slug (e.g. `add-loom-primitive`, `variation-resolution`). Records the invocation via skill_telemetry (#278).",
+      "inputs": {
+        "type": "object",
+        "required": ["skill_slug"],
+        "properties": {
+          "skill_slug": { "type": "string" },
+          "args": { "type": "object" }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] },
+          "result_summary": { "type": "string" },
+          "duration_ms": { "type": "integer" }
+        }
+      },
+      "read_only": false,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "skills.telemetry.recent",
+      "name": "Recent skill invocations",
+      "category": "introspection",
+      "description": "Read the last N entries from reports/skill-telemetry.jsonl; optionally filter by skill_slug.",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "skill_slug": { "type": "string" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 50 }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "count": { "type": "integer" },
+          "entries": { "type": "array" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "context.load",
+      "name": "Load structured context for session",
+      "category": "introspection",
+      "description": "Aggregate site_identity + recent provenance + recent skill telemetry + ARCHITECTURAL_THREADS into a single context payload for fast session orientation. Cached per-session (#285).",
+      "inputs": {
+        "type": "object",
+        "properties": {
+          "include_provenance": { "type": "boolean", "default": true },
+          "include_telemetry": { "type": "boolean", "default": true },
+          "telemetry_limit": { "type": "integer", "default": 20 }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "identity": { "type": "object" },
+          "provenance_recent": { "type": "array" },
+          "telemetry_recent": { "type": "array" },
+          "threads": { "type": "array" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "substrate.state",
+      "name": "Substrate state machine snapshot",
+      "category": "introspection",
+      "description": "Query the substrate's current state machine (#286): which arcs are in-progress, which gates are enabled, which content types are declared, which deprecations are pending.",
+      "inputs": { "type": "object", "properties": {} },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "active_gates": { "type": "array" },
+          "active_arcs": { "type": "array" },
+          "pending_deprecations": { "type": "array" }
+        }
+      },
+      "read_only": true,
+      "requires_signed_session": false
+    },
+    {
+      "slug": "progress.report",
+      "name": "Emit structured progress event",
+      "category": "automation",
+      "description": "Append a structured progress event (#288) — used by long-running operations to surface intermediate state to the operator without freezing on a single tool result.",
+      "inputs": {
+        "type": "object",
+        "required": ["event"],
+        "properties": {
+          "event": { "type": "string" },
+          "detail": { "type": "string" },
+          "progress_pct": { "type": "integer", "minimum": 0, "maximum": 100 }
+        }
+      },
+      "outputs": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "fail"] }
+        }
+      },
+      "read_only": false,
+      "requires_signed_session": false
+    }
+  ],
+  "notes": [
+    "Categories: substrate (build / render), introspection (read-only), attestation (signing / verification), reference-matching (Arc 2), automation (skills + progress).",
+    "Every tool that mutates filesystem state (read_only=false) MUST emit skill_telemetry records via skills.invoke when invoked by Claude — establishes the audit trail per #278.",
+    "requires_signed_session=true reserves the most sensitive operations (attest.init, future identity-rollback) for sessions that have explicitly authenticated with the operator key.",
+    "Per [[backward-compat-version-discipline]]: tool slug + inputs/outputs schema is the wire shape. Renaming a tool breaks consumers; deprecate via removal from this catalog with a 1-version overlap.",
+    "Future MCP server impl walks this catalog at startup to register tools. The catalog itself is the canonical contract; both the impl and the consumers (Claude) read from it."
+  ]
+}

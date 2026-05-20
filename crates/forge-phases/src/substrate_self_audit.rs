@@ -144,7 +144,7 @@ fn audit_file(path: &Path, findings: &mut Vec<Finding>, phase: &'static str) {
 
     // Unwrap/expect outside test code. Heuristic: scan line-by-line,
     // skip when we're inside a `#[cfg(test)]` or `mod tests {` block.
-    let mut depth_test: i32 = 0;
+    let depth_test: i32 = 0;
     let mut brace_at_test: Vec<i32> = Vec::new();
     let mut current_brace: i32 = 0;
     let mut inside_test = false;

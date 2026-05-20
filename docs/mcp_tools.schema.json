@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP typed-tool surface catalog (#284)",
+  "description": "Substrate operations a Model Context Protocol server exposes to Claude + AI tooling. Canonical contract: MCP server impl + consumers read from this catalog.",
+  "type": "object",
+  "required": ["spec", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "spec": { "type": "string", "enum": ["v1"] },
+    "description": { "type": "string" },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slug", "name", "category", "description", "inputs", "outputs", "read_only"],
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_.]*[a-z0-9]$",
+            "description": "Stable dot-separated identifier (e.g. forge.build, identity.show)."
+          },
+          "name": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["substrate", "introspection", "attestation", "reference-matching", "automation"]
+          },
+          "description": { "type": "string" },
+          "inputs": {
+            "type": "object",
+            "description": "JSON Schema of the tool's input arguments."
+          },
+          "outputs": {
+            "type": "object",
+            "description": "JSON Schema of the tool's output shape."
+          },
+          "read_only": {
+            "type": "boolean",
+            "description": "True iff the tool doesn't mutate filesystem state."
+          },
+          "requires_signed_session": {
+            "type": "boolean",
+            "default": false,
+            "description": "True for operations reserved for operator-key-authenticated sessions."
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
