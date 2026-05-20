@@ -456,18 +456,18 @@ Exit code: `0` on `status="ok"`, `1` on strict findings (production mode), `2` o
 
 ## Gaps (follow-on work)
 
-Eight subcommands currently emit text only. Each is a small capability-request for adding the `--json` flag + an emit function:
+Originally 8 subcommands; closed via task #200 batches:
 
-1. `forge verify` — chain integrity report
-2. `forge attest sign` — signature metadata
-3. `forge attest fingerprint` — pubkey fingerprint envelope
-4. `forge audit secrets` — credential scan findings
-5. `forge audit phantom_button` — phantom-button findings (currently `--explain` text only)
-6. `forge audit external_assets` — external-fetch findings
-7. `forge fix` — apply-result envelope
-8. `loom sync` / `loom deploy hetzner` — sync/deploy result envelope
+1. **`forge verify`** — ✓ closed (chain integrity envelope; signature summary nested)
+2. `forge attest sign` — pending (signature metadata envelope)
+3. `forge attest fingerprint` — pending (pubkey fingerprint envelope)
+4. **`forge audit secrets`** — ✓ closed (matches[] with path + rule)
+5. `forge audit phantom_button` — n/a (this is a Forge build phase, not a CLI subcommand; emits via the report JSON)
+6. `forge audit external_assets` — n/a (same — Forge build phase, in-report)
+7. `forge fix` — pending (apply-result envelope)
+8. `loom sync` / `loom deploy hetzner` — Loom-side; out of scope here.
 
-These will be filed as follow-on capability requests. Priority: the audit subcommands (secrets / phantom_button / external_assets) are highest, because CI consumes them.
+**Currently 4 still-pending Forge-side gaps** (attest sign, attest fingerprint, audit mutants, fix). Refactor pattern from `forge verify` + `forge audit secrets` is now established for the remaining ones.
 
 ---
 

@@ -138,6 +138,9 @@ enum Cmd {
         /// (T56). Requires reports/attest-pubkey.b64 to exist.
         #[arg(long, default_value_t = false)]
         signatures: bool,
+        /// JSON output (cross-AI consumable per docs-008). Closes #200.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
     /// T56: attestation key management.
     ///
@@ -466,6 +469,9 @@ enum AuditAction {
         /// Print the rule that matched alongside the path.
         #[arg(long, default_value_t = false)]
         explain: bool,
+        /// JSON output (cross-AI consumable per docs-008). Closes #200.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
     /// T58: mutation testing per AVP-2 Tier 6. Without
     /// `--run`, reads the most recent `mutants.out/outcomes.json`
@@ -1039,7 +1045,7 @@ fn run() -> Result<ExitCode> {
     // T55: subcommand router. `Build` is the default for backwards
     // compat with `forge` (no subcommand).
     match args.command.as_ref() {
-        Some(Cmd::Verify { chain, signatures }) => return run_verify(&root, *chain, *signatures),
+        Some(Cmd::Verify { chain, signatures, json }) => return run_verify(&root, *chain, *signatures, *json),
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Fix { apply }) => return run_fix(&root, *apply),
@@ -2074,41 +2080,80 @@ fn run_audit(root: &std::path::Path, action: &AuditAction) -> Result<ExitCode> {
             threshold,
         } => run_audit_mutants(root, *run, crate_name, *threshold),
         AuditAction::InitHook { force } => cmd_audit_init_hook(root, *force),
-        AuditAction::Secrets { paths, explain } => {
+        AuditAction::Secrets { paths, explain, json } => {
             let scan_targets: Vec<std::path::PathBuf> = if paths.is_empty() {
                 git_staged_paths(root)
             } else {
                 paths.clone()
             };
             if scan_targets.is_empty() {
-                println!(
-                    "forge audit secrets: nothing staged + no paths supplied — nothing to scan"
-                );
+                if *json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status": "empty",
+                            "scanned": 0,
+                            "matches": [],
+                            "reason": "nothing staged + no paths supplied"
+                        })
+                    );
+                } else {
+                    println!(
+                        "forge audit secrets: nothing staged + no paths supplied — nothing to scan"
+                    );
+                }
                 return Ok(ExitCode::SUCCESS);
             }
             let hits = scan_paths_for_secrets(&scan_targets);
             if hits.is_empty() {
-                println!(
-                    "forge audit secrets: scanned {} path(s), no secret-shaped names matched",
-                    scan_targets.len()
-                );
+                if *json {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status": "ok",
+                            "scanned": scan_targets.len(),
+                            "matches": [],
+                        })
+                    );
+                } else {
+                    println!(
+                        "forge audit secrets: scanned {} path(s), no secret-shaped names matched",
+                        scan_targets.len()
+                    );
+                }
                 return Ok(ExitCode::SUCCESS);
             }
-            eprintln!(
-                "forge audit secrets: {} secret-shaped path(s) found — refuse to commit",
-                hits.len()
-            );
-            for (path, rule) in &hits {
-                if *explain {
-                    eprintln!("  SECRET  [{rule}]  {}", path.display());
-                } else {
-                    eprintln!("  SECRET  {}", path.display());
+            if *json {
+                let matches_json: Vec<serde_json::Value> = hits
+                    .iter()
+                    .map(|(p, r)| serde_json::json!({"path": p.display().to_string(), "rule": r}))
+                    .collect();
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "fail",
+                        "scanned": scan_targets.len(),
+                        "matches": matches_json,
+                        "advisory": "If this is a false positive, rename the file or add it to a gitignore'd directory. NEVER --force past this gate.",
+                    })
+                );
+            } else {
+                eprintln!(
+                    "forge audit secrets: {} secret-shaped path(s) found — refuse to commit",
+                    hits.len()
+                );
+                for (path, rule) in &hits {
+                    if *explain {
+                        eprintln!("  SECRET  [{rule}]  {}", path.display());
+                    } else {
+                        eprintln!("  SECRET  {}", path.display());
+                    }
                 }
+                eprintln!(
+                    "\nIf this is a false positive, rename the file or add it to a gitignore'd \
+                     directory. NEVER --force past this gate."
+                );
             }
-            eprintln!(
-                "\nIf this is a false positive, rename the file or add it to a gitignore'd \
-                 directory. NEVER --force past this gate."
-            );
             Ok(ExitCode::from(1))
         }
     }
@@ -2357,19 +2402,45 @@ fn apply_create_security_txt(root: &std::path::Path) -> Result<()> {
     Ok(())
 }
 
-fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<ExitCode> {
+fn run_verify(
+    root: &std::path::Path,
+    chain: bool,
+    signatures: bool,
+    json: bool,
+) -> Result<ExitCode> {
     if !chain {
         // Currently chain is the only verify mode; reject other
         // shapes politely so future flags surface their own help.
-        eprintln!("forge verify: pass --chain (currently the only mode)");
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "fatal",
+                    "error": "forge verify: pass --chain (currently the only mode)"
+                })
+            );
+        } else {
+            eprintln!("forge verify: pass --chain (currently the only mode)");
+        }
         return Ok(ExitCode::from(2));
     }
     let reports_dir = root.join("reports");
     if !reports_dir.is_dir() {
-        println!(
-            "forge verify --chain: no reports/ directory at {} — nothing to verify",
-            reports_dir.display()
-        );
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "empty",
+                    "reports_dir": reports_dir.display().to_string(),
+                    "reason": "no reports/ directory — nothing to verify"
+                })
+            );
+        } else {
+            println!(
+                "forge verify --chain: no reports/ directory at {} — nothing to verify",
+                reports_dir.display()
+            );
+        }
         return Ok(ExitCode::SUCCESS);
     }
 
@@ -2386,7 +2457,18 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
     entries.sort();
 
     if entries.is_empty() {
-        println!("forge verify --chain: no build-*.json reports — nothing to verify");
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "empty",
+                    "reports_dir": reports_dir.display().to_string(),
+                    "reason": "no build-*.json reports — nothing to verify"
+                })
+            );
+        } else {
+            println!("forge verify --chain: no build-*.json reports — nothing to verify");
+        }
         return Ok(ExitCode::SUCCESS);
     }
 
@@ -2408,7 +2490,7 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
             }
         }
     }
-    if !skipped_unparseable.is_empty() {
+    if !skipped_unparseable.is_empty() && !json {
         eprintln!(
             "forge verify --chain: skipped {} unparseable report(s):",
             skipped_unparseable.len()
@@ -2418,28 +2500,44 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
         }
     }
 
-    println!(
-        "forge verify --chain: walking {} report(s) in {}",
-        chain_reports.len(),
-        reports_dir.display()
-    );
+    if !json {
+        println!(
+            "forge verify --chain: walking {} report(s) in {}",
+            chain_reports.len(),
+            reports_dir.display()
+        );
+    }
     match forge_core::attest::verify_chain(&chain_reports) {
         Ok(()) => {
             let last = chain_reports.last();
             let head_len = last.map(|r| r.chain_length).unwrap_or(0);
             let head_started = last.map(|r| r.started.as_str()).unwrap_or("?");
-            println!(
-                "  ok      chain intact — head chain_length={head_len} started={head_started}"
-            );
+            if !json {
+                println!(
+                    "  ok      chain intact — head chain_length={head_len} started={head_started}"
+                );
+            }
 
             // T56: optional signature verification.
+            let mut signature_summary: Option<serde_json::Value> = None;
             if signatures {
                 let pub_path = reports_dir.join("attest-pubkey.b64");
                 if !pub_path.is_file() {
-                    eprintln!(
-                        "  FAIL    --signatures requested but {} missing — run `forge attest init`",
-                        pub_path.display()
-                    );
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "status": "fail",
+                                "stage": "load_pubkey",
+                                "error": format!("--signatures requested but {} missing — run `forge attest init`", pub_path.display())
+                            })
+                        );
+                    } else {
+                        eprintln!(
+                            "  FAIL    --signatures requested but {} missing — run `forge attest init`",
+                            pub_path.display()
+                        );
+                    }
                     return Ok(ExitCode::from(1));
                 }
                 let pub_b64 = std::fs::read_to_string(&pub_path)
@@ -2447,10 +2545,21 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
                 let pubkey = match forge_core::attest::pubkey_from_base64(pub_b64.trim()) {
                     Some(p) => p,
                     None => {
-                        eprintln!(
-                            "  FAIL    {} is not a valid base64 ed25519 pubkey",
-                            pub_path.display()
-                        );
+                        if json {
+                            println!(
+                                "{}",
+                                serde_json::json!({
+                                    "status": "fatal",
+                                    "stage": "parse_pubkey",
+                                    "error": format!("{} is not a valid base64 ed25519 pubkey", pub_path.display())
+                                })
+                            );
+                        } else {
+                            eprintln!(
+                                "  FAIL    {} is not a valid base64 ed25519 pubkey",
+                                pub_path.display()
+                            );
+                        }
                         return Ok(ExitCode::from(2));
                     }
                 };
@@ -2462,30 +2571,78 @@ fn run_verify(root: &std::path::Path, chain: bool, signatures: bool) -> Result<E
                         continue;
                     }
                     if let Err(e) = forge_core::attest::verify_report(r, &pubkey) {
-                        eprintln!("  FAIL    signature mismatch at index {idx}: {e}");
-                        if let Some(p) = entries.get(idx) {
-                            eprintln!("  bad     {}", p.display());
+                        if json {
+                            let bad_path = entries.get(idx).map(|p| p.display().to_string());
+                            println!(
+                                "{}",
+                                serde_json::json!({
+                                    "status": "fail",
+                                    "stage": "verify_signature",
+                                    "at_index": idx,
+                                    "bad_path": bad_path,
+                                    "error": e.to_string()
+                                })
+                            );
+                        } else {
+                            eprintln!("  FAIL    signature mismatch at index {idx}: {e}");
+                            if let Some(p) = entries.get(idx) {
+                                eprintln!("  bad     {}", p.display());
+                            }
                         }
                         return Ok(ExitCode::from(1));
                     }
                     signed += 1;
                 }
-                println!(
-                    "  ok      {signed} signature(s) verified, {unsigned} unsigned (genesis-era)"
-                );
+                if json {
+                    signature_summary = Some(serde_json::json!({
+                        "signed": signed,
+                        "unsigned": unsigned,
+                    }));
+                } else {
+                    println!(
+                        "  ok      {signed} signature(s) verified, {unsigned} unsigned (genesis-era)"
+                    );
+                }
             }
 
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "reports_dir": reports_dir.display().to_string(),
+                        "reports_walked": chain_reports.len(),
+                        "skipped_unparseable": skipped_unparseable,
+                        "head_chain_length": head_len,
+                        "head_started": head_started,
+                        "signatures": signature_summary,
+                    })
+                );
+            }
             Ok(ExitCode::SUCCESS)
         }
         Err(e) => {
             // T55: print the typed ChainError verbatim. Each
             // variant carries the at_index + expected/actual so
             // the operator can immediately bisect to the bad file.
-            eprintln!("  FAIL    chain divergence: {e}");
-            // Surface which file the divergence is at if available.
-            if let Some(idx) = chain_error_index(&e) {
-                if let Some(p) = entries.get(idx) {
-                    eprintln!("  bad     {}", p.display());
+            let idx = chain_error_index(&e);
+            let bad_path = idx.and_then(|i| entries.get(i)).map(|p| p.display().to_string());
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "fail",
+                        "stage": "verify_chain",
+                        "error": e.to_string(),
+                        "at_index": idx,
+                        "bad_path": bad_path,
+                        "skipped_unparseable": skipped_unparseable,
+                    })
+                );
+            } else {
+                eprintln!("  FAIL    chain divergence: {e}");
+                if let Some(p) = bad_path {
+                    eprintln!("  bad     {p}");
                 }
             }
             Ok(ExitCode::from(1))
