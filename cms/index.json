@@ -171,6 +171,7 @@
     },
     {
       "kind": "call_to_action",
+      "align": "start",
       "eyebrow": "Coming up the ridge?",
       "title": "Book a night.",
       "lede": "Public observing is the second Friday of every month, free to attend. Group visits and school programs need to be scheduled in advance — we have a small staff and a finite dome.",

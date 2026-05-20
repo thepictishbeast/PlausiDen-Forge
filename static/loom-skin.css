@@ -7496,6 +7496,17 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   position: relative; overflow: hidden;
   isolation: isolate;
 }
+/* Substrate-de-consumer-shaping (2026-05-20): opt-out from the
+ * SaaS-marketing center default. Editorial sites set
+ * `align: start` on the CallToAction variant; the renderer emits
+ * data-align="start" and these rules take over. */
+.loom-cta-band[data-align="start"] {
+  place-items: start;
+  text-align: start;
+}
+.loom-cta-band[data-align="start"] .loom-cta-band__inner {
+  align-items: flex-start;
+}
 .loom-cta-band__inner {
   max-width: 56rem;
   display: flex; flex-direction: column;
