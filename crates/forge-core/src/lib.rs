@@ -33,6 +33,7 @@ pub mod fingerprint_migration;
 pub mod fingerprint_registry;
 pub mod identity_transition;
 pub mod pipeline;
+pub mod progress_events;
 pub mod provenance;
 pub mod session_context;
 pub mod site_identity;
