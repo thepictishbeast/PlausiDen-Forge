@@ -113,6 +113,8 @@ impl Phase for RenderPhase {
         let json_files = collect_cms_jsons(&cms_dir)?;
         let mut findings = Vec::new();
         let mut rendered_count = 0usize;
+        let mut rendered_slugs: std::collections::HashSet<String> =
+            std::collections::HashSet::new();
 
         for json_path in json_files {
             let slug = match slug_from_filename(&json_path) {
@@ -218,6 +220,46 @@ impl Phase for RenderPhase {
                 });
             }
             rendered_count += 1;
+            rendered_slugs.insert(slug.clone());
+        }
+
+        // Orphan detection (issue surfaced 2026-05-20): when a
+        // CMS source is deleted, the canonical static/<slug>.html
+        // lingers and the audit phases that follow (sri / tokens /
+        // perf_budget / unbuilt_route) re-scan it, producing N
+        // warns per stale file. Surface one finding per orphan
+        // here so the operator sees the root cause once instead of
+        // chasing the symptoms across phases. Pure detection;
+        // no deletion. Only relevant when write_canonical=true —
+        // off-canonical builds write to _render/ and `static/`
+        // is not the substrate's territory.
+        if write_canonical {
+            if let Ok(entries) = std::fs::read_dir(&ctx.static_dir) {
+                for entry in entries.flatten() {
+                    let p = entry.path();
+                    if !p.is_file() {
+                        continue;
+                    }
+                    if p.extension().and_then(|s| s.to_str()) != Some("html") {
+                        continue;
+                    }
+                    let stem = match p.file_stem().and_then(|s| s.to_str()) {
+                        Some(s) => s.to_owned(),
+                        None => continue,
+                    };
+                    if rendered_slugs.contains(&stem) {
+                        continue;
+                    }
+                    findings.push(Finding::warn(
+                        self.name(),
+                        p.display().to_string(),
+                        format!(
+                            "static/{stem}.html has no cms/{stem}.json source — stale artifact \
+                             (delete the file OR add cms/{stem}.json)"
+                        ),
+                    ));
+                }
+            }
         }
 
         // T69 (cycle 96 iter 13): write the canonical loom-skin.css
@@ -572,6 +614,70 @@ mod tests {
         assert!(
             tmp.join("static/home.html").is_file(),
             "write_canonical=true must write to static/<slug>"
+        );
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn render_detects_orphan_static_html_when_write_canonical_true() {
+        // Set up: cms/home.json exists; static/about.html lingers
+        // from a previous build whose cms/about.json was deleted.
+        let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
+        std::fs::write(tmp.join("forge.toml"), "[render]\nwrite_canonical = true\n")
+            .expect("write forge.toml");
+        std::fs::write(
+            tmp.join("static/about.html"),
+            "<!doctype html><html><body>stale orphan</body></html>",
+        )
+        .expect("seed orphan");
+
+        let findings = RenderPhase.run(&ctx).expect("run");
+
+        // The orphan must surface as exactly one render-phase warn
+        // citing the about slug; the rendered home page must NOT
+        // appear in the orphan list.
+        let orphan_findings: Vec<&Finding> = findings
+            .iter()
+            .filter(|f| f.message.contains("stale artifact"))
+            .collect();
+        assert_eq!(
+            orphan_findings.len(),
+            1,
+            "expected exactly one orphan warn, got {}: {:?}",
+            orphan_findings.len(),
+            findings
+        );
+        assert!(
+            orphan_findings[0].message.contains("about"),
+            "orphan finding must cite the about slug: {:?}",
+            orphan_findings[0].message
+        );
+        assert_eq!(orphan_findings[0].severity, forge_core::Severity::Warn);
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn render_orphan_detection_silent_when_write_canonical_false() {
+        // off-canonical builds write to _render/; static/ is not
+        // the substrate's territory in that mode and orphan
+        // findings would be false-positive.
+        let (ctx, tmp) = make_ctx_with_cms(&[("home", &sample_page("Home"))]);
+        std::fs::write(tmp.join("forge.toml"), "").expect("write forge.toml");
+        // Pre-create static/ with an orphan-shaped file.
+        std::fs::create_dir_all(tmp.join("static")).expect("mkdir");
+        std::fs::write(
+            tmp.join("static/about.html"),
+            "<!doctype html><html><body>not our problem</body></html>",
+        )
+        .expect("seed");
+        let findings = RenderPhase.run(&ctx).expect("run");
+        let orphan_findings: Vec<&Finding> = findings
+            .iter()
+            .filter(|f| f.message.contains("stale artifact"))
+            .collect();
+        assert!(
+            orphan_findings.is_empty(),
+            "off-canonical builds must NOT emit orphan warns: {orphan_findings:?}"
         );
         let _ = std::fs::remove_dir_all(&tmp);
     }
