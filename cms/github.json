@@ -1,7 +1,7 @@
 {
   "$schema": "../cms-schema.json",
   "title": "GitHub — Change is constant. GitHub keeps you ahead.",
-  "description": "Join the world's most widely adopted, AI-powered developer platform where millions of developers, businesses, and the largest open source community build software that advances humanity.",
+  "description": "Developer platform with Copilot integration. Where millions of developers, businesses, and the largest open source community build software that advances humanity.",
   "brand": "GitHub",
   "chrome": "page_shell",
   "theme": "dark",
@@ -55,7 +55,7 @@
       "align": "start",
       "eyebrow": "GitHub — Forge static mirror",
       "title": "Change is constant. GitHub keeps you ahead.",
-      "lede": "Join the world's most widely adopted, AI-powered developer platform where millions of developers, businesses, and the largest open source community build software that advances humanity.",
+      "lede": "Developer platform with Copilot integration. Where millions of developers, businesses, and the largest open source community build software that advances humanity.",
       "cta": {
         "label": "github.com",
         "href": "https://github.com/",

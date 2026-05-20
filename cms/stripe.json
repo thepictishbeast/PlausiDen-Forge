@@ -106,7 +106,7 @@
         {
           "key": "Agentic",
           "value": "Monetise through agentic commerce.",
-          "hint": "AI-driven shopping flows + agent-to-agent transactions. Same identity + idempotency primitives that ship on the human-facing checkout."
+          "hint": "Agent-driven shopping flows + agent-to-agent transactions. Same identity + idempotency primitives that ship on the human-facing checkout."
         }
       ]
     },

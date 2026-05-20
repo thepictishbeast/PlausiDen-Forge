@@ -150,7 +150,7 @@
       "kind": "call_to_action",
       "align": "start",
       "eyebrow": "Free consultation",
-      "title": "Ready to elevate your IT strategy?",
+      "title": "Ready to make your IT spend faster, cheaper, and confidentiality-preserving?",
       "lede": "Contact us today for a free consultation and discover how we can optimize your operations.",
       "cta": {"label": "Free consultation", "href": "/plausiden-contact/", "data_backend": "cta-contact"}
     }
