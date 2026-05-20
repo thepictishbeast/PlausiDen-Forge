@@ -34,6 +34,7 @@ pub mod fingerprint;
 pub mod fingerprint_migration;
 pub mod fingerprint_registry;
 pub mod identity_transition;
+pub mod iso_time;
 pub mod pipeline;
 pub mod progress_events;
 pub mod provenance;
@@ -45,32 +46,6 @@ pub mod site_identity;
 pub mod skill_telemetry;
 pub mod substrate_state;
 pub mod synthesis;
-
-/// Indirection so substrate_state can reuse session_context's
-/// embedded RFC-3339 formatter without making it pub.
-#[doc(hidden)]
-pub(crate) fn session_context_fmt_indirect(epoch: u64) -> String {
-    // Re-derive the same Howard Hinnant civil-from-days math
-    // session_context uses, kept inline here to avoid pub-cycle.
-    let days = epoch / 86400;
-    let secs_in_day = epoch % 86400;
-    let hour = secs_in_day / 3600;
-    let minute = (secs_in_day % 3600) / 60;
-    let second = secs_in_day % 60;
-    let z = days as i64 + 719468;
-    let era = if z >= 0 { z / 146097 } else { (z - 146096) / 146097 };
-    let doe = (z - era * 146097) as u32;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let y = yoe as i64 + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let year = (y + i64::from(m <= 2)) as i32;
-    format!(
-        "{year:04}-{m:02}-{d:02}T{hour:02}:{minute:02}:{second:02}Z"
-    )
-}
 pub mod tenant_corpus;
 
 use std::path::PathBuf;

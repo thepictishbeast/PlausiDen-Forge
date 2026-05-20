@@ -264,12 +264,7 @@ fn scan_deprecations(root: &Path) -> Vec<String> {
 }
 
 fn current_iso_utc() -> String {
-    let secs = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    // Re-use session_context's formatter via a one-line indirection.
-    crate::session_context_fmt_indirect(secs)
+    crate::iso_time::current_rfc3339_utc()
 }
 
 #[cfg(test)]

@@ -222,36 +222,11 @@ fn load_recent_telemetry(root: &Path, limit: usize) -> Vec<SkillInvocation> {
     entries[start..].to_vec()
 }
 
-/// Format an epoch second timestamp as RFC-3339 UTC. Simple
-/// fixed-width formatter; no chrono dep.
-fn format_rfc3339_utc(epoch: u64) -> String {
-    let days = epoch / 86400;
-    let secs_in_day = epoch % 86400;
-    let hour = secs_in_day / 3600;
-    let minute = (secs_in_day % 3600) / 60;
-    let second = secs_in_day % 60;
-    let (year, month, day) = civil_from_days(days as i64);
-    format!(
-        "{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z"
-    )
-}
-
-/// Howard Hinnant's "civil from days" — converts day-count since
-/// 1970-01-01 to (year, month, day). Public-domain algorithm,
-/// works for any reasonable date range.
-fn civil_from_days(days: i64) -> (i32, u32, u32) {
-    let z = days + 719468;
-    let era = if z >= 0 { z / 146097 } else { (z - 146096) / 146097 };
-    let doe = (z - era * 146097) as u32;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let y = yoe as i64 + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let year = (y + i64::from(m <= 2)) as i32;
-    (year, m, d)
-}
+// Canonical RFC-3339 formatter lives in `crate::iso_time`.
+// `format_rfc3339_utc` is re-exported as a private alias so the
+// local call sites in this module + the tests below keep their
+// existing names.
+use crate::iso_time::format_rfc3339_utc;
 
 #[cfg(test)]
 mod tests {
