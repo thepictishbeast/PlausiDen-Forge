@@ -1076,6 +1076,25 @@ enum FingerprintAction {
         #[arg(long, default_value_t = false)]
         json: bool,
     },
+    /// Register the current site's fingerprint into the
+    /// append-only registry chain. Reads cms/*.json, computes
+    /// the SiteFingerprint, signs with reports/attest-key.b64,
+    /// appends to registry/fingerprints.jsonl with site_id +
+    /// tenant_id from [site_identity] (CLI flags override).
+    Register {
+        /// Override the default registry path.
+        #[arg(long)]
+        registry_path: Option<std::path::PathBuf>,
+        /// Override the site_id from [site_identity].
+        #[arg(long)]
+        site_id: Option<String>,
+        /// Override the tenant_id from [site_identity].
+        #[arg(long)]
+        tenant_id: Option<String>,
+        /// JSON output for cross-AI consumers.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// List entries in the fingerprint registry. (closes #239 list dim)
     List {
         /// Override the default registry path
@@ -2499,6 +2518,114 @@ fn compute_fingerprint_from_cms(
 /// registry's Merkle chain + (optionally) Ed25519 signatures.
 fn run_fingerprint(root: &std::path::Path, action: &FingerprintAction) -> Result<ExitCode> {
     match action {
+        FingerprintAction::Register {
+            registry_path,
+            site_id,
+            tenant_id,
+            json,
+        } => {
+            let cms_dir = root.join("cms");
+            if !cms_dir.is_dir() {
+                let payload = serde_json::json!({
+                    "status": "fail",
+                    "stage": "register",
+                    "error": format!("no cms/ directory at {}", cms_dir.display()),
+                });
+                if *json {
+                    println!("{payload}");
+                } else {
+                    eprintln!("forge fingerprint register: no cms/ at {}", cms_dir.display());
+                }
+                return Ok(ExitCode::from(1));
+            }
+            let key_path = root.join("reports/attest-key.b64");
+            if !key_path.is_file() {
+                let payload = serde_json::json!({
+                    "status": "fail",
+                    "stage": "register",
+                    "error": format!("no {} — run `forge attest init` first", key_path.display()),
+                });
+                if *json {
+                    println!("{payload}");
+                } else {
+                    eprintln!(
+                        "forge fingerprint register: no signing key at {} — run `forge attest init` first",
+                        key_path.display()
+                    );
+                }
+                return Ok(ExitCode::from(1));
+            }
+            let key_body = std::fs::read_to_string(&key_path)
+                .with_context(|| format!("read {}", key_path.display()))?;
+            let signing_key = forge_core::attest::signing_key_from_base64(key_body.trim())
+                .ok_or_else(|| anyhow::anyhow!("could not parse signing key from {}", key_path.display()))?;
+
+            let identity = forge_core::site_identity::SiteIdentity::load(root)
+                .unwrap_or_default();
+            let resolved_site = site_id.clone().unwrap_or_else(|| {
+                identity.site_id.clone().unwrap_or_else(|| {
+                    root.file_name()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("unknown")
+                        .to_owned()
+                })
+            });
+            let resolved_tenant = tenant_id
+                .clone()
+                .unwrap_or_else(|| identity.tenant_id.clone().unwrap_or_default());
+
+            let fingerprint = forge_core::fingerprint::build_from_cms_dir(&cms_dir)
+                .with_context(|| format!("build_from_cms_dir {}", cms_dir.display()))?;
+
+            let registry = registry_path
+                .clone()
+                .unwrap_or_else(|| root.join("registry/fingerprints.jsonl"));
+            if let Some(parent) = registry.parent() {
+                std::fs::create_dir_all(parent)
+                    .with_context(|| format!("create_dir_all {}", parent.display()))?;
+            }
+
+            let timestamp = time::OffsetDateTime::now_utc()
+                .format(&time::format_description::well_known::Rfc3339)
+                .unwrap_or_else(|_| "0000-00-00T00:00:00Z".to_owned());
+
+            let entry = forge_core::fingerprint_registry::append(
+                &registry,
+                &resolved_site,
+                &resolved_tenant,
+                fingerprint,
+                &timestamp,
+                &signing_key,
+            )
+            .with_context(|| format!("append to {}", registry.display()))?;
+
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "stage": "register",
+                        "registry_path": registry.display().to_string(),
+                        "sequence": entry.sequence,
+                        "hash": entry.hash,
+                        "site_id": entry.site_id,
+                        "tenant_id": entry.tenant_id,
+                        "timestamp": entry.timestamp,
+                    })
+                );
+            } else {
+                println!(
+                    "forge fingerprint register: appended seq #{:04}",
+                    entry.sequence
+                );
+                println!("  hash:        {}", entry.hash);
+                println!("  site:        {}", entry.site_id);
+                println!("  tenant:      {}", entry.tenant_id);
+                println!("  timestamp:   {}", entry.timestamp);
+                println!("  registry:    {}", registry.display());
+            }
+            Ok(ExitCode::SUCCESS)
+        }
         FingerprintAction::Compute { json } => {
             // Walk cms/*.json and compute the SiteFingerprint
             // commitment without touching the registry.
