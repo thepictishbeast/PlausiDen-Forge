@@ -93,6 +93,74 @@ pub enum BuildMode {
     Dynamic,
 }
 
+/// Substrate-correct guidance attached to a finding.
+///
+/// Per `[[tool-starvation-anti-pattern]]` + `[[substrate-only-path]]`
+/// + task #151 (`docs/TOOL_ADVOCACY.md`): every refusal points at the
+/// named substrate fix. The Advocacy struct carries the four pieces
+/// of advocacy that travel alongside a finding into reports + JSON +
+/// terminal output:
+///
+///   * `why` — one-sentence root cause (not just symptom)
+///   * `substrate_fix` — the exact command / file / field that
+///     resolves the finding via the substrate-correct path
+///   * `skill` — pointer to `skills/<name>/SKILL.md` when a
+///     procedure applies
+///   * `anti_pattern` — the bash/grep/curl alternative the operator
+///     likely reached for; named explicitly so the substrate path
+///     is unambiguous
+///
+/// Per `[[backward-compat-version-discipline]]` additive change
+/// classification: populating Advocacy is non-breaking; empty
+/// Advocacy skips serialization to keep legacy reports byte-
+/// identical.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct Advocacy {
+    /// One-sentence root cause. Example:
+    /// "rendered HTML references an undeclared backend slug".
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub why: String,
+    /// The substrate-correct command or workflow that resolves the
+    /// finding. Be specific: exact command, exact file, exact field.
+    /// Example: `add \`[[backend]] id = "cta-signup"\` to
+    /// backends.toml in the same commit`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub substrate_fix: String,
+    /// Skill playbook reference (slug from `skills/<name>/SKILL.md`),
+    /// e.g. `"add-loom-primitive"`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skill: Option<String>,
+    /// Bash/grep/curl alternative the operator likely reached for —
+    /// named explicitly so the substrate alternative is unambiguous.
+    /// Example: `"don't \`grep -r data-backend static/\` — use
+    /// \`forge audit phantom_button\`"`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub anti_pattern: Option<String>,
+}
+
+impl Advocacy {
+    /// True when no advocacy field has been populated. Used to skip
+    /// serialization of legacy / un-retrofitted findings so JSON
+    /// reports stay byte-identical until phases adopt the trait.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.why.is_empty()
+            && self.substrate_fix.is_empty()
+            && self.skill.is_none()
+            && self.anti_pattern.is_none()
+    }
+}
+
+/// Anything that can carry typed substrate advocacy. Implemented by
+/// `Finding` today; other diagnostic types (BuildError variants,
+/// loom-lint warnings, crawler journey-step failures) can adopt the
+/// trait as the Phase-2 retrofit of task #201 lands.
+pub trait WithAdvocacy {
+    /// Borrow the attached advocacy. Returns a reference to allow
+    /// callers to inspect / render without cloning. May be empty.
+    fn advocacy(&self) -> &Advocacy;
+}
+
 /// A single finding produced by a phase.
 ///
 /// Findings flow up to the runner which collects them into a
@@ -104,6 +172,11 @@ pub enum BuildMode {
 /// → rationale via `forge doctrine query --rule <id>`. Optional;
 /// rules-aware phases populate it, legacy phases leave it empty
 /// during migration.
+///
+/// `advocacy` (task #201) lets a finding carry the substrate-correct
+/// fix alongside the diagnosis — see `docs/TOOL_ADVOCACY.md` for
+/// the template + the chained `.why()` / `.fix()` / `.skill()` /
+/// `.avoid()` builder methods.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Finding {
     /// Phase that produced this finding (e.g. "tokens", "csp").
@@ -128,6 +201,12 @@ pub struct Finding {
     /// additive change classification).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub enforces_rules: Vec<String>,
+    /// Substrate-correct guidance the operator (or AI agent) follows
+    /// to resolve the finding. Populated via the chained
+    /// `.why()` / `.fix()` / `.skill()` / `.avoid()` builders.
+    /// Skipped from JSON when empty (additive change classification).
+    #[serde(default, skip_serializing_if = "Advocacy::is_empty")]
+    pub advocacy: Advocacy,
 }
 
 impl Finding {
@@ -144,6 +223,7 @@ impl Finding {
             message: message.into(),
             severity: Severity::Strict,
             enforces_rules: Vec::new(),
+            advocacy: Advocacy::default(),
         }
     }
 
@@ -160,6 +240,7 @@ impl Finding {
             message: message.into(),
             severity: Severity::Warn,
             enforces_rules: Vec::new(),
+            advocacy: Advocacy::default(),
         }
     }
 
@@ -176,6 +257,50 @@ impl Finding {
         self.enforces_rules
             .extend(rule_ids.into_iter().map(Into::into));
         self
+    }
+
+    /// Attach the one-sentence root-cause explanation to this
+    /// finding's advocacy. Per `docs/TOOL_ADVOCACY.md`:
+    /// `Finding::strict(...).why("rendered HTML references an
+    /// undeclared backend slug")`.
+    #[must_use]
+    pub fn why(mut self, why: impl Into<String>) -> Self {
+        self.advocacy.why = why.into();
+        self
+    }
+
+    /// Attach the substrate-correct fix to this finding's advocacy.
+    /// Be specific: exact command, exact file, exact field.
+    /// `Finding::strict(...).fix("add \`[[backend]] id = \"cta-
+    /// signup\"\` to backends.toml in the same commit")`.
+    #[must_use]
+    pub fn fix(mut self, substrate_fix: impl Into<String>) -> Self {
+        self.advocacy.substrate_fix = substrate_fix.into();
+        self
+    }
+
+    /// Attach a skill-playbook pointer to this finding's advocacy.
+    /// The slug should match a `skills/<slug>/SKILL.md` file.
+    #[must_use]
+    pub fn skill(mut self, skill: impl Into<String>) -> Self {
+        self.advocacy.skill = Some(skill.into());
+        self
+    }
+
+    /// Attach the anti-pattern (bash/grep/curl alternative) the
+    /// operator likely reached for to this finding's advocacy.
+    /// `Finding::strict(...).avoid("don't \`grep -r data-backend
+    /// static/\` — use \`forge audit phantom_button\`")`.
+    #[must_use]
+    pub fn avoid(mut self, anti_pattern: impl Into<String>) -> Self {
+        self.advocacy.anti_pattern = Some(anti_pattern.into());
+        self
+    }
+}
+
+impl WithAdvocacy for Finding {
+    fn advocacy(&self) -> &Advocacy {
+        &self.advocacy
     }
 }
 
@@ -390,5 +515,89 @@ mod tests {
         r.push(Finding::strict("p", "path", "msg"));
         assert!(!r.passed(BuildMode::Poc));
         assert!(!r.passed(BuildMode::Production));
+    }
+
+    // -----------------------------------------------------------------
+    // Advocacy tests — task #201 phase 1
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn advocacy_default_is_empty() {
+        let a = Advocacy::default();
+        assert!(a.is_empty());
+    }
+
+    #[test]
+    fn advocacy_is_not_empty_after_any_field_populated() {
+        let mut a = Advocacy::default();
+        a.why = "x".into();
+        assert!(!a.is_empty());
+
+        let mut a = Advocacy::default();
+        a.substrate_fix = "x".into();
+        assert!(!a.is_empty());
+
+        let mut a = Advocacy::default();
+        a.skill = Some("x".into());
+        assert!(!a.is_empty());
+
+        let mut a = Advocacy::default();
+        a.anti_pattern = Some("x".into());
+        assert!(!a.is_empty());
+    }
+
+    #[test]
+    fn finding_advocacy_builders_populate_fields() {
+        let f = Finding::strict("phantom_button", "static/index.html", "msg")
+            .citing(["sec-007"])
+            .why("rendered HTML references an undeclared backend slug")
+            .fix("add `[[backend]] id = \"cta-signup\"` to backends.toml")
+            .skill("author-cms-content")
+            .avoid("don't `grep -r data-backend static/` — use `forge audit phantom_button`");
+
+        assert_eq!(f.enforces_rules, vec!["sec-007".to_string()]);
+        assert_eq!(
+            f.advocacy.why,
+            "rendered HTML references an undeclared backend slug"
+        );
+        assert!(f.advocacy.substrate_fix.starts_with("add `[[backend]]"));
+        assert_eq!(f.advocacy.skill.as_deref(), Some("author-cms-content"));
+        assert!(f.advocacy.anti_pattern.as_deref().unwrap().contains("grep"));
+        assert!(!f.advocacy.is_empty());
+    }
+
+    #[test]
+    fn finding_with_advocacy_trait_exposes_borrow() {
+        let f = Finding::strict("p", "p", "m").why("root cause");
+        let a: &Advocacy = f.advocacy();
+        assert_eq!(a.why, "root cause");
+    }
+
+    #[test]
+    fn finding_empty_advocacy_round_trips_unchanged() {
+        // Legacy finding (no advocacy) should serialize without an
+        // "advocacy" field (additive change per backward-compat doctrine).
+        let f = Finding::strict("p", "path", "msg");
+        let json = serde_json::to_string(&f).expect("serialize");
+        assert!(
+            !json.contains("\"advocacy\""),
+            "empty advocacy should be skipped to keep legacy reports byte-identical: {json}"
+        );
+    }
+
+    #[test]
+    fn finding_populated_advocacy_serializes() {
+        let f = Finding::strict("p", "path", "msg").why("cause").fix("do x");
+        let json = serde_json::to_string(&f).expect("serialize");
+        assert!(json.contains("\"advocacy\""));
+        assert!(json.contains("\"why\":\"cause\""));
+        assert!(json.contains("\"substrate_fix\":\"do x\""));
+
+        // Round-trip: deserialize back + assert content matches.
+        let back: Finding = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.advocacy.why, "cause");
+        assert_eq!(back.advocacy.substrate_fix, "do x");
+        assert!(back.advocacy.skill.is_none());
+        assert!(back.advocacy.anti_pattern.is_none());
     }
 }

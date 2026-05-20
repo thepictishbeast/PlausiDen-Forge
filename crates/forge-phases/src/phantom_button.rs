@@ -57,7 +57,11 @@ impl Phase for PhantomButtonPhase {
                             "{unwired} button(s) with no data-backend (UI not declared in backends.toml)"
                         ),
                     )
-                    .citing(["sec-007"]),
+                    .citing(["sec-007"])
+                    .why("interactive UI elements without data-backend are unaudited; the substrate cannot enforce capability declarations on them")
+                    .fix("add `data-backend=\"<slug>\"` to each button + declare the slug in backends.toml in the same commit")
+                    .skill("author-cms-content")
+                    .avoid("don't `grep -r 'class=\"btn' static/` to triage — use `forge audit phantom_button --explain`"),
                 );
             }
 
@@ -77,7 +81,13 @@ impl Phase for PhantomButtonPhase {
                         // in manifest) — the same declarative requirement
                         // applies to UI capabilities exposed via
                         // data-backend slugs.
-                        .citing(["sec-007"]),
+                        .citing(["sec-007"])
+                        .why("rendered HTML references a data-backend slug with no entry in backends.toml; the button will not work in production")
+                        .fix(format!(
+                            "add `[[backend]]\\nid = \"{key}\"\\nkind = \"<kind>\"\\nendpoint = \"<endpoint>\"` to backends.toml in the same commit, OR remove the data-backend attribute"
+                        ))
+                        .skill("author-cms-content")
+                        .avoid("don't `grep -r 'data-backend' static/` — use `forge audit phantom_button --explain`"),
                     );
                 }
             }

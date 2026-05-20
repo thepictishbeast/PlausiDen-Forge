@@ -1510,6 +1510,22 @@ fn print_finding(f: &Finding) {
     } else {
         println!("  {}{}: {} — {}{}", label, f.phase, f.path, f.message, rule_suffix);
     }
+    // Task #201: render Advocacy when populated. Indent under the
+    // finding line for grep-ability. Skipped silently for un-retrofitted
+    // findings (legacy phases) — they keep their byte-identical output.
+    let adv = &f.advocacy;
+    if !adv.why.is_empty() {
+        println!("      Why:    {}", adv.why);
+    }
+    if !adv.substrate_fix.is_empty() {
+        println!("      Fix:    {}", adv.substrate_fix);
+    }
+    if let Some(skill) = &adv.skill {
+        println!("      Skill:  skills/{skill}/SKILL.md");
+    }
+    if let Some(anti) = &adv.anti_pattern {
+        println!("      Avoid:  {anti}");
+    }
 }
 
 /// T44: continuous-build watch mode.
