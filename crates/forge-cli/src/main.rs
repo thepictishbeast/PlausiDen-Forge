@@ -177,6 +177,13 @@ enum Cmd {
         #[command(subcommand)]
         action: FingerprintAction,
     },
+    /// Identity provenance management (#239): compute, sign, and
+    /// list per-build provenance attestations of the site's
+    /// [site_identity] declaration + fingerprint commitment.
+    Identity {
+        #[command(subcommand)]
+        action: IdentityAction,
+    },
     /// Adversarial audits run OUTSIDE the build pipeline. Used
     /// for one-off scans + pre-commit hooks; never gated on a
     /// build's success.
@@ -1049,7 +1056,7 @@ enum FingerprintAction {
         #[arg(long, default_value_t = false)]
         json: bool,
     },
-    /// List entries in the fingerprint registry.
+    /// List entries in the fingerprint registry. (closes #239 list dim)
     List {
         /// Override the default registry path
         /// (`registry/fingerprints.jsonl`).
@@ -1059,6 +1066,33 @@ enum FingerprintAction {
         #[arg(long)]
         tenant: Option<String>,
         /// JSON output for cross-AI consumers.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+/// `forge identity` subcommands. Backs task #239.
+#[derive(clap::Subcommand, Clone, Debug)]
+enum IdentityAction {
+    /// Print the current site_identity hash + key fields.
+    Show {
+        /// JSON output (cross-AI consumable per docs-008).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+    /// List the provenance attestations on disk
+    /// (`reports/provenance-*.json`).
+    History {
+        /// JSON output.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+    /// Verify a provenance file's Ed25519 signature against
+    /// `reports/attest-pubkey.b64`.
+    Verify {
+        /// Path to the provenance file.
+        path: std::path::PathBuf,
+        /// JSON output.
         #[arg(long, default_value_t = false)]
         json: bool,
     },
@@ -1120,6 +1154,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Verify { chain, signatures, json }) => return run_verify(&root, *chain, *signatures, *json),
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Fingerprint { action }) => return run_fingerprint(&root, action),
+        Some(Cmd::Identity { action }) => return run_identity(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Fix { apply, json }) => return run_fix(&root, *apply, *json),
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
@@ -1998,6 +2033,198 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
                 println!("{}", fp.as_str());
             }
             Ok(ExitCode::SUCCESS)
+        }
+    }
+}
+
+/// Task #239: identity provenance management.
+fn run_identity(root: &std::path::Path, action: &IdentityAction) -> Result<ExitCode> {
+    match action {
+        IdentityAction::Show { json } => {
+            let identity = forge_core::site_identity::SiteIdentity::load(root)
+                .unwrap_or_default();
+            let provenance = forge_core::provenance::Provenance::compute(
+                root,
+                "(not-computed)",
+                time::OffsetDateTime::now_utc()
+                    .format(&time::format_description::well_known::Rfc3339)
+                    .unwrap_or_else(|_| "0000-00-00T00:00:00Z".to_owned()),
+                identity.site_id.clone().unwrap_or_default(),
+                identity.tenant_id.clone().unwrap_or_default(),
+            )
+            .with_context(|| "compute identity hash")?;
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "site_id": identity.site_id.clone().unwrap_or_default(),
+                        "tenant_id": identity.tenant_id.clone().unwrap_or_default(),
+                        "identity_hash": provenance.identity_hash,
+                        "voice_tier": identity.voice.tier.clone().unwrap_or_default(),
+                        "mood_primary": identity.mood.primary.clone().unwrap_or_default(),
+                        "density_preference": identity.density_preference.clone().unwrap_or_default(),
+                        "theme_variants": identity.theme_variant.iter().map(|t| &t.name).collect::<Vec<_>>(),
+                        "allowed_primitives": identity.allowed_primitives,
+                        "forbidden_primitives": identity.forbidden_primitives,
+                    })
+                );
+            } else {
+                println!("forge identity show:");
+                println!("  site_id:           {}", identity.site_id.as_deref().unwrap_or("(none)"));
+                println!("  tenant_id:         {}", identity.tenant_id.as_deref().unwrap_or("(none)"));
+                println!("  identity_hash:     {}", if provenance.identity_hash.is_empty() { "(no [site_identity] section)" } else { &provenance.identity_hash });
+                println!("  voice tier:        {}", identity.voice.tier.as_deref().unwrap_or("(unset)"));
+                println!("  mood primary:      {}", identity.mood.primary.as_deref().unwrap_or("(unset)"));
+                println!("  density:           {}", identity.density_preference.as_deref().unwrap_or("(unset)"));
+                println!(
+                    "  theme variants:    {}",
+                    if identity.theme_variant.is_empty() {
+                        "(none)".to_owned()
+                    } else {
+                        identity.theme_variant.iter().map(|t| t.name.as_str()).collect::<Vec<_>>().join(", ")
+                    }
+                );
+                println!("  allowed primitives:  {} entries", identity.allowed_primitives.len());
+                println!("  forbidden primitives: {} entries", identity.forbidden_primitives.len());
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        IdentityAction::History { json } => {
+            let reports_dir = root.join("reports");
+            let mut files: Vec<std::path::PathBuf> = if reports_dir.is_dir() {
+                std::fs::read_dir(&reports_dir)
+                    .with_context(|| format!("read_dir {}", reports_dir.display()))?
+                    .filter_map(|e| e.ok())
+                    .map(|e| e.path())
+                    .filter(|p| {
+                        p.file_name()
+                            .and_then(|n| n.to_str())
+                            .map_or(false, |n| n.starts_with("provenance-") && n.ends_with(".json"))
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            files.sort();
+            let mut entries = Vec::new();
+            for f in &files {
+                if let Ok(body) = std::fs::read_to_string(f) {
+                    if let Ok(p) = serde_json::from_str::<forge_core::provenance::Provenance>(&body) {
+                        entries.push((f.clone(), p));
+                    }
+                }
+            }
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "count": entries.len(),
+                        "entries": entries.iter().map(|(p, prov)| serde_json::json!({
+                            "path": p.display().to_string(),
+                            "timestamp": prov.timestamp,
+                            "site_id": prov.site_id,
+                            "tenant_id": prov.tenant_id,
+                            "identity_hash": prov.identity_hash,
+                            "fingerprint": prov.fingerprint_commitment_hex,
+                            "signed": !prov.signature_b64.is_empty(),
+                        })).collect::<Vec<_>>(),
+                    })
+                );
+            } else {
+                println!("forge identity history: {} provenance entries", entries.len());
+                for (path, p) in &entries {
+                    let short_hash = if p.identity_hash.len() >= 16 {
+                        &p.identity_hash[..16]
+                    } else {
+                        &p.identity_hash
+                    };
+                    println!(
+                        "  {}  identity={}…  site={}  signed={}",
+                        p.timestamp,
+                        short_hash,
+                        p.site_id,
+                        !p.signature_b64.is_empty()
+                    );
+                    println!("    {}", path.display());
+                }
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        IdentityAction::Verify { path, json } => {
+            let body = std::fs::read_to_string(path)
+                .with_context(|| format!("read {}", path.display()))?;
+            let prov: forge_core::provenance::Provenance =
+                serde_json::from_str(&body)
+                    .with_context(|| format!("parse provenance from {}", path.display()))?;
+            let pub_path = root.join("reports/attest-pubkey.b64");
+            if !pub_path.is_file() {
+                let payload = serde_json::json!({
+                    "status": "fail",
+                    "stage": "verify",
+                    "error": format!("no {} — run `forge attest init` first", pub_path.display()),
+                });
+                if *json {
+                    println!("{payload}");
+                } else {
+                    eprintln!("forge identity verify: no {}", pub_path.display());
+                }
+                return Ok(ExitCode::from(1));
+            }
+            let s = std::fs::read_to_string(&pub_path)
+                .with_context(|| format!("read {}", pub_path.display()))?;
+            let Some(vk) = forge_core::attest::pubkey_from_base64(s.trim()) else {
+                let payload = serde_json::json!({
+                    "status": "fail",
+                    "stage": "verify",
+                    "error": format!("could not parse pubkey from {}", pub_path.display()),
+                });
+                if *json {
+                    println!("{payload}");
+                } else {
+                    eprintln!("forge identity verify: bad pubkey at {}", pub_path.display());
+                }
+                return Ok(ExitCode::from(1));
+            };
+            match prov.verify(&vk) {
+                Ok(()) => {
+                    if *json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "status": "ok",
+                                "stage": "verify",
+                                "path": path.display().to_string(),
+                                "identity_hash": prov.identity_hash,
+                                "site_id": prov.site_id,
+                                "timestamp": prov.timestamp,
+                            })
+                        );
+                    } else {
+                        println!(
+                            "forge identity verify: ok — signature valid for site `{}` at {}",
+                            prov.site_id, prov.timestamp
+                        );
+                    }
+                    Ok(ExitCode::SUCCESS)
+                }
+                Err(e) => {
+                    if *json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "status": "fail",
+                                "stage": "verify",
+                                "error": e.to_string(),
+                            })
+                        );
+                    } else {
+                        eprintln!("forge identity verify: FAIL — {e}");
+                    }
+                    Ok(ExitCode::from(2))
+                }
+            }
         }
     }
 }
