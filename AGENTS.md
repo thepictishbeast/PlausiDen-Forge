@@ -8,6 +8,8 @@ Orientation for any AI agent (Claude or otherwise) working in this repository. R
 
 > Tool surface for AI clients (Claude / Gemini / other MCP-capable agents): see [mcp/README.md](./mcp/README.md). Tool schemas at `mcp/tools/*.json`, manifest at `mcp/manifest.json`. Cross-AI consumable — no agent-specific extensions.
 
+> Canonical workflows: see [justfile](./justfile). `just build-site` for the full deploy cycle (forge build → rsync → chown). `just substrate-extend <layer> <name>` for the capability-extension workflow. Pairs with the Makefile (which holds build / test / lint operations).
+
 ---
 
 ## RULE 0 — The substrate is the only path (LOAD-BEARING)
