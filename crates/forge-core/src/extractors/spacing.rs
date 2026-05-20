@@ -29,6 +29,25 @@ use serde::{Deserialize, Serialize};
 
 use crate::extractors::{ComputedStylesDump, ExtractorError, StylesSpec};
 
+impl SpacingResult {
+    /// Construct a SpacingResult. Public constructor needed for
+    /// external crates because the struct is `#[non_exhaustive]`.
+    #[must_use]
+    pub fn new(
+        rhythm_unit_px: u32,
+        section_gap_p95_px: u32,
+        content_max_width_px: u32,
+        gap_distribution_px: BTreeMap<u32, u32>,
+    ) -> Self {
+        Self {
+            rhythm_unit_px,
+            section_gap_p95_px,
+            content_max_width_px,
+            gap_distribution_px,
+        }
+    }
+}
+
 /// Aggregate spacing result.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]

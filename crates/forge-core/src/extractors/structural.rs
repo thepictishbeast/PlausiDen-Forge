@@ -75,6 +75,36 @@ pub struct StructuralDump {
     pub pages: Vec<PageEntry>,
 }
 
+impl NavShape {
+    /// Construct a NavShape. Public constructor for external
+    /// crates.
+    #[must_use]
+    pub fn new(item_count: u32, has_sticky_header: bool, has_footer_nav: bool) -> Self {
+        Self {
+            item_count,
+            has_sticky_header,
+            has_footer_nav,
+        }
+    }
+}
+
+impl StructuralResult {
+    /// Construct a StructuralResult. Public constructor for
+    /// external crates because the struct is `#[non_exhaustive]`.
+    #[must_use]
+    pub fn new(
+        nav_shape: NavShape,
+        page_type_distribution: BTreeMap<String, u32>,
+        cross_page_link_density_avg: f64,
+    ) -> Self {
+        Self {
+            nav_shape,
+            page_type_distribution,
+            cross_page_link_density_avg,
+        }
+    }
+}
+
 /// Aggregate structural result.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]

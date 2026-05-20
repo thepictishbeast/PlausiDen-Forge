@@ -11,8 +11,11 @@ use std::fs;
 use forge_core::extractors::interactive::{
     HoverTreatment, HoverTreatmentEntry, InteractiveResult,
 };
+use forge_core::extractors::motion::MotionResult;
 use forge_core::extractors::palette::{ContrastClass, PaletteEntry};
 use forge_core::extractors::sections::PatternClassification;
+use forge_core::extractors::spacing::SpacingResult;
+use forge_core::extractors::structural::{NavShape, StructuralResult};
 use forge_core::extractors::typography::{FontFamilyEntry, TypographyResult};
 use forge_core::extractors::voice::VoiceResult;
 use forge_core::reference_composition::{compose_multi, WeightedReference};
@@ -158,6 +161,54 @@ fn arc_multi_reference_composition_round_trip() {
     let written = synthesize(&spec, &dir).unwrap();
     assert_eq!(written.len(), 2);
     let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn arc_constructors_cover_every_extractor_result_type() {
+    // Exercise every extractor's pub fn new() to verify the
+    // constructors stay in sync with the structs they build.
+    // If any field is added to a #[non_exhaustive] struct, this
+    // test breaks at the call site — forcing a sync update.
+    let _palette = PaletteEntry::new(
+        "#000000",
+        [0, 0, 0],
+        10,
+        ContrastClass::Dark,
+        vec!["color".into()],
+    );
+    let _typography = TypographyResult::new(
+        vec![FontFamilyEntry::new("Inter", 5)],
+        BTreeMap::from([(16u32, 1u32)]),
+        vec![400],
+        1.4,
+    );
+    let _spacing = SpacingResult::new(16, 32, 760, BTreeMap::new());
+    let _motion = MotionResult::new(
+        vec![],
+        BTreeMap::new(),
+        false,
+        false,
+        4,
+        1,
+        false,
+        false,
+    );
+    let _structural = StructuralResult::new(
+        NavShape::new(3, true, false),
+        BTreeMap::new(),
+        2.5,
+    );
+    let _voice = VoiceResult::new(10, 100, 500, 10.0, 8, 18, 0.4, 1, 10000, "casual");
+    let _interactive = InteractiveResult::new(
+        vec![HoverTreatmentEntry::new(HoverTreatment::ColorShift, 1)],
+        BTreeMap::new(),
+        true,
+        BTreeMap::new(),
+        true,
+    );
+    let _section = PatternClassification::new("paragraph", 60, "");
+    // If this test compiles + runs, every constructor matches
+    // its struct shape.
 }
 
 #[test]

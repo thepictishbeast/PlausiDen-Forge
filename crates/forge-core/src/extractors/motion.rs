@@ -26,6 +26,46 @@ use serde::{Deserialize, Serialize};
 
 use crate::extractors::{ComputedStylesDump, ExtractorError, StylesSpec};
 
+impl TransitionCurveEntry {
+    /// Construct a TransitionCurveEntry. Public constructor for
+    /// external crates.
+    #[must_use]
+    pub fn new(curve: impl Into<String>, occurrence_count: u32) -> Self {
+        Self {
+            curve: curve.into(),
+            occurrence_count,
+        }
+    }
+}
+
+impl MotionResult {
+    /// Construct a MotionResult. Public constructor needed for
+    /// external crates because the struct is `#[non_exhaustive]`.
+    #[must_use]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        transition_curves: Vec<TransitionCurveEntry>,
+        transition_durations_ms: BTreeMap<u32, u32>,
+        has_scroll_triggers: bool,
+        has_animations: bool,
+        border_radius_mode_px: u32,
+        distinct_box_shadows: u32,
+        has_gradients: bool,
+        has_filters: bool,
+    ) -> Self {
+        Self {
+            transition_curves,
+            transition_durations_ms,
+            has_scroll_triggers,
+            has_animations,
+            border_radius_mode_px,
+            distinct_box_shadows,
+            has_gradients,
+            has_filters,
+        }
+    }
+}
+
 /// Aggregate motion + decorative result.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
