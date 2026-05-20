@@ -8203,7 +8203,8 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-mention, .loom-hashtag { color: var(--loom-color-primary, var(--loom-accent)); font-weight: 600; text-decoration: none; }
 .loom-mention:hover, .loom-hashtag:hover { text-decoration: underline; }
 .loom-share-row { display: flex; gap: 0.4rem; }
-.loom-share-row__btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--loom-color-border, var(--loom-border)); background: var(--loom-color-surface, var(--loom-bg)); cursor: pointer; font-size: 1rem; }
+/* 44x44 tap target — WCAG 2.5.5 AAA + Apple HIG + Material Design. */
+.loom-share-row__btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--loom-color-border, var(--loom-border)); background: var(--loom-color-surface, var(--loom-bg)); cursor: pointer; font-size: 1rem; }
 .loom-follow-btn { gap: 0.4rem; }
 .loom-follow-btn__count { font-weight: 500; opacity: 0.85; }
 .loom-profile-card { padding: 1.5rem; border-radius: 14px; background: var(--loom-color-surface, var(--loom-bg)); border: 1px solid var(--loom-color-border, var(--loom-border)); text-align: center; }
