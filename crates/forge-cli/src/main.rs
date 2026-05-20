@@ -46,6 +46,7 @@ use forge_phases::composition_lineage::CompositionLineagePhase;
 use forge_phases::differentiation_budget::DifferentiationBudgetPhase;
 use forge_phases::external_assets::ExternalAssetsPhase;
 use forge_phases::forbidden_patterns::ForbiddenPatternsPhase;
+use forge_phases::identity_coherence::IdentityCoherencePhase;
 use forge_phases::mood_lock::MoodLockPhase;
 use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
@@ -1391,6 +1392,7 @@ fn run() -> Result<ExitCode> {
         // docs/VARIATION_GUARANTEES.md.
         Box::new(EditorialPurityGatePhase::default()),
         Box::new(SiteIdentityConformancePhase::default()),
+        Box::new(IdentityCoherencePhase::default()),
         Box::new(ThemeVariationRequiredPhase::default()),
         Box::new(VoiceProfileAuditPhase::default()),
         Box::new(MoodLockPhase::default()),

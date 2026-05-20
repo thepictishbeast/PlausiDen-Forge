@@ -26,6 +26,7 @@ pub mod composition_lineage;
 pub mod differentiation_budget;
 pub mod editorial_purity_gate;
 pub mod forbidden_patterns;
+pub mod identity_coherence;
 pub mod mood_lock;
 pub mod pattern_entropy;
 pub mod site_identity_conformance;
