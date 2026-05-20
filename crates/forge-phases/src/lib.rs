@@ -21,6 +21,7 @@ pub mod a11y_landmarks;
 pub mod aesthetic_distinctiveness;
 pub mod annotation_review;
 pub mod density_audit;
+pub mod placeholder_value_audit;
 pub mod asset_optimization;
 pub mod backend_coverage;
 pub mod carbon_budget;
