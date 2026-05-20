@@ -98,6 +98,18 @@ impl Phase for LoomSyncPhase {
                     "Loom skin.css not found at {}. Set LOOM_PATH or check out PlausiDen-Loom as a sibling of PlausiDen-Forge.",
                     loom_path.display()
                 ),
+            )
+            .why(
+                "loom_sync verifies static/loom-skin.css matches the canonical bytes from a \
+                 PlausiDen-Loom checkout; without that checkout the sync chain is unverifiable",
+            )
+            .fix(
+                "set LOOM_PATH=/path/to/PlausiDen-Loom OR check out PlausiDen-Loom as a sibling \
+                 directory of PlausiDen-Forge (the default loom_skin_path probe location)",
+            )
+            .avoid(
+                "don't hand-copy skin.css bytes from Loom releases — the SYNC-FROM-LOOM \
+                 marker won't match and the next build will flag drift",
             )]);
         }
         let poc_path = ctx.static_dir.join("loom-skin.css");
@@ -106,6 +118,15 @@ impl Phase for LoomSyncPhase {
                 self.name(),
                 poc_path.display().to_string(),
                 "PoC skin.css missing — run `forge --sync-loom` to bootstrap.".to_owned(),
+            )
+            .why(
+                "static/loom-skin.css is the design-system bytes every rendered page links to; \
+                 a missing file means every <link rel=stylesheet> 404s in the browser",
+            )
+            .fix("run `forge --sync-loom` to copy current Loom skin.css bytes into static/")
+            .avoid(
+                "don't `touch static/loom-skin.css` — an empty file passes existence check but \
+                 strips every rendered page of its design system",
             )]);
         }
 
@@ -121,6 +142,19 @@ impl Phase for LoomSyncPhase {
                 self.name(),
                 relative(&poc_path, &ctx.root),
                 "no SYNC-FROM-LOOM marker — skin.css has never been auto-synced from Loom. Run `forge --sync-loom`.".to_owned(),
+            )
+            .why(
+                "the SYNC-FROM-LOOM:sha384-<hash> marker is the chain-of-custody proof that \
+                 the CSS bytes match a specific Loom revision; without it, drift can't be \
+                 detected on subsequent builds",
+            )
+            .fix(
+                "run `forge --sync-loom` to write the canonical bytes + marker to \
+                 static/loom-skin.css in one step",
+            )
+            .avoid(
+                "don't edit static/loom-skin.css by hand — Forge regenerates it on \
+                 `forge --sync-loom` and any manual edit gets clobbered",
             )]),
             Some(rec) if rec == expected => Ok(vec![]),
             Some(rec) => Ok(vec![Finding::warn(
@@ -129,6 +163,16 @@ impl Phase for LoomSyncPhase {
                 format!(
                     "Loom skin.css drift (recorded {rec}, current {expected}). Run `forge --sync-loom` to update."
                 ),
+            )
+            .why(
+                "Loom's canonical skin.css has changed (new design-system tokens, fixed a11y \
+                 contrast, etc.) but static/loom-skin.css still carries the old hash. The \
+                 served site is shipping the stale design system",
+            )
+            .fix("run `forge --sync-loom` to copy the current Loom skin.css bytes + update the marker")
+            .avoid(
+                "don't manually update the marker — only the canonical sync command writes \
+                 both bytes + hash atomically",
             )]),
         }
     }
@@ -211,6 +255,38 @@ mod tests {
         css.push_str(&".foo {} ".repeat(140)); // > 1KB of content
         css.push_str("/* SYNC-FROM-LOOM:sha384-XYZ */");
         assert_eq!(parse_marker(&css), None);
+    }
+
+    #[test]
+    fn loom_sync_findings_carry_advocacy() {
+        // Run the phase in an empty temp root — loom_path won't
+        // exist, triggering the first warn branch. Assert advocacy
+        // is populated across the four code paths.
+        let tmp = std::env::temp_dir().join(format!(
+            "forge-loom-sync-advocacy-{}",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(&tmp).expect("mkdir");
+        std::fs::create_dir_all(tmp.join("static")).expect("mkdir static");
+        let ctx = BuildCtx {
+            root: tmp.clone(),
+            static_dir: tmp.join("static"),
+            mode: forge_core::BuildMode::Poc,
+        };
+        let findings = LoomSyncPhase.run(&ctx).expect("run");
+        assert_eq!(findings.len(), 1, "expected one loom-missing warn");
+        let adv = &findings[0].advocacy;
+        assert!(!adv.why.is_empty(), "loom_sync warn must carry .why()");
+        assert!(
+            !adv.substrate_fix.is_empty(),
+            "loom_sync warn must carry .fix()"
+        );
+        assert!(
+            adv.anti_pattern.is_some(),
+            "loom_sync warn must carry .avoid()"
+        );
+        let _ = std::fs::remove_dir_all(&tmp);
     }
 
     #[test]
