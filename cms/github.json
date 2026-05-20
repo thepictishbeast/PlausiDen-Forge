@@ -1,0 +1,132 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "GitHub — Change is constant. GitHub keeps you ahead.",
+  "description": "Join the world's most widely adopted, AI-powered developer platform where millions of developers, businesses, and the largest open source community build software that advances humanity.",
+  "brand": "GitHub",
+  "chrome": "page_shell",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "github.com", "href": "https://github.com/", "data_backend": "cta-platform"}
+  ],
+  "path": "/github.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Product",
+        "links": [
+          {"label": "Repositories", "href": "/github-repos/",    "data_backend": "view-platform"},
+          {"label": "Actions",      "href": "/github-actions/",  "data_backend": "view-platform"},
+          {"label": "Copilot",      "href": "/github-copilot/",  "data_backend": "view-platform"},
+          {"label": "Issues",       "href": "/github-issues/",   "data_backend": "view-platform"},
+          {"label": "Discussions",  "href": "/github-discussions/", "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Reference",
+        "links": [
+          {"label": "github.com",   "href": "https://github.com/",     "data_backend": "cta-platform"},
+          {"label": "Docs",         "href": "https://docs.github.com/", "data_backend": "view-docs"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "GitHub approximation",
+      "phone": "Forge-static mirror",
+      "email": "approximation@plausiden.com",
+      "address": "Authored from SSR-extractable copy",
+      "jurisdiction": "Pixel-rep rotation"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 Forge-static approximation of github.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with GitHub, Inc."
+  },
+  "nav_links": [
+    {"label": "Features",   "href": "/github-features/",  "data_backend": "view-platform"},
+    {"label": "Customers",  "href": "/github-customers/", "data_backend": "view-platform"},
+    {"label": "Docs",       "href": "https://docs.github.com/", "data_backend": "view-docs"},
+    {"label": "Pricing",    "href": "/github-pricing/",   "data_backend": "view-pricing"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "GitHub — Forge static mirror",
+      "title": "Change is constant. GitHub keeps you ahead.",
+      "lede": "Join the world's most widely adopted, AI-powered developer platform where millions of developers, businesses, and the largest open source community build software that advances humanity.",
+      "cta": {
+        "label": "github.com",
+        "href": "https://github.com/",
+        "data_backend": "cta-platform"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating collaborative software development.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge-static approximation of github.com authored from SSR-extractable headings + meta description. Pixel-rep rotation target per PlausiDen-Forge #222. Not affiliated with GitHub; the substrate uses GitHub as a reference shape for the editorial_purity_gate's developer-platform + logo-wall audit."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "The future of building happens together.",
+      "attribution": "github.com, SSR-extracted hero subtitle",
+      "emphasis": "display"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "GitHub features.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Repositories",
+          "value": "Source of truth for code + collaboration.",
+          "hint": "Distributed git hosting with rich permissions, branch protection, code review at the line level. The substrate everything else depends on."
+        },
+        {
+          "key": "Actions",
+          "value": "CI/CD that runs in the same place the code lives.",
+          "hint": "Workflow-as-code: matrix builds, custom runners, secrets management, marketplace integration. Same authz model as the repo itself."
+        },
+        {
+          "key": "Copilot",
+          "value": "AI pair programmer + agent integration.",
+          "hint": "Inline suggestions, agent-mode PRs, code review augmentation. Integrates with the chat surfaces (Discussions, PR comments) where engineering decisions actually happen."
+        },
+        {
+          "key": "Issues",
+          "value": "Typed issue + project tracking.",
+          "hint": "Labels, milestones, projects, custom fields. Tied to commits + PRs + discussions through closes-via-mention semantics."
+        },
+        {
+          "key": "Discussions",
+          "value": "Long-form decision capture.",
+          "hint": "RFC threads, Q&A, announcements. Distinct from issues — the place engineering decisions get litigated before they become work items."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "GitHub customers."
+    },
+    {
+      "kind": "paragraph",
+      "text": "American Airlines, Duolingo, Ernst & Young, Ford — alongside millions of open source maintainers — ship on GitHub. The reference shape is one where the same substrate serves enterprise compliance posture and individual-developer side projects without two SKUs that diverge."
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Reference",
+      "title": "Open the live GitHub site.",
+      "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
+      "cta": {"label": "github.com", "href": "https://github.com/", "data_backend": "cta-platform"}
+    }
+  ]
+}
