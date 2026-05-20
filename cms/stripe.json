@@ -1,0 +1,169 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Stripe — Financial Infrastructure to Grow Your Revenue",
+  "description": "Stripe is a financial services platform that helps all types of businesses accept payments, build flexible billing models and manage money movement.",
+  "brand": "Stripe",
+  "chrome": "page_shell",
+  "theme": "ocean",
+  "nav_actions": [
+    {"label": "stripe.com", "href": "https://stripe.com/", "data_backend": "cta-platform"}
+  ],
+  "path": "/stripe.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Products",
+        "links": [
+          {"label": "Payments",      "href": "/stripe-payments/",      "data_backend": "view-platform"},
+          {"label": "Billing",       "href": "/stripe-billing/",       "data_backend": "view-pricing"},
+          {"label": "Issuing",       "href": "/stripe-issuing/",       "data_backend": "view-platform"},
+          {"label": "Treasury",      "href": "/stripe-treasury/",      "data_backend": "view-platform"},
+          {"label": "Connect",       "href": "/stripe-connect/",       "data_backend": "view-platform"}
+        ]
+      },
+      {
+        "heading": "Reference",
+        "links": [
+          {"label": "stripe.com",    "href": "https://stripe.com/",            "data_backend": "cta-platform"},
+          {"label": "Docs",          "href": "https://docs.stripe.com/",        "data_backend": "view-docs"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Stripe approximation",
+      "phone": "Forge-static mirror",
+      "email": "approximation@plausiden.com",
+      "address": "Authored from SSR-extractable copy",
+      "jurisdiction": "Pixel-rep rotation"
+    },
+    "legal_links": [
+      {"label": "Privacy", "href": "/about/privacy-policy/",       "data_backend": "view-docs"},
+      {"label": "Terms",   "href": "/about/terms-and-conditions/", "data_backend": "view-docs"}
+    ],
+    "colophon": "© 2026 Forge-static approximation of stripe.com — authored by PlausiDen-Forge for substrate validation. Not affiliated with Stripe, Inc."
+  },
+  "nav_links": [
+    {"label": "Payments", "href": "/stripe-payments/", "data_backend": "view-platform"},
+    {"label": "Billing",  "href": "/stripe-billing/",  "data_backend": "view-pricing"},
+    {"label": "Connect",  "href": "/stripe-connect/",  "data_backend": "view-platform"},
+    {"label": "Docs",     "href": "https://docs.stripe.com/", "data_backend": "view-docs"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Stripe — Forge static mirror",
+      "title": "Financial Infrastructure to Grow Your Revenue.",
+      "lede": "Stripe is a financial services platform that helps all types of businesses accept payments, build flexible billing models and manage money movement.",
+      "cta": {
+        "label": "stripe.com",
+        "href": "https://stripe.com/",
+        "data_backend": "cta-platform"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-66.jpg",
+        "alt": "Editorial photograph illustrating financial infrastructure.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Forge-static approximation of stripe.com authored from SSR-extractable headings + descriptions. Pixel-rep rotation target per PlausiDen-Forge #221. Not affiliated with Stripe; the substrate uses Stripe as a reference shape for the editorial_purity_gate's solution-tile audit."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Flexible solutions for every business model.",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Payments",
+          "value": "Accept and optimise payments globally — online and in person.",
+          "hint": "Cards, wallets, bank debits, BNPL, and crypto. Real-time decline-rate optimisation. Unified API across 195+ countries."
+        },
+        {
+          "key": "Billing",
+          "value": "Enable any billing model.",
+          "hint": "Subscriptions, metered, hybrid, one-off invoices, dunning, revenue recognition. Same API regardless of the pricing shape."
+        },
+        {
+          "key": "Issuing",
+          "value": "Create a card issuing programme.",
+          "hint": "Virtual + physical cards under your brand. Programmatic spend controls, real-time authorisation hooks, integrated ledger."
+        },
+        {
+          "key": "Treasury",
+          "value": "Borderless money movement.",
+          "hint": "Embedded financial accounts, ACH + wire, multi-currency, stablecoins + crypto for cross-border treasury without correspondent friction."
+        },
+        {
+          "key": "Connect",
+          "value": "Embed payments in your platform.",
+          "hint": "Marketplace + SaaS-platform payouts. Multi-party transactions with revenue-sharing rules expressed declaratively."
+        },
+        {
+          "key": "Agentic",
+          "value": "Monetise through agentic commerce.",
+          "hint": "AI-driven shopping flows + agent-to-agent transactions. Same identity + idempotency primitives that ship on the human-facing checkout."
+        }
+      ]
+    },
+    {
+      "kind": "pull_quote",
+      "body": "The backbone of global commerce. Businesses on Stripe generated US$1.9tn in 2025; 150k+ users have their best day ever on Stripe.",
+      "attribution": "Stripe, public 2025 figures",
+      "emphasis": "display"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Powering businesses of all sizes."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Customer references (verbatim from live page).",
+      "density": "comfortable",
+      "items": [
+        {
+          "key": "Hertz",
+          "value": "Hertz unifies commerce with Stripe.",
+          "hint": "Cross-channel unification: in-vehicle, kiosk, web, mobile — one ledger, one reconciliation pipeline."
+        },
+        {
+          "key": "URBN",
+          "value": "URBN consolidates $5 billion in online and in-store revenue onto Stripe.",
+          "hint": "Multi-brand retail group (Urban Outfitters, Anthropologie, Free People) on a unified payment + treasury stack."
+        },
+        {
+          "key": "Instacart",
+          "value": "Instacart powers online grocery delivery with Stripe.",
+          "hint": "Multi-party marketplace economics (shopper, retailer, customer) executed via Connect."
+        },
+        {
+          "key": "Le Monde",
+          "value": "Le Monde improves local and international payments with Stripe.",
+          "hint": "Subscription + one-off article-paywall billing across multiple currencies + regulatory regimes."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Reliable, extensible infrastructure for every stack."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Connect to existing systems. Scale with confidence. Choose an integration path. The substrate ships SDKs in 7 languages with parity-tested client behaviour and stable wire shapes pinned via semver discipline."
+    },
+    {
+      "kind": "call_to_action",
+      "align": "start",
+      "eyebrow": "Reference",
+      "title": "View the live Stripe site.",
+      "lede": "This is the Forge-static approximation. The actual product lives at the canonical URL.",
+      "cta": {"label": "stripe.com", "href": "https://stripe.com/", "data_backend": "cta-platform"}
+    }
+  ]
+}
