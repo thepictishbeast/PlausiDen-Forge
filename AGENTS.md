@@ -92,6 +92,19 @@ Before reaching for bash/grep/find/curl, hand-rolled scripts, or general-purpose
 **Fix:**
 - `forge fix` — auto-apply mechanical fixes from latest build report.
 
+**Codegen (complete-Rust-stack runtime generator):**
+- `forge codegen --dry-run` — preview generated-crate file set + per-stage summary.
+- `forge codegen --out <DIR>` — write a self-contained Cargo crate (axum + tokio + serde + loom-cms-render). Five stages: handler-scaffold, router-assembly, crate-manifest, persistence-layer, smoke-tests. **Use this instead of hand-writing axum handlers per page.**
+- `--crate-name <NAME>` overrides the default basename-derived crate name.
+
+**Pixel reproduction (Forge #218 rotation):**
+- `make pixel-rep SLUG=<x> SITE_URL=<url> FORGE_PATH=/<x>.html` — capture live URL + local Forge mirror at 390/768/1280 via Crawler `--capture-reference`. Captures land in `../PlausiDen-Crawler/runs/<slug>/` + `<slug>-forge/`.
+- `make pixel-rep-diff SLUG=<x>` — compact file-size delta table.
+- `make pixel-rep-visual-diff SLUG=<x>` — ImageMagick pixel-level diff + red-overlay diff PNGs under `<slug>-diff/`.
+- `make pixel-rep-rotation` — auto-summary table of every captured `<slug>+<slug>-forge` pair under `runs/`.
+- Per-site analyses live in `docs/PIXEL_REP_<SLUG>.md`. Rotation summary: `docs/PIXEL_REP_ROTATION.md`.
+- **Use this instead of ad-hoc curl + screenshot scripts.**
+
 **Loom (sister repo, drives this one's CSS + primitives):**
 - `loom site init --template <kind>` — scaffold buildable site.
 - `loom edit serve` — admin CMS editor (cookie auth).
