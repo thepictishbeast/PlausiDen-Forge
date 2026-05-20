@@ -94,6 +94,12 @@ search-core = { path = "../search-core" }
 # bundles missing the AVIF/WebP/JPEG fallback ladder or
 # empty alt text (WCAG 2.1 §1.1.1).
 assets-core = { path = "../assets-core" }
+# 2026-05-20 runtime wiring: doctrine-core drives
+# `forge doctrine query` — loads + queries the AVP-Doctrine
+# 71-rule database (build / primitives / security / testing /
+# docs / logging / perf / content / accessibility) with the
+# statement+rationale+enforcement triple per task #173.
+doctrine-core = { path = "../doctrine-core" }
 # Base64 decode for the fingerprint subcommand (forge-core stores
 # the pubkey as base64).
 base64 = { workspace = true }

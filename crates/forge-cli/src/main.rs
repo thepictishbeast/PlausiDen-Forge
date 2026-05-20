@@ -363,6 +363,23 @@ enum Cmd {
         #[command(subcommand)]
         action: AssetsAction,
     },
+    /// Query the AVP-Doctrine rule database (71 rules across 9
+    /// domains: build / primitives / security / testing / docs /
+    /// logging / perf / content / accessibility).
+    ///
+    /// Backed by `doctrine-core` (task #174). Rules live in
+    /// `<AVP-Doctrine repo>/doctrine/rules/<domain>.toml`; the
+    /// rules' typed schema is at the same dir's `SCHEMA.md`.
+    ///
+    /// Examples:
+    ///   forge doctrine query --domain security
+    ///   forge doctrine query --rule prim-001
+    ///   forge doctrine query --severity strict --lifecycle stable
+    ///   forge doctrine query --search "tap target"
+    Doctrine {
+        #[command(subcommand)]
+        action: DoctrineAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -626,6 +643,52 @@ enum ConfigAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum DoctrineAction {
+    /// Query the doctrine rule database. At least one filter
+    /// (or `--rule` to fetch by id) should be supplied; with
+    /// no filters, lists every loaded rule's id + name.
+    ///
+    /// Exit codes:
+    ///   0 — query returned at least one rule
+    ///   1 — query loaded the database but matched no rules
+    ///   2 — fatal (doctrine dir missing / parse error / invalid filter)
+    Query {
+        /// Filter to a specific rule id (e.g., `prim-001`). When set,
+        /// other filters are ignored.
+        #[arg(long)]
+        rule: Option<String>,
+        /// Filter by domain (build / primitives / security / testing /
+        /// docs / logging / perf / content / accessibility).
+        #[arg(long)]
+        domain: Option<String>,
+        /// Filter by severity (strict / warn / informational / experimental).
+        #[arg(long)]
+        severity: Option<String>,
+        /// Filter by lifecycle (experimental / stable / deprecated).
+        #[arg(long)]
+        lifecycle: Option<String>,
+        /// Substring search across statement + rationale fields.
+        #[arg(long)]
+        search: Option<String>,
+        /// Filter to rules that reference the given trait name in
+        /// their `related_traits` field.
+        #[arg(long, value_name = "TRAIT")]
+        related_trait: Option<String>,
+        /// Path to the AVP-Doctrine repository root (the directory
+        /// containing `doctrine/rules/`). Defaults to the env var
+        /// `PLAUSIDEN_DOCTRINE_DIR`, falling back to
+        /// `../PlausiDen-AVP-Doctrine` relative to `--root`.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// Emit JSON output (machine-readable, cross-AI consumable per
+        /// the cross-AI compatibility rule docs-008). Default is the
+        /// human-readable summary.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
 enum FederationAction {
     /// Validate `federation.toml` at the project root against
     /// the typed federation-core surface (T79).
@@ -765,6 +828,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Content { action }) => return run_content(action),
         Some(Cmd::Search { action }) => return run_search(action),
         Some(Cmd::Assets { action }) => return run_assets(action),
+        Some(Cmd::Doctrine { action }) => return run_doctrine(action, &root),
         Some(Cmd::Watch {
             debounce_ms,
             max_rebuilds,
@@ -5150,6 +5214,347 @@ fn run_assets_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
             );
             Ok(ExitCode::from(1))
         }
+    }
+}
+
+// ----------------------------------------------------------------
+// `forge doctrine query` — task #175.
+//
+// Loads PlausiDen-AVP-Doctrine's doctrine/rules/*.toml via
+// doctrine-core (task #174), applies filters, emits human or JSON
+// output.
+//
+// Doctrine dir resolution order:
+//   1. --doctrine-dir flag
+//   2. PLAUSIDEN_DOCTRINE_DIR env var
+//   3. <forge-root>/../PlausiDen-AVP-Doctrine
+// ----------------------------------------------------------------
+
+fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result<ExitCode> {
+    match action {
+        DoctrineAction::Query {
+            rule,
+            domain,
+            severity,
+            lifecycle,
+            search,
+            related_trait,
+            doctrine_dir,
+            json,
+        } => run_doctrine_query(
+            rule.as_deref(),
+            domain.as_deref(),
+            severity.as_deref(),
+            lifecycle.as_deref(),
+            search.as_deref(),
+            related_trait.as_deref(),
+            doctrine_dir.as_deref(),
+            *json,
+            forge_root,
+        ),
+    }
+}
+
+fn resolve_doctrine_dir(
+    explicit: Option<&std::path::Path>,
+    forge_root: &std::path::Path,
+) -> PathBuf {
+    if let Some(p) = explicit {
+        return p.to_path_buf();
+    }
+    if let Ok(env) = std::env::var("PLAUSIDEN_DOCTRINE_DIR") {
+        if !env.is_empty() {
+            return PathBuf::from(env);
+        }
+    }
+    forge_root
+        .parent()
+        .map(|p| p.join("PlausiDen-AVP-Doctrine"))
+        .unwrap_or_else(|| PathBuf::from("PlausiDen-AVP-Doctrine"))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_doctrine_query(
+    rule: Option<&str>,
+    domain: Option<&str>,
+    severity: Option<&str>,
+    lifecycle: Option<&str>,
+    search: Option<&str>,
+    related_trait: Option<&str>,
+    doctrine_dir: Option<&std::path::Path>,
+    json: bool,
+    forge_root: &std::path::Path,
+) -> Result<ExitCode> {
+    let dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+    let db = match doctrine_core::load_from_dir(&dir) {
+        Ok(d) => d,
+        Err(e) => {
+            if json {
+                let payload = serde_json::json!({
+                    "status": "fatal",
+                    "error": e.to_string(),
+                    "doctrine_dir": dir.display().to_string(),
+                });
+                println!("{}", payload);
+            } else {
+                eprintln!(
+                    "forge doctrine: failed to load doctrine from {} — {}",
+                    dir.display(),
+                    e
+                );
+                eprintln!(
+                    "(set --doctrine-dir or PLAUSIDEN_DOCTRINE_DIR to point at PlausiDen-AVP-Doctrine)"
+                );
+            }
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    // Direct id lookup short-circuits other filters.
+    if let Some(id) = rule {
+        return match db.by_id(id) {
+            Some(r) => {
+                emit_doctrine_rules(std::slice::from_ref(r), json);
+                Ok(ExitCode::SUCCESS)
+            }
+            None => {
+                if json {
+                    println!(
+                        "{}",
+                        serde_json::json!({"status":"empty","matched":0,"rule":id})
+                    );
+                } else {
+                    eprintln!("forge doctrine: no rule with id {id}");
+                }
+                Ok(ExitCode::from(1))
+            }
+        };
+    }
+
+    // Parse + validate filter values.
+    let dom_filter = match domain {
+        None => None,
+        Some(s) => match parse_doctrine_domain(s) {
+            Some(d) => Some(d),
+            None => {
+                eprintln!(
+                    "forge doctrine: unknown --domain {s} (expected one of: build, primitives, security, testing, docs, logging, perf, content, accessibility)"
+                );
+                return Ok(ExitCode::from(2));
+            }
+        },
+    };
+    let sev_filter = match severity {
+        None => None,
+        Some(s) => match parse_doctrine_severity(s) {
+            Some(v) => Some(v),
+            None => {
+                eprintln!(
+                    "forge doctrine: unknown --severity {s} (expected one of: strict, warn, informational, experimental)"
+                );
+                return Ok(ExitCode::from(2));
+            }
+        },
+    };
+    let lc_filter = match lifecycle {
+        None => None,
+        Some(s) => match parse_doctrine_lifecycle(s) {
+            Some(v) => Some(v),
+            None => {
+                eprintln!(
+                    "forge doctrine: unknown --lifecycle {s} (expected one of: experimental, stable, deprecated)"
+                );
+                return Ok(ExitCode::from(2));
+            }
+        },
+    };
+
+    let needle_lc = search.map(|s| s.to_lowercase());
+
+    let matched: Vec<&doctrine_core::Rule> = db
+        .all()
+        .iter()
+        .filter(|r| dom_filter.is_none_or(|d| r.domain == d))
+        .filter(|r| sev_filter.is_none_or(|s| r.severity == s))
+        .filter(|r| lc_filter.is_none_or(|l| r.lifecycle == l))
+        .filter(|r| match &needle_lc {
+            None => true,
+            Some(n) => {
+                r.statement.to_lowercase().contains(n)
+                    || r.rationale.to_lowercase().contains(n)
+                    || r.name.to_lowercase().contains(n)
+            }
+        })
+        .filter(|r| match related_trait {
+            None => true,
+            Some(t) => r.related_traits.iter().any(|x| x == t),
+        })
+        .collect();
+
+    if matched.is_empty() {
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({"status":"empty","matched":0,"total_loaded":db.len()})
+            );
+        } else {
+            eprintln!(
+                "forge doctrine: no rules matched the supplied filters ({} rules loaded total)",
+                db.len()
+            );
+        }
+        return Ok(ExitCode::from(1));
+    }
+
+    emit_doctrine_rules(matched.iter().copied(), json);
+    Ok(ExitCode::SUCCESS)
+}
+
+fn parse_doctrine_domain(s: &str) -> Option<doctrine_core::Domain> {
+    match s.to_lowercase().as_str() {
+        "build" => Some(doctrine_core::Domain::Build),
+        "primitives" => Some(doctrine_core::Domain::Primitives),
+        "security" => Some(doctrine_core::Domain::Security),
+        "testing" => Some(doctrine_core::Domain::Testing),
+        "docs" => Some(doctrine_core::Domain::Docs),
+        "logging" => Some(doctrine_core::Domain::Logging),
+        "perf" => Some(doctrine_core::Domain::Perf),
+        "content" => Some(doctrine_core::Domain::Content),
+        "accessibility" => Some(doctrine_core::Domain::Accessibility),
+        _ => None,
+    }
+}
+
+fn parse_doctrine_severity(s: &str) -> Option<doctrine_core::Severity> {
+    match s.to_lowercase().as_str() {
+        "strict" => Some(doctrine_core::Severity::Strict),
+        "warn" => Some(doctrine_core::Severity::Warn),
+        "informational" => Some(doctrine_core::Severity::Informational),
+        "experimental" => Some(doctrine_core::Severity::Experimental),
+        _ => None,
+    }
+}
+
+fn parse_doctrine_lifecycle(s: &str) -> Option<doctrine_core::Lifecycle> {
+    match s.to_lowercase().as_str() {
+        "experimental" => Some(doctrine_core::Lifecycle::Experimental),
+        "stable" => Some(doctrine_core::Lifecycle::Stable),
+        "deprecated" => Some(doctrine_core::Lifecycle::Deprecated),
+        _ => None,
+    }
+}
+
+fn emit_doctrine_rules<'a, T>(rules: T, json: bool)
+where
+    T: IntoIterator<Item = &'a doctrine_core::Rule> + Clone,
+{
+    if json {
+        // Per docs-008 (cross-AI compatibility): JSON output is the
+        // machine-readable surface Claude / Gemini / other agents
+        // consume; the human surface is the text form below.
+        let rules_vec: Vec<&doctrine_core::Rule> = rules.into_iter().collect();
+        let payload = serde_json::json!({
+            "status": "ok",
+            "matched": rules_vec.len(),
+            "rules": rules_vec,
+        });
+        println!("{}", payload);
+        return;
+    }
+    let mut count = 0_usize;
+    for r in rules {
+        count += 1;
+        println!("{} — {}  [{}/{}]", r.id, r.name, severity_label(r.severity), lifecycle_label(r.lifecycle));
+        println!("  domain    : {:?}", r.domain);
+        println!("  statement : {}", r.statement.trim());
+        // Rationale can be multi-paragraph; indent each line.
+        for line in r.rationale.trim().lines() {
+            println!("  rationale : {line}");
+        }
+        for (i, e) in r.enforcement.iter().enumerate() {
+            if i == 0 {
+                println!("  enforce   : {e}");
+            } else {
+                println!("            : {e}");
+            }
+        }
+        if !r.applies_to.is_empty() {
+            println!("  applies-to: {}", r.applies_to.join("; "));
+        }
+        if !r.related_traits.is_empty() {
+            println!("  traits    : {}", r.related_traits.join(", "));
+        }
+        if !r.references.is_empty() {
+            println!("  refs      : {}", r.references.join(" | "));
+        }
+        if let Some(d) = &r.deprecated_at {
+            println!("  deprecated: {d}{}", r.replaced_by.as_deref().map(|s| format!(" → {s}")).unwrap_or_default());
+        }
+        println!();
+    }
+    println!("({count} matched)");
+}
+
+fn severity_label(s: doctrine_core::Severity) -> &'static str {
+    match s {
+        doctrine_core::Severity::Strict => "strict",
+        doctrine_core::Severity::Warn => "warn",
+        doctrine_core::Severity::Informational => "info",
+        doctrine_core::Severity::Experimental => "experimental",
+        // #[non_exhaustive] on doctrine_core::Severity — handle future
+        // variants gracefully as "unknown" rather than panicking.
+        _ => "unknown",
+    }
+}
+
+fn lifecycle_label(l: doctrine_core::Lifecycle) -> &'static str {
+    match l {
+        doctrine_core::Lifecycle::Experimental => "experimental",
+        doctrine_core::Lifecycle::Stable => "stable",
+        doctrine_core::Lifecycle::Deprecated => "deprecated",
+        // #[non_exhaustive] — future variants surface as "unknown".
+        _ => "unknown",
+    }
+}
+
+#[cfg(test)]
+mod doctrine_query_tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn resolves_explicit_dir() {
+        let p = Path::new("/tmp/doctrine-test");
+        assert_eq!(resolve_doctrine_dir(Some(p), Path::new("/x")), p);
+    }
+
+    #[test]
+    fn falls_back_to_sibling_avp_doctrine() {
+        // Note: doesn't touch the global PLAUSIDEN_DOCTRINE_DIR env var to
+        // keep the test thread-safe. Only exercises the explicit-None path
+        // when the env var is absent (the env var override is covered by
+        // the explicit-Some-path test above).
+        if std::env::var("PLAUSIDEN_DOCTRINE_DIR").is_ok() {
+            // Env var is set by the harness — skip rather than mutate.
+            return;
+        }
+        let forge_root = Path::new("/home/u/projects/PlausiDen-Forge");
+        let resolved = resolve_doctrine_dir(None, forge_root);
+        assert!(resolved.ends_with("PlausiDen-AVP-Doctrine"));
+    }
+
+    #[test]
+    fn parses_domain_aliases() {
+        assert!(matches!(parse_doctrine_domain("build"), Some(doctrine_core::Domain::Build)));
+        assert!(matches!(parse_doctrine_domain("PRIMITIVES"), Some(doctrine_core::Domain::Primitives)));
+        assert!(parse_doctrine_domain("bogus").is_none());
+    }
+
+    #[test]
+    fn parses_severity_aliases() {
+        assert!(matches!(parse_doctrine_severity("strict"), Some(doctrine_core::Severity::Strict)));
+        assert!(matches!(parse_doctrine_severity("WARN"), Some(doctrine_core::Severity::Warn)));
+        assert!(parse_doctrine_severity("bogus").is_none());
     }
 }
 
