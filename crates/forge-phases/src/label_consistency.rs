@@ -111,25 +111,37 @@ impl Phase for LabelConsistencyPhase {
                 // for now silence is the contract.
                 continue;
             } else if opted > 0 {
-                findings.push(Finding::warn(
-                    self.name(),
-                    "static/",
-                    format!(
-                        "{kind}[{key}] — {} distinct labels with PARTIAL data-loom-poly-action ({opted}/{total} elements opted out): {} — annotate the remaining elements OR remove the attribute on all",
-                        label_counts.len(),
-                        summary.join(", ")
-                    ),
-                ));
+                findings.push(
+                    Finding::warn(
+                        self.name(),
+                        "static/",
+                        format!(
+                            "{kind}[{key}] — {} distinct labels with PARTIAL data-loom-poly-action ({opted}/{total} elements opted out): {}",
+                            label_counts.len(),
+                            summary.join(", ")
+                        ),
+                    )
+                    .why("inconsistent annotation — some instances declare polymorphic action, others don't; readers/screen-readers see contradicting affordances")
+                    .fix("either annotate the remaining elements with `data-loom-poly-action=\"true\"` OR remove the attribute on the opted-out ones — be uniform")
+                    .skill("author-cms-content")
+                    .avoid("don't grep individual files — `forge audit label_consistency` looks across the entire built static/ in one pass"),
+                );
             } else {
-                findings.push(Finding::strict(
-                    self.name(),
-                    "static/",
-                    format!(
-                        "{kind}[{key}] — {} distinct labels: {} — declare data-loom-poly-action=\"true\" if intentional polymorphism, otherwise consolidate to one label",
-                        label_counts.len(),
-                        summary.join(", ")
-                    ),
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        "static/",
+                        format!(
+                            "{kind}[{key}] — {} distinct labels: {}",
+                            label_counts.len(),
+                            summary.join(", ")
+                        ),
+                    )
+                    .why("same target (href or data-backend) is rendered with different labels in different places; screen-reader users hear a moving target")
+                    .fix("consolidate to ONE canonical label across cms/*.json + nav/footer config, OR declare polymorphism explicitly with `data-loom-poly-action=\"true\"` on every instance")
+                    .skill("author-cms-content")
+                    .avoid("don't search-replace one file at a time — `forge audit label_consistency` enforces consistency across the build"),
+                );
             }
         }
         Ok(findings)

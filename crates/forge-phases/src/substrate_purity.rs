@@ -119,12 +119,14 @@ fn walk_static_for_hand_authored(
                             phase_name,
                             path.display().to_string(),
                             format!(
-                                "hand-authored asset {name} not in canonical Forge/Loom emission allowlist — \
-                                site repos contain only CMS content + Forge-emitted output; \
-                                file a capability request to add this to Loom, or declare an exception via the substrate-bypass register"
+                                "hand-authored asset {name} not in canonical Forge/Loom emission allowlist"
                             ),
                         )
-                        .citing(["build-007", "prim-006"]),
+                        .citing(["build-007", "prim-006"])
+                        .why("site repos contain only CMS content + Forge-emitted output; this asset is neither")
+                        .fix("extend Loom (add a primitive variant + emission), OR move the rule into loom-tokens/src/skin.css if it is a token/theme change, OR — for genuine emergencies — declare the bypass via bypass-register.toml + a `// SUBSTRATE-BYPASS(<issue-id>): <reason>` comment")
+                        .skill("add-loom-primitive")
+                        .avoid("don't `cp foo.css static/` or `curl ... > static/foo.js` — substrate-only-path is load-bearing per SUBSTRATE_DISCIPLINE.md"),
                     );
                 }
             }

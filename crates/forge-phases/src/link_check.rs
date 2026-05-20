@@ -64,14 +64,23 @@ impl Phase for LinkCheckPhase {
                     continue;
                 };
                 if !anchors.contains(&target.fragment) {
-                    findings.push(Finding::strict(
-                        self.name(),
-                        file.name.clone(),
-                        format!(
-                            "href=\"{href}\" → no #{} anchor found in {target_file_name}",
+                    findings.push(
+                        Finding::strict(
+                            self.name(),
+                            file.name.clone(),
+                            format!(
+                                "href=\"{href}\" → no #{} anchor found in {target_file_name}",
+                                target.fragment
+                            ),
+                        )
+                        .why("anchor jump-link points at a fragment id that no element declares; clicking the link will scroll nowhere")
+                        .fix(format!(
+                            "add `\"id\": \"{}\"` to the target heading/section in cms/<page>.json, OR fix the href fragment in the source nav/footer/body",
                             target.fragment
-                        ),
-                    ));
+                        ))
+                        .skill("author-cms-content")
+                        .avoid("don't grep for `#frag` matches manually — `forge build` runs link_check across every page in one pass"),
+                    );
                 }
             }
         }
