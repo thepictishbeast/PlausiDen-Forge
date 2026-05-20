@@ -644,6 +644,36 @@ enum ConfigAction {
 
 #[derive(Subcommand, Debug)]
 enum DoctrineAction {
+    /// Scan the workspace for `// DOCTRINE-EXCEPTION: rule-XXX —
+    /// <reason>, see ADR-YYY` inline tags. Each exception names
+    /// the rule it bypasses + the justification + an ADR or issue
+    /// reference.
+    ///
+    /// Verifies:
+    ///   * the cited rule id resolves
+    ///   * justification text is non-empty
+    ///   * an ADR or issue link is present (regex: `(?i)(adr|issue)-\d+`)
+    ///
+    /// Lists every active exception in the workspace (use this as
+    /// a regular audit cadence — accumulating exceptions per rule
+    /// signal that the rule needs revision or the substrate needs
+    /// to support both cases properly).
+    ///
+    /// Exit codes:
+    ///   0 — no exceptions OR every exception is well-formed
+    ///   1 — at least one malformed or orphan exception
+    ///   2 — fatal (doctrine dir / parse error)
+    Exceptions {
+        /// Path to AVP-Doctrine root.
+        #[arg(long)]
+        doctrine_dir: Option<PathBuf>,
+        /// Source tree to scan. Defaults to `<forge-root>/crates`.
+        #[arg(long)]
+        source_dir: Option<PathBuf>,
+        /// JSON output.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
     /// PR-time gate: load + validate the doctrine database AND
     /// verify every rule citation in the workspace resolves to a
     /// known rule.
@@ -5265,6 +5295,16 @@ fn run_assets_validate(path: &std::path::Path, json: bool) -> Result<ExitCode> {
 
 fn run_doctrine(action: &DoctrineAction, forge_root: &std::path::Path) -> Result<ExitCode> {
     match action {
+        DoctrineAction::Exceptions {
+            doctrine_dir,
+            source_dir,
+            json,
+        } => run_doctrine_exceptions(
+            doctrine_dir.as_deref(),
+            source_dir.as_deref(),
+            *json,
+            forge_root,
+        ),
         DoctrineAction::Check {
             doctrine_dir,
             source_dir,
@@ -5720,6 +5760,255 @@ fn collect_citations(root: &std::path::Path) -> Vec<Citation> {
     out
 }
 
+// ----------------------------------------------------------------
+// `forge doctrine exceptions` — task #179.
+//
+// Inline-tag scanner: walks the workspace for
+// `// DOCTRINE-EXCEPTION: rule-XXX — <reason>, see ADR-YYY` or
+// `// DOCTRINE-EXCEPTION: rule-XXX — <reason>, see issue-YYY`.
+// Verifies the cited rule exists, the reason is non-empty, and an
+// ADR / issue reference is present.
+// ----------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+struct Exception {
+    file: PathBuf,
+    line: usize,
+    rule_id: String,
+    reason: String,
+    reference: Option<String>,
+}
+
+fn run_doctrine_exceptions(
+    doctrine_dir: Option<&std::path::Path>,
+    source_dir: Option<&std::path::Path>,
+    json: bool,
+    forge_root: &std::path::Path,
+) -> Result<ExitCode> {
+    let dir = resolve_doctrine_dir(doctrine_dir, forge_root);
+    let db = match doctrine_core::load_from_dir(&dir) {
+        Ok(d) => d,
+        Err(e) => {
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "fatal",
+                        "stage": "load_database",
+                        "error": e.to_string(),
+                        "doctrine_dir": dir.display().to_string(),
+                    })
+                );
+            } else {
+                eprintln!(
+                    "forge doctrine exceptions: failed to load doctrine — {e}\n  doctrine_dir = {}",
+                    dir.display()
+                );
+            }
+            return Ok(ExitCode::from(2));
+        }
+    };
+
+    let scan_root = match source_dir {
+        Some(p) => p.to_path_buf(),
+        None => forge_root.join("crates"),
+    };
+
+    let exceptions = collect_exceptions(&scan_root);
+
+    // Validate each: rule resolves, reason non-empty, ADR/issue ref present.
+    let mut malformed: Vec<(Exception, &'static str)> = Vec::new();
+    for ex in &exceptions {
+        if db.by_id(&ex.rule_id).is_none() {
+            malformed.push((ex.clone(), "rule_id does not resolve"));
+            continue;
+        }
+        if ex.reason.trim().is_empty() {
+            malformed.push((ex.clone(), "empty justification"));
+            continue;
+        }
+        if ex.reference.is_none() {
+            malformed.push((ex.clone(), "missing ADR/issue reference"));
+        }
+    }
+
+    if json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "status": if malformed.is_empty() { "ok" } else { "violations" },
+                "rules_loaded": db.len(),
+                "exceptions_found": exceptions.len(),
+                "well_formed": exceptions.len() - malformed.len(),
+                "malformed": malformed.iter().map(|(ex, why)| serde_json::json!({
+                    "file": ex.file.display().to_string(),
+                    "line": ex.line,
+                    "rule_id": ex.rule_id,
+                    "reason": ex.reason,
+                    "reference": ex.reference,
+                    "violation": why,
+                })).collect::<Vec<_>>(),
+                "active": exceptions.iter().map(|ex| serde_json::json!({
+                    "file": ex.file.display().to_string(),
+                    "line": ex.line,
+                    "rule_id": ex.rule_id,
+                    "reason": ex.reason,
+                    "reference": ex.reference,
+                })).collect::<Vec<_>>(),
+            })
+        );
+    } else {
+        println!(
+            "forge doctrine exceptions: {} rules loaded; {} exception(s) found across {}",
+            db.len(),
+            exceptions.len(),
+            scan_root.display()
+        );
+        if exceptions.is_empty() {
+            println!("  No DOCTRINE-EXCEPTION tags in the workspace.");
+        } else {
+            for ex in &exceptions {
+                println!(
+                    "  {}:{} — bypasses {} ({}) {}",
+                    ex.file.display(),
+                    ex.line,
+                    ex.rule_id,
+                    ex.reason.trim(),
+                    ex.reference
+                        .as_deref()
+                        .map(|r| format!("[{r}]"))
+                        .unwrap_or_default(),
+                );
+            }
+            if !malformed.is_empty() {
+                println!();
+                println!("  ⚠ Malformed exceptions:");
+                for (ex, why) in &malformed {
+                    println!(
+                        "    {}:{} (rule {}) — {}",
+                        ex.file.display(),
+                        ex.line,
+                        ex.rule_id,
+                        why
+                    );
+                }
+            }
+        }
+    }
+
+    if malformed.is_empty() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::from(1))
+    }
+}
+
+fn collect_exceptions(root: &std::path::Path) -> Vec<Exception> {
+    let mut out: Vec<Exception> = Vec::new();
+    visit_rs_files(root, &mut |path| {
+        let Ok(text) = std::fs::read_to_string(path) else {
+            return;
+        };
+        for (i, line) in text.lines().enumerate() {
+            if let Some(parsed) = parse_doctrine_exception(line) {
+                out.push(Exception {
+                    file: path.to_path_buf(),
+                    line: i + 1,
+                    rule_id: parsed.rule_id,
+                    reason: parsed.reason,
+                    reference: parsed.reference,
+                });
+            }
+        }
+    });
+    out
+}
+
+struct ParsedException {
+    rule_id: String,
+    reason: String,
+    reference: Option<String>,
+}
+
+/// Parse one line for the canonical
+/// `// DOCTRINE-EXCEPTION: <rule-id> — <reason>[, see <ref>]`
+/// form. Tolerant of em-dash, hyphen, or " - " between rule and reason.
+/// Returns None if the line doesn't match the pattern.
+fn parse_doctrine_exception(line: &str) -> Option<ParsedException> {
+    // Find the marker; everything after `DOCTRINE-EXCEPTION:` is payload.
+    let idx = line.find("DOCTRINE-EXCEPTION:")?;
+    let payload = line[idx + "DOCTRINE-EXCEPTION:".len()..].trim();
+
+    // Split rule_id (first whitespace-delimited token) from the rest.
+    let mut iter = payload.splitn(2, |c: char| c.is_whitespace() || c == ':');
+    let rule_id_raw = iter.next()?.trim().trim_matches(',');
+    let rule_id = rule_id_raw.to_string();
+    if !is_rule_id_shaped(&rule_id) {
+        return None;
+    }
+    let rest = iter.next().unwrap_or("").trim();
+    if rest.is_empty() {
+        return Some(ParsedException {
+            rule_id,
+            reason: String::new(),
+            reference: None,
+        });
+    }
+    // Split reason from reference at first occurrence of ", see ".
+    let (reason, reference) = match rest.find(", see ") {
+        Some(at) => {
+            let r = rest[..at].trim();
+            let ref_raw = rest[at + ", see ".len()..].trim();
+            let normalized = normalize_exception_reference(ref_raw);
+            (r.to_string(), normalized)
+        }
+        None => {
+            // Reference might appear as a trailing parenthetical
+            // "(ADR-017)" or after a different separator. Try a final
+            // pass: scan for the first ADR-N / issue-N / GH-N token.
+            let ref_token = rest
+                .split_whitespace()
+                .find_map(|t| normalize_exception_reference(t.trim_matches(|c: char| c == '(' || c == ')' || c == '[' || c == ']')));
+            (rest.trim_end_matches(',').trim().to_string(), ref_token)
+        }
+    };
+    // Strip leading em-dash / hyphen so reason text is clean.
+    let reason = reason
+        .trim_start_matches(|c: char| c == '—' || c == '-' || c.is_whitespace())
+        .trim()
+        .to_string();
+    Some(ParsedException {
+        rule_id,
+        reason,
+        reference,
+    })
+}
+
+/// Recognize references shaped like ADR-NNN, ISSUE-NNN, GH-NNN, #NNN.
+/// Returns the normalized form (uppercase prefix where applicable).
+fn normalize_exception_reference(s: &str) -> Option<String> {
+    let s = s.trim().trim_matches(',');
+    if s.is_empty() {
+        return None;
+    }
+    let lower = s.to_lowercase();
+    for prefix in &["adr-", "issue-", "gh-", "task-"] {
+        if let Some(rest) = lower.strip_prefix(prefix) {
+            if rest.chars().all(|c| c.is_ascii_digit()) && !rest.is_empty() {
+                // Normalize prefix to upper-case
+                let upper: String = prefix.trim_end_matches('-').to_uppercase();
+                return Some(format!("{upper}-{rest}"));
+            }
+        }
+    }
+    if let Some(rest) = s.strip_prefix('#') {
+        if rest.chars().all(|c| c.is_ascii_digit()) && !rest.is_empty() {
+            return Some(format!("#{rest}"));
+        }
+    }
+    None
+}
+
 /// Strict rule-id pattern: kebab-case word(s) + `-NNN` numeric
 /// suffix. Examples: `prim-001`, `a11y-003`, `sec-010`, `build-008`.
 /// Rejects: doc placeholders like `rule-X`, escape-quoted forms
@@ -5794,6 +6083,51 @@ mod doctrine_check_tests {
         assert!(ids.contains(&"a11y-001"));
         assert_eq!(cites.len(), 3);
         std::fs::remove_dir_all(&tmp).ok();
+    }
+
+    // Build fixtures at runtime so the literal marker doesn't appear in
+    // source — otherwise the `doctrine exceptions` scanner (which also
+    // walks this file) would treat the test strings as real exceptions
+    // and report them as malformed every run.
+    const EX_MARKER: &str = concat!("DOCTRINE", "-", "EXCEPTION");
+
+    #[test]
+    fn parses_doctrine_exception_with_adr() {
+        let line = format!(
+            "    // {}: prim-009 — desktop-only admin tool, see ADR-017",
+            EX_MARKER
+        );
+        let parsed = parse_doctrine_exception(&line).expect("parses");
+        assert_eq!(parsed.rule_id, "prim-009");
+        assert_eq!(parsed.reason, "desktop-only admin tool");
+        assert_eq!(parsed.reference.as_deref(), Some("ADR-017"));
+    }
+
+    #[test]
+    fn parses_doctrine_exception_with_issue() {
+        let line = format!(
+            "// {}: sec-008 — legacy endpoint pending rewrite, see issue-1429",
+            EX_MARKER
+        );
+        let parsed = parse_doctrine_exception(&line).expect("parses");
+        assert_eq!(parsed.rule_id, "sec-008");
+        assert_eq!(parsed.reference.as_deref(), Some("ISSUE-1429"));
+    }
+
+    #[test]
+    fn rejects_bad_rule_id_shape() {
+        let line = format!("// {}: rule-X — nope", EX_MARKER);
+        assert!(parse_doctrine_exception(&line).is_none());
+    }
+
+    #[test]
+    fn normalize_reference_handles_hash_form() {
+        assert_eq!(normalize_exception_reference("#1234"), Some("#1234".to_string()));
+        assert_eq!(
+            normalize_exception_reference("adr-42"),
+            Some("ADR-42".to_string())
+        );
+        assert_eq!(normalize_exception_reference("not-a-ref"), None);
     }
 
     #[test]
