@@ -181,6 +181,11 @@
           "key": "Expertise",
           "value": "Deep expertise across hardware + software.",
           "hint": "The substrate is one engineering team, end to end. The same people who design the cryptographic protocols deploy the production systems and respond to the incidents."
+        },
+        {
+          "key": "Confidentiality",
+          "value": "Confidentiality-first delivery.",
+          "hint": "Default-deny posture from the first line of code: hardware-anchored identity, audit trails by construction, no telemetry the customer didn't opt into. Compliance scaffolding (SOC 2, HIPAA, NIST) ships in the same engineering substrate that runs your apps — not a separate compliance team chasing diagrams after the fact."
         }
       ]
     },
