@@ -39,6 +39,7 @@ pub mod session_context;
 pub mod site_identity;
 pub mod skill_telemetry;
 pub mod substrate_state;
+pub mod synthesis;
 
 /// Indirection so substrate_state can reuse session_context's
 /// embedded RFC-3339 formatter without making it pub.
