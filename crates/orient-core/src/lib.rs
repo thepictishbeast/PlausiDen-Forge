@@ -47,76 +47,44 @@
 
 use serde::{Deserialize, Serialize};
 
+pub mod accessibility;
+pub mod audience;
 pub mod compliance;
+pub mod domain;
+pub mod lifecycle;
 pub mod objective;
+pub mod resource;
 pub mod risk;
 pub mod sovereignty;
+pub mod temporal;
 
+pub use accessibility::Accessibility;
+pub use audience::Audience;
 pub use compliance::Compliance;
+pub use domain::Domain;
+pub use lifecycle::Lifecycle;
 pub use objective::Objective;
+pub use resource::Resource;
 pub use risk::Risk;
 pub use sovereignty::Sovereignty;
+pub use temporal::Temporal;
 
 // Marker modules for the remaining 10 axes (object is implicit in
 // Rust type identity; the substrate doesn't need a separate enum).
 // Each gets fleshed out in its own follow-on task.
 
-/// Placeholder for the Outcome orientation (`#195`).
+/// Placeholder for the Outcome orientation.
 ///
 /// Outcomes describe what an entity *causes* / aims to cause —
 /// measurable effects like `page_lcp_under_2.5s`,
 /// `audit_chain_verified`, `no_phantom_buttons`. Distinct from
 /// Objective: the objective is the *goal*; the outcome is the
 /// *measurable consequence*.
+///
+/// Stringly-typed today — outcome values are dynamic per-entity
+/// (every Forge phase declares its own outcomes). Future typing
+/// when the canonical outcome enum stabilizes.
 pub mod outcome {}
-
-/// Placeholder for the Audience orientation (`#195`).
-///
-/// Audiences enumerate the consumers an entity serves —
-/// `end_user`, `operator`, `partner_developer`, `regulator`,
-/// `ai_agent`, `legal_archive`, `internal_engineer`. Multi-valued.
-pub mod audience {}
-
-/// Placeholder for the Domain orientation (`#195`).
-///
-/// Domains enumerate the verticals an entity binds to —
-/// `healthcare`, `finance`, `hospitality`, `voting`, `education`,
-/// `ecommerce`, `legal`, `journalism`, `philanthropy`,
-/// `ai_research`, `agnostic` (substrate default).
-pub mod domain {}
-
-/// Placeholder for the Lifecycle orientation (`#195`).
-///
-/// Lifecycle states an entity's evolution stage —
-/// `experimental` (trial; advisory enforcement), `beta` (functional
-/// but unstable), `stable` (binding), `deprecated` (sunset
-/// scheduled), `retired` (removed). Parallels doctrine rule
-/// lifecycle.
-pub mod lifecycle {}
-
-/// Placeholder for the Resource orientation (`#194`).
-///
-/// Resource enumerates cost/budget envelopes — `cpu-cheap`,
-/// `cpu-bounded`, `cpu-expensive`, `memory-bounded`,
-/// `memory-streaming`, `network-frugal`, `network-bursty`,
-/// `carbon-budgeted`, `disk-frugal`, `disk-archival`. Multi-valued.
-pub mod resource {}
-
-/// Placeholder for the Accessibility orientation (`#195`).
-///
-/// Accessibility defines a11y target levels — `wcag-2.1-a`,
-/// `wcag-2.1-aa` (substrate default), `wcag-2.1-aaa`, `wcag-2.2-aa`,
-/// `wcag-2.2-aaa` — plus capability multi-values
-/// (`screen-reader-first`, `keyboard-first`, etc.).
-pub mod accessibility {}
-
-/// Placeholder for the Temporal orientation (`#195`).
-///
-/// Temporal enumerates time-binding behaviors — `session-scoped`,
-/// `request-scoped`, `build-scoped`, `daily-recurring`,
-/// `monthly-recurring`, `archival`, `ephemeral`,
-/// `versioned-immutable`, `monotonic`, `bounded-history`.
-pub mod temporal {}
 
 /// The full 12-orientation projection an entity may declare.
 ///
@@ -141,26 +109,31 @@ pub struct OrientationProjection {
     /// Measurable outcomes the entity causes / aims to cause.
     /// Multi-valued. Typed in task `#195`.
     pub outcome: Option<Vec<String>>,
-    /// Consumers the entity serves. Multi-valued. Typed in task `#195`.
-    pub audience: Option<Vec<String>>,
-    /// Verticals the entity binds to. Multi-valued. Typed in task `#195`.
-    pub domain: Option<Vec<String>>,
-    /// Entity's evolution stage. Typed in task `#195`.
-    pub lifecycle: Option<String>,
+    /// Consumers the entity serves. Multi-valued. Typed enum per
+    /// [`Audience`] (task #195).
+    pub audience: Option<Vec<Audience>>,
+    /// Verticals the entity binds to. Multi-valued. Typed enum per
+    /// [`Domain`] (task #195).
+    pub domain: Option<Vec<Domain>>,
+    /// Entity's evolution stage. Typed enum per [`Lifecycle`]
+    /// (task #195).
+    pub lifecycle: Option<Lifecycle>,
     /// Regulatory regimes the entity must conform to. Multi-valued.
     /// Typed enum per [`Compliance`] (task #191).
     pub compliance: Option<Vec<Compliance>>,
     /// AVP-2 risk tier. Typed enum per [`Risk`] (task #193).
     pub risk: Option<Risk>,
-    /// Cost/budget envelopes. Multi-valued. Typed in task `#194`.
-    pub resource: Option<Vec<String>>,
-    /// A11y posture. Typed in task `#195`.
-    pub accessibility: Option<String>,
+    /// Cost/budget envelopes. Multi-valued. Typed enum per
+    /// [`Resource`] (task #194).
+    pub resource: Option<Vec<Resource>>,
+    /// A11y posture. Typed enum per [`Accessibility`] (task #195).
+    pub accessibility: Option<Accessibility>,
     /// PSA posture. Multi-valued. Typed enum per [`Sovereignty`]
     /// (task #192).
     pub sovereignty: Option<Vec<Sovereignty>>,
-    /// Time-binding behaviors. Multi-valued. Typed in task `#195`.
-    pub temporal: Option<Vec<String>>,
+    /// Time-binding behaviors. Multi-valued. Typed enum per
+    /// [`Temporal`] (task #195).
+    pub temporal: Option<Vec<Temporal>>,
 }
 
 impl OrientationProjection {
@@ -240,11 +213,50 @@ mod tests {
         let p: OrientationProjection = serde_json::from_str(json).expect("deserialize");
         assert_eq!(p.object.as_deref(), Some("Loom.Primitive.Hero"));
         assert_eq!(p.objective, Some(Objective::DisplayContent));
-        assert_eq!(p.lifecycle.as_deref(), Some("stable"));
-        // Typed orientations from this iteration.
+        assert_eq!(p.lifecycle, Some(Lifecycle::Stable));
+        // Typed orientations from prior iteration.
         assert_eq!(p.compliance, Some(vec![Compliance::Wcag21Aa]));
         assert_eq!(p.risk, Some(Risk::Tier4Property));
         assert_eq!(p.sovereignty, Some(vec![Sovereignty::Private]));
+        // Newly-typed orientations from this iteration (#194/#195).
+        assert_eq!(p.audience, Some(vec![Audience::EndUser]));
+        assert_eq!(p.domain, Some(vec![Domain::Agnostic]));
+        assert_eq!(
+            p.resource,
+            Some(vec![Resource::CpuCheap, Resource::NetworkFrugal])
+        );
+        assert_eq!(p.accessibility, Some(Accessibility::Wcag21Aa));
+        assert_eq!(p.temporal, Some(vec![Temporal::BuildScoped]));
+    }
+
+    #[test]
+    fn projection_with_all_twelve_orientations_roundtrips() {
+        // Demonstrate that an entity can carry typed values on
+        // every orientation simultaneously.
+        let p = OrientationProjection {
+            object: Some("Loom.Primitive.PaymentForm".into()),
+            objective: Some(Objective::EnablePayment),
+            outcome: Some(vec!["user_completes_signup".into()]),
+            audience: Some(vec![Audience::EndUser]),
+            domain: Some(vec![Domain::Ecommerce, Domain::Finance]),
+            lifecycle: Some(Lifecycle::Stable),
+            compliance: Some(vec![Compliance::PciDss4, Compliance::Gdpr]),
+            risk: Some(Risk::Tier6Mutation),
+            resource: Some(vec![Resource::CpuBounded, Resource::NetworkFrugal]),
+            accessibility: Some(Accessibility::Wcag22Aa),
+            sovereignty: Some(vec![Sovereignty::CleartextForbidden, Sovereignty::Private]),
+            temporal: Some(vec![Temporal::SessionScoped]),
+        };
+        let json = serde_json::to_string(&p).expect("serialize");
+        let back: OrientationProjection = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(back.objective, Some(Objective::EnablePayment));
+        assert_eq!(back.lifecycle, Some(Lifecycle::Stable));
+        assert_eq!(back.risk, Some(Risk::Tier6Mutation));
+        assert_eq!(back.accessibility, Some(Accessibility::Wcag22Aa));
+        assert_eq!(
+            back.domain,
+            Some(vec![Domain::Ecommerce, Domain::Finance])
+        );
     }
 
     #[test]
