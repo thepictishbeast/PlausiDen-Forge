@@ -116,6 +116,40 @@ impl Phase for RenderPhase {
         let mut rendered_slugs: std::collections::HashSet<String> =
             std::collections::HashSet::new();
 
+        // Skin bytes + two derived hashes, computed once per build:
+        //   - `raw_hash_b64` → goes inside the SYNC-FROM-LOOM marker
+        //     that gets prepended to the skin file (loom_sync gate
+        //     expects this to match sha384(loom-tokens/src/skin.css)).
+        //   - `served_hash_b64` → integrity attr on every <link>;
+        //     hashes the bytes the browser actually downloads, i.e.
+        //     marker + raw.
+        // Hoisted above the per-page loop so each rendered HTML can
+        // inject the integrity attribute, AND the post-loop skin.css
+        // write can use the same prepared buffer instead of recomputing.
+        use base64::Engine as _;
+        use sha2::Digest as _;
+        let skin_raw = loom_tokens::SKIN_CSS.as_bytes();
+        let raw_hash_b64 = {
+            let mut h = sha2::Sha384::new();
+            h.update(skin_raw);
+            base64::engine::general_purpose::STANDARD.encode(h.finalize())
+        };
+        let skin_marker = format!(
+            "/* SYNC-FROM-LOOM:sha384-{raw_hash_b64} — auto-synced by forge render at build */\n"
+        );
+        let skin_with_marker: Vec<u8> = {
+            let mut buf = Vec::with_capacity(skin_marker.len() + skin_raw.len());
+            buf.extend_from_slice(skin_marker.as_bytes());
+            buf.extend_from_slice(skin_raw);
+            buf
+        };
+        let served_hash_b64 = {
+            let mut h = sha2::Sha384::new();
+            h.update(&skin_with_marker);
+            base64::engine::general_purpose::STANDARD.encode(h.finalize())
+        };
+        let skin_integrity_attr = format!("sha384-{served_hash_b64}");
+
         for json_path in json_files {
             let slug = match slug_from_filename(&json_path) {
                 Some(s) => s,
@@ -200,13 +234,19 @@ impl Phase for RenderPhase {
                 page.dev_devtools = true;
             }
             let body_markup = loom_cms_render::render_page(&page).into_string();
-            let html = loom_cms_render::page_shell_themed(
+            let html_raw = loom_cms_render::page_shell_themed(
                 &page,
                 "/loom-skin.css",
                 &body_markup,
                 None,
                 theme_ref,
             );
+
+            // Inject SRI integrity attribute on the loom-skin.css
+            // link. Hash was precomputed above over the SAME bytes
+            // (marker + raw) the post-loop skin.css writer ships,
+            // so the browser's SRI check matches what we serve.
+            let html = inject_skin_integrity(&html_raw, &skin_integrity_attr);
 
             let out_path = out_dir.join(format!("{slug}.html"));
             if let Err(e) = atomic_write(&out_path, html.as_bytes()) {
@@ -300,29 +340,12 @@ impl Phase for RenderPhase {
         // produces a properly-marked file. (Surfaced via loom_sync
         // gate finding "no SYNC-FROM-LOOM marker" on every build.)
         let skin_path = ctx.static_dir.join("loom-skin.css");
-        let skin_raw = loom_tokens::SKIN_CSS.as_bytes();
-        use sha2::Digest as _;
-        let mut hasher = sha2::Sha384::new();
-        hasher.update(skin_raw);
-        let digest = hasher.finalize();
-        use base64::Engine as _;
-        let digest_b64 = base64::engine::general_purpose::STANDARD.encode(digest);
-        let marker = format!(
-            "/* SYNC-FROM-LOOM:sha384-{digest_b64} — auto-synced by forge render at build */\n"
-        );
-        let skin_with_marker = {
-            let mut buf = Vec::with_capacity(marker.len() + skin_raw.len());
-            buf.extend_from_slice(marker.as_bytes());
-            buf.extend_from_slice(skin_raw);
-            buf
-        };
-        let skin_bytes: &[u8] = &skin_with_marker;
         let needs_write = match std::fs::read(&skin_path) {
-            Ok(existing) => existing != skin_bytes,
+            Ok(existing) => existing != skin_with_marker,
             Err(_) => true, // missing / unreadable → write
         };
         if needs_write {
-            if let Err(e) = atomic_write(&skin_path, skin_bytes) {
+            if let Err(e) = atomic_write(&skin_path, &skin_with_marker) {
                 return Err(BuildError::Io {
                     context: format!("render write {}", skin_path.display()),
                     source: e,
@@ -458,6 +481,26 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
 /// Defence in depth: a typo'd or deliberately-malformed
 /// Atomic write: tmp file + rename. POSIX guarantees rename is
 /// atomic on the same filesystem.
+/// Inject `integrity="sha384-..." crossorigin="anonymous"` onto
+/// the loom-skin.css `<link rel="stylesheet">` tag in a rendered
+/// HTML page. Idempotent: if `integrity=` is already present the
+/// html is returned unchanged. Returns an owned `String` either way.
+///
+/// Forge-side post-processing instead of a Loom page_shell change:
+/// avoids stacking a 4th open Loom PR; the sri gate closes without
+/// waiting on Loom merge. When Loom's page_shell accepts a
+/// `skin_integrity: Option<String>` param, this helper is deleted.
+fn inject_skin_integrity(html: &str, integrity_attr: &str) -> String {
+    const NEEDLE: &str = "<link rel=\"stylesheet\" href=\"/loom-skin.css\">";
+    if !html.contains(NEEDLE) {
+        return html.to_owned();
+    }
+    let replacement = format!(
+        "<link rel=\"stylesheet\" href=\"/loom-skin.css\" integrity=\"{integrity_attr}\" crossorigin=\"anonymous\">",
+    );
+    html.replacen(NEEDLE, &replacement, 1)
+}
+
 fn atomic_write(dest: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let parent = dest.parent().ok_or_else(|| {
         std::io::Error::new(std::io::ErrorKind::InvalidInput, "dest has no parent")
@@ -881,6 +924,52 @@ mod tests {
         std::fs::create_dir_all(&tmp).expect("mk");
         std::fs::write(tmp.join("forge.toml"), "this is = not valid toml [[[ ").expect("write");
         assert_eq!(forge_toml_theme(&tmp), None);
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn inject_skin_integrity_replaces_link_once() {
+        let html = "<head><link rel=\"stylesheet\" href=\"/loom-skin.css\"></head>";
+        let out = inject_skin_integrity(html, "sha384-AAAA");
+        assert!(out.contains("integrity=\"sha384-AAAA\""));
+        assert!(out.contains("crossorigin=\"anonymous\""));
+        // Exactly one occurrence of the original needle remains as the
+        // base href portion; verify no duplicated link tag.
+        assert_eq!(out.matches("<link rel=\"stylesheet\"").count(), 1);
+    }
+
+    #[test]
+    fn inject_skin_integrity_passes_through_when_needle_absent() {
+        let html = "<head></head>";
+        let out = inject_skin_integrity(html, "sha384-AAAA");
+        assert_eq!(out, html);
+    }
+
+    #[test]
+    fn render_emits_integrity_attribute_on_canonical_build() {
+        // Sanity check that the per-page injection lands in real
+        // rendered HTML. Uses write_canonical=true so the output
+        // hits <static>/<slug>.html — same path the sri gate scans.
+        let (ctx, tmp) = make_ctx_with_cms(&[("index", &sample_page("SRI smoke test"))]);
+        std::fs::write(tmp.join("forge.toml"), "[render]\nwrite_canonical = true\n")
+            .expect("write toml");
+        let findings = RenderPhase.run(&ctx).expect("run");
+        assert!(
+            findings
+                .iter()
+                .all(|f| !matches!(f.severity, forge_core::Severity::Strict)),
+            "render must not emit strict findings on a valid sample page: {findings:?}"
+        );
+        let html =
+            std::fs::read_to_string(tmp.join("static/index.html")).expect("read rendered html");
+        assert!(
+            html.contains("integrity=\"sha384-"),
+            "rendered page missing integrity attr — sri gate would warn"
+        );
+        assert!(
+            html.contains("crossorigin=\"anonymous\""),
+            "rendered page missing crossorigin attr"
+        );
         let _ = std::fs::remove_dir_all(&tmp);
     }
 }
