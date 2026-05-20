@@ -189,6 +189,13 @@ enum Cmd {
         #[command(subcommand)]
         action: IdentityAction,
     },
+    /// Synthesis spec preview + generation (#292): preview a
+    /// SiteSpec before writing it to cms/, then confirm and
+    /// generate. Pairs with #291 forge_core::synthesis.
+    Synthesis {
+        #[command(subcommand)]
+        action: SynthesisAction,
+    },
     /// Adversarial audits run OUTSIDE the build pipeline. Used
     /// for one-off scans + pre-commit hooks; never gated on a
     /// build's success.
@@ -1076,6 +1083,37 @@ enum FingerprintAction {
     },
 }
 
+/// `forge synthesis` subcommands. Backs task #292.
+#[derive(clap::Subcommand, Clone, Debug)]
+enum SynthesisAction {
+    /// Load a SiteSpec JSON file and print its summary without
+    /// writing any cms/ files. Operator reviews before
+    /// committing.
+    Preview {
+        /// Path to the spec JSON file.
+        spec: std::path::PathBuf,
+        /// JSON output (full spec round-tripped).
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+    /// Load a SiteSpec JSON file and emit cms/<slug>.json files
+    /// per page. Refuses to overwrite existing files unless
+    /// --force.
+    Generate {
+        /// Path to the spec JSON file.
+        spec: std::path::PathBuf,
+        /// Output directory (default: ./cms).
+        #[arg(long, default_value = "cms")]
+        out_dir: std::path::PathBuf,
+        /// Overwrite existing cms/<slug>.json files.
+        #[arg(long, default_value_t = false)]
+        force: bool,
+        /// JSON output.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+}
+
 /// `forge identity` subcommands. Backs task #239.
 #[derive(clap::Subcommand, Clone, Debug)]
 enum IdentityAction {
@@ -1160,6 +1198,7 @@ fn run() -> Result<ExitCode> {
         Some(Cmd::Attest { action }) => return run_attest(&root, action),
         Some(Cmd::Fingerprint { action }) => return run_fingerprint(&root, action),
         Some(Cmd::Identity { action }) => return run_identity(&root, action),
+        Some(Cmd::Synthesis { action }) => return run_synthesis(&root, action),
         Some(Cmd::Audit { action }) => return run_audit(&root, action),
         Some(Cmd::Fix { apply, json }) => return run_fix(&root, *apply, *json),
         Some(Cmd::Manifest { action }) => return run_manifest(&root, action),
@@ -2041,6 +2080,104 @@ fn run_attest(root: &std::path::Path, action: &AttestAction) -> Result<ExitCode>
                 );
             } else {
                 println!("{}", fp.as_str());
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+    }
+}
+
+/// Task #292: synthesis preview + generate.
+fn run_synthesis(root: &std::path::Path, action: &SynthesisAction) -> Result<ExitCode> {
+    match action {
+        SynthesisAction::Preview { spec, json } => {
+            let body = std::fs::read_to_string(spec)
+                .with_context(|| format!("read {}", spec.display()))?;
+            let parsed: forge_core::synthesis::SiteSpec = serde_json::from_str(&body)
+                .with_context(|| format!("parse spec from {}", spec.display()))?;
+            if *json {
+                println!("{}", serde_json::to_string_pretty(&parsed)?);
+            } else {
+                println!("forge synthesis preview:");
+                println!("  site_id:        {}", parsed.site_id);
+                println!("  tenant_id:      {}", parsed.tenant_id);
+                println!("  voice:          {}", if parsed.voice.is_empty() { "(unset)" } else { &parsed.voice });
+                println!("  mood:           {}", if parsed.mood.is_empty() { "(unset)" } else { &parsed.mood });
+                println!("  density:        {}", if parsed.density.is_empty() { "(unset)" } else { &parsed.density });
+                println!("  pages declared: {}", parsed.pages.len());
+                for (slug, sections) in &parsed.pages {
+                    println!("    {} ({} sections):", slug, sections.len());
+                    for sec in sections {
+                        if sec.variant.is_empty() {
+                            println!("      - {}", sec.kind);
+                        } else {
+                            println!("      - {} [{}]", sec.kind, sec.variant);
+                        }
+                    }
+                }
+                println!();
+                println!("Run `forge synthesis generate {} --out-dir <dir>` to write cms/*.json.", spec.display());
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+        SynthesisAction::Generate {
+            spec,
+            out_dir,
+            force,
+            json,
+        } => {
+            let body = std::fs::read_to_string(spec)
+                .with_context(|| format!("read {}", spec.display()))?;
+            let parsed: forge_core::synthesis::SiteSpec = serde_json::from_str(&body)
+                .with_context(|| format!("parse spec from {}", spec.display()))?;
+            let resolved_out = if out_dir.is_absolute() {
+                out_dir.clone()
+            } else {
+                root.join(out_dir)
+            };
+            // Refuse to overwrite without --force.
+            if !force && resolved_out.exists() {
+                let mut existing = Vec::new();
+                for page_slug in parsed.pages.keys() {
+                    let p = resolved_out.join(format!("{page_slug}.json"));
+                    if p.exists() {
+                        existing.push(p.display().to_string());
+                    }
+                }
+                if !existing.is_empty() {
+                    let payload = serde_json::json!({
+                        "status": "fail",
+                        "stage": "generate",
+                        "error": "refusing to overwrite existing cms files; pass --force to allow",
+                        "existing": existing,
+                    });
+                    if *json {
+                        println!("{payload}");
+                    } else {
+                        eprintln!("forge synthesis generate: refusing to overwrite existing files (pass --force):");
+                        for p in &existing {
+                            eprintln!("  {p}");
+                        }
+                    }
+                    return Ok(ExitCode::from(1));
+                }
+            }
+            let written = forge_core::synthesis::synthesize(&parsed, &resolved_out)
+                .with_context(|| format!("synthesize into {}", resolved_out.display()))?;
+            if *json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "ok",
+                        "stage": "generate",
+                        "out_dir": resolved_out.display().to_string(),
+                        "written": written.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+                    })
+                );
+            } else {
+                println!("forge synthesis generate: wrote {} files to {}", written.len(), resolved_out.display());
+                for p in &written {
+                    println!("  {}", p.display());
+                }
             }
             Ok(ExitCode::SUCCESS)
         }
