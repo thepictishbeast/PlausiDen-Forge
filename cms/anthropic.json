@@ -1,7 +1,7 @@
 {
   "$schema": "../cms-schema.json",
-  "title": "Anthropic — AI safety company building reliable, interpretable, steerable AI systems",
-  "description": "At Anthropic, we build AI to serve humanity's long-term well-being. Maker of Claude.",
+  "title": "Anthropic — Building AI to serve humanity",
+  "description": "At Anthropic, we build AI to serve humanity's long-term well-being. We are an AI safety company building reliable, interpretable, steerable AI systems. Maker of Claude.",
   "brand": "Anthropic",
   "chrome": "page_shell",
   "theme": "warm",
