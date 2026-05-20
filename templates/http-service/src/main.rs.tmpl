@@ -1,0 +1,77 @@
+//! REPLACE — one-paragraph crate purpose.
+//!
+//! HTTP service scaffolded from `templates/http-service/`. Canonical
+//! stack per `[[substrate-only-path]]` doctrine.
+//!
+//! BUG ASSUMPTION: every HTTP handler validates its input through a
+//! typed Axum extractor with `serde(deny_unknown_fields)`. Adding a
+//! handler that bypasses validation (e.g. raw `Bytes` body parsed
+//! ad-hoc) is a doctrine violation tracked under rule `sec-001`.
+
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
+use anyhow::Result;
+use axum::Router;
+use tracing_subscriber::EnvFilter;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Structured tracing per rule log-001. OTLP-compatible.
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_target(false)
+        .json()
+        .init();
+
+    let app = build_router();
+    let listener = tokio::net::TcpListener::bind(bind_address()).await?;
+    tracing::info!(addr = %listener.local_addr()?, "REPLACE-ME-service listening");
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
+/// Wire every typed handler here. Each handler must use typed Axum
+/// extractors (Json<T>, Query<T>, Path<T>) with `serde(deny_unknown_fields)`
+/// on the target struct — rule `sec-001`.
+fn build_router() -> Router {
+    Router::new()
+        .route("/health", axum::routing::get(health))
+        // .route("/your-endpoint", axum::routing::post(your_handler))
+}
+
+/// Default listen address. Override via env in production.
+fn bind_address() -> std::net::SocketAddr {
+    let port: u16 = std::env::var("PORT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(3000);
+    std::net::SocketAddr::from(([127, 0, 0, 1], port))
+}
+
+/// Health endpoint — every HTTP service ships one.
+async fn health() -> &'static str {
+    "ok"
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        /// REPLACE: a real property of one of your handlers. The
+        /// scaffold version is a placeholder so the proptest harness
+        /// runs; replace with an invariant test on actual input data
+        /// per rule `test-002`.
+        #[test]
+        fn bind_port_in_valid_range(port in 1u16..u16::MAX) {
+            // SAFETY: single-threaded test on a per-test env var.
+            // SAFETY: see callsite — single-threaded test
+            unsafe { std::env::set_var("PORT", port.to_string()) };
+            let addr = bind_address();
+            prop_assert_eq!(addr.port(), port);
+            unsafe { std::env::remove_var("PORT") };
+        }
+    }
+}

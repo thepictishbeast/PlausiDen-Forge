@@ -1,0 +1,35 @@
+# Cargo.toml template for a new typed-surface library crate.
+#
+# Use for: pure typed types/traits with no I/O and no platform code.
+# Examples: forge-core, *-core domain types, schema definitions.
+#
+# Canonical stack:
+#   * Errors  : thiserror (libraries; anyhow only at binary boundary)
+#   * Serde   : deny_unknown_fields at input boundaries
+#   * Tests   : proptest at every input-accepting fn (rule test-002)
+#
+# Steps:
+#   1. Copy this file to `crates/<your-crate>/Cargo.toml`.
+#   2. Rename `name`, update `description`.
+#   3. Add to workspace root members.
+
+[package]
+name = "REPLACE-ME-core"
+version = "0.1.0"
+publish = false
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "REPLACE — typed-surface library crate. Pure types + small helpers, no I/O."
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+
+[lints]
+workspace = true

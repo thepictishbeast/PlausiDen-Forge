@@ -1,0 +1,71 @@
+//! REPLACE — Forge audit phase. Cite the doctrine rule(s) this phase
+//! enforces in the doc string.
+//!
+//! BUG ASSUMPTION: REPLACE — name the risk class. e.g. "phase reads
+//! HTML from <static-dir> and pattern-matches; future browser changes
+//! to the pattern format would silently break detection."
+
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
+use forge_core::{BuildCtx, BuildError, Finding, Phase};
+
+/// REPLACE — one-paragraph phase purpose.
+///
+/// Enforces doctrine rule(s): `REPLACE-NNN`. See
+/// `forge doctrine query --rule REPLACE-NNN` for the full
+/// statement + rationale + enforcement.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ReplaceMePhase;
+
+impl Phase for ReplaceMePhase {
+    fn name(&self) -> &'static str {
+        // Phase name in build reports + manifest. Match the
+        // forge-phases module naming convention.
+        "replace_me"
+    }
+
+    fn run(&self, _ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
+        let findings: Vec<Finding> = Vec::new();
+        // REPLACE — actual detection logic. Emit findings via:
+        //   findings.push(
+        //       Finding::strict(self.name(), path, message)
+        //           .citing(["REPLACE-NNN"])
+        //   );
+        // Rule citations link findings → doctrine via rule docs-005.
+        Ok(findings)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use forge_core::BuildMode;
+    use proptest::prelude::*;
+
+    fn ctx() -> BuildCtx {
+        BuildCtx {
+            root: std::path::PathBuf::from("/tmp/test-root"),
+            static_dir: std::path::PathBuf::from("/tmp/test-root/static"),
+            mode: BuildMode::Poc,
+        }
+    }
+
+    #[test]
+    fn phase_name_is_stable() {
+        assert_eq!(ReplaceMePhase.name(), "replace_me");
+    }
+
+    proptest! {
+        /// REPLACE — property-based test exercising the phase against
+        /// generated inputs (rule test-002, test-004).
+        #[test]
+        fn phase_runs_without_panic(_seed in 0u32..100) {
+            let phase = ReplaceMePhase;
+            // Default ctx has no static dir contents, so this should
+            // return empty findings.
+            let result = phase.run(&ctx());
+            prop_assert!(result.is_ok());
+        }
+    }
+}

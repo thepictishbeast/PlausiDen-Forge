@@ -1,0 +1,78 @@
+//! REPLACE — one-paragraph CLI purpose.
+//!
+//! Scaffolded from `templates/cli-tool/`. Canonical stack per
+//! `[[substrate-only-path]]` doctrine.
+
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
+use anyhow::Result;
+use clap::{Parser, Subcommand};
+use std::process::ExitCode;
+use tracing_subscriber::EnvFilter;
+
+/// REPLACE — one-line description shown in --help.
+#[derive(Parser, Debug)]
+#[command(version, about)]
+struct Cli {
+    /// Project root (default = CWD). Convention matches forge-cli +
+    /// loom-cli — keep the argv shape consistent.
+    #[arg(long, env = "REPLACE_ME_ROOT")]
+    root: Option<std::path::PathBuf>,
+    /// JSON output (per docs-008 cross-AI compatibility rule).
+    #[arg(long, default_value_t = false)]
+    json: bool,
+    #[command(subcommand)]
+    cmd: Cmd,
+}
+
+#[derive(Subcommand, Debug)]
+enum Cmd {
+    /// Default action. REPLACE with real behavior.
+    Hello,
+}
+
+fn main() -> ExitCode {
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_target(false)
+        .init();
+
+    let cli = Cli::parse();
+    match run(&cli) {
+        Ok(code) => code,
+        Err(e) => {
+            tracing::error!(error = %e, "fatal");
+            eprintln!("{e:#}");
+            ExitCode::from(2)
+        }
+    }
+}
+
+fn run(cli: &Cli) -> Result<ExitCode> {
+    match &cli.cmd {
+        Cmd::Hello => {
+            if cli.json {
+                println!("{}", serde_json::json!({"status":"ok","msg":"hello"}));
+            } else {
+                println!("hello");
+            }
+            Ok(ExitCode::SUCCESS)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        /// REPLACE: a real input-boundary property. Scaffold ensures
+        /// the proptest harness runs.
+        #[test]
+        fn empty_proptest_placeholder(_x in 0i64..100) {
+            prop_assert!(true);
+        }
+    }
+}

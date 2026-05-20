@@ -1,0 +1,42 @@
+# Cargo.toml template for a new Forge audit phase crate (or new
+# module in forge-phases — the latter is the common case).
+#
+# Use for: new audit / validation phase that implements forge-core's
+# `Phase` trait, runs as part of the build pipeline, emits typed
+# Findings with rule citations (rule build-002, build-008, docs-002).
+#
+# If extending the existing `forge-phases` crate, copy ONLY the
+# `[dependencies]` section into that crate's Cargo.toml — don't
+# create a new crate per phase unless the phase has heavy deps that
+# don't belong in the umbrella forge-phases crate.
+
+[package]
+name = "REPLACE-ME-phase"
+version = "0.1.0"
+publish = false
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "REPLACE — one-sentence purpose. Cite the doctrine rule(s) this phase enforces."
+
+[dependencies]
+# forge-core gives the Phase trait + Finding + BuildCtx + BuildError.
+forge-core = { path = "../forge-core" }
+
+# Most phases need serde + tracing + thiserror. Add domain-specific
+# deps as required (HTML parser for HTML phases, CSS parser for CSS
+# phases, etc.).
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+# Property tests at every input boundary (rule test-002 + test-004:
+# every Forge phase ships with at least one regression fixture).
+proptest = { workspace = true }
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

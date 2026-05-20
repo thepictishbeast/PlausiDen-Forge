@@ -1,0 +1,62 @@
+# Cargo.toml template for a new HTTP service crate.
+#
+# Canonical stack (per `[[substrate-only-path]]` doctrine — do NOT
+# relitigate):
+#   * HTTP server : axum
+#   * Async       : tokio
+#   * Middleware  : tower / tower-http
+#   * Logging     : tracing + tracing-subscriber (OTLP-compatible)
+#   * Errors      : anyhow at binary boundaries
+#   * Serde       : deny_unknown_fields at every input boundary
+#
+# Steps:
+#   1. Copy this file to `crates/<your-crate>/Cargo.toml`.
+#   2. Rename `name`, update `description`.
+#   3. Add to workspace root `Cargo.toml` members list.
+
+[package]
+name = "REPLACE-ME-service"
+version = "0.1.0"
+publish = false  # workspace-internal; never published
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "REPLACE — one-sentence purpose of this HTTP service."
+
+[dependencies]
+# Canonical HTTP framework — do NOT swap for Actix/Rocket/Warp.
+# (Substrate Discipline canonical default.)
+axum = { workspace = true }
+
+# Canonical async runtime — do NOT swap for async-std/smol.
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal"] }
+
+# Middleware stack. tower-http gives common HTTP middleware (CORS,
+# tracing, timeout, compression).
+tower = { workspace = true }
+tower-http = { workspace = true, features = ["trace", "cors", "timeout"] }
+
+# Serde with deny_unknown_fields discipline applied at every input
+# boundary (rule sec-001).
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+# Anyhow at binary boundary (this crate's main.rs).
+anyhow = { workspace = true }
+# thiserror for library-internal error enums (sec-002 / build-003).
+thiserror = { workspace = true }
+
+# OTLP-compatible structured logging (rule log-001).
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "json"] }
+
+[dev-dependencies]
+# Property-based tests at every input boundary (rule test-002).
+proptest = { workspace = true }
+# Async test harness — tokio's built-in is sufficient; for HTTP
+# integration tests use reqwest or hyper directly.
+tokio-test = { workspace = true }
+
+[lints]
+workspace = true

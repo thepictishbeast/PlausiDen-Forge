@@ -1,0 +1,82 @@
+//! REPLACE — one-paragraph crate purpose.
+//!
+//! Pure typed surface. No I/O, no platform-specific code, no async,
+//! no `unsafe`.
+//!
+//! BUG ASSUMPTION: REPLACE — name the main risk class. e.g.
+//! "deserializer accepting fields the type system doesn't model."
+//!
+//! AVP-2 invariants:
+//! * `#![forbid(unsafe_code)]`
+//! * Zero `unwrap` / `expect` in non-test paths.
+//! * Every public type carries `#[non_exhaustive]` where forward-
+//!   compat additivity matters (per `[[backward-compat-version-
+//!   discipline]]`).
+//! * Every public type has rustdoc (rule `docs-006`).
+
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+
+use serde::{Deserialize, Serialize};
+
+/// REPLACE — primary typed surface.
+///
+/// `#[serde(deny_unknown_fields)]` per rule `sec-001` — every input
+/// boundary rejects unknown fields.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[non_exhaustive]
+pub struct ReplaceMe {
+    /// REPLACE — describe each field.
+    pub id: String,
+}
+
+/// REPLACE — primary error enum. Library code uses thiserror; the
+/// binary boundary uses anyhow.
+#[derive(Debug, thiserror::Error)]
+#[non_exhaustive]
+pub enum ReplaceMeError {
+    /// REPLACE — describe each variant.
+    #[error("invalid id: {0}")]
+    InvalidId(String),
+}
+
+impl ReplaceMe {
+    /// REPLACE — main validation entry point. Returns Result so
+    /// callers can handle invalid input rather than panic.
+    pub fn validate(&self) -> Result<(), ReplaceMeError> {
+        if self.id.is_empty() {
+            return Err(ReplaceMeError::InvalidId("empty".to_string()));
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    proptest! {
+        /// Property: validate() rejects empty ids (rule test-002).
+        #[test]
+        fn validate_rejects_empty_id(id in r"[a-z]{0,16}") {
+            let r = ReplaceMe { id };
+            let result = r.validate();
+            if r.id.is_empty() {
+                prop_assert!(result.is_err());
+            } else {
+                prop_assert!(result.is_ok());
+            }
+        }
+
+        /// Property: deny_unknown_fields actually rejects unknown
+        /// fields at the deserializer boundary.
+        #[test]
+        fn rejects_unknown_fields(_seed in 0u32..100) {
+            let bad = serde_json::json!({"id":"valid","unknown":"field"});
+            let result: Result<ReplaceMe, _> = serde_json::from_value(bad);
+            prop_assert!(result.is_err());
+        }
+    }
+}
