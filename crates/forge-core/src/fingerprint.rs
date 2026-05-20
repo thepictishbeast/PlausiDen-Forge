@@ -267,6 +267,171 @@ pub struct SiteFingerprint {
     pub assets: AssetDistribution,
 }
 
+/// Pick a stable variant string for a section. Prefers explicit
+/// `variant` / `style` / `tone` / `kind_detail` / `background`
+/// fields; otherwise derives from count-style discriminators
+/// (`columns` / `tiers` / `items`). Default: empty string.
+///
+/// Public so forge-phases::uniqueness_gate and forge-cli's
+/// `fingerprint compute` share the same variant-derivation
+/// logic — single source of truth.
+#[must_use]
+pub fn guess_section_variant(section: &serde_json::Value) -> String {
+    for field in &["variant", "style", "tone", "kind_detail", "background"] {
+        if let Some(s) = section.get(field).and_then(|v| v.as_str()) {
+            return format!("{field}={s}");
+        }
+    }
+    if let Some(cols) = section.get("columns").and_then(|v| v.as_u64()) {
+        return format!("columns={cols}");
+    }
+    if let Some(tiers) = section.get("tiers").and_then(|v| v.as_array()) {
+        return format!("tiers={}", tiers.len());
+    }
+    if let Some(items) = section.get("items").and_then(|v| v.as_array()) {
+        return format!("items={}", items.len());
+    }
+    String::new()
+}
+
+/// Bucket character counts into ranges. Hash sites with similar
+/// content length together; exact count is noise-sensitive.
+#[must_use]
+pub fn bucket_chars(n: u32) -> u32 {
+    match n {
+        0..=99 => 0,
+        100..=499 => 1,
+        500..=999 => 2,
+        1000..=2499 => 3,
+        2500..=4999 => 4,
+        _ => 5,
+    }
+}
+
+/// Derive a density tier from section count + total chars.
+/// Mirrors the density-audit phase's heuristic.
+#[must_use]
+pub fn density_tier_for(section_count: u32, total_chars: u32) -> &'static str {
+    let chars_per_section = if section_count == 0 {
+        0
+    } else {
+        total_chars / section_count
+    };
+    match (section_count, chars_per_section) {
+        (0..=3, _) => "sparse",
+        (4..=7, 0..=300) => "comfortable",
+        (4..=7, _) => "dense",
+        (8..=12, _) => "dense",
+        _ => "extreme",
+    }
+}
+
+/// Walk every `*.json` file in `cms_dir` and build the canonical
+/// SiteFingerprint. Single source of truth used by both
+/// `forge_phases::uniqueness_gate` (the gate phase) and
+/// `forge-cli`'s `fingerprint compute` subcommand.
+pub fn build_from_cms_dir(
+    cms_dir: &std::path::Path,
+) -> Result<SiteFingerprint, std::io::Error> {
+    use std::fs;
+    let mut paths: Vec<std::path::PathBuf> = Vec::new();
+    for entry in fs::read_dir(cms_dir)? {
+        let p = entry?.path();
+        if p.extension().and_then(|e| e.to_str()) == Some("json") {
+            paths.push(p);
+        }
+    }
+    paths.sort();
+
+    let mut primitives: Vec<PrimitiveOccurrence> = Vec::new();
+    let mut silhouettes: BTreeMap<String, ContentSilhouette> = BTreeMap::new();
+    let mut rhythms: BTreeMap<String, CompositionRhythm> = BTreeMap::new();
+    let mut assets = AssetDistribution::default();
+
+    for path in paths {
+        let raw = fs::read_to_string(&path)?;
+        let Ok(value) = serde_json::from_str::<serde_json::Value>(&raw) else {
+            continue;
+        };
+        let page = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_owned();
+        let mut section_count: u32 = 0;
+        let mut total_chars: u32 = 0;
+        let mut paragraph_count: u32 = 0;
+        let mut list_item_count: u32 = 0;
+        let mut headings: Vec<String> = Vec::new();
+
+        if let Some(sections) = value.get("sections").and_then(|s| s.as_array()) {
+            for section in sections {
+                let Some(kind) = section.get("kind").and_then(|v| v.as_str()) else {
+                    continue;
+                };
+                section_count += 1;
+                primitives.push(PrimitiveOccurrence::new(
+                    kind.to_owned(),
+                    guess_section_variant(section),
+                    page.clone(),
+                ));
+                match kind {
+                    "image" | "gallery" | "hero_image" | "image_hero" | "photo" => {
+                        assets.image_count += 1
+                    }
+                    "video" | "video_embed" => assets.video_count += 1,
+                    "form" | "interactive" | "code" | "code_block" | "code_playground"
+                    | "embedded_widget" => assets.interactive_count += 1,
+                    _ => {}
+                }
+                for field in &["title", "body", "lede", "subtitle", "message", "summary"] {
+                    if let Some(text) = section.get(field).and_then(|v| v.as_str()) {
+                        let len = u32::try_from(text.chars().count()).unwrap_or(u32::MAX);
+                        total_chars = total_chars.saturating_add(len);
+                        if *field == "body" || *field == "summary" {
+                            paragraph_count = paragraph_count
+                                .saturating_add(text.matches("\n\n").count() as u32 + 1);
+                        }
+                    }
+                }
+                if let Some(items) = section.get("items").and_then(|v| v.as_array()) {
+                    list_item_count =
+                        list_item_count.saturating_add(items.len() as u32);
+                }
+                if kind.starts_with("heading") || kind == "section_heading" {
+                    if let Some(level) = section.get("level").and_then(|v| v.as_str()) {
+                        headings.push(level.to_owned());
+                    } else {
+                        headings.push("h2".to_owned());
+                    }
+                }
+            }
+        }
+
+        let bucket = bucket_chars(total_chars);
+        silhouettes.insert(
+            page.clone(),
+            ContentSilhouette::new(bucket, paragraph_count, list_item_count, headings.join(",")),
+        );
+        rhythms.insert(
+            page,
+            CompositionRhythm::new(
+                section_count,
+                density_tier_for(section_count, total_chars).to_owned(),
+            ),
+        );
+    }
+
+    Ok(SiteFingerprint::new(
+        FingerprintSpec::V1,
+        primitives,
+        Vec::<TokenOverride>::new(),
+        silhouettes,
+        rhythms,
+        assets,
+    ))
+}
+
 impl SiteFingerprint {
     /// Construct a full site fingerprint. Provided because the
     /// struct is `#[non_exhaustive]`, so external crates (forge-

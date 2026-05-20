@@ -53,17 +53,14 @@
 //! * Pure walk over JSON + read-only registry I/O — never mutates
 //!   the registry from inside a phase.
 
-use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use forge_core::fingerprint::{
-    AssetDistribution, CompositionRhythm, ContentSilhouette, FingerprintSpec,
-    PrimitiveOccurrence, SiteFingerprint, TokenOverride,
-};
+use forge_core::fingerprint::SiteFingerprint;
 use forge_core::fingerprint_registry::{find_near_duplicates, find_by_hash};
 use forge_core::site_identity::SiteIdentity;
 use forge_core::{BuildCtx, BuildError, Finding, Phase};
+#[cfg(test)]
 use serde_json::Value;
 
 /// `uniqueness_gate` phase implementation.
@@ -265,183 +262,33 @@ impl UniquenessConfig {
     }
 }
 
-/// Walk `cms/*.json` and compute a `SiteFingerprint`. Per-section
-/// fields drive variant detection; per-page silhouettes are summed
-/// across body strings; asset distribution counts img/video/
-/// interactive sections.
+/// Walk `cms/*.json` and compute a `SiteFingerprint`. Delegates
+/// to `forge_core::fingerprint::build_from_cms_dir` so the gate
+/// phase and the `forge fingerprint compute` CLI subcommand
+/// share a single source of truth.
 fn build_fingerprint(cms_dir: &Path) -> Result<SiteFingerprint, BuildError> {
-    let mut paths: Vec<PathBuf> = Vec::new();
-    let entries = fs::read_dir(cms_dir).map_err(|e| BuildError::Io {
-        context: format!("read_dir {}", cms_dir.display()),
+    forge_core::fingerprint::build_from_cms_dir(cms_dir).map_err(|e| BuildError::Io {
+        context: format!("build_from_cms_dir {}", cms_dir.display()),
         source: e,
-    })?;
-    for entry in entries {
-        let entry = entry.map_err(|e| BuildError::Io {
-            context: format!("read_dir entry in {}", cms_dir.display()),
-            source: e,
-        })?;
-        let p = entry.path();
-        if p.extension().and_then(|e| e.to_str()) == Some("json") {
-            paths.push(p);
-        }
-    }
-    paths.sort();
-
-    let mut primitives: Vec<PrimitiveOccurrence> = Vec::new();
-    let mut silhouettes: BTreeMap<String, ContentSilhouette> = BTreeMap::new();
-    let mut rhythms: BTreeMap<String, CompositionRhythm> = BTreeMap::new();
-    let mut assets = AssetDistribution::default();
-
-    for path in paths {
-        let raw = fs::read_to_string(&path).map_err(|e| BuildError::Io {
-            context: format!("read {}", path.display()),
-            source: e,
-        })?;
-        let Ok(value) = serde_json::from_str::<Value>(&raw) else {
-            continue;
-        };
-        let page_name = path
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("unknown")
-            .to_owned();
-
-        let mut section_count: u32 = 0;
-        let mut total_chars: u32 = 0;
-        let mut paragraph_count: u32 = 0;
-        let mut list_item_count: u32 = 0;
-        let mut headings: Vec<String> = Vec::new();
-
-        if let Some(sections) = value.get("sections").and_then(|s| s.as_array()) {
-            for section in sections {
-                let Some(kind) = section.get("kind").and_then(|v| v.as_str()) else {
-                    continue;
-                };
-                section_count += 1;
-                let variant = guess_variant(kind, section);
-                primitives.push(PrimitiveOccurrence::new(
-                    kind.to_owned(),
-                    variant,
-                    page_name.clone(),
-                ));
-
-                // Asset counts.
-                match kind {
-                    "image" | "gallery" | "hero_image" => assets.image_count += 1,
-                    "video" | "video_embed" => assets.video_count += 1,
-                    "form" | "interactive" | "code_playground" | "embedded_widget" => {
-                        assets.interactive_count += 1
-                    }
-                    _ => {}
-                }
-
-                // Silhouette accumulators from common text fields.
-                for field in &["title", "body", "lede", "subtitle", "message", "summary"] {
-                    if let Some(text) = section.get(field).and_then(|v| v.as_str()) {
-                        let len = u32::try_from(text.chars().count()).unwrap_or(u32::MAX);
-                        total_chars = total_chars.saturating_add(len);
-                        if *field == "body" || *field == "summary" {
-                            paragraph_count += text.matches("\n\n").count() as u32 + 1;
-                        }
-                    }
-                }
-                if let Some(items) = section.get("items").and_then(|v| v.as_array()) {
-                    list_item_count += items.len() as u32;
-                }
-                if kind.starts_with("heading") || kind == "section_heading" {
-                    if let Some(level) = section.get("level").and_then(|v| v.as_str()) {
-                        headings.push(level.to_owned());
-                    } else {
-                        headings.push("h2".to_owned());
-                    }
-                }
-            }
-        }
-
-        let total_chars_bucket = bucket_chars(total_chars);
-        silhouettes.insert(
-            page_name.clone(),
-            ContentSilhouette::new(
-                total_chars_bucket,
-                paragraph_count,
-                list_item_count,
-                headings.join(","),
-            ),
-        );
-        rhythms.insert(
-            page_name,
-            CompositionRhythm::new(
-                section_count,
-                density_tier_for(section_count, total_chars).to_owned(),
-            ),
-        );
-    }
-
-    Ok(SiteFingerprint::new(
-        FingerprintSpec::V1,
-        primitives,
-        Vec::<TokenOverride>::new(),
-        silhouettes,
-        rhythms,
-        assets,
-    ))
+    })
 }
 
-/// Pick a stable variant string for a section. Prefers the
-/// section's `variant` / `style` / `kind_detail` / `tone` field if
-/// present; otherwise derives from the count-style fields (e.g.
-/// `columns`, `tiers`, `items`).
-fn guess_variant(kind: &str, section: &Value) -> String {
-    for field in &["variant", "style", "tone", "kind_detail", "background"] {
-        if let Some(s) = section.get(field).and_then(|v| v.as_str()) {
-            return format!("{field}={s}");
-        }
-    }
-    // Count-style discriminators.
-    if let Some(cols) = section.get("columns").and_then(|v| v.as_u64()) {
-        return format!("columns={cols}");
-    }
-    if let Some(tiers) = section.get("tiers").and_then(|v| v.as_array()) {
-        return format!("tiers={}", tiers.len());
-    }
-    if let Some(items) = section.get("items").and_then(|v| v.as_array()) {
-        return format!("items={}", items.len());
-    }
-    // Default — kind-only variant. Two sections of the same kind
-    // with no distinguishing field collapse to the same variant
-    // string.
-    let _ = kind;
-    String::new()
+/// Re-exports for backward compatibility with this module's tests.
+/// `#[cfg(test)]` because non-test callers should hit forge-core
+/// directly via `forge_core::fingerprint::*`.
+#[cfg(test)]
+fn guess_variant(_kind: &str, section: &Value) -> String {
+    forge_core::fingerprint::guess_section_variant(section)
 }
 
-/// Bucket character counts into ranges. Hash sites with similar
-/// content length together; the exact count is noise-sensitive.
+#[cfg(test)]
 fn bucket_chars(n: u32) -> u32 {
-    match n {
-        0..=99 => 0,
-        100..=499 => 1,
-        500..=999 => 2,
-        1000..=2499 => 3,
-        2500..=4999 => 4,
-        _ => 5,
-    }
+    forge_core::fingerprint::bucket_chars(n)
 }
 
-/// Derive a density tier from section count + total chars. Mirrors
-/// the heuristic used by the density-audit phase.
+#[cfg(test)]
 fn density_tier_for(section_count: u32, total_chars: u32) -> &'static str {
-    let chars_per_section = if section_count == 0 {
-        0
-    } else {
-        total_chars / section_count
-    };
-    match (section_count, chars_per_section) {
-        (0..=3, _) => "sparse",
-        (4..=7, 0..=300) => "comfortable",
-        (4..=7, _) => "dense",
-        (8..=12, _) => "dense",
-        _ => "extreme",
-    }
+    forge_core::fingerprint::density_tier_for(section_count, total_chars)
 }
 
 #[cfg(test)]
