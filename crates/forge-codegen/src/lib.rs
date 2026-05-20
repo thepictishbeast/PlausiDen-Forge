@@ -213,8 +213,11 @@ fn stage_handler_scaffold(plan: &CodegenPlan) -> Result<Vec<GeneratedFile>, Code
     }
     let mut files = Vec::with_capacity(handler_names.len() + 1);
     for ((slug, fn_name), page) in handler_names.iter().zip(plan.pages.iter()) {
+        let mod_name = slug.replace('-', "_");
         files.push(GeneratedFile {
-            path: format!("src/handlers/{slug}.rs"),
+            // File name MUST match the mod name (snake_case) or
+            // Rust won't find the module from `pub mod <name>;`.
+            path: format!("src/handlers/{mod_name}.rs"),
             contents: render_handler_stub(fn_name, page)?,
         });
     }
@@ -411,8 +414,9 @@ fn stage_persistence_layer(plan: &CodegenPlan) -> Result<Vec<GeneratedFile>, Cod
     }
     let mut files = Vec::with_capacity(stub_names.len() + 1);
     for ((slug, fn_name), backend) in stub_names.iter().zip(plan.backends.iter()) {
+        let mod_name = slug.replace('-', "_");
         files.push(GeneratedFile {
-            path: format!("src/db/{slug}.rs"),
+            path: format!("src/db/{mod_name}.rs"),
             contents: render_backend_stub(fn_name, backend),
         });
     }
@@ -456,6 +460,13 @@ fn render_db_mod(stubs: &[(String, String)]) -> String {
         let mod_name = slug.replace('-', "_");
         out.push_str(&format!("pub mod {mod_name};\n"));
     }
+    // Flatten each submodule's query fn into `db::<fn>` so call
+    // sites don't have to know the submodule name.
+    out.push('\n');
+    for (slug, fn_name) in stubs {
+        let mod_name = slug.replace('-', "_");
+        out.push_str(&format!("pub use {mod_name}::{fn_name};\n"));
+    }
     out
 }
 
@@ -491,6 +502,10 @@ fn derive_slug(page: &loom_cms_render::CmsPage) -> String {
     if p.is_empty() {
         return "index".to_owned();
     }
+    // Strip a single `.html` suffix so a path like `/anthropic.html`
+    // and a path like `/anthropic/` produce the same slug shape.
+    // Multi-suffix files (`.html.gz`, etc) are out of scope.
+    let p = p.strip_suffix(".html").unwrap_or(p);
     p.replace('/', "-")
 }
 
@@ -631,6 +646,18 @@ fn render_handlers_mod(handlers: &[(String, String)]) -> String {
         let mod_name = slug.replace('-', "_");
         out.push_str(&format!("pub mod {mod_name};\n"));
     }
+    // Flatten each submodule's handler fn into `handlers::<fn>`
+    // so the generated router can call them without naming the
+    // submodule. The router emits `handlers::render_<slug>()`;
+    // without these re-exports that resolves to E0425.
+    out.push('\n');
+    for (_, fn_name) in handlers {
+        let mod_name = fn_name
+            .strip_prefix("render_")
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| fn_name.clone());
+        out.push_str(&format!("pub use {mod_name}::{fn_name};\n"));
+    }
     out
 }
 
@@ -702,6 +729,16 @@ mod tests {
     }
 
     #[test]
+    fn slug_strips_html_suffix() {
+        // `/anthropic.html` and `/anthropic/` both produce
+        // the same handler slug — the codegen layer treats
+        // file-extension URLs and directory-style URLs as
+        // referring to the same page.
+        assert_eq!(derive_slug(&page("/anthropic.html", "x")), "anthropic");
+        assert_eq!(derive_slug(&page("/anthropic/", "x")), "anthropic");
+    }
+
+    #[test]
     fn slug_to_fn_name_escapes_dashes() {
         assert_eq!(
             slug_to_fn_name("about-privacy-policy").unwrap(),
@@ -750,6 +787,38 @@ mod tests {
             .unwrap();
         assert!(mod_rs.contents.contains("pub mod index;"));
         assert!(mod_rs.contents.contains("pub mod about;"));
+        // pub use re-exports so router can call `handlers::render_*`
+        // directly without naming the submodule.
+        assert!(mod_rs.contents.contains("pub use index::render_index;"));
+        assert!(mod_rs.contents.contains("pub use about::render_about;"));
+    }
+
+    #[test]
+    fn handler_file_paths_use_snake_case() {
+        // Rust requires `pub mod <ident>;` to map to a file named
+        // `<ident>.rs` (or `<ident>/mod.rs`). Slugs with dashes
+        // need to be snake-cased on disk; the mod re-exports
+        // re-flatten under the kebab-aware fn_name on the call
+        // side.
+        let plan = CodegenPlan {
+            pages: vec![page("/about/privacy-policy/", "Privacy")],
+            crate_name: "demo-server".to_owned(),
+            backends: vec![],
+        };
+        let out = generate(&plan).unwrap();
+        assert!(
+            out.files
+                .iter()
+                .any(|f| f.path == "src/handlers/about_privacy_policy.rs"),
+            "expected snake-case file name on disk; got: {:?}",
+            out.files.iter().map(|f| &f.path).collect::<Vec<_>>()
+        );
+        // Kebab variant must NOT exist (Rust won't load it).
+        assert!(
+            !out.files
+                .iter()
+                .any(|f| f.path == "src/handlers/about-privacy-policy.rs")
+        );
     }
 
     #[test]
@@ -886,7 +955,8 @@ mod tests {
         assert!(
             out.files
                 .iter()
-                .any(|f| f.path == "src/db/contact-form.rs")
+                .any(|f| f.path == "src/db/contact_form.rs"),
+            "kebab slug must produce snake-case file on disk"
         );
         assert!(out.files.iter().any(|f| f.path == "src/db/mod.rs"));
         let mod_rs = out
@@ -896,6 +966,10 @@ mod tests {
             .unwrap();
         assert!(mod_rs.contents.contains("pub mod subscribe;"));
         assert!(mod_rs.contents.contains("pub mod contact_form;"));
+        assert!(mod_rs.contents.contains("pub use subscribe::query_subscribe;"));
+        assert!(mod_rs
+            .contents
+            .contains("pub use contact_form::query_contact_form;"));
         // Audit reflects emit count.
         let persistence_row = out
             .stages

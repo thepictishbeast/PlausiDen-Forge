@@ -13,6 +13,12 @@ path = "src/main.rs"
 [dependencies]
 forge-core = { path = "../forge-core" }
 forge-phases = { path = "../forge-phases" }
+# T101 codegen library — emits a complete-Rust-stack runtime crate
+# from cms/*.json + backends.toml. CLI wiring lives in forge-cli.
+forge-codegen = { path = "../forge-codegen" }
+# T101: loom-cms-render types used directly by run_codegen to
+# parse cms/*.json into the CmsPage tree passed to forge-codegen.
+loom-cms-render = { git = "https://github.com/thepictishbeast/PlausiDen-Loom.git", branch = "main" }
 # T33: manifest-gate CLI uses the keystone types directly.
 manifest-core = { path = "../manifest-core" }
 # T91 (first wiring): privacy-core (T76) drives the new

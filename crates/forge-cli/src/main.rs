@@ -499,6 +499,31 @@ enum Cmd {
         #[arg(long, default_value_t = false)]
         json: bool,
     },
+    /// T101: complete-Rust-stack codegen. Reads cms/*.json +
+    /// backends.toml and emits a self-contained Cargo crate
+    /// (axum + tokio + sqlx + serde + loom-cms-render) where
+    /// every CmsPage becomes a typed `async fn` handler.
+    ///
+    /// Exit codes:
+    ///   0 — wrote N files to `--out` (or printed plan to stdout
+    ///       in `--dry-run` mode)
+    ///   1 — at least one CodegenError (collision / bad slug / etc)
+    ///   2 — fatal I/O / parse error reading the source CMS
+    Codegen {
+        /// Output directory for the generated crate. Created if
+        /// it doesn't exist. Required unless `--dry-run` is set.
+        #[arg(long, value_name = "DIR")]
+        out: Option<PathBuf>,
+        /// Print the planned file set to stdout instead of writing
+        /// anything to disk. Useful for inspection + CI smoke tests.
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+        /// Crate name for the generated output. Defaults to the
+        /// project root's directory name (kebab-cased). Must match
+        /// Cargo's package-name grammar.
+        #[arg(long, value_name = "NAME")]
+        crate_name: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1317,6 +1342,13 @@ fn run() -> Result<ExitCode> {
             json,
         }) => {
             return run_orient(&root, r#for.as_deref(), doctrine_dir.as_deref(), *json);
+        }
+        Some(Cmd::Codegen {
+            out,
+            dry_run,
+            crate_name,
+        }) => {
+            return run_codegen(&root, out.as_deref(), *dry_run, crate_name.as_deref());
         }
         Some(Cmd::Build) | None => {}
     }
@@ -8786,6 +8818,151 @@ fn run_bypasses(
 // one mechanical command. JSON output is cross-AI consumable
 // (Claude / Gemini / other agents).
 // ----------------------------------------------------------------
+
+/// `forge codegen` subcommand. Reads cms/*.json + backends.toml,
+/// builds a CodegenPlan, invokes forge_codegen::generate(), and
+/// either writes the result to `out_dir` or prints the plan to
+/// stdout in dry-run mode.
+fn run_codegen(
+    forge_root: &std::path::Path,
+    out_dir: Option<&std::path::Path>,
+    dry_run: bool,
+    crate_name: Option<&str>,
+) -> Result<ExitCode> {
+    // Resolve crate name: --crate-name arg > project dir basename.
+    let crate_name = match crate_name {
+        Some(s) => s.to_owned(),
+        None => forge_root
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("forge-generated")
+            .to_ascii_lowercase()
+            .replace('_', "-"),
+    };
+
+    // Collect CmsPage tree from cms/*.json.
+    let cms_dir = forge_root.join("cms");
+    let mut pages: Vec<loom_cms_render::CmsPage> = Vec::new();
+    if cms_dir.is_dir() {
+        let mut json_paths: Vec<std::path::PathBuf> = std::fs::read_dir(&cms_dir)
+            .map_err(|e| anyhow::anyhow!("read cms dir {}: {}", cms_dir.display(), e))?
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("json"))
+            .collect();
+        json_paths.sort();
+        for p in &json_paths {
+            let raw = std::fs::read_to_string(p)
+                .map_err(|e| anyhow::anyhow!("read {}: {}", p.display(), e))?;
+            let page: loom_cms_render::CmsPage = serde_json::from_str(&raw).map_err(|e| {
+                anyhow::anyhow!("parse cms page {}: {}", p.display(), e)
+            })?;
+            pages.push(page);
+        }
+    }
+
+    // Parse backends.toml if present.
+    let backends_path = forge_root.join("backends.toml");
+    let backends: Vec<forge_codegen::BackendSpec> = if backends_path.exists() {
+        let raw = std::fs::read_to_string(&backends_path)
+            .map_err(|e| anyhow::anyhow!("read backends.toml: {}", e))?;
+        parse_backends_toml(&raw)?
+    } else {
+        Vec::new()
+    };
+
+    let plan = forge_codegen::CodegenPlan {
+        pages,
+        crate_name: crate_name.clone(),
+        backends,
+    };
+    let output = match forge_codegen::generate(&plan) {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("codegen error: {e}");
+            return Ok(ExitCode::from(1));
+        }
+    };
+
+    if dry_run || out_dir.is_none() {
+        println!("forge codegen — plan for crate `{crate_name}`");
+        println!(
+            "  pages:    {}\n  backends: {}\n  files:    {}\n  stages:   {}",
+            plan.pages.len(),
+            plan.backends.len(),
+            output.files.len(),
+            output.stages.len(),
+        );
+        for stage in &output.stages {
+            println!("    {:<20} {} files", stage.stage, stage.files_emitted);
+        }
+        for f in &output.files {
+            println!("    + {}", f.path);
+        }
+        return Ok(ExitCode::SUCCESS);
+    }
+
+    // Write to disk.
+    let out = out_dir.expect("checked above");
+    std::fs::create_dir_all(out)
+        .map_err(|e| anyhow::anyhow!("mkdir {}: {}", out.display(), e))?;
+    for f in &output.files {
+        let dest = out.join(&f.path);
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| anyhow::anyhow!("mkdir {}: {}", parent.display(), e))?;
+        }
+        std::fs::write(&dest, &f.contents)
+            .map_err(|e| anyhow::anyhow!("write {}: {}", dest.display(), e))?;
+    }
+    println!(
+        "forge codegen — wrote {} files to {}",
+        output.files.len(),
+        out.display()
+    );
+    Ok(ExitCode::SUCCESS)
+}
+
+/// Parse `backends.toml` into the [`forge_codegen::BackendSpec`]
+/// list. Mirrors the parse shape already used by
+/// `forge-phases::backend_coverage` (one entry per
+/// `[backends.<name>]` table).
+fn parse_backends_toml(raw: &str) -> Result<Vec<forge_codegen::BackendSpec>> {
+    let value: toml::Value =
+        toml::from_str(raw).map_err(|e| anyhow::anyhow!("backends.toml parse: {}", e))?;
+    let mut out: Vec<forge_codegen::BackendSpec> = Vec::new();
+    let Some(table) = value.get("backends").and_then(|v| v.as_table()) else {
+        return Ok(out);
+    };
+    for (name, body) in table {
+        let body = body.as_table().ok_or_else(|| {
+            anyhow::anyhow!("backends.{name}: expected table, got {body:?}")
+        })?;
+        let method = body
+            .get("method")
+            .and_then(|v| v.as_str())
+            .unwrap_or("GET")
+            .to_owned();
+        let path = body
+            .get("path")
+            .and_then(|v| v.as_str())
+            .unwrap_or("/")
+            .to_owned();
+        let purpose = body
+            .get("purpose")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_owned();
+        out.push(forge_codegen::BackendSpec {
+            name: name.clone(),
+            method,
+            path,
+            purpose,
+        });
+    }
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    Ok(out)
+}
 
 fn run_orient(
     forge_root: &std::path::Path,
