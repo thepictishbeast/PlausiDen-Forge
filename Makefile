@@ -169,6 +169,10 @@ pre-commit: fmt clippy test-quick doctrine-check ## Quick local checks before co
 PIXEL_REP_SLUG          ?= prosperityclub
 PIXEL_REP_SITE_URL      ?= https://prosperityclub.com/
 PIXEL_REP_PORT          ?= 8125
+# Path on the local static server for the Forge mirror. Defaults to /
+# (which is the prosperityclub mirror at cms/index.json). For other
+# sites, override: FORGE_PATH=/stripe.html
+PIXEL_REP_FORGE_PATH    ?= /
 CRAWLER_REPO_DIR        ?= ../PlausiDen-Crawler
 CRAWLER_BIN             ?= $(CRAWLER_REPO_DIR)/target/release/crawler
 
@@ -184,9 +188,9 @@ pixel-rep: ## Capture live + Forge mirror at 3 viewports. Override SLUG / SITE_U
 	@echo "[2/3] starting static server on :$(PIXEL_REP_PORT)..."
 	@cd static && nohup ruby -run -ehttpd . -p $(PIXEL_REP_PORT) > /tmp/forge-pixel-rep-server.log 2>&1 & echo $$! > /tmp/forge-pixel-rep.pid; sleep 2
 	@test "$$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:$(PIXEL_REP_PORT)/)" = "200" || (echo "static server did not come up; check /tmp/forge-pixel-rep-server.log" && kill $$(cat /tmp/forge-pixel-rep.pid 2>/dev/null) 2>/dev/null && exit 3)
-	@echo "[3/3] capturing local Forge mirror..."
+	@echo "[3/3] capturing local Forge mirror at $(PIXEL_REP_FORGE_PATH)..."
 	@cd $(CRAWLER_REPO_DIR) && ./target/release/crawler \
-	    --capture-reference http://127.0.0.1:$(PIXEL_REP_PORT)/ \
+	    --capture-reference http://127.0.0.1:$(PIXEL_REP_PORT)$(PIXEL_REP_FORGE_PATH) \
 	    --site-slug $(PIXEL_REP_SLUG)-forge 2>&1 | tail -4
 	@kill $$(cat /tmp/forge-pixel-rep.pid 2>/dev/null) 2>/dev/null
 	@rm -f /tmp/forge-pixel-rep.pid
