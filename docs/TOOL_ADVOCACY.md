@@ -146,7 +146,7 @@ A sweep across emission sites in `forge-cli`, `forge-phases`, `forge-core`, `loo
 |------|--------|-------------|
 | **Done — this doc** | ✓ | Advocacy template + Advocacy trait sketch + audit of current state |
 | Phase 1 | ✓ landed at 9ee5851 | Advocacy struct + WithAdvocacy trait + Finding builders + 7 unit tests; phantom_button retrofit + print_finding renderer |
-| Phase 2 | partial — 9 of 16 sites landed (substrate_purity / link_check / label_consistency / contrast / csp / a11y_landmarks / sri / id_strategy / html_semantic) | Refactor remaining 7 ◐ emission sites (one PR per phase, low blast radius each) |
+| Phase 2 | partial — 11 of 16 sites landed (substrate_purity / link_check / label_consistency / contrast / csp / a11y_landmarks / sri / id_strategy / html_semantic / external_assets / asset_optimization) | Refactor remaining 5 ◐ emission sites (one PR per phase, low blast radius each) |
 | Phase 3 | pending | Refactor the 3 ✗ emission sites |
 | Phase 4 | pending | JSON output emits `advocacy` field per `docs/JSON_OUTPUT.md`; consumer schemas updated (automatic via serde; needs schema doc + MCP tool description update) |
 | Phase 5 | pending | Loom + Crawler emission sites adopt the same trait (cross-repo) |

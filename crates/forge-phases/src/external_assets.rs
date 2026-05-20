@@ -28,11 +28,20 @@ impl Phase for ExternalAssetsPhase {
             let body = file.body.as_str();
             let stripped = strip_reference_tags(body);
             for hit in scan_external_loads(&stripped) {
-                findings.push(Finding::strict(
-                    self.name(),
-                    file.name.clone(),
-                    format!("external load: {hit} (CDN-free policy — vendor instead)"),
-                ));
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        file.name.clone(),
+                        format!("external load: {hit}"),
+                    )
+                    .citing(["sec-005"])
+                    .why("third-party fetches at runtime defeat SRI, allow third-party tracking, break CSP isolation, and add cross-origin failure modes — the CDN-free policy is load-bearing for sovereignty")
+                    .fix(format!(
+                        "vendor the asset into the build: add the file under PlausiDen-Loom/loom-tokens/ (or the appropriate substrate location) so forge build emits it to static/ with SRI + same-origin. Remove the external URL `{hit}` from the Loom primitive that emits the reference"
+                    ))
+                    .skill("add-loom-primitive")
+                    .avoid("don't add the URL to a CSP allowlist — vendor it instead. Per [[super-society-tech-stack]] anonymity + private axes: no third-party network calls at page render"),
+                );
             }
         }
 

@@ -69,43 +69,67 @@ impl Phase for AssetOptimizationPhase {
                 "png" => {
                     let sz = file_size(path, self.name())?;
                     if sz > PNG_BUDGET {
-                        findings.push(Finding::warn(
-                            self.name(),
-                            name,
-                            format!(
-                                "{} PNG — convert to webp (50-80% smaller, broader support) or avif",
-                                iec(sz)
-                            ),
-                        ));
+                        findings.push(
+                            Finding::warn(
+                                self.name(),
+                                name,
+                                format!("{} PNG over budget", iec(sz)),
+                            )
+                            .citing(["perf-001", "perf-002"])
+                            .why("PNG is lossless; for photographic / large UI imagery, webp/avif are 50-80% smaller with imperceptible quality loss. Larger image = slower LCP")
+                            .fix("the loom-bridge assets pipeline should emit a webp + avif ladder alongside the PNG (assets-core handles this) — verify forge assets validate is reporting the bundle as complete")
+                            .skill("add-loom-primitive"),
+                        );
                     }
                 }
                 "jpg" | "jpeg" if !has_modern_sibling(path, &path_set) => {
-                    findings.push(Finding::warn(
-                        self.name(),
-                        name,
-                        "JPG without webp/avif sibling — modern browsers fetch faster format via <picture>",
-                    ));
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            name,
+                            "JPG without webp/avif sibling",
+                        )
+                        .citing(["perf-001", "perf-002"])
+                        .why("`<picture>` lets modern browsers fetch a faster format (avif > webp > jpg); without siblings every visitor downloads the legacy format")
+                        .fix("re-run loom-bridge asset emission to produce webp/avif siblings; if missing, forge assets validate will diagnose the bundle gap")
+                        .skill("add-loom-primitive"),
+                    );
                 }
                 "mp4" if !has_sibling(path, &path_set, "webm") => {
-                    findings.push(Finding::warn(
-                        self.name(),
-                        name,
-                        "MP4 without webm sibling — Firefox / older clients fetch better via <video><source>",
-                    ));
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            name,
+                            "MP4 without webm sibling",
+                        )
+                        .citing(["perf-001"])
+                        .why("`<video><source>` falls back to MP4 if webm is missing, costing visitors on free-software / lower-bandwidth contexts")
+                        .fix("the asset bundler should emit a .webm sibling alongside the .mp4; verify via forge assets validate"),
+                    );
                 }
                 "wav" => {
-                    findings.push(Finding::warn(
-                        self.name(),
-                        name,
-                        "WAV — re-encode as opus (best ratio) or aac (broader compat) for web",
-                    ));
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            name,
+                            "WAV file in static — uncompressed audio is bandwidth-hostile",
+                        )
+                        .citing(["perf-001"])
+                        .why("WAV is uncompressed PCM; opus (BSD-licensed, royalty-free, best ratio) or aac (broader compat) compress 10-20× with no perceptible quality loss for speech / typical UI sounds")
+                        .fix("re-encode the source to opus (preferred for sovereignty stack) or aac. If this is a transient audio asset, the Loom asset-bundle primitive should emit a compressed variant"),
+                    );
                 }
                 "ttf" | "otf" => {
-                    findings.push(Finding::warn(
-                        self.name(),
-                        name,
-                        "TTF/OTF — convert to woff2 (~30% smaller); add font-display: swap",
-                    ));
+                    findings.push(
+                        Finding::warn(
+                            self.name(),
+                            name,
+                            "TTF/OTF font format — woff2 saves ~30%",
+                        )
+                        .citing(["perf-001", "perf-002"])
+                        .why("woff2 is the modern web font format: ~30% smaller than TTF, universally supported, gzip-optimized. Larger fonts delay FOUT / FOFT and slow LCP")
+                        .fix("convert via `woff2_compress` (Google's BSD-licensed tool) and emit only woff2 from the Loom font-asset pipeline. Add `font-display: swap` to the @font-face emission for FOUT protection"),
+                    );
                 }
                 _ => {}
             }
