@@ -121,6 +121,29 @@ struct Args {
 enum Cmd {
     /// Run every phase. Default when no subcommand is given.
     Build,
+    /// Forge Lite diagnostic — resolve a narrow-surface lite page
+    /// into the full CmsPage shape so the lite pipeline can be
+    /// exercised end-to-end through the existing render + audit
+    /// stack.
+    ///
+    /// Per docs/SUBSTRATE_REFRAME_2026_05_21.md § Forge Lite: the
+    /// lite surface exposes only 10 primitives + 3 themes through
+    /// a deliberately narrow typed contract
+    /// ([`forge_core::forge_lite::ForgeLitePage`]). The resolver
+    /// (forge-phases::forge_lite_resolve::resolve) maps the lite
+    /// shape to [`loom_cms_render::CmsPage`]. This subcommand is
+    /// the operator-facing entry point: take a lite page JSON,
+    /// write a CmsPage JSON ready for the standard build to
+    /// consume.
+    ///
+    /// Exit codes:
+    ///   0 — resolved cleanly, output written
+    ///   1 — lite-validation error (typed message printed)
+    ///   2 — fatal (read / parse / write error)
+    Lite {
+        #[command(subcommand)]
+        action: LiteAction,
+    },
     /// T44: continuous-build mode. Watches the project root for
     /// changes (cms/*, static/*, forge.toml, backends.toml) and
     /// re-runs the build pipeline on each save with debounce. Exit
@@ -614,6 +637,29 @@ enum ManifestAction {
         /// detected gaps to stdout. Default is human-readable.
         #[arg(long, default_value_t = false)]
         json: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum LiteAction {
+    /// Resolve a ForgeLitePage JSON file into a full CmsPage
+    /// JSON file. Reads `input`, validates, calls
+    /// [`forge_phases::forge_lite_resolve::resolve`], writes the
+    /// CmsPage to `output` (atomically — temp file + rename).
+    ///
+    /// When `output` is omitted, prints the resolved CmsPage as
+    /// JSON to stdout (useful for piping into other tools).
+    Resolve {
+        /// Path to the input ForgeLitePage JSON.
+        input: std::path::PathBuf,
+        /// Optional output path for the resolved CmsPage JSON.
+        /// Stdout when absent.
+        #[arg(long, short = 'o')]
+        output: Option<std::path::PathBuf>,
+        /// Pretty-print the JSON output (two-space indent).
+        /// Default is compact.
+        #[arg(long, default_value_t = false)]
+        pretty: bool,
     },
 }
 
@@ -1351,6 +1397,7 @@ fn run() -> Result<ExitCode> {
         }) => {
             return run_codegen(&root, out.as_deref(), *dry_run, crate_name.as_deref());
         }
+        Some(Cmd::Lite { action }) => return Ok(run_lite(action)),
         Some(Cmd::Build) | None => {}
     }
 
@@ -8820,6 +8867,87 @@ fn run_bypasses(
 // one mechanical command. JSON output is cross-AI consumable
 // (Claude / Gemini / other agents).
 // ----------------------------------------------------------------
+
+/// `forge lite resolve` — read a ForgeLitePage JSON, run the
+/// typed resolver, write the resulting CmsPage JSON (or print
+/// to stdout). See [`LiteAction::Resolve`] for the CLI contract.
+fn run_lite(action: &LiteAction) -> std::process::ExitCode {
+    match action {
+        LiteAction::Resolve {
+            input,
+            output,
+            pretty,
+        } => {
+            let body = match std::fs::read_to_string(input) {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("forge lite resolve: read {}: {}", input.display(), e);
+                    return std::process::ExitCode::from(2);
+                }
+            };
+            let lite: forge_core::forge_lite::ForgeLitePage = match serde_json::from_str(&body) {
+                Ok(p) => p,
+                Err(e) => {
+                    eprintln!("forge lite resolve: parse {}: {}", input.display(), e);
+                    return std::process::ExitCode::from(2);
+                }
+            };
+            let page = match forge_phases::forge_lite_resolve::resolve(&lite) {
+                Ok(p) => p,
+                Err(e) => {
+                    eprintln!("forge lite resolve: lite validation failed: {e}");
+                    return std::process::ExitCode::from(1);
+                }
+            };
+            let json = if *pretty {
+                serde_json::to_string_pretty(&page)
+            } else {
+                serde_json::to_string(&page)
+            };
+            let json = match json {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("forge lite resolve: serialize: {e}");
+                    return std::process::ExitCode::from(2);
+                }
+            };
+            match output {
+                Some(out_path) => {
+                    if let Some(parent) = out_path.parent() {
+                        if !parent.as_os_str().is_empty() {
+                            if let Err(e) = std::fs::create_dir_all(parent) {
+                                eprintln!(
+                                    "forge lite resolve: mkdir {}: {}",
+                                    parent.display(),
+                                    e
+                                );
+                                return std::process::ExitCode::from(2);
+                            }
+                        }
+                    }
+                    let tmp = out_path.with_extension("tmp");
+                    if let Err(e) = std::fs::write(&tmp, json.as_bytes()) {
+                        eprintln!("forge lite resolve: write {}: {}", tmp.display(), e);
+                        return std::process::ExitCode::from(2);
+                    }
+                    if let Err(e) = std::fs::rename(&tmp, out_path) {
+                        eprintln!(
+                            "forge lite resolve: rename {} → {}: {}",
+                            tmp.display(),
+                            out_path.display(),
+                            e
+                        );
+                        return std::process::ExitCode::from(2);
+                    }
+                }
+                None => {
+                    println!("{json}");
+                }
+            }
+            std::process::ExitCode::SUCCESS
+        }
+    }
+}
 
 /// `forge codegen` subcommand. Reads cms/*.json + backends.toml,
 /// builds a CodegenPlan, invokes forge_codegen::generate(), and
