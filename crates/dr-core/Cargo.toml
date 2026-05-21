@@ -1,3 +1,4 @@
+# integration-audit-allow: contract-first crate; runtime consumer queued — see docs/INTEGRATION_COVERAGE.md
 [package]
 name = "dr-core"
 version = "0.1.0"
