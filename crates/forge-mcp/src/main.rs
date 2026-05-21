@@ -220,6 +220,135 @@ fn tool_list() -> Value {
     })
 }
 
+/// Filter the full tool list by the active session scope.
+///
+/// Per `forge_core::session_scope` (substrate reframe #385): a
+/// session can declare its scope via the `FORGE_SESSION_SCOPE`
+/// env var. When set to a known scope slug, this function
+/// keeps only tools that are in scope; everything else is
+/// removed from the MCP surface so the client sees a tighter
+/// inventory.
+///
+/// Unset env var, unknown slug, or `unscoped` → pass the full
+/// list through unchanged (back-compat for callers that
+/// haven't adopted the scope pattern).
+fn filter_tool_list_by_session_scope(full: Value) -> Value {
+    let scope = std::env::var("FORGE_SESSION_SCOPE")
+        .ok()
+        .and_then(|s| forge_core::session_scope::SessionScope::from_slug(&s))
+        .unwrap_or(forge_core::session_scope::SessionScope::Unscoped);
+    let allowed = forge_core::session_scope::tools_in_scope(scope);
+    if allowed.is_empty() {
+        // Empty → unscoped; pass through.
+        return full;
+    }
+    let Value::Object(mut obj) = full else {
+        return full;
+    };
+    let tools = obj.remove("tools").unwrap_or(Value::Array(Vec::new()));
+    let Value::Array(items) = tools else {
+        obj.insert("tools".to_owned(), tools);
+        return Value::Object(obj);
+    };
+    let filtered: Vec<Value> = items
+        .into_iter()
+        .filter(|t| {
+            t.get("name")
+                .and_then(|v| v.as_str())
+                .is_some_and(|name| allowed.contains(&name))
+        })
+        .collect();
+    obj.insert("tools".to_owned(), Value::Array(filtered));
+    obj.insert(
+        "_session_scope".to_owned(),
+        Value::String(scope.slug().to_owned()),
+    );
+    Value::Object(obj)
+}
+
+#[cfg(test)]
+mod scope_filter_tests {
+    use super::*;
+
+    fn mock_full_list() -> Value {
+        json!({
+            "tools": [
+                { "name": "forge.orient", "description": "..." },
+                { "name": "forge.build", "description": "..." },
+                { "name": "forge.authoring", "description": "..." },
+                { "name": "forge.manifest.validate", "description": "..." },
+                { "name": "forge.codegen", "description": "..." },
+            ]
+        })
+    }
+
+    fn count_tools(v: &Value) -> usize {
+        v.get("tools")
+            .and_then(|t| t.as_array())
+            .map_or(0, Vec::len)
+    }
+
+    fn names(v: &Value) -> Vec<String> {
+        v.get("tools")
+            .and_then(|t| t.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|e| e.get("name").and_then(|n| n.as_str()).map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    #[test]
+    fn unscoped_env_passes_through() {
+        // SAFETY: serial test; cargo test on this fn doesn't
+        // run in parallel with other env-touching tests since
+        // they're in the same module.
+        std::env::remove_var("FORGE_SESSION_SCOPE");
+        let out = filter_tool_list_by_session_scope(mock_full_list());
+        assert_eq!(count_tools(&out), 5);
+        assert!(out.get("_session_scope").is_none());
+    }
+
+    #[test]
+    fn build_site_scope_drops_substrate_tools() {
+        std::env::set_var("FORGE_SESSION_SCOPE", "build-site");
+        let out = filter_tool_list_by_session_scope(mock_full_list());
+        let kept = names(&out);
+        assert!(kept.contains(&"forge.orient".to_owned()));
+        assert!(kept.contains(&"forge.build".to_owned()));
+        assert!(kept.contains(&"forge.authoring".to_owned()));
+        assert!(!kept.contains(&"forge.manifest.validate".to_owned()));
+        assert!(!kept.contains(&"forge.codegen".to_owned()));
+        assert_eq!(
+            out.get("_session_scope").and_then(|v| v.as_str()),
+            Some("build-site")
+        );
+        std::env::remove_var("FORGE_SESSION_SCOPE");
+    }
+
+    #[test]
+    fn modify_primitive_scope_keeps_substrate_tools() {
+        std::env::set_var("FORGE_SESSION_SCOPE", "modify-primitive");
+        let out = filter_tool_list_by_session_scope(mock_full_list());
+        let kept = names(&out);
+        assert!(kept.contains(&"forge.manifest.validate".to_owned()));
+        assert!(kept.contains(&"forge.codegen".to_owned()));
+        assert!(!kept.contains(&"forge.authoring".to_owned()));
+        std::env::remove_var("FORGE_SESSION_SCOPE");
+    }
+
+    #[test]
+    fn unknown_scope_passes_through() {
+        std::env::set_var("FORGE_SESSION_SCOPE", "does-not-exist");
+        let out = filter_tool_list_by_session_scope(mock_full_list());
+        // Unknown slug → SessionScope::Unscoped → empty allow →
+        // pass-through.
+        assert_eq!(count_tools(&out), 5);
+        std::env::remove_var("FORGE_SESSION_SCOPE");
+    }
+}
+
 async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
     let result = match req.method.as_str() {
         "initialize" => Some(json!({
@@ -227,7 +356,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
             "capabilities": { "tools": {} },
             "serverInfo": serde_json::from_str::<Value>(SERVER_INFO).unwrap_or(json!({}))
         })),
-        "tools/list" => Some(tool_list()),
+        "tools/list" => Some(filter_tool_list_by_session_scope(tool_list())),
         "tools/call" => {
             let name = req
                 .params
