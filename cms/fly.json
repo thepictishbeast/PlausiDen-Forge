@@ -96,34 +96,31 @@
       "emphasis": "display"
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Fly product surface.",
-      "density": "comfortable",
+      "lede": "Five primitives \u2014 Machines, Apps, Volumes, Anycast, Postgres \u2014 that compose into a deploy platform thinner than the runtime above it.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Machines",
-          "value": "Firecracker microVMs as the unit of compute.",
-          "hint": "Hardware virtualization, not container isolation. Sub-second start; ms-scale autoscale. Any code that runs on Linux runs on a Machine."
+          "title": "Machines",
+          "body": "Firecracker microVMs as the unit of compute. Hardware virtualization, not container isolation. Sub-second start; ms-scale autoscale. Any code that runs on Linux runs on a Machine."
         },
         {
-          "key": "Apps",
-          "value": "Multi-region apps from one fly.toml.",
-          "hint": "Declarative deploy: regions, scale rules, health checks, secrets \u2014 all in one config the platform reads. Same shape regardless of stack."
+          "title": "Apps",
+          "body": "Multi-region apps from one fly.toml. Declarative deploy: regions, scale rules, health checks, secrets \u2014 all in one config the platform reads. Same shape regardless of stack."
         },
         {
-          "key": "Volumes",
-          "value": "Per-Machine block storage.",
-          "hint": "Persistent volumes attached to specific Machines. Lets stateful workloads (databases, queues, caches) run with the same deploy ergonomics as stateless apps."
+          "title": "Volumes",
+          "body": "Per-Machine block storage. Persistent volumes attached to specific Machines. Lets stateful workloads (databases, queues, caches) run with the same deploy ergonomics as stateless apps."
         },
         {
-          "key": "Anycast",
-          "value": "Global Anycast network.",
-          "hint": "Same IP, routed to the closest region. TLS termination + WAF at the edge; app code never sees a 'choose a region' prompt at request time."
+          "title": "Anycast",
+          "body": "Global Anycast network. Same IP, routed to the closest region. TLS termination + WAF at the edge; app code never sees a 'choose a region' prompt at request time."
         },
         {
-          "key": "Postgres",
-          "value": "Fly Postgres (managed).",
-          "hint": "Multi-region Postgres deployed via fly.toml. Read replicas auto-routed via the same Anycast layer."
+          "title": "Postgres",
+          "body": "Fly Postgres (managed). Multi-region Postgres deployed via fly.toml. Read replicas auto-routed via the same Anycast layer."
         }
       ]
     },
