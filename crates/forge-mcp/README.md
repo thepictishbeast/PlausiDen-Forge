@@ -48,11 +48,18 @@ cheap on Claude's side.
 - `forge.doctrine.for { path, root?, terse? }` — surface
   doctrine rules applicable to a path. Defaults to terse output
   (rule ids + names only) for token efficiency.
+- `forge.authoring { root? }` — scan a tenant's `cms/*.json`
+  for empty / below-floor content fields. Returns a structured
+  TODO list of sections that still need content.
+- `forge.config { root? }` — umbrella config-gate runner
+  (privacy / trust-safety / domains / forms / federation /
+  email / commerce / memberships). Missing config files are
+  warnings, not failures.
+- `forge.fix { root? }` — auto-fix mechanical findings from
+  the latest build report. Idempotent.
 
 ### Planned
 
-- `forge.audit.explain { phase, root? }` — explain a phase's
-  intent + when it fires.
 - `forge.synthesis.preview { spec_path }` — preview the
   `SiteSpec` that would generate from a given spec.
 - `forge.codegen { root?, target? }` — emit an axum + tokio +

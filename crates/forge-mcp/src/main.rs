@@ -124,6 +124,45 @@ fn tool_list() -> Value {
                         }
                     }
                 }
+            },
+            {
+                "name": "forge.authoring",
+                "description": "Scan a tenant's cms/*.json for empty / below-floor content fields. Returns a structured TODO list of sections that still need content. Companion to the `content_substance` build phase.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "root": {
+                            "type": "string",
+                            "description": "Tenant root. Defaults to the working directory."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.config",
+                "description": "Umbrella config-gate runner: privacy / trust-safety / domains / forms / federation / email / commerce / memberships. Each missing config file is a warning, not a failure (e.g., a tenant that doesn't sell anything doesn't need commerce.toml). Backed by `forge config`.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "root": {
+                            "type": "string",
+                            "description": "Tenant root. Defaults to the working directory."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.fix",
+                "description": "Auto-fix mechanical findings from the latest build report. Idempotent; safe to run after every `forge.build`. Backed by `forge fix`.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "root": {
+                            "type": "string",
+                            "description": "Project root. Defaults to the working directory."
+                        }
+                    }
+                }
             }
         ]
     })
@@ -148,6 +187,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.orient" => Some(tool_forge_orient(args).await),
                 "forge.build" => Some(tool_forge_build(args).await),
                 "forge.doctrine.for" => Some(tool_forge_doctrine_for(args).await),
+                "forge.authoring" => Some(tool_forge_authoring(args).await),
+                "forge.config" => Some(tool_forge_config(args).await),
+                "forge.fix" => Some(tool_forge_fix(args).await),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -249,6 +291,30 @@ async fn tool_forge_doctrine_for(args: Value) -> Value {
         forge_args.push("--terse");
     }
     run_forge("doctrine for", &forge_args).await
+}
+
+async fn tool_forge_authoring(args: Value) -> Value {
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    run_forge("authoring", &["authoring", "--root", root]).await
+}
+
+async fn tool_forge_config(args: Value) -> Value {
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    run_forge("config", &["config", "--root", root]).await
+}
+
+async fn tool_forge_fix(args: Value) -> Value {
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    run_forge("fix", &["fix", "--root", root]).await
 }
 
 #[tokio::main]
