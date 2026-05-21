@@ -1651,12 +1651,21 @@ fn run() -> Result<ExitCode> {
             mode: mode_str,
             ..Default::default()
         };
+        // Per-tenant [strict] promotions — converts selected
+        // phases' Warn findings to Strict at the boundary so
+        // operators don't have to touch every phase to tighten.
+        // See forge-core::strict_promotions + architecture
+        // audit 2026-05-21.
+        let strict_promotions = forge_core::strict_promotions::StrictPromotions::load(&root);
+        let mut total_promoted = 0usize;
         for phase in &phases {
             let phase_started = std::time::Instant::now();
             println!("\n== phase: {} ==", phase.name());
-            let findings = phase
+            let mut findings = phase
                 .run(&ctx)
                 .with_context(|| format!("phase {}", phase.name()))?;
+            let promoted = strict_promotions.promote(&mut findings);
+            total_promoted += promoted;
             let elapsed = phase_started.elapsed().as_millis();
             if findings.is_empty() {
                 println!("  ok      no findings ({elapsed}ms)");
@@ -1666,6 +1675,11 @@ fn run() -> Result<ExitCode> {
                     report.push(f.clone());
                 }
             }
+        }
+        if total_promoted > 0 {
+            println!(
+                "\n  note    [strict] promoted {total_promoted} finding(s) Warn→Strict per forge.toml"
+            );
         }
         report
     };
