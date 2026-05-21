@@ -34,5 +34,3 @@ jobs:
         run: cargo build -p substrate-integration-audit --release
       - name: Run substrate-integration-audit
         run: ./target/release/substrate-integration-audit crates
-        continue-on-error: true   # surface orphans without blocking
-                                  # until #333 annotation pass lands
