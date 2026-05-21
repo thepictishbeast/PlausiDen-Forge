@@ -1794,6 +1794,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "substrate-integration-audit"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "toml",
+ "walkdir",
+]
+
+[[package]]
 name = "substrate-name-audit"
 version = "0.1.0"
 dependencies = [

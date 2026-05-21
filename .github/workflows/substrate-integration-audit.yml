@@ -1,0 +1,38 @@
+# Substrate-integration-audit CI gate (#330).
+#
+# Reports any non-binary crate with zero incoming dependencies
+# (orphan slice). Suppress contract-first crates (where the
+# consumer is documented but not yet implemented) with a
+# `# integration-audit-allow: <reason>` line in the crate's
+# Cargo.toml.
+
+name: substrate-integration-audit
+
+on:
+  pull_request:
+    paths:
+      - 'crates/**/Cargo.toml'
+      - '.github/workflows/substrate-integration-audit.yml'
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-integration-audit-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build substrate-integration-audit
+        run: cargo build -p substrate-integration-audit --release
+      - name: Run substrate-integration-audit
+        run: ./target/release/substrate-integration-audit crates
+        continue-on-error: true   # surface orphans without blocking
+                                  # until #333 annotation pass lands
