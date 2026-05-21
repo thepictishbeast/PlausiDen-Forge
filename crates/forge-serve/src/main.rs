@@ -17,7 +17,7 @@
 //!   serve the uncompressed source and log a WARN. Caught the
 //!   T54 SRI-mismatch loop.
 //! * Per-request timing log; >SLOW_REQUEST_MS_THRESHOLD writes
-//!   a structured line to /tmp/skillshots-server-slow.log.
+//!   a structured line to /tmp/forge-server-slow.log.
 //! * CSS-load self-test on startup: GET / + verify each <link>
 //!   resolves to a non-empty body. Loud warning if any fail.
 //!
@@ -55,7 +55,7 @@ use tokio::net::TcpListener;
 use tracing::{info, warn};
 
 const SLOW_REQUEST_MS_THRESHOLD: u128 = 500;
-const SLOW_LOG_PATH: &str = "/tmp/skillshots-server-slow.log";
+const SLOW_LOG_PATH: &str = "/tmp/forge-server-slow.log";
 
 #[derive(Parser, Debug)]
 #[command(

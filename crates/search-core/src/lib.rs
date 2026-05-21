@@ -1,8 +1,8 @@
 //! `search-core` — typed search contract.
 //!
-//! Per `PLATFORM_ROADMAP.md` §16, every PlausiDen tenant gets
-//! search built in. This crate defines the cross-backend
-//! contract; per-backend clients plug in via [`SearchBackend`].
+//! Per `PLATFORM_ROADMAP.md` §16, every tenant gets search
+//! built in. This crate defines the cross-backend contract;
+//! per-backend clients plug in via [`SearchBackend`].
 //!
 //! Supported backends (closed enum):
 //!   * Typesense — typo-tolerant, faceted, low-latency

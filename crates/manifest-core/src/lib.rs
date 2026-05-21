@@ -1,4 +1,4 @@
-//! `manifest-core` — the keystone type the entire PlausiDen
+//! `manifest-core` — the keystone type the entire substrate
 //! platform projects through.
 //!
 //! Per `PLATFORM_ROADMAP.md` §3 and the
@@ -76,7 +76,7 @@ pub struct PlatformManifest {
     /// changes to the JSON shape, not on capability additions.
     #[serde(default = "default_schema_version")]
     pub schema_version: String,
-    /// Human-readable platform identifier (e.g. `plausiden`).
+    /// Human-readable platform identifier (operator-defined slug).
     pub platform: String,
     /// All declared capabilities. Each capability appears at most
     /// once — duplicates are a parse error (see [`Self::validate`]).
@@ -402,7 +402,7 @@ mod tests {
     #[test]
     fn empty_manifest_validates() {
         let m = PlatformManifest {
-            platform: "plausiden".into(),
+            platform: "acme".into(), // audit-allow: test fixture
             ..Default::default()
         };
         m.validate().unwrap();
@@ -421,7 +421,7 @@ mod tests {
             metadata: BTreeMap::new(),
         };
         let m = PlatformManifest {
-            platform: "plausiden".into(),
+            platform: "acme".into(), // audit-allow: test fixture
             capabilities: vec![cap.clone(), cap],
             ..Default::default()
         };
@@ -434,7 +434,7 @@ mod tests {
     #[test]
     fn detects_phase_implements_unknown_capability() {
         let m = PlatformManifest {
-            platform: "plausiden".into(),
+            platform: "acme".into(), // audit-allow: test fixture
             phases: vec![PhaseDescriptor {
                 id: CapabilityId::parse("p").unwrap(),
                 implements: Some(CapabilityId::parse("nope").unwrap()),
@@ -453,7 +453,7 @@ mod tests {
     #[test]
     fn json_round_trip_preserves_shape() {
         let m = PlatformManifest {
-            platform: "plausiden".into(),
+            platform: "acme".into(), // audit-allow: test fixture
             schema_version: "1".into(),
             capabilities: vec![Capability {
                 id: CapabilityId::parse("auth").unwrap(),
@@ -475,7 +475,7 @@ mod tests {
     #[test]
     fn toml_round_trip_preserves_shape() {
         let toml_src = r#"
-platform = "plausiden"
+platform = "acme"
 schema-version = "1"
 
 [[capabilities]]
@@ -488,7 +488,7 @@ tests = ["forge-phases::auth::tests::ok"]
 docs = ["docs/auth.md"]
 "#;
         let m = PlatformManifest::from_toml(toml_src).unwrap();
-        assert_eq!(m.platform, "plausiden");
+        assert_eq!(m.platform, "acme");
         assert_eq!(m.capabilities.len(), 1);
         assert_eq!(m.capabilities[0].id.as_str(), "auth");
     }

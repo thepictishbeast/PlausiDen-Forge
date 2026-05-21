@@ -1,4 +1,4 @@
-//! `loom-traits` — typed projection of the PlausiDen trait DAG.
+//! `loom-traits` — typed projection of the substrate trait DAG.
 //!
 //! Per AVP-Doctrine `TRAIT_DAG.md`: every substrate-managed entity
 //! (Loom primitive, CMS section, Forge phase, Crawler detector,
@@ -559,7 +559,7 @@ impl Category {
 #[must_use]
 pub fn render_markdown_catalog() -> String {
     let mut out = String::new();
-    out.push_str("# PlausiDen trait catalog\n\n");
+    out.push_str("# Substrate trait catalog\n\n");
     out.push_str(
         "Generated from the `loom-traits` crate per AVP-Doctrine \
          `TRAIT_DAG.md`. **54 traits across 11 categories.**\n\n",
@@ -1219,7 +1219,7 @@ mod tests {
     #[test]
     fn rendered_catalog_has_top_level_heading() {
         let md = render_markdown_catalog();
-        assert!(md.starts_with("# PlausiDen trait catalog"));
+        assert!(md.starts_with("# Substrate trait catalog"));
     }
 
     #[test]

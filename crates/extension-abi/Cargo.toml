@@ -6,7 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Typed ABI every PlausiDen extension projects through. Defines ExtensionManifest + Capability + host-export shape; backend-independent (Wasm Component Model planned, NullHost ships today for tests)."
+description = "Typed ABI every extension projects through. Defines ExtensionManifest + Capability + host-export shape; backend-independent (Wasm Component Model planned, NullHost ships today for tests)."
 
 [lints.rust]
 unsafe_code = "forbid"

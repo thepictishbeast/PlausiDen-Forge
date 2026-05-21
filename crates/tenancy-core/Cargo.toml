@@ -6,7 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Typed TenantId + 3-tier isolation primitives every multi-tenant PlausiDen subsystem (CMS, Loom edit-serve, Forge build) projects through."
+description = "Typed TenantId + 3-tier isolation primitives every multi-tenant subsystem (CMS, Loom edit-serve, Forge build) projects through."
 
 [lints.rust]
 unsafe_code = "forbid"

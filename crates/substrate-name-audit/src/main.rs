@@ -69,15 +69,16 @@ struct Pattern {
     class: &'static str,
 }
 
-/// Platform-repo suffixes — hyphenated names that follow a brand
-/// when the substrate refers to its OWN repo (e.g.,
-/// `PlausiDen-AVP-Doctrine`, `PlausiDen-Forge`, `PlausiDen-Loom`).
-/// A brand match immediately followed by one of these suffixes is
-/// suppressed — the platform talking about its own repos is fine.
+/// Platform-self-reference suffixes — substrings that follow a
+/// brand when the substrate refers to its OWN repo / env var /
+/// domain. A brand match immediately followed by one of these
+/// is suppressed — the platform talking about its own
+/// infrastructure is not a tenant leak.
 ///
-/// All entries are lowercase + dash-prefixed to match the post-
-/// brand substring exactly.
+/// All entries are lowercase to match the post-brand substring
+/// exactly (the matcher lowercases input before comparison).
 const PLATFORM_REPO_SUFFIXES: &[&str] = &[
+    // Hyphenated platform-repo names (PlausiDen-Forge, …)
     "-avp-doctrine",
     "-forge",
     "-loom",
@@ -94,6 +95,25 @@ const PLATFORM_REPO_SUFFIXES: &[&str] = &[
     "-site",
     "-bridge",
     "-audits",
+    // Underscored env-var prefixes (PLAUSIDEN_DOCTRINE_DIR, …)
+    "_doctrine_dir",
+    "_dir",
+    "_root",
+    "_path",
+    "_url",
+    "_home",
+    "_config",
+    "_env",
+    "_token",
+    "_key",
+    "_secret",
+    "_id",
+    // Platform-owned domain TLDs (plausiden.com, plausiden.org, …)
+    ".com",
+    ".org",
+    ".net",
+    ".dev",
+    ".io",
 ];
 
 /// Built-in forbidden brand-name patterns. Authors extending this

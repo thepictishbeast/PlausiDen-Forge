@@ -1,5 +1,5 @@
 //! `manifest-attest` — consolidated signing layer for every
-//! PlausiDen artifact.
+//! substrate artifact.
 //!
 //! Per `PLATFORM_ROADMAP.md` §6 + the
 //! `super_society_tech_stack` doctrine: every artifact the

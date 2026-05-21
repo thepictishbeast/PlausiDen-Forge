@@ -1,6 +1,6 @@
 //! Sovereignty orientation — the PSA (privacy / security / anonymity)
-//! differentiator that distinguishes the PlausiDen platform from
-//! conventional substrates.
+//! differentiator that distinguishes this substrate from
+//! conventional ones.
 //!
 //! Per AVP-Doctrine `N_ORIENTATION_SUBSTRATE.md` § Orientation 11 +
 //! `[[super-society-tech-stack]]`: every substrate entity scores

@@ -6,7 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Consolidated signing layer for every PlausiDen artifact — build reports, manifests, deploy bundles, content snapshots. Ed25519 today; ML-DSA hybrid lands in #65."
+description = "Consolidated signing layer for every substrate artifact — build reports, manifests, deploy bundles, content snapshots. Ed25519 today; ML-DSA hybrid lands in #65."
 
 [lints.rust]
 unsafe_code = "forbid"
