@@ -248,6 +248,13 @@ members = [
     # `loom backend-stub` / `loom backend-stub-all`. Joining the
     # workspace so `cargo check` covers it.
     "server-stub",
+    # #320 (paul 2026-05-21): forge-mcp — Model Context Protocol
+    # server exposing Forge subcommands as JSON-RPC tools so
+    # MCP-aware clients (Claude Code / Codex / Cursor) can call
+    # `forge orient`, `forge build`, `forge audit … --explain`,
+    # `forge doctrine for <path>` etc. without re-parsing CLI
+    # text. Token-efficient by design.
+    "crates/forge-mcp",
 ]
 
 [workspace.package]
