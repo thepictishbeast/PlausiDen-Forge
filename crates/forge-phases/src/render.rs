@@ -205,6 +205,23 @@ impl Phase for RenderPhase {
                 }
             };
 
+            // #322 (paul 2026-05-21): apply per-tenant
+            // `{{ VAR }}` / `@asset-slug` substitution BEFORE the
+            // render path. Tenants ship variables.json /
+            // palette.json / assets-map.json at the project root;
+            // forge_core::tenant_variables::load merges them into
+            // a typed TenantVariables, then loom_cms_render
+            // projects every CmsBlock/CmsSection string leaf
+            // through the substitution table.
+            //
+            // Fail-tolerant: ANY error here (load failure, JSON
+            // conversion miss) leaves `page` untouched.
+            if let Some(tv) = forge_core::tenant_variables::TenantVariables::load(&ctx.root) {
+                if let Some(substituted) = apply_tenant_variables(&page, &tv) {
+                    page = substituted;
+                }
+            }
+
             // T70b: call Loom's full a11y / dual-theme page-shell
             // directly. Forge inherits the same WCAG-AA contrast
             // tokens, focus-visible outlines, skip-link styling,
@@ -576,6 +593,25 @@ fn inject_skin_integrity(html: &str, integrity_attr: &str) -> String {
         "<link rel=\"stylesheet\" href=\"/loom-skin.css\" integrity=\"{integrity_attr}\" crossorigin=\"anonymous\">",
     );
     html.replacen(NEEDLE, &replacement, 1)
+}
+
+/// Bridge between `forge_core::tenant_variables::TenantVariables`
+/// and `loom_cms_render::apply_variables`. The two types are
+/// shape-compatible (three sibling `BTreeMap<String,String>`
+/// fields with identical JSON wire format) so we round-trip
+/// through `serde_json::Value` to convert without compile-time
+/// coupling forge-core to loom-variables.
+///
+/// Returns `None` on any conversion error — the caller leaves
+/// the page untouched (placeholders preserved verbatim per
+/// substitute() contract).
+fn apply_tenant_variables(
+    page: &loom_cms_render::CmsPage,
+    tv: &forge_core::tenant_variables::TenantVariables,
+) -> Option<loom_cms_render::CmsPage> {
+    let tv_json = serde_json::to_value(tv).ok()?;
+    let loom_tv: loom_cms_render::TenantVariables = serde_json::from_value(tv_json).ok()?;
+    loom_cms_render::apply_variables(page, &loom_tv).ok()
 }
 
 /// Inject the tenant's `[style]` CSS overrides into the rendered
@@ -1058,6 +1094,39 @@ mod tests {
         // Non-parent flat slugs stay flat even with a populated set.
         let p = output_path_for_slug(out_dir, "contact", &parents);
         assert_eq!(p, Path::new("/tmp/out/contact.html"));
+    }
+
+    #[test]
+    fn apply_tenant_variables_substitutes_in_block_text() {
+        use std::collections::BTreeMap;
+        let mut variables = BTreeMap::new();
+        variables.insert("BRAND".into(), "PlausiDen".into());
+        let tv = forge_core::tenant_variables::TenantVariables {
+            variables,
+            palette: BTreeMap::new(),
+            assets: BTreeMap::new(),
+        };
+        let page: loom_cms_render::CmsPage = serde_json::from_str(
+            r#"{
+                "brand": null, "theme": null, "chrome": null,
+                "content_width": null, "nav_actions": [],
+                "title": "Welcome to {{ BRAND }}",
+                "description": "About {{ BRAND }}",
+                "path": "/p", "nav_links": [], "dev_devtools": false,
+                "sections": [
+                    { "kind": "compose", "blocks": [
+                        { "kind": "text", "text": "Made by {{ BRAND }}." }
+                    ]}
+                ]
+            }"#,
+        )
+        .expect("page parses");
+        let substituted = apply_tenant_variables(&page, &tv).expect("round-trip");
+        assert_eq!(substituted.title, "Welcome to PlausiDen");
+        assert_eq!(substituted.description, "About PlausiDen");
+        let html = loom_cms_render::render_page(&substituted).into_string();
+        assert!(html.contains("Made by PlausiDen."));
+        assert!(!html.contains("{{ BRAND }}"));
     }
 
     #[test]

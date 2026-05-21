@@ -1056,6 +1056,7 @@ dependencies = [
  "base64",
  "loom-components",
  "loom-icons",
+ "loom-variables",
  "maud",
  "schemars",
  "serde",
@@ -1097,6 +1098,14 @@ dependencies = [
 
 [[package]]
 name = "loom-traits"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "loom-variables"
 version = "0.1.0"
 dependencies = [
  "serde",
