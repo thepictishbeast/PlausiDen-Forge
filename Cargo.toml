@@ -255,6 +255,12 @@ members = [
     # `forge doctrine for <path>` etc. without re-parsing CLI
     # text. Token-efficient by design.
     "crates/forge-mcp",
+    # #328 (paul 2026-05-21): substrate-name-audit — Rust binary
+    # that scans substrate .rs/.toml/.md/.css/.html for hardcoded
+    # tenant-name leaks (brands, phone numbers, street addresses)
+    # and reports file:line. Used as a pre-commit hook and a CI
+    # gate to keep substrate code generic.
+    "crates/substrate-name-audit",
 ]
 
 [workspace.package]
