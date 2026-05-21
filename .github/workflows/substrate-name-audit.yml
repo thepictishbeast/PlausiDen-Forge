@@ -1,0 +1,35 @@
+# Substrate-name-audit CI gate (#328).
+#
+# Fails the PR if any substrate file under crates/ contains a
+# tenant-name leak (brands, phone numbers, street addresses).
+# Suppress legitimate platform-name references with an inline
+# `// audit-allow: <reason>` comment on the same line.
+
+name: substrate-name-audit
+
+on:
+  pull_request:
+    paths:
+      - 'crates/**'
+      - '.github/workflows/substrate-name-audit.yml'
+  push:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build substrate-name-audit
+        run: cargo build -p substrate-name-audit --release
+      - name: Run substrate-name-audit
+        run: ./target/release/substrate-name-audit crates
