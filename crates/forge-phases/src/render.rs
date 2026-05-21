@@ -267,6 +267,13 @@ impl Phase for RenderPhase {
             // so the browser's SRI check matches what we serve.
             let html = inject_skin_integrity(&html_raw, &skin_integrity_attr);
 
+            // Per-tenant [style] overrides — inject after </head>
+            // so the tenant CSS variables override the substrate
+            // baseline. Tenants without [style] pass through (the
+            // load() is fail-tolerant and returns None on every
+            // error path including missing-section).
+            let html = inject_tenant_style(&html, &ctx.root);
+
             let out_path = output_path_for_slug(&out_dir, &slug, &parent_slugs);
             if let Some(parent) = out_path.parent() {
                 if let Err(e) = std::fs::create_dir_all(parent) {
@@ -569,6 +576,27 @@ fn inject_skin_integrity(html: &str, integrity_attr: &str) -> String {
         "<link rel=\"stylesheet\" href=\"/loom-skin.css\" integrity=\"{integrity_attr}\" crossorigin=\"anonymous\">",
     );
     html.replacen(NEEDLE, &replacement, 1)
+}
+
+/// Inject the tenant's `[style]` CSS overrides into the rendered
+/// page-shell head. Pass-through when the tenant declares no
+/// `[style]` section in `forge.toml`. Injected AFTER the
+/// `loom-skin.css` link so source-order cascade lets tenant
+/// values override substrate baselines.
+fn inject_tenant_style(html: &str, root: &Path) -> String {
+    let Some(style) = forge_core::tenant_style::TenantStyle::load(root) else {
+        return html.to_owned();
+    };
+    let style_tag = style.to_style_tag();
+    if style_tag.is_empty() {
+        return html.to_owned();
+    }
+    if !html.contains("</head>") {
+        // Unexpected shape; leave untouched rather than risk a
+        // malformed document.
+        return html.to_owned();
+    }
+    html.replacen("</head>", &format!("{style_tag}</head>"), 1)
 }
 
 fn atomic_write(dest: &Path, bytes: &[u8]) -> std::io::Result<()> {
@@ -1048,6 +1076,66 @@ mod tests {
         let html = "<head></head>";
         let out = inject_skin_integrity(html, "sha384-AAAA");
         assert_eq!(out, html);
+    }
+
+    #[test]
+    fn inject_tenant_style_injects_when_style_section_present() {
+        let dir = std::env::temp_dir().join(format!(
+            "forge-phases-tenant-style-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("forge.toml"),
+            "[style.palette]\nprimary = \"#733635\"\n",
+        )
+        .unwrap();
+        let html = "<head><title>x</title></head><body></body>";
+        let out = inject_tenant_style(html, &dir);
+        assert!(out.contains("data-loom-tenant-style"));
+        assert!(out.contains("--loom-color-primary: #733635;"));
+        // Style tag lands BEFORE </head> so the cascade after
+        // loom-skin.css applies.
+        let idx_style = out.find("data-loom-tenant-style").unwrap();
+        let idx_close = out.find("</head>").unwrap();
+        assert!(idx_style < idx_close);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn inject_tenant_style_passes_through_when_no_forge_toml() {
+        let dir = std::env::temp_dir().join(format!(
+            "forge-phases-tenant-style-empty-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let html = "<head></head>";
+        let out = inject_tenant_style(html, &dir);
+        assert_eq!(out, html);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn inject_tenant_style_passes_through_when_style_section_empty() {
+        let dir = std::env::temp_dir().join(format!(
+            "forge-phases-tenant-style-empty-section-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("forge.toml"), "[forge]\nmode = \"poc\"\n").unwrap();
+        let html = "<head></head>";
+        let out = inject_tenant_style(html, &dir);
+        assert_eq!(out, html);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
