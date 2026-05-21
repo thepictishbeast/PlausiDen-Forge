@@ -85,39 +85,35 @@
       "text": "Forge-static approximation of stripe.com authored from SSR-extractable headings + descriptions. Pixel-rep rotation target per PlausiDen-Forge #221. Not affiliated with Stripe; the substrate uses Stripe as a reference shape for the editorial_purity_gate's solution-tile audit."
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Flexible solutions for every business model.",
-      "density": "comfortable",
+      "lede": "Six product surfaces under one unified API \u2014 every developer gets the same identity + idempotency primitives whether they're billing humans, running a marketplace, or wiring an agent.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Payments",
-          "value": "Accept and optimise payments globally \u2014 online and in person.",
-          "hint": "Cards, wallets, bank debits, BNPL, and crypto. Real-time decline-rate optimisation. Unified API across 195+ countries."
+          "title": "Payments",
+          "body": "Accept and optimise payments globally \u2014 online and in person. Cards, wallets, bank debits, BNPL, and crypto. Real-time decline-rate optimisation. Unified API across 195+ countries."
         },
         {
-          "key": "Billing",
-          "value": "Enable any billing model.",
-          "hint": "Subscriptions, metered, hybrid, one-off invoices, dunning, revenue recognition. Same API regardless of the pricing shape."
+          "title": "Billing",
+          "body": "Enable any billing model. Subscriptions, metered, hybrid, one-off invoices, dunning, revenue recognition. Same API regardless of the pricing shape."
         },
         {
-          "key": "Issuing",
-          "value": "Create a card issuing programme.",
-          "hint": "Virtual + physical cards under your brand. Programmatic spend controls, real-time authorisation hooks, integrated ledger."
+          "title": "Issuing",
+          "body": "Create a card issuing programme. Virtual + physical cards under your brand. Programmatic spend controls, real-time authorisation hooks, integrated ledger."
         },
         {
-          "key": "Treasury",
-          "value": "Borderless money movement.",
-          "hint": "Embedded financial accounts, ACH + wire, multi-currency, stablecoins + crypto for cross-border treasury without correspondent friction."
+          "title": "Treasury",
+          "body": "Borderless money movement. Embedded financial accounts, ACH + wire, multi-currency, stablecoins + crypto for cross-border treasury without correspondent friction."
         },
         {
-          "key": "Connect",
-          "value": "Embed payments in your platform.",
-          "hint": "Marketplace + SaaS-platform payouts. Multi-party transactions with revenue-sharing rules expressed declaratively."
+          "title": "Connect",
+          "body": "Embed payments in your platform. Marketplace + SaaS-platform payouts. Multi-party transactions with revenue-sharing rules expressed declaratively."
         },
         {
-          "key": "Agentic",
-          "value": "Monetise through agentic commerce.",
-          "hint": "Agent-driven shopping flows + agent-to-agent transactions. Same identity + idempotency primitives that ship on the human-facing checkout."
+          "title": "Agentic",
+          "body": "Monetise through agentic commerce. Agent-driven shopping flows + agent-to-agent transactions. Same identity + idempotency primitives that ship on the human-facing checkout."
         }
       ]
     },
