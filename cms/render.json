@@ -91,34 +91,31 @@
       "emphasis": "display"
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Your fastest path to production.",
-      "density": "comfortable",
+      "lede": "Five managed surfaces — web, workers, Postgres, Redis, networking — that compose into a deploy platform where the operator flow stays three explicit steps, not a 12-tab dashboard.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Web Services",
-          "value": "Stateless HTTP + WebSocket services.",
-          "hint": "Auto-scaling, zero-downtime deploys from git push. Free TLS. The default shape for new apps."
+          "title": "Web Services",
+          "body": "Stateless HTTP + WebSocket services. Auto-scaling, zero-downtime deploys from git push. Free TLS. The default shape for new apps."
         },
         {
-          "key": "Background",
-          "value": "Background workers + cron jobs.",
-          "hint": "Long-running tasks, scheduled jobs, queue consumers. Same deploy + observability surface as web services."
+          "title": "Background",
+          "body": "Background workers + cron jobs. Long-running tasks, scheduled jobs, queue consumers. Same deploy + observability surface as web services."
         },
         {
-          "key": "PostgreSQL",
-          "value": "Managed PostgreSQL.",
-          "hint": "Daily backups, point-in-time restore, automatic failover. Connection pooling baked in."
+          "title": "PostgreSQL",
+          "body": "Managed PostgreSQL. Daily backups, point-in-time restore, automatic failover. Connection pooling baked in."
         },
         {
-          "key": "Redis",
-          "value": "Managed Redis.",
-          "hint": "In-memory cache + queue substrate. Cluster mode for horizontal scaling."
+          "title": "Redis",
+          "body": "Managed Redis. In-memory cache + queue substrate. Cluster mode for horizontal scaling."
         },
         {
-          "key": "Networking",
-          "value": "Intuitive hosting and private networking.",
-          "hint": "Service mesh between your apps + databases without operator-side VPC config. Default-deny posture."
+          "title": "Networking",
+          "body": "Intuitive hosting and private networking. Service mesh between your apps + databases without operator-side VPC config. Default-deny posture."
         }
       ]
     },
