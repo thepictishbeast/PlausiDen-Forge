@@ -284,6 +284,12 @@ impl Phase for RenderPhase {
             // so the browser's SRI check matches what we serve.
             let html = inject_skin_integrity(&html_raw, &skin_integrity_attr);
 
+            // Default-fragmentation gradient cascade (#352 per
+            // docs/SUBSTRATE_REFRAME_2026_05_21.md). Inject the
+            // pool-selected gradient `:root` block first so that
+            // an explicit tenant [style.palette] gradient_a / b
+            // override still wins via cascade ordering.
+            let html = inject_default_gradient(&html, &ctx.root);
             // Per-tenant [style] overrides — inject after </head>
             // so the tenant CSS variables override the substrate
             // baseline. Tenants without [style] pass through (the
@@ -633,6 +639,66 @@ fn inject_tenant_style(html: &str, root: &Path) -> String {
         return html.to_owned();
     }
     html.replacen("</head>", &format!("{style_tag}</head>"), 1)
+}
+
+/// Default-fragmentation gradient cascade.
+///
+/// Per `docs/SUBSTRATE_REFRAME_2026_05_21.md` § Forge fix 4
+/// (default fragmentation): when a tenant doesn't explicitly
+/// declare a gradient in `[style.palette]`, the substrate
+/// selects from `loom_tokens::gradient_pool::GRADIENT_POOL`
+/// deterministically on site identity (`site_id` + `tenant_id`
+/// from `[site_identity]`). Two tenants that don't override
+/// gradients land on different pool entries because identity
+/// drives the selection.
+///
+/// Emits a single `:root { --loom-gradient-a: ...;
+/// --loom-gradient-b: ...; --loom-gradient-direction: ...deg;
+/// --loom-gradient-image: linear-gradient(...) }` block. Tenant
+/// explicit `[style.palette]` overrides cascade AFTER this block
+/// (see `inject_tenant_style` call order) so an explicit tenant
+/// gradient still wins.
+///
+/// Fail-tolerant: when `site_identity` is absent or has no
+/// `site_id`, falls back to the site's directory name as the
+/// identity input. Tenants without forge.toml entirely get the
+/// pool entry for identity `("default", "default")` — still
+/// deterministic, still pool-sourced, never the same single
+/// canonical gradient on every site.
+fn inject_default_gradient(html: &str, root: &Path) -> String {
+    if !html.contains("</head>") {
+        return html.to_owned();
+    }
+    let identity = forge_core::site_identity::SiteIdentity::load(root);
+    let (site_id_owned, tenant_id_owned);
+    let site_id: &str = match identity.as_ref().and_then(|i| i.site_id.as_deref()) {
+        Some(s) => s,
+        None => {
+            site_id_owned = root
+                .file_name()
+                .and_then(std::ffi::OsStr::to_str)
+                .unwrap_or("default")
+                .to_owned();
+            &site_id_owned
+        }
+    };
+    let tenant_id: &str = match identity.as_ref().and_then(|i| i.tenant_id.as_deref()) {
+        Some(t) => t,
+        None => {
+            tenant_id_owned = "default".to_owned();
+            &tenant_id_owned
+        }
+    };
+    let pair = loom_tokens::gradient_pool::select_for_identity(site_id, tenant_id, &[]);
+    let block = format!(
+        "<style data-loom-default-gradient data-pool-name=\"{name}\">\n:root {{\n  --loom-gradient-a: {a};\n  --loom-gradient-b: {b};\n  --loom-gradient-direction: {dir}deg;\n  --loom-gradient-image: {img};\n}}\n</style>\n",
+        name = pair.name,
+        a = pair.a,
+        b = pair.b,
+        dir = pair.direction_deg,
+        img = pair.to_css_value(),
+    );
+    html.replacen("</head>", &format!("{block}</head>"), 1)
 }
 
 fn atomic_write(dest: &Path, bytes: &[u8]) -> std::io::Result<()> {
@@ -1236,5 +1302,77 @@ mod tests {
             "rendered page missing crossorigin attr"
         );
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn inject_default_gradient_emits_pool_block() {
+        let dir = std::env::temp_dir().join(format!(
+            "forge-phases-default-gradient-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(
+            dir.join("forge.toml"),
+            "[site_identity]\nsite_id = \"sample-alpha\"\ntenant_id = \"tenant-x\"\n",
+        )
+        .unwrap();
+        let html = "<head></head>";
+        let out = inject_default_gradient(html, &dir);
+        assert!(out.contains("data-loom-default-gradient"));
+        assert!(out.contains("--loom-gradient-image:"));
+        assert!(out.contains("--loom-gradient-a:"));
+        assert!(out.contains("--loom-gradient-b:"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn inject_default_gradient_is_deterministic_on_identity() {
+        // Same identity → same pool selection in output bytes.
+        let mk = |label: &str| {
+            std::env::temp_dir().join(format!(
+                "forge-phases-default-gradient-det-{label}-{}-{}",
+                std::process::id(),
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |d| d.as_nanos())
+            ))
+        };
+        let a = mk("a");
+        let b = mk("b");
+        std::fs::create_dir_all(&a).unwrap();
+        std::fs::create_dir_all(&b).unwrap();
+        let toml = "[site_identity]\nsite_id = \"same-site\"\ntenant_id = \"same-tenant\"\n";
+        std::fs::write(a.join("forge.toml"), toml).unwrap();
+        std::fs::write(b.join("forge.toml"), toml).unwrap();
+        let out_a = inject_default_gradient("<head></head>", &a);
+        let out_b = inject_default_gradient("<head></head>", &b);
+        // Extract the data-pool-name attribute from both; must match.
+        let pick = |s: &str| {
+            s.find("data-pool-name=\"")
+                .map(|i| s[i + 16..].split('"').next().unwrap_or("").to_owned())
+                .unwrap_or_default()
+        };
+        assert_eq!(pick(&out_a), pick(&out_b));
+        let _ = std::fs::remove_dir_all(&a);
+        let _ = std::fs::remove_dir_all(&b);
+    }
+
+    #[test]
+    fn inject_default_gradient_passes_through_without_head() {
+        let dir = std::env::temp_dir().join(format!(
+            "forge-phases-default-gradient-no-head-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let html = "<body>no head</body>";
+        let out = inject_default_gradient(html, &dir);
+        assert_eq!(out, html);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
