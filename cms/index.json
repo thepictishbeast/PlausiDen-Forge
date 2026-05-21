@@ -87,7 +87,7 @@
         "kind": "photo",
         "src": "/assets/dreamstime/man-at-computer.webp",
         "alt": "Businessman at his laptop reviewing investment portfolio — financial education.",
-        "overlay": "dark"
+        "overlay": "none"
       },
       "height": "compact"
     },
@@ -96,29 +96,27 @@
       "text": "Prosperity Club is a dependable source for financial education. Free articles, a member Masterclass, and one-to-one Risk Management — written for working and middle-class readers in the US and Canada."
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "What we cover.",
-      "density": "comfortable",
+      "lede": "Four pillars of financial education for working- and middle-class readers in the US and Canada.",
+      "columns": 2,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Social class",
-          "value": "What social class do I belong to?",
-          "hint": "Learning about social class allows you to better understand where you stand, so that you can take the right steps towards prosperity. From income to education levels to job opportunities, social class can significantly impact your day-to-day life."
+          "title": "Social class",
+          "body": "Learning about social class allows you to better understand where you stand, so that you can take the right steps towards prosperity. From income to education levels to job opportunities, social class can significantly impact your day-to-day life."
         },
         {
-          "key": "Insurance",
-          "value": "Why insurance is essential for financial well-being.",
-          "hint": "Insurance for your home, car, and other valuables protects what you own. Track expenses, store documents safely, and consider working with a financial advisor to plan for retirement."
+          "title": "Insurance",
+          "body": "Insurance for your home, car, and other valuables protects what you own. Track expenses, store documents safely, and consider working with a financial advisor to plan for retirement."
         },
         {
-          "key": "Investing",
-          "value": "Understanding the basics of investing.",
-          "hint": "Investing can seem complex and intimidating, but understanding the basics can set you on a path to smarter financial decisions. Learn about types of investments, your goals, and diversification."
+          "title": "Investing",
+          "body": "Investing can seem complex and intimidating, but understanding the basics can set you on a path to smarter financial decisions. Learn about types of investments, your goals, and diversification."
         },
         {
-          "key": "About",
-          "value": "Hi, I am Deborah Armstrong.",
-          "hint": "A licensed insurance agent who sells life, health, and property/casualty products. Prosperity Club was established by a passionate woman who found her way through a bleak financial situation by educating herself in finance."
+          "title": "About Deborah",
+          "body": "A licensed insurance agent who sells life, health, and property/casualty products. Prosperity Club was established by a passionate woman who found her way through a bleak financial situation by educating herself in finance."
         }
       ]
     },
@@ -140,24 +138,23 @@
       "text": "Prosperity Club helps uncover the why of expenses and identifies what actions you can take to reduce them without changing your lifestyle. Budgets do not resolve financial spending or obligation — attaching dollar amounts to each expense is not how to reduce expenses. Tracking expenses uncovers the underlying reasons why you are spending on certain things."
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "How we help.",
-      "density": "comfortable",
+      "lede": "Three commitments that shape every article, every Masterclass week, and every Risk Management consultation.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Better decisions",
-          "value": "Make better money-related decisions.",
-          "hint": "Our prosperity educators teach strategies that reduce liabilities and increase discretionary income — so you stop saying \"I will never make enough money to pay my bills.\""
+          "title": "Better decisions",
+          "body": "Our prosperity educators teach strategies that reduce liabilities and increase discretionary income — so you stop saying \"I will never make enough money to pay my bills.\""
         },
         {
-          "key": "Cash on hand",
-          "value": "Keep most of what you earn.",
-          "hint": "Have enough money to pay for the necessities, build an emergency fund, invest, and enjoy life. Keeping most of your income is the most important step to being prosperous and planning for retirement."
+          "title": "Cash on hand",
+          "body": "Have enough money to pay for the necessities, build an emergency fund, invest, and enjoy life. Keeping most of your income is the most important step to being prosperous and planning for retirement."
         },
         {
-          "key": "Risk before return",
-          "value": "Protect what you have before chasing returns.",
-          "hint": "Disability, life, health, home/renters, auto — covered honestly, including which products are oversold and which are quietly load-bearing. The foundation under every investment decision, not an after-thought."
+          "title": "Risk before return",
+          "body": "Disability, life, health, home/renters, auto — covered honestly, including which products are oversold and which are quietly load-bearing. The foundation under every investment decision, not an after-thought."
         }
       ]
     },
