@@ -91,24 +91,23 @@
       "emphasis": "display"
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Keep work moving 24/7.",
-      "density": "comfortable",
+      "lede": "Three agent surfaces that operate on the typed-block substrate \u2014 automate, answer, triage \u2014 so the human queue stays small and the work keeps moving while people sleep.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Automate",
-          "value": "Automate repetitive work for your team.",
-          "hint": "Agent flows that take a meeting note and route it to the right project, generate the status update, and prompt the assignee \u2014 without a templated form to fill in."
+          "title": "Automate",
+          "body": "Automate repetitive work for your team. Agent flows that take a meeting note and route it to the right project, generate the status update, and prompt the assignee \u2014 without a templated form to fill in."
         },
         {
-          "key": "Answer",
-          "value": "Answers questions instantly using knowledge you already have.",
-          "hint": "Vector-indexed across the workspace + connected apps. Permission-respecting; the agent can't surface a doc the asker can't read."
+          "title": "Answer",
+          "body": "Answers questions instantly using knowledge you already have. Vector-indexed across the workspace + connected apps. Permission-respecting; the agent can't surface a doc the asker can't read."
         },
         {
-          "key": "Triage",
-          "value": "Assigns, prioritizes, and routes tasks on its own.",
-          "hint": "Project rules (escalation thresholds, owner-pool fallbacks, blocking dependencies) executed by the agent so the human queue stays small."
+          "title": "Triage",
+          "body": "Assigns, prioritizes, and routes tasks on its own. Project rules (escalation thresholds, owner-pool fallbacks, blocking dependencies) executed by the agent so the human queue stays small."
         }
       ]
     },
