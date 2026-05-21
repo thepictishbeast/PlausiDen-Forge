@@ -34,6 +34,7 @@ pub mod extractors;
 pub mod fingerprint;
 pub mod fingerprint_migration;
 pub mod fingerprint_registry;
+pub mod forge_lite;
 pub mod identity_transition;
 pub mod iso_time;
 pub mod pipeline;
