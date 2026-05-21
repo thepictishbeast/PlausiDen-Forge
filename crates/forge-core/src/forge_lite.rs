@@ -170,9 +170,13 @@ impl ForgeLiteTheme {
 }
 
 /// Typed page envelope exposed by the Forge Lite surface.
+///
+/// Intentionally exhaustive — the lite contract is a closed
+/// surface; adding fields means widening the diagnostic
+/// surface, which is a substrate-doctrine event (see
+/// `docs/SUBSTRATE_REFRAME_2026_05_21.md` § Forge Lite).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-#[non_exhaustive]
 pub struct ForgeLitePage {
     /// `<title>` text.
     pub title: String,
