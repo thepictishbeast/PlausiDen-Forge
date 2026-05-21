@@ -48,6 +48,7 @@ pub mod substrate_state;
 pub mod synthesis;
 pub mod tenant_corpus;
 pub mod tenant_style;
+pub mod tenant_variables;
 
 use std::path::PathBuf;
 
