@@ -268,6 +268,13 @@ members = [
     # struct / pub enum / pub trait / pub const / pub static /
     # pub type / pub mod is documented.
     "crates/substrate-docs-audit",
+    # #330 (paul 2026-05-21): substrate-integration-audit —
+    # Rust binary that walks Cargo.toml files, builds a
+    # crate-name → depends-on graph, and reports any
+    # non-binary crate with zero incoming deps (orphan slice).
+    # Pairs with docs/INTEGRATION_COVERAGE.md — the manual
+    # narrative half of the audit.
+    "crates/substrate-integration-audit",
 ]
 
 [workspace.package]
