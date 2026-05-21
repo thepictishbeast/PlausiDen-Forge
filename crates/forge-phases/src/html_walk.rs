@@ -122,6 +122,9 @@ mod tempdir {
     /// + a process-id-derived suffix instead.
     pub struct TempDir;
     impl TempDir {
+        /// Stub constructor — always errors. The real `tempfile`
+        /// crate isn't a dependency here; tests use raw
+        /// `std::env::temp_dir()` + manual cleanup instead.
         #[allow(dead_code)]
         pub fn new(_: &str) -> Result<Self, std::io::Error> {
             Err(std::io::Error::new(

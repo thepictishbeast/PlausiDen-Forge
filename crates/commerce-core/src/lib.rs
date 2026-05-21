@@ -35,8 +35,11 @@ use serde::{Deserialize, Serialize};
 // PLAN CATALOG
 // ============================================================
 
-/// Closed enum of plan tiers. New tiers are a typed change, not
-/// a free-form string.
+/// Subscription plan tier — substrate-canonical billing levels.
+/// Closed enum (new tiers are a typed change, not a free-form
+/// string). Tiers are ordered (`Free` < `Starter` < `Pro` <
+/// ...) so the natural `Ord` derive matches access-control
+/// checks.
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, Default,
 )]
