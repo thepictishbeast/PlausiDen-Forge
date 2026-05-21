@@ -769,6 +769,7 @@ mod tests {
     fn page(path: &str, title: &str) -> loom_cms_render::CmsPage {
         loom_cms_render::CmsPage {
             brand: None,
+            brand_logo: None,
             theme: None,
             chrome: None,
             content_width: None,
