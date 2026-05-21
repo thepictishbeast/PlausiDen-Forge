@@ -20,7 +20,7 @@ use forge_core::reference_composition::{compose_multi, WeightedReference};
 use forge_core::reference_mapping::{map_to_spec, ExtractedSignals};
 use forge_core::synthesis::synthesize;
 
-fn editorial_signals_for_prosperity() -> ExtractedSignals {
+fn editorial_signals_sample() -> ExtractedSignals {
     let mut s = ExtractedSignals::default();
     s.palette = vec![
         PaletteEntry::new(
@@ -74,10 +74,10 @@ fn editorial_signals_for_prosperity() -> ExtractedSignals {
 
 #[test]
 fn arc_single_reference_round_trip_emits_clean_cms() {
-    let signals = editorial_signals_for_prosperity();
-    let spec = map_to_spec("prosperityclub-test", "plausiden", &signals);
+    let signals = editorial_signals_sample();
+    let spec = map_to_spec("acme-test", "acme", &signals);
 
-    assert_eq!(spec.site_id, "prosperityclub-test");
+    assert_eq!(spec.site_id, "acme-test");
     assert_eq!(spec.voice, "editorial");
     assert!(matches!(spec.mood.as_str(), "minimal" | "editorial"));
     assert_eq!(spec.density, "comfortable");
@@ -104,7 +104,7 @@ fn arc_single_reference_round_trip_emits_clean_cms() {
 
 #[test]
 fn arc_translates_saas_trope_classifications_to_editorial_counterparts() {
-    let mut signals = editorial_signals_for_prosperity();
+    let mut signals = editorial_signals_sample();
     signals.sections_by_page.insert(
         "index".into(),
         vec![
@@ -126,7 +126,7 @@ fn arc_translates_saas_trope_classifications_to_editorial_counterparts() {
 
 #[test]
 fn arc_multi_reference_composition_round_trip() {
-    let editorial = editorial_signals_for_prosperity();
+    let editorial = editorial_signals_sample();
 
     let mut technical = ExtractedSignals::default();
     technical.voice = VoiceResult::new(0, 0, 0, 0.0, 0, 0, 0.0, 0, 0, "technical");

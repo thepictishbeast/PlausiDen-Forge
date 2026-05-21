@@ -532,7 +532,7 @@ surprise_field = "boom"
 [site_identity]
 spec = "v1"
 site_id = "prosperityclub.com"
-tenant_id = "plausiden"
+tenant_id = "acme"
 density_preference = "dense"
 allowed_primitives = ["hero_editorial", "kv_pair"]
 forbidden_primitives = ["hero"]
@@ -566,7 +566,7 @@ required = true
         let id = SiteIdentity::load(&dir).expect("loads");
         assert_eq!(id.spec, IdentitySpec::V1);
         assert_eq!(id.site_id.as_deref(), Some("prosperityclub.com"));
-        assert_eq!(id.tenant_id.as_deref(), Some("plausiden"));
+        assert_eq!(id.tenant_id.as_deref(), Some("acme"));
         assert_eq!(id.density_preference.as_deref(), Some("dense"));
         assert_eq!(id.allowed_primitives.len(), 2);
         assert_eq!(id.forbidden_primitives.len(), 1);

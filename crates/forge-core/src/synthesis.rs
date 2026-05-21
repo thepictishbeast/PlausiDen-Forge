@@ -13,14 +13,14 @@
 //! ## Wire shape
 //!
 //! ```rust,ignore
-//! let spec = SiteSpec::new("prosperityclub", "plausiden")
+//! let spec = SiteSpec::new("acme-site", "acme")
 //!     .with_voice("editorial")
 //!     .with_mood("editorial")
 //!     .with_density("comfortable")
 //!     .with_page("index", vec![
 //!         SectionSpec::new("hero_editorial")
-//!             .with_field("title", "Financial education for ordinary people")
-//!             .with_field("kicker", "PROSPERITY CLUB"),
+//!             .with_field("title", "Editorial financial guidance for everyday people")
+//!             .with_field("kicker", "ACME"),
 //!         SectionSpec::new("paragraph")
 //!             .with_field("body", "..."),
 //!     ]);

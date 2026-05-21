@@ -7,7 +7,7 @@ manifest_codegen_macros::include_manifest!("tests/fixtures/simple.toml");
 #[test]
 fn header_constants_resolve() {
     assert_eq!(MANIFEST_SCHEMA, "1");
-    assert_eq!(MANIFEST_PLATFORM, "plausiden-test");
+    assert_eq!(MANIFEST_PLATFORM, "acme-test");
 }
 
 #[test]

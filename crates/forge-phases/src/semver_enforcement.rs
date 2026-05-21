@@ -1,4 +1,4 @@
-//! `semver_enforcement` — verify every PlausiDen artifact carries a
+//! `semver_enforcement` — verify every substrate artifact carries a
 //! version field, and every version field parses as semver 2.0.0.
 //!
 //! Per `[[backward-compat-version-discipline]]` doctrine + AVP-

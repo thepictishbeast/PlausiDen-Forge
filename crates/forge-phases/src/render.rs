@@ -2,7 +2,7 @@
 //! using `loom-cms-render` IN-PROCESS, not via shelling out to
 //! `loom cms-render`.
 //!
-//! Owner directive 2026-05-13: "plausiden cms should actually
+//! Owner directive 2026-05-13: "the cms should actually
 //! generate content and forge uses it so it should actually
 //! generate content."
 //!
@@ -92,7 +92,7 @@ impl Phase for RenderPhase {
         //     write_canonical = true
         //
         // Closes the workflow gap surfaced by the 2026-05-14
-        // SkillShots dogfood loop: a CMS or Loom edit was producing
+        // stock-template dogfood loop: a CMS or Loom edit was producing
         // updated HTML in `_render/` while `static/` (which the
         // dev server actually serves) stayed stale. With
         // write_canonical=true, `forge build` rebuilds the served

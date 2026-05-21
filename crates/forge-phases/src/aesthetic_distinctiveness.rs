@@ -1003,10 +1003,10 @@ fn check_short_paragraph_dominance(
 
 /// `adjacent_section_repetition` — same `kind` 3+ times in a row.
 ///
-/// The structural fingerprint of a SkillShots-shape page: 5
-/// `feature_spotlight` adjacent, or 8 `paragraph` in a row, or 4
-/// `pricing` tiers stacked. The page reads as one repeating beat
-/// rather than a composition of contrasting blocks.
+/// The structural fingerprint of a consumer-shaped stock-template
+/// page: 5 `feature_spotlight` adjacent, or 8 `paragraph` in a
+/// row, or 4 `pricing` tiers stacked. The page reads as one
+/// repeating beat rather than a composition of contrasting blocks.
 ///
 /// Distinct from:
 /// * `monotonous_feature_grid` — flags ONE feature_spotlight with
@@ -1894,7 +1894,7 @@ mod tests {
 
     #[test]
     fn adjacent_section_repetition_warns_on_three_in_a_row() {
-        // 3 feature_spotlight adjacent — the canonical SkillShots shape.
+        // 3 feature_spotlight adjacent — the canonical stock-template shape.
         let sections = vec![
             json!({"kind": "image_hero", "title": "x"}),
             json!({"kind": "feature_spotlight", "items": []}),
@@ -2128,7 +2128,7 @@ mod tests {
     #[test]
     fn emoji_in_body_surfaces_sample_text() {
         let sections =
-            vec![json!({"kind": "paragraph", "text": "Get started 🚀 with PlausiDen today"})];
+            vec![json!({"kind": "paragraph", "text": "Get started 🚀 with Acme today"})];
         let mut findings = vec![];
         check_emoji_in_body(
             &sections,
@@ -2138,7 +2138,7 @@ mod tests {
         );
         assert!(findings[0]
             .message
-            .contains(r#""Get started 🚀 with PlausiDen today""#));
+            .contains(r#""Get started 🚀 with Acme today""#));
     }
 
     #[test]

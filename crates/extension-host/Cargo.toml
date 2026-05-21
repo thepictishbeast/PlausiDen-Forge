@@ -6,7 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Trait every PlausiDen extension-host backend implements + NullHost reference impl. Wasm Component Model backend is a follow-up; tying the contract first lets every consumer integrate against a stable interface."
+description = "Trait every extension-host backend implements + NullHost reference impl. Wasm Component Model backend is a follow-up; tying the contract first lets every consumer integrate against a stable interface."
 
 [lints.rust]
 unsafe_code = "forbid"

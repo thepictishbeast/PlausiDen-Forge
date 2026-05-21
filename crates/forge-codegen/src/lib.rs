@@ -50,7 +50,7 @@ pub struct CodegenPlan {
     /// across the generated output so the diff is stable when
     /// the operator re-runs codegen with no CMS changes.
     pub pages: Vec<loom_cms_render::CmsPage>,
-    /// Name of the generated crate (e.g. `"prosperityclub-server"`).
+    /// Name of the generated crate (e.g. `"acme-server"`).
     /// Must be a valid Rust identifier in kebab-case (the
     /// canonical Cargo crate-name shape).
     pub crate_name: String,

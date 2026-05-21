@@ -1,14 +1,14 @@
 //! `commerce-storefront-core` — typed tenant-storefront contract.
 //!
-//! Per `PLATFORM_ROADMAP.md` §18, every PlausiDen tenant can sell
-//! to *their* customers. This crate defines the tenant-storefront
+//! Per `PLATFORM_ROADMAP.md` §18, every tenant can sell to
+//! *their* customers. This crate defines the tenant-storefront
 //! shape — Product + Variant + Inventory + TaxJurisdiction +
 //! ShippingZone + customer Subscription — distinct from
-//! `commerce-core` (T72), which covers the operator's own
-//! PlausiDen billing.
+//! `commerce-core` (T72), which covers the substrate operator's
+//! own billing of the tenants.
 //!
 //! Naming convention:
-//!   * `commerce-core`            — what PlausiDen charges the tenant
+//!   * `commerce-core`            — what the operator charges the tenant
 //!   * `commerce-storefront-core` — what the tenant charges their customers
 //!
 //! ### Why typed

@@ -4,7 +4,7 @@
 //!
 //! Owner directive 2026-05-13: "you should also adhere to iso
 //! standards." T69 (loom docs/ISO_STANDARDS.md) catalogues which
-//! ISO/IEC standards every PlausiDen-* repo defaults to. This
+//! ISO/IEC standards every substrate repo defaults to. This
 //! phase mechanically enforces ISO 8601 (`YYYY-MM-DDTHH:MM:SSZ`
 //! or the date-only `YYYY-MM-DD` shorthand) for any free-text
 //! timestamp.

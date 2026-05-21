@@ -1,8 +1,9 @@
 //! `editorial_purity_gate` — strict refusal of SaaS-trope shapes.
 //!
-//! Per paul 2026-05-20 directive: "dev.prosperityclub.com looks
-//! a lot like SkillShots still. you need to radically improve
-//! forge so this stops happening." This phase is the gate.
+//! Per paul 2026-05-20 directive: tenant sites were rendering as
+//! generic consumer-shaped stock templates rather than the
+//! editorial register the substrate is supposed to produce.
+//! This phase is the gate that forces the choice.
 //!
 //! When `forge.toml [editorial_purity] enforce = true`, the
 //! build REFUSES (strict findings) every SaaS-trope shape the
@@ -18,7 +19,7 @@
 //!
 //! `editorial-purity.saas-hero`           strict — `CmsSection::
 //!   Hero` is used (use `HeroEditorial` instead). The SaaS-default
-//!   centered hero is the canonical SkillShots-shape signal;
+//!   centered hero is the canonical consumer-shape signal;
 //!   editorial pages use HeroEditorial which has asymmetric layout,
 //!   monospace kicker, no gradient backdrop.
 //! `editorial-purity.feature-spotlight-grid` strict — `FeatureSpotlight`
@@ -162,7 +163,7 @@ fn check_section(
         "hero" => {
             push(
                 "editorial-purity.saas-hero",
-                "`CmsSection::Hero` used — the SaaS-default centered hero is the canonical SkillShots-shape signal. Use `HeroEditorial` (asymmetric layout, monospace kicker, no gradient backdrop) instead.".to_owned(),
+                "`CmsSection::Hero` used — the SaaS-default centered hero is the canonical consumer-shape signal. Use `HeroEditorial` (asymmetric layout, monospace kicker, no gradient backdrop) instead.".to_owned(),
                 findings,
             );
             check_centered_single_line(section, where_at, exempt, findings, phase, "hero");

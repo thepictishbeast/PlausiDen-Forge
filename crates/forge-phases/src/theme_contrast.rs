@@ -118,7 +118,7 @@ fn resolve_loom_bin() -> Result<PathBuf, Vec<PathBuf>> {
     }
     let mut candidates: Vec<PathBuf> = Vec::new();
     // Sibling Loom checkout (canonical `~/projects/PlausiDen-Loom/`
-    // layout per memory: plausiden_canonical_dir).
+    // layout per the canonical-dir doctrine).
     if let Ok(cwd) = std::env::current_dir() {
         if let Some(parent) = cwd.parent() {
             candidates.push(parent.join("PlausiDen-Loom/target/release/loom"));

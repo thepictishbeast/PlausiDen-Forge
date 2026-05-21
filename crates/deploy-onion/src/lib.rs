@@ -33,8 +33,8 @@
 //!
 //! ```json
 //! {
-//!   "hidden_service_dir": "/var/lib/tor/skillshots-onion",
-//!   "web_root":           "/var/www/onion-skillshots",
+//!   "hidden_service_dir": "/var/lib/tor/onion-site",
+//!   "web_root":           "/var/www/onion-site",
 //!   "virtual_port":       80,
 //!   "target_port":        8080,
 //!   "control_port":       9051

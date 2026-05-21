@@ -429,7 +429,7 @@ fn resolve_crawler_dir() -> Result<PathBuf, Vec<PathBuf>> {
     if let Ok(home) = std::env::var("HOME") {
         let h = PathBuf::from(home);
         candidates.push(h.join("projects/PlausiDen-Crawler"));
-        candidates.push(h.join("Development/PlausiDen/PlausiDen-Crawler"));
+        candidates.push(h.join("Development/<platform>/PlausiDen-Crawler"));
     }
     for c in &candidates {
         if c.is_dir() {
@@ -441,7 +441,7 @@ fn resolve_crawler_dir() -> Result<PathBuf, Vec<PathBuf>> {
 
 fn resolve_journey_path(crawler_dir: &Path) -> PathBuf {
     let rel = std::env::var("CRAWLER_JOURNEY")
-        .unwrap_or_else(|_| "journeys/skillshots-poc.json".to_owned());
+        .unwrap_or_else(|_| "journeys/poc.json".to_owned());
     crawler_dir.join(rel)
 }
 

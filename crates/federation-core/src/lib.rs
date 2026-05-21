@@ -1,7 +1,7 @@
 //! `federation-core` — typed federation + IndieWeb contract.
 //!
 //! Per `PLATFORM_ROADMAP.md` §13 + the "no walled garden" axis of
-//! `super_society_tech_stack`, every PlausiDen tenant federates
+//! `super_society_tech_stack`, every tenant federates
 //! out to the open web by default. This crate defines the
 //! cross-protocol contract; per-protocol clients plug in via
 //! [`FederationPublisher`].

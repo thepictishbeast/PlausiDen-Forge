@@ -40,7 +40,7 @@
 //! {
 //!   "api_endpoint":   "http://127.0.0.1:5001/api/v0",
 //!   "gateway_url":    "https://ipfs.io",
-//!   "ipns_key_name":  "skillshots-pub",
+//!   "ipns_key_name":  "site-pub",
 //!   "cid_snapshot":   "/var/lib/forge/ipns-current-cid.txt",
 //!   "pin_remote":     null
 //! }

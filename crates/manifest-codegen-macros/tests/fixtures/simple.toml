@@ -1,4 +1,4 @@
-platform = "plausiden-test"
+platform = "acme-test"
 schema-version = "1"
 
 [[capabilities]]

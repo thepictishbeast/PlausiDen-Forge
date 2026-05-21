@@ -6,7 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "PlatformManifest — the keystone type the entire PlausiDen platform projects through."
+description = "PlatformManifest — the keystone type the entire substrate projects through."
 
 [lints.rust]
 unsafe_code = "forbid"
