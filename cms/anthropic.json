@@ -105,39 +105,35 @@
       "emphasis": "display"
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Latest releases + research.",
-      "density": "comfortable",
+      "lede": "Six surfaces \u2014 model, governance, principles, public data, curriculum, transparency tooling \u2014 that together describe how an AI lab can be auditable from the outside.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Opus 4.7",
-          "value": "Claude Opus 4.7 \u2014 flagship model.",
-          "hint": "Frontier reasoning + coding + agent capability. Same model family as Claude Code's default."
+          "title": "Opus 4.7",
+          "body": "Claude Opus 4.7 \u2014 flagship model. Frontier reasoning + coding + agent capability. Same model family as Claude Code's default."
         },
         {
-          "key": "RSP",
-          "value": "Responsible Scaling Policy.",
-          "hint": "Published commitment to capability thresholds + the corresponding safety mitigations that must be in place before training crosses them. The reference shape for AI lab governance."
+          "title": "RSP",
+          "body": "Responsible Scaling Policy. Published commitment to capability thresholds + the corresponding safety mitigations that must be in place before training crosses them. The reference shape for AI lab governance."
         },
         {
-          "key": "Constitution",
-          "value": "Claude's Constitution.",
-          "hint": "Published principles + the constitutional-AI training method that derives behavior from them. Auditable from the outside."
+          "title": "Constitution",
+          "body": "Claude's Constitution. Published principles + the constitutional-AI training method that derives behavior from them. Auditable from the outside."
         },
         {
-          "key": "Index",
-          "value": "Anthropic's Economic Index.",
-          "hint": "Public dataset tracking how AI is used in the real economy. Same dataset the Anthropic policy team uses internally \u2014 published rather than hoarded."
+          "title": "Index",
+          "body": "Anthropic's Economic Index. Public dataset tracking how AI is used in the real economy. Same dataset the Anthropic policy team uses internally \u2014 published rather than hoarded."
         },
         {
-          "key": "Academy",
-          "value": "Anthropic Academy: Build and Learn with Claude.",
-          "hint": "Free curriculum on building with Claude. Developer-facing rather than research-facing \u2014 same substrate, different audience."
+          "title": "Academy",
+          "body": "Anthropic Academy: Build and Learn with Claude. Free curriculum on building with Claude. Developer-facing rather than research-facing \u2014 same substrate, different audience."
         },
         {
-          "key": "Glasswing",
-          "value": "Project Glasswing (preview).",
-          "hint": "Anthropic's research initiative on transparency tooling. The substrate makes AI behavior legible to non-researchers."
+          "title": "Glasswing",
+          "body": "Project Glasswing (preview). Anthropic's research initiative on transparency tooling. The substrate makes AI behavior legible to non-researchers."
         }
       ]
     },
