@@ -120,39 +120,35 @@
       "text": "We provide end-to-end solutions that cover every aspect of your technology stack. Confidentiality-first delivery for teams that need to ship securely."
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Everything Your Business Needs.",
-      "density": "comfortable",
+      "lede": "Six service surfaces \u2014 IT operations, security, AI, automation, software, hardware \u2014 delivered by one engineering team where confidentiality is the default, not an add-on.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "IT Operations",
-          "value": "Robust infrastructure management.",
-          "hint": "Operational excellence: capacity planning, incident response, change management, and observability across hybrid + multi-cloud topologies."
+          "title": "IT Operations",
+          "body": "Robust infrastructure management. Operational excellence: capacity planning, incident response, change management, and observability across hybrid + multi-cloud topologies."
         },
         {
-          "key": "Cyber Security",
-          "value": "Advanced threat protection + compliance.",
-          "hint": "Default-deny posture, hardware-anchored identity, audit trails, and compliance scaffolding (SOC 2, HIPAA, NIST) folded into the same engineering substrate that runs your apps."
+          "title": "Cyber Security",
+          "body": "Advanced threat protection + compliance. Default-deny posture, hardware-anchored identity, audit trails, and compliance scaffolding (SOC 2, HIPAA, NIST) folded into the same engineering substrate that runs your apps."
         },
         {
-          "key": "Artificial Intelligence",
-          "value": "Intelligent systems + predictive analytics.",
-          "hint": "Specialist models for forecasting, anomaly detection, and document understanding \u2014 deployed on your infrastructure with confidentiality preserved end-to-end."
+          "title": "Artificial Intelligence",
+          "body": "Intelligent systems + predictive analytics. Specialist models for forecasting, anomaly detection, and document understanding \u2014 deployed on your infrastructure with confidentiality preserved end-to-end."
         },
         {
-          "key": "Automation & IoT",
-          "value": "Operational efficiency at industrial scale.",
-          "hint": "Production-line telemetry, edge inference, and supply-chain integration \u2014 Rust + WASM substrate where latency + reliability are load-bearing."
+          "title": "Automation & IoT",
+          "body": "Operational efficiency at industrial scale. Production-line telemetry, edge inference, and supply-chain integration \u2014 Rust + WASM substrate where latency + reliability are load-bearing."
         },
         {
-          "key": "Software",
-          "value": "Custom development tailored to your stack.",
-          "hint": "Rust-first engineering with formal verification on the load-bearing primitives. Same discipline that ships PlausiDen-Forge, Loom, and the SacredVote integrity infrastructure."
+          "title": "Software",
+          "body": "Custom development tailored to your stack. Rust-first engineering with formal verification on the load-bearing primitives. Same discipline that ships PlausiDen-Forge, Loom, and the SacredVote integrity infrastructure."
         },
         {
-          "key": "Hardware",
-          "value": "Enterprise-grade procurement + deployment.",
-          "hint": "From edge devices to rack-scale: vetted supply chain, hardware-anchored identity at provisioning, lifecycle management with attestation receipts."
+          "title": "Hardware",
+          "body": "Enterprise-grade procurement + deployment. From edge devices to rack-scale: vetted supply chain, hardware-anchored identity at provisioning, lifecycle management with attestation receipts."
         }
       ]
     },
@@ -168,24 +164,23 @@
       "text": "Why industry leaders choose PlausiDen."
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "What you get.",
-      "density": "comfortable",
+      "lede": "Three commitments that shape every engagement — strategy fit to your actual constraints, end-to-end expertise across hardware and software, and confidentiality by construction rather than by retrofit.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Strategy",
-          "value": "Customized strategies, not cookie-cutter solutions.",
-          "hint": "Every engagement starts with the actual constraints \u2014 regulatory, technical, organizational \u2014 and produces an implementation tied to those constraints, not a vendor checklist."
+          "title": "Strategy",
+          "body": "Customized strategies, not cookie-cutter solutions. Every engagement starts with the actual constraints — regulatory, technical, organizational — and produces an implementation tied to those constraints, not a vendor checklist."
         },
         {
-          "key": "Expertise",
-          "value": "Deep expertise across hardware + software.",
-          "hint": "The substrate is one engineering team, end to end. The same people who design the cryptographic protocols deploy the production systems and respond to the incidents."
+          "title": "Expertise",
+          "body": "Deep expertise across hardware + software. The substrate is one engineering team, end to end. The same people who design the cryptographic protocols deploy the production systems and respond to the incidents."
         },
         {
-          "key": "Confidentiality",
-          "value": "Confidentiality-first delivery.",
-          "hint": "Default-deny posture from the first line of code: hardware-anchored identity, audit trails by construction, no telemetry the customer didn't opt into. Compliance scaffolding (SOC 2, HIPAA, NIST) ships in the same engineering substrate that runs your apps — not a separate compliance team chasing diagrams after the fact."
+          "title": "Confidentiality",
+          "body": "Confidentiality-first delivery. Default-deny posture from the first line of code: hardware-anchored identity, audit trails by construction, no telemetry the customer didn't opt into. Compliance scaffolding (SOC 2, HIPAA, NIST) ships in the same engineering substrate that runs your apps — not a separate compliance team chasing diagrams after the fact."
         }
       ]
     },
