@@ -1393,7 +1393,7 @@ fn run() -> Result<ExitCode> {
         // a substrate change.
         Box::new(SubstratePurityPhase),
         // phase_semver_enforcement (task #138): verify every
-        // PlausiDen artifact carries a well-formed version field.
+        // substrate artifact carries a well-formed version field.
         // Walks forge.toml [platform] block, backends.toml
         // schema_version, cms/*.json version field, and
         // mcp/manifest.json. Per AVP-Doctrine
@@ -8240,9 +8240,9 @@ fn count_domains(db: &doctrine_core::DoctrineDatabase) -> usize {
 
 fn render_doctrine_markdown(db: &doctrine_core::DoctrineDatabase) -> String {
     let mut buf = String::new();
-    buf.push_str("# PlausiDen Doctrine\n\n");
+    buf.push_str("# Substrate Doctrine\n\n");
     buf.push_str(
-        "Canonical rule database for the PlausiDen substrate. \
+        "Canonical rule database for the substrate. \
          Generated from `PlausiDen-AVP-Doctrine/doctrine/rules/*.toml` by \
          `forge doctrine render`. Every rule carries a statement, \
          rationale, and enforcement triple; consult \

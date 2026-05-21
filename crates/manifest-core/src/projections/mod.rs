@@ -1,4 +1,4 @@
-//! Bridges from pre-existing PlausiDen file formats into
+//! Bridges from pre-existing legacy file formats into
 //! manifest-core types.
 //!
 //! Each submodule reads a domain-specific TOML/JSON file that

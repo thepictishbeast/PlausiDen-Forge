@@ -13,7 +13,7 @@
 //! Wire format for each file is a flat JSON object:
 //!
 //! ```json
-//! { "BRAND_NAME": "PlausiDen", "YEAR": "2026" }
+//! { "BRAND_NAME": "Acme", "YEAR": "2026" }
 //! ```
 //!
 //! At render time, `forge-phases::render` projects this struct
@@ -117,11 +117,11 @@ mod tests {
         let root = tempdir("vars_only");
         fs::write(
             root.join("variables.json"),
-            r#"{"BRAND_NAME":"PlausiDen","YEAR":"2026"}"#,
+            r#"{"BRAND_NAME":"Acme","YEAR":"2026"}"#,
         )
         .unwrap();
         let tv = TenantVariables::load(&root).expect("loads");
-        assert_eq!(tv.variables.get("BRAND_NAME").map(String::as_str), Some("PlausiDen"));
+        assert_eq!(tv.variables.get("BRAND_NAME").map(String::as_str), Some("Acme"));
         assert_eq!(tv.variables.get("YEAR").map(String::as_str), Some("2026"));
         assert!(tv.palette.is_empty());
         assert!(tv.assets.is_empty());

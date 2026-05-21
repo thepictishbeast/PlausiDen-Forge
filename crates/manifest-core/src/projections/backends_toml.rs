@@ -6,7 +6,7 @@
 //!
 //! ```toml
 //! [meta]
-//! project = "SkillShots"
+//! project = "Acme"
 //! api_base = "https://api.skillshots.com"
 //! schema_version = 1
 //!

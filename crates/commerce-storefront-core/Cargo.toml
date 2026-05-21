@@ -6,7 +6,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Typed tenant-storefront contract — Product + Variant + Inventory + TaxJurisdiction + ShippingZone + customer-side Subscription. Distinct from commerce-core (T72), which covers operator-facing PlausiDen billing."
+description = "Typed tenant-storefront contract — Product + Variant + Inventory + TaxJurisdiction + ShippingZone + customer-side Subscription. Distinct from commerce-core (T72), which covers operator billing."
 
 [lints.rust]
 unsafe_code = "forbid"

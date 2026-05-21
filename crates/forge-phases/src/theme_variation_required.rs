@@ -1,12 +1,11 @@
 //! `theme_variation_required` — substrate default-theme floor.
 //!
 //! Task #261 per the variation-architecture spec. Anchors the
-//! platform commitment from memory
-//! [[forge-default-themes-a11y]] + [[plausiden-design-premium]]:
-//! every PlausiDen site ships at least two themes (light + dark)
-//! by default. Operators opt OUT explicitly via
-//! `[theme_policy] minimum = "none"`; opting out is
-//! intentional, not the default.
+//! substrate's premium-design commitment from doctrine
+//! [[forge-default-themes-a11y]]: every site ships at least two
+//! themes (light + dark) by default. Operators opt OUT
+//! explicitly via `[theme_policy] minimum = "none"`; opting out
+//! is intentional, not the default.
 //!
 //! Where the site_identity_conformance phase (#235) checks that
 //! every `required = true` theme_variant has its corresponding
@@ -93,7 +92,7 @@ impl Phase for ThemeVariationRequiredPhase {
                         .to_owned(),
                 )
                 .citing(["theme-101"])
-                .why("PlausiDen sites ship multiple themes by default per the platform's premium-design commitment; declaring an identity without theme variants leaves the substrate's AMOLED + light dual-theme floor unmet")
+                .why("Sites ship multiple themes by default per the substrate's premium-design commitment; declaring an identity without theme variants leaves the AMOLED + light dual-theme floor unmet")
                 .fix("add `[[site_identity.theme_variant]]` entries for `light` + `amoled` (recommended), OR set `[theme_policy] minimum = \"none\"` to explicitly opt out"),
             );
             return Ok(findings);

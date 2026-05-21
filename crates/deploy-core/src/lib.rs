@@ -1,5 +1,5 @@
 //! `deploy-core` — typed deployment surface every adapter in the
-//! PlausiDen ecosystem implements.
+//! substrate implements.
 //!
 //! Per `PLATFORM_ROADMAP.md` §4 and the
 //! `super_society_tech_stack` doctrine: deployment isn't a single

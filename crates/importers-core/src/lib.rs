@@ -1,7 +1,7 @@
 //! `importers-core` — typed CMS importer contract.
 //!
-//! Per `PLATFORM_ROADMAP.md` §11, PlausiDen reads content out of
-//! every major incumbent CMS so the move-in cost is zero:
+//! Per `PLATFORM_ROADMAP.md` §11, the substrate reads content
+//! out of every major incumbent CMS so the move-in cost is zero:
 //! WordPress export XML, Webflow CMS API, Squarespace export
 //! XML, Wix Velo export, Ghost JSON, Contentful Delivery API.
 //! Each source has its own native shape; this crate defines the

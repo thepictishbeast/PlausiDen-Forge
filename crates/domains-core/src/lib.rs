@@ -1,6 +1,6 @@
 //! `domains-core` — typed custom-domain + SSL contract.
 //!
-//! Per `PLATFORM_ROADMAP.md` §20, every PlausiDen tenant can
+//! Per `PLATFORM_ROADMAP.md` §20, every tenant can
 //! attach their own custom domain with auto-managed Let's Encrypt
 //! (or any ACME RFC 8555 CA) certificates including wildcards,
 //! HSTS-preload compatibility, and one-click verification.

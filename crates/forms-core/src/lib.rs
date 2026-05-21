@@ -1,6 +1,6 @@
 //! `forms-core` — typed forms contract.
 //!
-//! Per `PLATFORM_ROADMAP.md` §15, every PlausiDen tenant exposes
+//! Per `PLATFORM_ROADMAP.md` §15, every tenant exposes
 //! an accessible-by-default forms builder where:
 //!
 //! * Field types are a closed taxonomy with appropriate ARIA +

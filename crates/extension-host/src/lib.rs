@@ -1,4 +1,4 @@
-//! `extension-host` — trait every PlausiDen extension-host
+//! `extension-host` — trait every extension-host
 //! backend implements, plus a `NullHost` reference impl for
 //! tests + CI.
 //!

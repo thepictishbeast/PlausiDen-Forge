@@ -36,9 +36,9 @@ toml = { workspace = true }
 # can override via .cargo/config.toml with a [patch] entry:
 #
 #   [patch."https://github.com/thepictishbeast/PlausiDen-Loom"]
-#   loom-cms-render = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-cms-render" }
-#   loom-tokens     = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-tokens" }
-#   loom-lint       = { path = "/home/user/Development/PlausiDen/PlausiDen-Loom/loom-lint" }
+#   loom-cms-render = { path = "../PlausiDen-Loom/loom-cms-render" } # audit-allow: platform repo path
+#   loom-tokens     = { path = "../PlausiDen-Loom/loom-tokens" }     # audit-allow: platform repo path
+#   loom-lint       = { path = "../PlausiDen-Loom/loom-lint" }       # audit-allow: platform repo path
 loom-cms-render = { git = "https://github.com/thepictishbeast/PlausiDen-Loom.git", branch = "main" }
 # T69 (cycle 96 iter 13): pull SKIN_CSS (the loom-tokens skin.css
 # bytes) via include_str! so render phase writes the CURRENT

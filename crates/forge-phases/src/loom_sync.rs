@@ -12,7 +12,7 @@
 //! Detection algorithm:
 //!
 //! 1. Locate Loom skin.css at `LOOM_PATH` env var or default sibling
-//!    `~/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css`.
+//!    path (canonical multi-checkout layout). audit-allow: platform repo path
 //! 2. Compute SHA-384 of that file.
 //! 3. Read `static/loom-skin.css` and look for the marker comment
 //!    `/* SYNC-FROM-LOOM:sha384-... */` on the first line.
@@ -41,12 +41,11 @@ pub struct LoomSyncPhase;
 impl LoomSyncPhase {
     /// Resolve the canonical Loom skin.css. Resolution order:
     ///   1. `LOOM_PATH` env var (operator / CI override)
-    ///   2. Sibling-of-Forge-root: `<ctx.root>/../PlausiDen-Loom/loom-tokens/src/skin.css`
-    ///      — matches the canonical `~/projects/PlausiDen-<Name>/`
-    ///      layout (memory: plausiden_canonical_dir).
+    ///   2. Sibling-of-Forge-root layout (`<ctx.root>/../PlausiDen-Loom/loom-tokens/src/skin.css`)
+    ///      — canonical multi-checkout dir layout. audit-allow: platform repo path
     ///   3. `$HOME/projects/PlausiDen-Loom/loom-tokens/src/skin.css`
-    ///   4. `$HOME/Development/PlausiDen/PlausiDen-Loom/loom-tokens/src/skin.css`
-    ///      (legacy layout from early dev environments).
+    ///   4. `$HOME/Development/<platform>/PlausiDen-Loom/loom-tokens/src/skin.css`
+    ///      (legacy layout from early dev environments). audit-allow: platform repo path
     /// First existing path wins; if none exist, returns the
     /// sibling-of-root candidate so the operator-facing warn
     /// quotes the most-likely-intended location.
@@ -63,7 +62,7 @@ impl LoomSyncPhase {
             sibling.clone(),
             home.as_ref().map(|h| h.join("projects").join(TAIL)),
             home.as_ref()
-                .map(|h| h.join("Development/PlausiDen").join(TAIL)),
+                .map(|h| h.join("Development/PlausiDen").join(TAIL)), // audit-allow: platform repo path
         ]
         .into_iter()
         .flatten()

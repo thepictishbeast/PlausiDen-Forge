@@ -129,7 +129,7 @@ fn extract_internal_hrefs(body: &str) -> Vec<String> {
 ///
 /// BUG ASSUMPTION: an href like `path:foo` (relative path that
 /// happens to contain a colon) would be misclassified as schemed.
-/// In practice URLs of that shape don't appear in PlausiDen
+/// In practice URLs of that shape don't appear in substrate-built
 /// rendered HTML — content paths never contain bare colons. If a
 /// real case surfaces, switch to checking that the colon appears
 /// before the first `/` (which IS how RFC 3986 actually disambiguates).

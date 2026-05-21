@@ -35,7 +35,7 @@ impl Phase for TokensPhase {
             // Without this strip, the phase rejects the very file
             // that defines the design system.
             //
-            // Fix 2026-05-17: the SkillShots premium design pass
+            // Fix 2026-05-17: the premium-design pass
             // landed 80+ tokens (px scale, hex palette) inside
             // inline <style>:root{} blocks. tokens-phase strict-
             // failed on every page. Stripping the declaration

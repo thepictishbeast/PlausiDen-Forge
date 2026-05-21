@@ -1,7 +1,7 @@
 //! `privacy-core` — typed privacy-by-design contract.
 //!
 //! Per `PLATFORM_ROADMAP.md` §10 + `super_society_tech_stack`,
-//! every PlausiDen tenant exposes the legally-required privacy
+//! every tenant exposes the legally-required privacy
 //! controls — DSAR request lifecycle, retention timers, cookie
 //! consent classification — as a typed surface, not a free-form
 //! "privacy page" string field. This crate defines:

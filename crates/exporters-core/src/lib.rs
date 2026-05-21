@@ -1,7 +1,7 @@
 //! `exporters-core` — typed export contract.
 //!
 //! Per `PLATFORM_ROADMAP.md` §12 + the "no walled garden" axis of
-//! `super_society_tech_stack`, every PlausiDen tenant can leave
+//! `super_society_tech_stack`, every tenant can leave
 //! at any time with a portable, machine-readable bundle of
 //! everything they've authored. This crate defines the
 //! cross-format contract; per-format renderers (Markdown w/ YAML

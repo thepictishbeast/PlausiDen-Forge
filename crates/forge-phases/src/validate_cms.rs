@@ -120,8 +120,8 @@ impl ValidateCmsFinding {
 ///      root that includes loom-cli as a member).
 ///   4. `../PlausiDen-Loom/target/{release,debug}/loom` (sibling-
 ///      repo convention — Forge and Loom live as sibling
-///      `PlausiDen-*` checkouts under one parent dir on every
-///      PlausiDen contributor's machine).
+///      platform repo checkouts under one parent dir on every
+///      substrate contributor's machine). audit-allow: platform repo path
 ///   5. `$PATH` lookup as a last resort.
 fn resolve_loom_bin() -> Result<PathBuf, Vec<PathBuf>> {
     if let Ok(env) = std::env::var("LOOM_BIN") {

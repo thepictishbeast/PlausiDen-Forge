@@ -87,8 +87,8 @@ const SCAFFOLD_DEFAULTS: &[(&str, &str)] = &[
     ("email", "contact@example.com"),
     ("email", "noreply@example.com"),
     ("email", "name@example.com"),
-    ("phone", "(000) 000-0000"),
-    ("phone", "000-000-0000"),
+    ("phone", "(000) 000-0000"), // audit-allow: placeholder-value list
+    ("phone", "000-000-0000"),   // audit-allow: placeholder-value list
     ("phone", "555-555-5555"),
     ("phone", "+1 555 555 5555"),
     // Misc identity
