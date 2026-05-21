@@ -1,0 +1,40 @@
+{
+  "title": "Gamma — Selected work",
+  "description": "Generic placeholder fixture exercising the lite portfolio-tile primitive sequence (image hero + two-column feature spotlight + logo cloud).",
+  "path": "/work",
+  "theme": "dark",
+  "brand": "Gamma",
+  "sections": [
+    {
+      "kind": "image_hero",
+      "eyebrow": "Portfolio",
+      "title": "Selected work, 2020 – present",
+      "lede": null,
+      "photo_src": "/assets/photos/studio-light.webp",
+      "photo_alt": "Studio interior with raking afternoon light — illustrative.",
+      "cta_label": null,
+      "cta_href": null
+    },
+    {
+      "kind": "feature_spotlight",
+      "heading": "Recent projects",
+      "columns": 2,
+      "items": [
+        { "title": "Project alpha", "body": "Identity, web, and motion system for a small research lab." },
+        { "title": "Project beta",  "body": "Multi-disciplinary publication, six issues, with a custom typographic stack." },
+        { "title": "Project gamma", "body": "Long-running editorial micro-site spanning four contributors." },
+        { "title": "Project delta", "body": "Civic-information tool, three jurisdictions, accessibility-first." }
+      ]
+    },
+    {
+      "kind": "logo_cloud",
+      "heading": "Selected clients",
+      "logos": [
+        { "src": "/assets/logos/anon-1.svg", "alt": "Anon One" },
+        { "src": "/assets/logos/anon-2.svg", "alt": "Anon Two" },
+        { "src": "/assets/logos/anon-3.svg", "alt": "Anon Three" },
+        { "src": "/assets/logos/anon-4.svg", "alt": "Anon Four" }
+      ]
+    }
+  ]
+}

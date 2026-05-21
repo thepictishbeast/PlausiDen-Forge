@@ -146,7 +146,9 @@ pub enum SpacerSize {
 }
 
 /// Closed enumeration of Forge Lite themes. Three only.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 #[allow(missing_docs)]
 pub enum ForgeLiteTheme {

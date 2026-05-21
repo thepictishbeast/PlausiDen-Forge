@@ -1,0 +1,26 @@
+{
+  "title": "Delta — A single-page brief",
+  "description": "Generic placeholder fixture exercising the lite minimal-brief primitive sequence (hero + paragraph + divider + paragraph).",
+  "path": "/brief",
+  "theme": "light",
+  "brand": "Delta",
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": null,
+      "title": "A short brief",
+      "lede": null,
+      "cta_label": null,
+      "cta_href": null
+    },
+    {
+      "kind": "paragraph",
+      "text": "Some sites need almost nothing. A title, two paragraphs, and a clean rule between them."
+    },
+    { "kind": "divider" },
+    {
+      "kind": "paragraph",
+      "text": "The lite surface treats minimal sites as a first-class case rather than a degraded one. No mandatory hero photo, no mandatory feature grid, no mandatory CTA. Build only what the content actually requires."
+    }
+  ]
+}

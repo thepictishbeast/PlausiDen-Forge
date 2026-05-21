@@ -1,0 +1,39 @@
+{
+  "title": "Alpha — Product overview",
+  "description": "Generic placeholder fixture exercising the lite SaaS-landing primitive sequence (hero + heading + paragraph + 3-column feature spotlight + CTA).",
+  "path": "/",
+  "theme": "light",
+  "brand": "Alpha",
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Platform",
+      "title": "A simpler way to ship",
+      "lede": "Bounded surface, opinionated defaults, zero hand-CSS.",
+      "cta_label": "Start a project",
+      "cta_href": "/start"
+    },
+    { "kind": "heading", "level": 2, "text": "What you get" },
+    {
+      "kind": "paragraph",
+      "text": "Three guarantees, each enforced at compile time: typed components, deterministic rendering, audited output."
+    },
+    {
+      "kind": "feature_spotlight",
+      "heading": "Three guarantees",
+      "columns": 3,
+      "items": [
+        { "title": "Typed components", "body": "Every primitive parses with deny_unknown_fields; the wire format refuses smuggled shapes." },
+        { "title": "Deterministic builds", "body": "Same inputs produce identical outputs, byte-for-byte. Verified by chained build reports." },
+        { "title": "Audited output", "body": "Twenty-seven phases run on every build; strict findings block ship." }
+      ]
+    },
+    {
+      "kind": "call_to_action",
+      "title": "Ready to evaluate?",
+      "lede": "The lite surface ships with five fixtures you can build right now.",
+      "cta_label": "See the fixtures",
+      "cta_href": "/fixtures"
+    }
+  ]
+}

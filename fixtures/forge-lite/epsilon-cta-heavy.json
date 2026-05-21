@@ -1,0 +1,44 @@
+{
+  "title": "Epsilon — Take the next step",
+  "description": "Generic placeholder fixture exercising the lite CTA-heavy landing primitive sequence (hero + feature spotlight + CTA + logo cloud + large spacer).",
+  "path": "/sign-up",
+  "theme": "warm",
+  "brand": "Epsilon",
+  "sections": [
+    {
+      "kind": "hero",
+      "eyebrow": "Sign up",
+      "title": "Bring the team along",
+      "lede": "Five seats free for evaluation. No card required.",
+      "cta_label": "Start the trial",
+      "cta_href": "/start"
+    },
+    {
+      "kind": "feature_spotlight",
+      "heading": "Three reasons teams pick this",
+      "columns": 3,
+      "items": [
+        { "title": "Bounded by design",  "body": "The narrow surface keeps every decision shallow." },
+        { "title": "Verifiable",          "body": "Every build emits a chained, signed report." },
+        { "title": "Substrate-aligned",   "body": "Tenant content stays tenant-side; substrate stays generic." }
+      ]
+    },
+    {
+      "kind": "call_to_action",
+      "title": "Start a conversation",
+      "lede": "Email the team — we read every message.",
+      "cta_label": "Reach out",
+      "cta_href": "/contact"
+    },
+    {
+      "kind": "logo_cloud",
+      "heading": "Teams using the bounded surface",
+      "logos": [
+        { "src": "/assets/logos/anon-5.svg", "alt": "Anon Five" },
+        { "src": "/assets/logos/anon-6.svg", "alt": "Anon Six" },
+        { "src": "/assets/logos/anon-7.svg", "alt": "Anon Seven" }
+      ]
+    },
+    { "kind": "spacer", "size": "large" }
+  ]
+}

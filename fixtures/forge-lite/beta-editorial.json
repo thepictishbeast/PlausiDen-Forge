@@ -1,0 +1,34 @@
+{
+  "title": "Beta — A note on bounded interfaces",
+  "description": "Generic placeholder fixture exercising the lite editorial-piece primitive sequence (image hero + heading + body + pull quote + body).",
+  "path": "/notes/bounded-interfaces",
+  "theme": "warm",
+  "brand": "Beta",
+  "sections": [
+    {
+      "kind": "image_hero",
+      "eyebrow": "Essay",
+      "title": "When the substrate is the seam",
+      "lede": "Most platforms widen their surface to absorb every use case. The result is a vocabulary nobody fully holds.",
+      "photo_src": "/assets/photos/library-shelves.webp",
+      "photo_alt": "Library shelving stacked floor to ceiling — illustrative.",
+      "cta_label": null,
+      "cta_href": null
+    },
+    { "kind": "heading", "level": 2, "text": "The first move" },
+    {
+      "kind": "paragraph",
+      "text": "Start by listing every primitive the substrate exposes. Count them. Most platforms find a number between thirty and a hundred, and most operators recognize only a small fraction by name."
+    },
+    {
+      "kind": "pull_quote",
+      "text": "A bounded surface is not a poverty. It is a contract you can keep.",
+      "attribution": "—— platform doctrine, 2026"
+    },
+    { "kind": "heading", "level": 3, "text": "The second move" },
+    {
+      "kind": "paragraph",
+      "text": "Build a narrower surface that exposes only the primitives an operator can hold in working memory. Watch what gets built. The signal arrives quickly — either the bounded surface produces better output, or it produces the same convergent outputs and the bottleneck lives elsewhere."
+    }
+  ]
+}
