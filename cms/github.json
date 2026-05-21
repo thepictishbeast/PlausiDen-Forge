@@ -91,34 +91,31 @@
       "emphasis": "display"
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "GitHub features.",
-      "density": "comfortable",
+      "lede": "Five interlocking surfaces that turn a git repo into the substrate every other engineering tool plugs into \u2014 code, CI, AI, work tracking, and decision capture share one authz model.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Repositories",
-          "value": "Source of truth for code + collaboration.",
-          "hint": "Distributed git hosting with rich permissions, branch protection, code review at the line level. The substrate everything else depends on."
+          "title": "Repositories",
+          "body": "Source of truth for code + collaboration. Distributed git hosting with rich permissions, branch protection, code review at the line level. The substrate everything else depends on."
         },
         {
-          "key": "Actions",
-          "value": "CI/CD that runs in the same place the code lives.",
-          "hint": "Workflow-as-code: matrix builds, custom runners, secrets management, marketplace integration. Same authz model as the repo itself."
+          "title": "Actions",
+          "body": "CI/CD that runs in the same place the code lives. Workflow-as-code: matrix builds, custom runners, secrets management, marketplace integration. Same authz model as the repo itself."
         },
         {
-          "key": "Copilot",
-          "value": "AI pair programmer + agent integration.",
-          "hint": "Inline suggestions, agent-mode PRs, code review augmentation. Integrates with the chat surfaces (Discussions, PR comments) where engineering decisions actually happen."
+          "title": "Copilot",
+          "body": "AI pair programmer + agent integration. Inline suggestions, agent-mode PRs, code review augmentation. Integrates with the chat surfaces (Discussions, PR comments) where engineering decisions actually happen."
         },
         {
-          "key": "Issues",
-          "value": "Typed issue + project tracking.",
-          "hint": "Labels, milestones, projects, custom fields. Tied to commits + PRs + discussions through closes-via-mention semantics."
+          "title": "Issues",
+          "body": "Typed issue + project tracking. Labels, milestones, projects, custom fields. Tied to commits + PRs + discussions through closes-via-mention semantics."
         },
         {
-          "key": "Discussions",
-          "value": "Long-form decision capture.",
-          "hint": "RFC threads, Q&A, announcements. Distinct from issues \u2014 the place engineering decisions get litigated before they become work items."
+          "title": "Discussions",
+          "body": "Long-form decision capture. RFC threads, Q&A, announcements. Distinct from issues \u2014 the place engineering decisions get litigated before they become work items."
         }
       ]
     },
