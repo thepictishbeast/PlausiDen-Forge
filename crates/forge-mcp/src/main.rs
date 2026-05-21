@@ -85,6 +85,45 @@ fn tool_list() -> Value {
                         }
                     }
                 }
+            },
+            {
+                "name": "forge.build",
+                "description": "Run every phase against the project at `root` and return the build report. Use this instead of shell-invoking `forge build` so the structured report stays out of the conversation as JSON, not CLI text.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "root": {
+                            "type": "string",
+                            "description": "Project root path. Defaults to the working directory."
+                        },
+                        "json": {
+                            "type": "boolean",
+                            "description": "If true, request `--json` output (when supported). Default false."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.doctrine.for",
+                "description": "Surface AVP-Doctrine rules applicable to a path (crate, file, directory). Walks every loaded rule and matches each rule's `applies_to` entries against the path. Backed by `forge doctrine for <path>`.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["path"],
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Workspace-relative or absolute path to query rules for."
+                        },
+                        "root": {
+                            "type": "string",
+                            "description": "Project root. Defaults to the working directory."
+                        },
+                        "terse": {
+                            "type": "boolean",
+                            "description": "If true, surface rule ids + names only (saves tokens). Default true."
+                        }
+                    }
+                }
             }
         ]
     })
@@ -107,6 +146,8 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
             let args = req.params.get("arguments").cloned().unwrap_or(json!({}));
             match name {
                 "forge.orient" => Some(tool_forge_orient(args).await),
+                "forge.build" => Some(tool_forge_build(args).await),
+                "forge.doctrine.for" => Some(tool_forge_doctrine_for(args).await),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -130,16 +171,12 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
     }
 }
 
-async fn tool_forge_orient(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
-    // Shell out to the installed `forge` binary. Future iter:
-    // call into forge-core directly to skip the subprocess
-    // round-trip.
+/// Run `forge <args>` and wrap stdout/stderr in an MCP
+/// `content`-shaped response. Centralises the spawn + error path
+/// so each `tool_*` body stays short.
+async fn run_forge(label: &str, forge_args: &[&str]) -> Value {
     let output = tokio::process::Command::new("forge")
-        .args(["orient", "--root", root])
+        .args(forge_args)
         .output()
         .await;
     match output {
@@ -154,9 +191,10 @@ async fn tool_forge_orient(args: Value) -> Value {
             "content": [{
                 "type": "text",
                 "text": format!(
-                    "forge orient exited {}: {}",
-                    out.status,
-                    String::from_utf8_lossy(&out.stderr)
+                    "forge {label} exited {status}: {err}",
+                    label = label,
+                    status = out.status,
+                    err = String::from_utf8_lossy(&out.stderr)
                 )
             }]
         }),
@@ -164,10 +202,53 @@ async fn tool_forge_orient(args: Value) -> Value {
             "isError": true,
             "content": [{
                 "type": "text",
-                "text": format!("could not spawn forge: {e}")
+                "text": format!("could not spawn forge {label}: {e}")
             }]
         }),
     }
+}
+
+async fn tool_forge_orient(args: Value) -> Value {
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    run_forge("orient", &["orient", "--root", root]).await
+}
+
+async fn tool_forge_build(args: Value) -> Value {
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    let json_mode = args.get("json").and_then(|v| v.as_bool()).unwrap_or(false);
+    let mut forge_args: Vec<&str> = vec!["build", "--root", root];
+    if json_mode {
+        forge_args.push("--json");
+    }
+    run_forge("build", &forge_args).await
+}
+
+async fn tool_forge_doctrine_for(args: Value) -> Value {
+    let Some(path) = args.get("path").and_then(|v| v.as_str()) else {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": "missing required argument: path"
+            }]
+        });
+    };
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    let terse = args.get("terse").and_then(|v| v.as_bool()).unwrap_or(true);
+    let mut forge_args: Vec<&str> = vec!["doctrine", "--root", root, "for", path];
+    if terse {
+        forge_args.push("--terse");
+    }
+    run_forge("doctrine for", &forge_args).await
 }
 
 #[tokio::main]

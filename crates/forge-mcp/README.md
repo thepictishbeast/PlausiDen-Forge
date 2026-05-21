@@ -38,19 +38,21 @@ cheap on Claude's side.
 
 ## Tool surface
 
-### v0.1.0 (this release)
+### Shipped
 
 - `forge.orient { root?: string }` — session brief. Shells out
   to `forge orient --root <root>`.
+- `forge.build { root?, json? }` — run every phase + return the
+  build report. Pass `json: true` to request structured output
+  when the underlying `forge build` supports it.
+- `forge.doctrine.for { path, root?, terse? }` — surface
+  doctrine rules applicable to a path. Defaults to terse output
+  (rule ids + names only) for token efficiency.
 
 ### Planned
 
-- `forge.build { root?, mode? }` — run every phase. Returns
-  structured `Vec<Finding>` instead of CLI text.
 - `forge.audit.explain { phase, root? }` — explain a phase's
   intent + when it fires.
-- `forge.doctrine.for { path, terse? }` — applicable doctrine
-  rules for `<path>`.
 - `forge.synthesis.preview { spec_path }` — preview the
   `SiteSpec` that would generate from a given spec.
 - `forge.codegen { root?, target? }` — emit an axum + tokio +
