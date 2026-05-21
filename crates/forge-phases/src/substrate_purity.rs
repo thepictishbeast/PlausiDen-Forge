@@ -80,6 +80,14 @@ fn canonical_emission_allowlist() -> HashSet<&'static str> {
 
 /// Recursively walks `static_dir`, emitting findings for files that
 /// look hand-authored.
+///
+/// Subdirectories containing a `.substrate-widget` marker file are
+/// skipped wholesale. That marker declares the directory holds a
+/// substrate-built widget pkg (e.g., `wasm-pack build` output for a
+/// crate elsewhere in the workspace) that the tenant copies in to
+/// serve. The marker contract: ALL files in such a directory are
+/// substrate-emitted, not hand-authored, even though they didn't
+/// land via Forge/Loom's own emission path. Per task #337.
 fn walk_static_for_hand_authored(
     static_dir: &Path,
     allowlist: &HashSet<&'static str>,
@@ -92,6 +100,11 @@ fn walk_static_for_hand_authored(
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
+            // Skip directories that explicitly declare themselves
+            // as substrate-built widget pkgs.
+            if path.join(".substrate-widget").is_file() {
+                continue;
+            }
             // Recurse into subdirs (e.g. nested route HTML).
             walk_static_for_hand_authored(&path, allowlist, findings, phase_name);
             continue;
@@ -260,6 +273,47 @@ mod tests {
         let ctx = make_ctx(&root.join("static"));
         let findings = phase.run(&ctx).expect("runs");
         assert_eq!(findings.len(), 1);
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn substrate_widget_marker_exempts_directory() {
+        // A directory carrying `.substrate-widget` skips the
+        // hand-authored check entirely — the marker declares the
+        // contents are substrate-built (e.g. wasm-pack output).
+        let root = tmp_root();
+        let widget_dir = root.join("static").join("crucible-widget");
+        fs::create_dir_all(&widget_dir).unwrap();
+        fs::write(widget_dir.join(".substrate-widget"), b"crucible-widget pkg").unwrap();
+        // These would normally trip substrate_purity strict:
+        fs::write(widget_dir.join("crucible_widget.js"), b"x").unwrap();
+        fs::write(widget_dir.join("crucible_widget_bg.wasm"), b"x").unwrap();
+        let phase = SubstratePurityPhase;
+        let ctx = make_ctx(&root.join("static"));
+        let findings = phase.run(&ctx).expect("runs");
+        assert!(
+            findings.is_empty(),
+            "marker should exempt the whole dir; got {findings:#?}"
+        );
+        fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn substrate_widget_marker_required_per_directory() {
+        // Marker exempts only THAT directory, not siblings.
+        let root = tmp_root();
+        let widget_dir = root.join("static").join("ok-widget");
+        let sibling_dir = root.join("static").join("not-widget");
+        fs::create_dir_all(&widget_dir).unwrap();
+        fs::create_dir_all(&sibling_dir).unwrap();
+        fs::write(widget_dir.join(".substrate-widget"), b"").unwrap();
+        fs::write(widget_dir.join("widget.js"), b"x").unwrap(); // exempt
+        fs::write(sibling_dir.join("rogue.js"), b"x").unwrap(); // flagged
+        let phase = SubstratePurityPhase;
+        let ctx = make_ctx(&root.join("static"));
+        let findings = phase.run(&ctx).expect("runs");
+        assert_eq!(findings.len(), 1, "sibling without marker should flag");
+        assert!(findings[0].message.contains("rogue.js"));
         fs::remove_dir_all(&root).ok();
     }
 }
