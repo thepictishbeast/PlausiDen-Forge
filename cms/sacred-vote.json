@@ -115,24 +115,23 @@
       "text": "SacredVote is a Voter Dashboard + public audit infrastructure for elections. Engineered by PlausiDen Technologies. Verifiable end-to-end: every voter can verify their own ballot landed in the official count; every member of the public can audit the running tally without trusting any single party."
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Three axes of integrity.",
-      "density": "comfortable",
+      "lede": "Verifiable, transparent, secure \u2014 three properties the substrate guarantees by construction, not by trust in any single party.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Verifiable",
-          "value": "Every voter verifies their own ballot.",
-          "hint": "Cryptographic receipts let any voter confirm their ballot is counted as cast. No trust required \u2014 the math is the proof."
+          "title": "Verifiable",
+          "body": "Every voter verifies their own ballot. Cryptographic receipts let any voter confirm their ballot is counted as cast. No trust required \u2014 the math is the proof."
         },
         {
-          "key": "Transparent",
-          "value": "Public audit log, always-on.",
-          "hint": "The running tally is observable in real time by anyone. Audit logs are append-only, signed, and chain-of-custody-preserving."
+          "title": "Transparent",
+          "body": "Public audit log, always-on. The running tally is observable in real time by anyone. Audit logs are append-only, signed, and chain-of-custody-preserving."
         },
         {
-          "key": "Secure",
-          "value": "Default-deny, post-quantum capable.",
-          "hint": "Ed25519 + ML-DSA dual signatures. Threshold cryptography for ballot decryption. No single party can forge, alter, or suppress a count."
+          "title": "Secure",
+          "body": "Default-deny, post-quantum capable. Ed25519 + ML-DSA dual signatures. Threshold cryptography for ballot decryption. No single party can forge, alter, or suppress a count."
         }
       ]
     },
