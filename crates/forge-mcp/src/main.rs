@@ -163,6 +163,58 @@ fn tool_list() -> Value {
                         }
                     }
                 }
+            },
+            {
+                "name": "forge.synthesis.preview",
+                "description": "Load a `SiteSpec` JSON and print its summary without writing any cms/ files. Lets the operator review before committing. Backed by `forge synthesis preview`.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["spec_path"],
+                    "properties": {
+                        "spec_path": {
+                            "type": "string",
+                            "description": "Path to the SiteSpec JSON file."
+                        },
+                        "root": {
+                            "type": "string",
+                            "description": "Project root. Defaults to the working directory."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.codegen",
+                "description": "Emit a self-contained Cargo crate (axum + tokio + sqlx + serde + loom-cms-render) from cms/*.json + backends.toml. Each CmsPage becomes a typed `async fn` handler. Backed by `forge codegen`.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "root": {
+                            "type": "string",
+                            "description": "Project root. Defaults to the working directory."
+                        },
+                        "out": {
+                            "type": "string",
+                            "description": "Output directory for the generated crate. Required unless `dry_run` is true."
+                        },
+                        "dry_run": {
+                            "type": "boolean",
+                            "description": "If true, print the plan to stdout instead of writing. Default false."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.manifest.validate",
+                "description": "Validate phases.toml + backends.toml at the project root. Reports parsing + projection + topo-sort errors. Backed by `forge manifest validate`.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "root": {
+                            "type": "string",
+                            "description": "Project root. Defaults to the working directory."
+                        }
+                    }
+                }
             }
         ]
     })
@@ -190,6 +242,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.authoring" => Some(tool_forge_authoring(args).await),
                 "forge.config" => Some(tool_forge_config(args).await),
                 "forge.fix" => Some(tool_forge_fix(args).await),
+                "forge.synthesis.preview" => Some(tool_forge_synthesis_preview(args).await),
+                "forge.codegen" => Some(tool_forge_codegen(args).await),
+                "forge.manifest.validate" => Some(tool_forge_manifest_validate(args).await),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -315,6 +370,60 @@ async fn tool_forge_fix(args: Value) -> Value {
         .and_then(|v| v.as_str())
         .unwrap_or(".");
     run_forge("fix", &["fix", "--root", root]).await
+}
+
+async fn tool_forge_synthesis_preview(args: Value) -> Value {
+    let Some(spec_path) = args.get("spec_path").and_then(|v| v.as_str()) else {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": "missing required argument: spec_path"
+            }]
+        });
+    };
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    run_forge(
+        "synthesis preview",
+        &["synthesis", "--root", root, "preview", spec_path],
+    )
+    .await
+}
+
+async fn tool_forge_codegen(args: Value) -> Value {
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    let dry_run = args.get("dry_run").and_then(|v| v.as_bool()).unwrap_or(false);
+    let out = args.get("out").and_then(|v| v.as_str());
+    let mut forge_args: Vec<&str> = vec!["codegen", "--root", root];
+    if dry_run {
+        forge_args.push("--dry-run");
+    } else if let Some(o) = out {
+        forge_args.push("--out");
+        forge_args.push(o);
+    } else {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": "forge.codegen requires either `out` or `dry_run: true`"
+            }]
+        });
+    }
+    run_forge("codegen", &forge_args).await
+}
+
+async fn tool_forge_manifest_validate(args: Value) -> Value {
+    let root = args
+        .get("root")
+        .and_then(|v| v.as_str())
+        .unwrap_or(".");
+    run_forge("manifest validate", &["manifest", "--root", root, "validate"]).await
 }
 
 #[tokio::main]

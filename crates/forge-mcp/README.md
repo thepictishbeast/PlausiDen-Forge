@@ -57,16 +57,24 @@ cheap on Claude's side.
   warnings, not failures.
 - `forge.fix { root? }` — auto-fix mechanical findings from
   the latest build report. Idempotent.
+- `forge.synthesis.preview { spec_path, root? }` — load a
+  `SiteSpec` JSON and print its summary without writing any
+  cms/ files.
+- `forge.codegen { root?, out?, dry_run? }` — emit a
+  self-contained Cargo crate (axum + tokio + sqlx + serde +
+  loom-cms-render) from `cms/*.json` + `backends.toml`. Pass
+  `dry_run: true` to print the plan; otherwise `out` is
+  required.
+- `forge.manifest.validate { root? }` — validate
+  `phases.toml` + `backends.toml`: parsing, projection,
+  topo-sort, capability resolution.
 
 ### Planned
 
-- `forge.synthesis.preview { spec_path }` — preview the
-  `SiteSpec` that would generate from a given spec.
-- `forge.codegen { root?, target? }` — emit an axum + tokio +
-  sqlx crate from `cms/*.json`.
 - `forge.tenant_style.preview { root? }` — render the tenant's
   `[style]` config as the `<style>` snippet that injects into
-  the page-shell head.
+  the page-shell head. Needs a new CLI affordance first
+  (`forge style preview`).
 
 ## Why an MCP, not just skills?
 
