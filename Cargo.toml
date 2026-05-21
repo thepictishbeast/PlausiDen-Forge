@@ -261,6 +261,13 @@ members = [
     # and reports file:line. Used as a pre-commit hook and a CI
     # gate to keep substrate code generic.
     "crates/substrate-name-audit",
+    # #329 (paul 2026-05-21): substrate-docs-audit — Rust binary
+    # that scans substrate .rs files for public-API items
+    # lacking a `///` or `//!` doc comment. Companion CI gate
+    # to substrate-name-audit; ensures every pub fn / pub
+    # struct / pub enum / pub trait / pub const / pub static /
+    # pub type / pub mod is documented.
+    "crates/substrate-docs-audit",
 ]
 
 [workspace.package]

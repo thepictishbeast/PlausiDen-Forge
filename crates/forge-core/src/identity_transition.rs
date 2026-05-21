@@ -557,6 +557,10 @@ mod tests {
     mod forge_core_helper {
         use crate::site_identity::ThemeVariant;
         use serde_json::json;
+        /// Test-only constructor: builds a minimal
+        /// `ThemeVariant` with `required = false` via JSON
+        /// because the type is `non_exhaustive` and can't be
+        /// struct-literalled from outside its defining module.
         pub fn test_theme_variant(name: &str) -> ThemeVariant {
             serde_json::from_value::<ThemeVariant>(json!({
                 "name": name,
