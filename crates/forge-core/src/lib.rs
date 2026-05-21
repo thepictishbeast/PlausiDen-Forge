@@ -30,6 +30,7 @@ pub mod attest;
 pub mod content_substance;
 pub mod cross_build_audit;
 pub mod diagnostic;
+pub mod doc_query;
 pub mod extractors;
 pub mod fingerprint;
 pub mod fingerprint_migration;
