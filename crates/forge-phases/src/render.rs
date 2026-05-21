@@ -1098,9 +1098,12 @@ mod tests {
 
     #[test]
     fn apply_tenant_variables_substitutes_in_block_text() {
+        // Generic placeholder fixture — substrate tests never
+        // hardcode real tenant names per the substrate-discipline
+        // rule (no client/site/operator names in substrate Rust).
         use std::collections::BTreeMap;
         let mut variables = BTreeMap::new();
-        variables.insert("BRAND".into(), "PlausiDen".into());
+        variables.insert("BRAND".into(), "Acme".into());
         let tv = forge_core::tenant_variables::TenantVariables {
             variables,
             palette: BTreeMap::new(),
@@ -1122,10 +1125,10 @@ mod tests {
         )
         .expect("page parses");
         let substituted = apply_tenant_variables(&page, &tv).expect("round-trip");
-        assert_eq!(substituted.title, "Welcome to PlausiDen");
-        assert_eq!(substituted.description, "About PlausiDen");
+        assert_eq!(substituted.title, "Welcome to Acme");
+        assert_eq!(substituted.description, "About Acme");
         let html = loom_cms_render::render_page(&substituted).into_string();
-        assert!(html.contains("Made by PlausiDen."));
+        assert!(html.contains("Made by Acme."));
         assert!(!html.contains("{{ BRAND }}"));
     }
 
