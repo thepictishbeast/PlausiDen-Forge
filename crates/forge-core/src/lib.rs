@@ -45,6 +45,7 @@ pub mod session_context;
 pub mod site_identity;
 pub mod skill_telemetry;
 pub mod substrate_state;
+pub mod surveillance;
 pub mod synthesis;
 pub mod tenant_corpus;
 pub mod tenant_style;
