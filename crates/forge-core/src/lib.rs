@@ -28,6 +28,7 @@
 
 pub mod attest;
 pub mod content_substance;
+pub mod cross_build_audit;
 pub mod diagnostic;
 pub mod extractors;
 pub mod fingerprint;
