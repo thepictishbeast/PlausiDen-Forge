@@ -1,6 +1,6 @@
 //! `email-core` — typed email contract.
 //!
-//! Per `PLATFORM_ROADMAP.md` §17, every PlausiDen tenant gets:
+//! Per `PLATFORM_ROADMAP.md` §17, every tenant gets:
 //!
 //! * Transactional email (signup, password reset, receipt)
 //! * Marketing email (newsletter, campaign) with built-in

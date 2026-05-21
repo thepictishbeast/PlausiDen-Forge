@@ -25,7 +25,7 @@
 //! //   pub const ALL_PHASES:       &[PhaseRecord]      = &[...];
 //! //   pub const ALL_BACKENDS:     &[BackendRecord]    = &[...];
 //! //   pub const MANIFEST_SCHEMA:  &str                = "1";
-//! //   pub const MANIFEST_PLATFORM:&str                = "plausiden";
+//! //   pub const MANIFEST_PLATFORM:&str                = "acme";
 //! ```
 //!
 //! ### Why a build.rs projector instead of a proc-macro?
@@ -408,7 +408,7 @@ mod tests {
 
     fn sample_manifest() -> PlatformManifest {
         PlatformManifest {
-            platform: "plausiden".into(),
+            platform: "acme".into(),
             schema_version: "1".into(),
             capabilities: vec![Capability {
                 id: CapabilityId::parse("auth").unwrap(),
@@ -438,7 +438,7 @@ mod tests {
         let src = project_to_rust(&m);
         assert!(src.contains("AUTO-GENERATED"));
         assert!(src.contains("pub const MANIFEST_SCHEMA: &str = \"1\";"));
-        assert!(src.contains("pub const MANIFEST_PLATFORM: &str = \"plausiden\";"));
+        assert!(src.contains("pub const MANIFEST_PLATFORM: &str = \"acme\";"));
     }
 
     #[test]
@@ -514,7 +514,7 @@ mod tests {
         std::fs::write(
             &manifest_path,
             r#"
-platform = "plausiden"
+platform = "acme"
 schema-version = "1"
 "#,
         )

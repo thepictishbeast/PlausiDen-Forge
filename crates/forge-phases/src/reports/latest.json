@@ -1,0 +1,85 @@
+{
+  "mode": "poc",
+  "findings": [
+    {
+      "phase": "loom_sync",
+      "path": "/home/paul/projects/PlausiDen-Forge/crates/forge-phases/src/static/loom-skin.css",
+      "message": "PoC skin.css missing — run `forge --sync-loom` to bootstrap.",
+      "severity": "warn",
+      "advocacy": {
+        "why": "static/loom-skin.css is the design-system bytes every rendered page links to; a missing file means every <link rel=stylesheet> 404s in the browser",
+        "substrate_fix": "run `forge --sync-loom` to copy current Loom skin.css bytes into static/",
+        "anti_pattern": "don't `touch static/loom-skin.css` — an empty file passes existence check but strips every rendered page of its design system"
+      }
+    },
+    {
+      "phase": "self_check",
+      "path": "loom-skin.css",
+      "message": "skin.css not present — nothing to self-check",
+      "severity": "warn"
+    },
+    {
+      "phase": "theme_consistency",
+      "path": "static/",
+      "message": "no loom.css or loom-skin.css found — theme drift not verified",
+      "severity": "warn",
+      "enforces_rules": [
+        "prim-007"
+      ],
+      "advocacy": {
+        "why": "without the loom-emitted skin.css, the theme-consistency gate can't verify cascade integrity; the build is shipping unchecked theme behavior",
+        "substrate_fix": "ensure `forge build` runs the render phase first (it emits skin.css to static/); if `loom sync --regenerate` was skipped, run it before the next forge build",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "theme_contrast",
+      "path": "loom-cli",
+      "message": "loom binary not found (/home/paul/projects/PlausiDen-Forge/crates/forge-phases/PlausiDen-Loom/target/release/loom, /home/paul/projects/PlausiDen-Forge/crates/forge-phases/PlausiDen-Loom/target/debug/loom, ./target/release/loom, ./target/debug/loom, /usr/local/sbin/loom, /usr/local/bin/loom, /usr/sbin/loom, /usr/bin/loom, /sbin/loom, /bin/loom) — contrast not verified (build cargo run --release -p loom-cli in PlausiDen-Loom or set LOOM_BIN env)",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "sitemap.xml",
+      "message": "missing sitemap.xml — search-engine crawl coverage suffers",
+      "severity": "warn"
+    },
+    {
+      "phase": "seo",
+      "path": "robots.txt",
+      "message": "missing robots.txt — crawler hint missing",
+      "severity": "warn"
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "*",
+      "message": "no backends.toml — UI ↔ backend mapping unverified",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "without backends.toml the phantom_button + backend_coverage gates can't enforce capability declarations; UI buttons without backing data-backend slugs ship silently broken",
+        "substrate_fix": "create `backends.toml` at the project root with one `[[backend]] id = \"...\" kind = \"...\" endpoint = \"...\"` entry per UI affordance that needs server wiring",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "contrast",
+      "path": "loom-tokens.css",
+      "message": "tokens.css missing — skipping contrast phase",
+      "severity": "warn"
+    },
+    {
+      "phase": "crawl",
+      "path": "127.0.0.1:8123",
+      "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
+      "severity": "warn"
+    }
+  ],
+  "strict_count": 0,
+  "warn_count": 9,
+  "duration_ms": 0,
+  "chain_length": 1,
+  "started": "2026-05-20T16:37:39Z"
+}

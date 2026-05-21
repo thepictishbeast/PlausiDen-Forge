@@ -1,4 +1,4 @@
-//! `extension-abi` — typed ABI every PlausiDen extension projects
+//! `extension-abi` — typed ABI every extension projects
 //! through.
 //!
 //! Per `PLATFORM_ROADMAP.md` §6 + the

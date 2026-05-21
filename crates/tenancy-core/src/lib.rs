@@ -1,6 +1,6 @@
 //! `tenancy-core` — typed TenantId + 3-tier isolation primitives.
 //!
-//! Per `PLATFORM_ROADMAP.md` §5 + `plausiden_design_premium`:
+//! Per `PLATFORM_ROADMAP.md` §5 + the design-premium doctrine:
 //! when the platform hosts multiple tenants (CMS deployments,
 //! Loom edit-serve workspaces, per-customer Forge builds), every
 //! operation that touches tenant-owned resources must carry a
@@ -25,7 +25,7 @@
 //! [`DataIsolated`]: IsolationLevel::DataIsolated
 //! [`FullyIsolated`]: IsolationLevel::FullyIsolated
 //!
-//! Most PlausiDen workloads default to `DataIsolated` —
+//! Most substrate workloads default to `DataIsolated` —
 //! per-tenant SQLite + per-tenant filesystem root, in one
 //! process, shared egress. `Shared` is reserved for read-only
 //! aggregations (analytics) where the row count justifies the

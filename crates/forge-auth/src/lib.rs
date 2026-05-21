@@ -17,7 +17,7 @@
 //! - `Passkey`                — WebAuthn discoverable credential
 //! - `MagicLinkSso`           — SSO single sign-on link
 //! - `Anonymous`              — anonymous-but-receipt-bearing
-//!                               (Sacred.Vote pattern)
+//!                               (sovereign-receipt pattern)
 //!
 //! ## MFA shipped
 //!
@@ -55,7 +55,7 @@ pub enum AuthMethod {
     Passkey,
     /// SSO magic-link.
     MagicLinkSso,
-    /// Anonymous-but-receipt-bearing (Sacred.Vote pattern).
+    /// Anonymous-but-receipt-bearing (sovereign-receipt pattern).
     Anonymous,
 }
 

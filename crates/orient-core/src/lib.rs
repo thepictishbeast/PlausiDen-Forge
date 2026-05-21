@@ -1,4 +1,4 @@
-//! `orient-core` — typed projection of the 12 PlausiDen N-orientations.
+//! `orient-core` — typed projection of the 12 substrate N-orientations.
 //!
 //! Per `[[n-orientation-substrate]]` doctrine + AVP-Doctrine
 //! `N_ORIENTATION_SUBSTRATE.md`: every substrate entity is

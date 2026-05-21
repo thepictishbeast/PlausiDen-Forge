@@ -1,5 +1,5 @@
-//! `i18n-core` — typed i18n substrate every PlausiDen subsystem
-//! (CMS, Loom edit-serve, Forge phase output, admin UI) projects
+//! `i18n-core` — typed i18n substrate every subsystem (CMS,
+//! Loom edit-serve, Forge phase output, admin UI) projects
 //! through.
 //!
 //! Per `PLATFORM_ROADMAP.md` §7 + the

@@ -1,7 +1,7 @@
 //! `memberships-core` — typed memberships + paywall contract.
 //!
-//! Per `PLATFORM_ROADMAP.md` §19, every PlausiDen tenant can run
-//! a creator-economy / reader-supported model: tiered
+//! Per `PLATFORM_ROADMAP.md` §19, every tenant can run a
+//! creator-economy / reader-supported model: tiered
 //! memberships, metered paywalls (NYT-style), hard paywalls
 //! (Substack-style), or time-based previews. This crate defines
 //! the typed surface; per-payment-provider integrations

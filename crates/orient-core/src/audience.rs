@@ -29,7 +29,7 @@ pub enum Audience {
     AiAgent,
     /// Long-term compliance retention.
     LegalArchive,
-    /// PlausiDen contributors.
+    /// Substrate contributors.
     InternalEngineer,
 }
 

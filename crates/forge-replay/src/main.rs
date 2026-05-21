@@ -1,6 +1,6 @@
 //! Forge — log replay tool (T38).
 //!
-//! Walks `reports/build-*.json` + `/tmp/skillshots-server-slow.log`,
+//! Walks `reports/build-*.json` + `/tmp/forge-server-slow.log`,
 //! producing a terminal-friendly summary that surfaces:
 //!
 //! 1. **Recent build trend** — last N builds: strict / warn / duration.
@@ -37,7 +37,7 @@ use forge_core::{BuildReport, Finding};
     about = "Forge log replay — surface trends, churn, slow URLs."
 )]
 struct Args {
-    /// Project root containing reports/ and /tmp/skillshots-server-slow.log.
+    /// Project root containing reports/ and /tmp/forge-server-slow.log.
     /// Defaults to CWD.
     #[arg(long)]
     root: Option<PathBuf>,
@@ -48,7 +48,7 @@ struct Args {
 
     /// Path to dev-server slow log (forge-serve writes here when
     /// SLOW_REQUEST_MS_THRESHOLD is exceeded).
-    #[arg(long, default_value = "/tmp/skillshots-server-slow.log")]
+    #[arg(long, default_value = "/tmp/forge-server-slow.log")]
     slow_log: PathBuf,
 }
 
