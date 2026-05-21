@@ -85,34 +85,31 @@
       "text": "Forge-static approximation of vercel.com authored from SSR-extractable headings + descriptions. Pixel-rep rotation target per PlausiDen-Forge #222. Not affiliated with Vercel; the substrate uses Vercel as a reference shape for the editorial_purity_gate's developer-platform audit."
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Your product, delivered.",
-      "density": "comfortable",
+      "lede": "Five deploy surfaces, one platform \u2014 Vercel composes the same edge + build + CDN substrate under every workload type the team ships.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Agents",
-          "value": "Run AI agents at the edge.",
-          "hint": "Vercel's AI Cloud ships agent-first primitives: streaming inference, structured-output routing, and per-request isolation. Same edge runtime that powers the framework-aware deploys."
+          "title": "Agents",
+          "body": "Run AI agents at the edge. Vercel's AI Cloud ships agent-first primitives: streaming inference, structured-output routing, and per-request isolation. Same edge runtime that powers the framework-aware deploys."
         },
         {
-          "key": "AI Apps",
-          "value": "Ship AI-native applications.",
-          "hint": "SDK + framework integration for chat, embeddings, agentic flows. Same provider-agnostic API regardless of which model lives behind it."
+          "title": "AI Apps",
+          "body": "Ship AI-native applications. SDK + framework integration for chat, embeddings, agentic flows. Same provider-agnostic API regardless of which model lives behind it."
         },
         {
-          "key": "Web Apps",
-          "value": "Framework-aware deploys.",
-          "hint": "Next.js, Nuxt, SvelteKit, Astro \u2014 first-class CI/CD with preview deploys per branch, automatic edge caching, image optimization."
+          "title": "Web Apps",
+          "body": "Framework-aware deploys. Next.js, Nuxt, SvelteKit, Astro \u2014 first-class CI/CD with preview deploys per branch, automatic edge caching, image optimization."
         },
         {
-          "key": "Commerce",
-          "value": "Composable Commerce.",
-          "hint": "Headless storefronts that compose Vercel's deployment substrate with the CMS + payment + search providers the operator chose. No vendor lock-in at the deploy layer."
+          "title": "Commerce",
+          "body": "Composable Commerce. Headless storefronts that compose Vercel's deployment substrate with the CMS + payment + search providers the operator chose. No vendor lock-in at the deploy layer."
         },
         {
-          "key": "Multi-tenant",
-          "value": "Multi-tenant Platform.",
-          "hint": "Per-tenant isolation at the build + runtime + edge layers. White-label deploys with tenant-scoped domains, secrets, analytics."
+          "title": "Multi-tenant",
+          "body": "Multi-tenant Platform. Per-tenant isolation at the build + runtime + edge layers. White-label deploys with tenant-scoped domains, secrets, analytics."
         }
       ]
     },
