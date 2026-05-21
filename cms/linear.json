@@ -96,34 +96,31 @@
       "emphasis": "display"
     },
     {
-      "kind": "kv_pair",
+      "kind": "feature_spotlight",
       "heading": "Faster app launch.",
-      "density": "comfortable",
+      "lede": "Five stages of product delivery, one tool \u2014 Linear collapses the chain from customer signal to shipped feature into a single surface.",
+      "columns": 3,
+      "decoration": "editorial",
       "items": [
         {
-          "key": "Plan",
-          "value": "Make product faster \u2014 turn conversations into actionable issues.",
-          "hint": "Customer feedback is routed, labeled, and prioritized for the right team. No issue-tracker triage queue eating engineering attention."
+          "title": "Plan",
+          "body": "Make product faster \u2014 turn conversations into actionable issues. Customer feedback is routed, labeled, and prioritized for the right team. No issue-tracker triage queue eating engineering attention."
         },
         {
-          "key": "Define",
-          "value": "Define the work, end to end.",
-          "hint": "Plan and navigate from idea to launch. Align teams via product initiatives, strategic roadmaps, and clear up-to-date PRDs."
+          "title": "Define",
+          "body": "Define the work, end to end. Plan and navigate from idea to launch. Align teams via product initiatives, strategic roadmaps, and clear up-to-date PRDs."
         },
         {
-          "key": "Ship",
-          "value": "Move work forward with agents.",
-          "hint": "Build and deploy AI agents that work alongside your team. Complex tasks together or delegate entire issues end-to-end."
+          "title": "Ship",
+          "body": "Move work forward with agents. Build and deploy AI agents that work alongside your team. Complex tasks together or delegate entire issues end-to-end."
         },
         {
-          "key": "Review",
-          "value": "Review PRs and agent output.",
-          "hint": "Understand code changes at a glance with structural diffs for human and agent output. Review, discuss, and merge \u2014 all within Linear."
+          "title": "Review",
+          "body": "Review PRs and agent output. Understand code changes at a glance with structural diffs for human and agent output. Review, discuss, and merge \u2014 all within Linear."
         },
         {
-          "key": "Measure",
-          "value": "Understand progress without guesswork.",
-          "hint": "Project updates, analytics, and dashboards surface what needs your attention. The signal-to-noise ratio is the product."
+          "title": "Measure",
+          "body": "Understand progress without guesswork. Project updates, analytics, and dashboards surface what needs your attention. The signal-to-noise ratio is the product."
         }
       ]
     },
