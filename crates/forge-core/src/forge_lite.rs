@@ -117,13 +117,27 @@ pub enum ForgeLitePrimitive {
     },
 }
 
-/// One feature-spotlight item. Title + body.
+/// One feature-spotlight item.
+///
+/// Optional `icon_slug` lets operators vary iconography across
+/// items in a 3-column grid — without it, the
+/// `monotonous_feature_grid` variation-arc gate fires because
+/// every item shares the same (empty) icon. Closed addition
+/// (2026-05-22 diagnostic finding).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 #[allow(missing_docs)]
 pub struct FeatureItem {
     pub title: String,
     pub body: String,
+    /// Optional `loom-assets` icon slug
+    /// (e.g. `"icon-shield"`). When set, surfaces alongside
+    /// the title. The variation-arc gate measures uniqueness
+    /// across items in the same grid — at least 2 distinct
+    /// non-empty `icon_slug`s prevent the monotonous-grid
+    /// finding from firing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_slug: Option<String>,
 }
 
 /// One logo-cloud item. Image src + accessible name.
@@ -399,6 +413,7 @@ mod tests {
                 items: vec![FeatureItem {
                     title: "t".to_owned(),
                     body: "b".to_owned(),
+                    icon_slug: None,
                 }],
             }],
         };

@@ -168,7 +168,7 @@ fn map_primitive(p: &ForgeLitePrimitive) -> CmsSection {
             items: items
                 .iter()
                 .map(|it| SpotlightItem {
-                    icon_slug: None,
+                    icon_slug: it.icon_slug.clone(),
                     image: None,
                     title: it.title.clone(),
                     body: it.body.clone(),
@@ -329,10 +329,12 @@ mod tests {
                     FeatureItem {
                         title: "A".to_owned(),
                         body: "alpha".to_owned(),
+                        icon_slug: None,
                     },
                     FeatureItem {
                         title: "B".to_owned(),
                         body: "beta".to_owned(),
+                        icon_slug: None,
                     },
                 ],
             }],
