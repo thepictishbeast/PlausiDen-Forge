@@ -39,6 +39,7 @@ pub mod editorial_purity_gate;
 pub mod external_assets;
 pub mod forbidden_patterns;
 pub mod forge_lite_resolve;
+pub mod hero_composition_resolve;
 pub mod html_semantic;
 pub mod html_walk;
 pub mod hunted_tier;
