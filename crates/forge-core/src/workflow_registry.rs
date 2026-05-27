@@ -114,7 +114,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   (content change, theme swap, primitive substitution).",
         skill_dir: "forge-modify-site",
         mcp_tool: "forge.modify_site",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#365",
     },
     WorkflowEntry {
@@ -284,12 +284,12 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #364 shipped: 1 Paired (build_site_from_brief),
-        // 2 SkillOnly (add-loom-primitive, add-forge-phase),
-        // 8 Planned. Sums to 11.
-        assert_eq!(paired.len(), 1);
+        // After #365 shipped: 2 Paired (build_site_from_brief +
+        // modify_site), 2 SkillOnly (add-loom-primitive, add-forge-
+        // phase), 7 Planned. Sums to 11.
+        assert_eq!(paired.len(), 2);
         assert_eq!(skill_only.len(), 2);
-        assert_eq!(planned.len(), 8);
+        assert_eq!(planned.len(), 7);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 

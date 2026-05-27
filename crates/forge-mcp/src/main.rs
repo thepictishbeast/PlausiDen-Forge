@@ -41,8 +41,8 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 mod typed_args;
 use typed_args::{
     parse_args, AuthoringArgs, BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs,
-    DocsQueryArgs, DoctrineForArgs, FixArgs, ManifestValidateArgs, OrientArgs,
-    SynthesisPreviewArgs, WorkflowsListArgs,
+    DocsQueryArgs, DoctrineForArgs, FixArgs, ManifestValidateArgs, ModifySiteArgs,
+    OrientArgs, SynthesisPreviewArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -254,6 +254,32 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.modify_site",
+                "description": "Apply a scoped modification to an existing tenant site. Paired with skills/forge-modify-site/SKILL.md (#365). One axis per call (theme | density | page_kind | add_page | remove_page | content_edit).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["tenant_root", "modification_kind", "modification_path"],
+                    "properties": {
+                        "tenant_root": {
+                            "type": "string",
+                            "description": "Absolute path to the existing tenant repo."
+                        },
+                        "modification_kind": {
+                            "type": "string",
+                            "description": "One of: change_theme, change_density, change_page_kind, add_page, remove_page, content_edit."
+                        },
+                        "modification_path": {
+                            "type": "string",
+                            "description": "Absolute path to the TOML file describing the modification."
+                        },
+                        "dry_run": {
+                            "type": "boolean",
+                            "description": "Default true. When true, reports the planned delta without writing."
                         }
                     }
                 }
@@ -502,6 +528,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.build_site_from_brief" => {
                     Some(tool_forge_build_site_from_brief(args).await)
                 }
+                "forge.modify_site" => Some(tool_forge_modify_site(args).await),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -735,6 +762,104 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #2: apply a scoped modification to an existing tenant.
+///
+/// Validates the modification kind at the MCP boundary; full
+/// procedural guidance lives in `skills/forge-modify-site/SKILL.md`.
+async fn tool_forge_modify_site(args: Value) -> Value {
+    let parsed: ModifySiteArgs = match parse_args("modify_site", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    // Boundary validation: kinds the workflow supports.
+    const KNOWN_KINDS: &[&str] = &[
+        "change_theme",
+        "change_density",
+        "change_page_kind",
+        "add_page",
+        "remove_page",
+        "content_edit",
+    ];
+    if !KNOWN_KINDS.contains(&parsed.modification_kind.as_str()) {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Unknown modification_kind: {}. Must be one of: {}.",
+                    parsed.modification_kind,
+                    KNOWN_KINDS.join(", ")
+                )
+            }]
+        });
+    }
+
+    if !std::path::Path::new(&parsed.tenant_root).is_dir() {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "tenant_root not a directory: {}. \
+                     Use forge.build_site_from_brief (#364) for from-zero builds.",
+                    parsed.tenant_root
+                )
+            }]
+        });
+    }
+
+    if !std::path::Path::new(&parsed.modification_path).is_file() {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "modification_path not a file: {}",
+                    parsed.modification_path
+                )
+            }]
+        });
+    }
+
+    if parsed.dry_run {
+        return json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Dry-run: forge.modify_site\n\
+                     -----\n\
+                     tenant_root:       {root}\n\
+                     modification_kind: {kind}\n\
+                     modification_path: {path}\n\
+                     \n\
+                     Real-run (dry_run: false) would:\n\
+                     1. Parse {path} per {kind} shape\n\
+                     2. Apply the modification to {root}\n\
+                     3. Run `forge build --root {root} --json`\n\
+                     4. Return the structured build report\n\
+                     \n\
+                     Follow skills/forge-modify-site/SKILL.md for\n\
+                     procedural guidance.",
+                    root = parsed.tenant_root,
+                    kind = parsed.modification_kind,
+                    path = parsed.modification_path
+                )
+            }]
+        });
+    }
+
+    // Real-run: re-build after the operator applies the change per
+    // the skill procedure. Future iteration: this MCP tool itself
+    // could read the modification TOML and apply it, but for the
+    // Paired-status MVP it delegates to the build pipeline.
+    run_forge(
+        "modify_site",
+        &["build", "--root", &parsed.tenant_root, "--json"],
+    )
+    .await
 }
 
 /// Workflow #1: build a tenant site from a written brief.

@@ -154,6 +154,23 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.modify_site` — Workflow #2 paired skill+MCP.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ModifySiteArgs {
+    pub tenant_root: String,
+    pub modification_kind: String,
+    pub modification_path: String,
+    #[serde(default = "ModifySiteArgs::default_dry_run")]
+    pub dry_run: bool,
+}
+
+impl ModifySiteArgs {
+    const fn default_dry_run() -> bool {
+        true
+    }
+}
+
 /// `forge.workflows.list` — { status?: String, slug?: String }
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -289,6 +306,29 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_modify_site_requires_three_fields() {
+        let result = parse_args::<ModifySiteArgs>(
+            "modify_site",
+            json!({"tenant_root": "/tmp/tenant"}),
+        );
+        assert!(result.is_err(), "missing modification_kind/path should fail");
+    }
+
+    #[test]
+    fn parse_modify_site_dry_run_defaults_true() {
+        let args = parse_args::<ModifySiteArgs>(
+            "modify_site",
+            json!({
+                "tenant_root": "/tmp/tenant",
+                "modification_kind": "change_theme",
+                "modification_path": "/tmp/mod.toml"
+            }),
+        )
+        .unwrap();
+        assert!(args.dry_run);
     }
 
     #[test]
