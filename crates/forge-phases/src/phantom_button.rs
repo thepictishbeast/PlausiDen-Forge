@@ -67,7 +67,7 @@ impl Phase for PhantomButtonPhase {
 
             // Every declared data-backend must exist in backends.toml.
             for key in extract_data_backends(body) {
-                if !declared.contains(&key) {
+                if !declared.contains(&key) && !is_substrate_internal_backend(&key) {
                     findings.push(
                         Finding::strict(
                             self.name(),
@@ -154,6 +154,30 @@ impl PhantomButtonPhase {
     }
 }
 
+/// Substrate-internal data-backend slugs that the phantom_button
+/// phase auto-allows without requiring an explicit backends.toml
+/// entry. Used by closed-surface modes (Forge Lite, etc.) where
+/// the resolver hardcodes specific slugs that the operator has no
+/// way to declare from the lite contract.
+///
+/// Per architecture audit 2026-05-21 + docs/FORGE_LITE_DIAGNOSTIC_2026_05_22.md
+/// (Category 2 lite-surface leak): the lite resolver emits
+/// `data-backend="lite-cta"` and similar `lite-*` slugs from
+/// fixed templates; requiring tenants to author backends.toml
+/// entries for these defeats the "narrow surface" promise. The
+/// fix is to auto-allow the `lite-*` prefix.
+const SUBSTRATE_INTERNAL_BACKEND_PREFIXES: &[&str] = &["lite-"];
+
+/// True when `key` matches a substrate-internal prefix and
+/// should be auto-allowed without an explicit backends.toml
+/// declaration.
+#[must_use]
+pub fn is_substrate_internal_backend(key: &str) -> bool {
+    SUBSTRATE_INTERNAL_BACKEND_PREFIXES
+        .iter()
+        .any(|prefix| key.starts_with(prefix))
+}
+
 /// Pull every `data-backend="X"` value out of `body`.
 fn extract_data_backends(body: &str) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
@@ -198,5 +222,31 @@ mod tests {
         let tags = scan_button_tags(body);
         assert_eq!(tags.len(), 2);
         assert!(tags[0].contains("data-backend=\"a\""));
+    }
+
+    #[test]
+    fn substrate_internal_lite_prefix_is_auto_allowed() {
+        assert!(is_substrate_internal_backend("lite-cta"));
+        assert!(is_substrate_internal_backend("lite-nav-link"));
+        assert!(is_substrate_internal_backend("lite-footer-1"));
+    }
+
+    #[test]
+    fn substrate_internal_does_not_match_tenant_slugs() {
+        // Tenant-authored slugs that happen to LOOK similar must
+        // still require backends.toml declaration.
+        assert!(!is_substrate_internal_backend("sign-in"));
+        assert!(!is_substrate_internal_backend("post-skill"));
+        assert!(!is_substrate_internal_backend("footer-contact"));
+        assert!(!is_substrate_internal_backend("contact-lite"));
+        assert!(!is_substrate_internal_backend("limited-cta"));
+        assert!(!is_substrate_internal_backend(""));
+    }
+
+    #[test]
+    fn substrate_internal_prefix_must_be_at_start() {
+        // "lite-" anywhere but the start doesn't count.
+        assert!(!is_substrate_internal_backend("my-lite-thing"));
+        assert!(!is_substrate_internal_backend("xlite-cta"));
     }
 }
