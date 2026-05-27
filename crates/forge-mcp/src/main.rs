@@ -40,9 +40,10 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod typed_args;
 use typed_args::{
-    parse_args, AddPrimitiveArgs, AuthoringArgs, BuildArgs, BuildSiteFromBriefArgs,
-    CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs, FixArgs, ManifestValidateArgs,
-    ModifySiteArgs, OrientArgs, SynthesisPreviewArgs, WorkflowsListArgs,
+    parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
+    BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
+    FixArgs, ManifestValidateArgs, ModifySiteArgs, OrientArgs, SynthesisPreviewArgs,
+    WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -254,6 +255,24 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.add_audit_phase",
+                "description": "Pre-flight guard for adding a new audit phase. Checks the proposed name against the 75+ existing phase modules in crates/forge-phases/src/ and surfaces near-duplicate category buckets. Paired with skills/add-forge-phase/SKILL.md (#367).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["proposed_name"],
+                    "properties": {
+                        "proposed_name": {
+                            "type": "string",
+                            "description": "snake_case name for the proposed phase module (e.g., image_dimension_required)."
+                        },
+                        "finding_summary": {
+                            "type": "string",
+                            "description": "One-line description of what the phase would detect; surfaced in the duplicate-check report."
                         }
                     }
                 }
@@ -552,6 +571,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 }
                 "forge.modify_site" => Some(tool_forge_modify_site(args).await),
                 "forge.add_primitive" => Some(tool_forge_add_primitive(args)),
+                "forge.add_audit_phase" => Some(tool_forge_add_audit_phase(args)),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -785,6 +805,106 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #4: pre-flight guard before adding a new audit phase.
+///
+/// Pure function; no I/O. Surfaces near-duplicate category buckets
+/// from the 75+ existing phase modules in
+/// `crates/forge-phases/src/`. Procedural guidance lives in
+/// `skills/add-forge-phase/SKILL.md`.
+fn tool_forge_add_audit_phase(args: Value) -> Value {
+    let parsed: AddAuditPhaseArgs = match parse_args("add_audit_phase", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let proposed_lower = parsed.proposed_name.to_lowercase();
+
+    // Phase categories observed in crates/forge-phases/src/. When a
+    // proposed name matches one of these tokens, the developer is
+    // pointed at the existing phases in that category to read first.
+    let phase_categories: Vec<(&str, &[&str])> = vec![
+        ("Accessibility / a11y", &["a11y_landmarks", "contrast", "motion_respects_reduced", "label_consistency"]),
+        ("Aesthetic / mood", &["aesthetic_distinctiveness", "mood_lock", "editorial_purity_gate"]),
+        ("Content quality", &["content_substance", "annotation_review", "disclosure_audit", "identity_coherence"]),
+        ("Layout / structure", &["composition_lineage", "density_audit", "html_semantic", "html_walk", "hero_composition_resolve"]),
+        ("Performance / assets", &["asset_optimization", "carbon_budget", "external_assets"]),
+        ("Network / security", &["csp", "csp_devmode", "dns_hygiene_lint", "link_check", "network_target_enforcement"]),
+        ("Crawler / hunting", &["crawl", "hunted_tier"]),
+        ("Forbidden patterns", &["forbidden_patterns", "loom_lint", "loom_sync"]),
+        ("Internationalization", &["iso_8601", "locale_html_lang"]),
+        ("Variation arc", &["differentiation_budget"]),
+        ("Theming", &["dual_theme"]),
+        ("Backend / coverage", &["backend_coverage"]),
+        ("Jurisdiction / compliance", &["jurisdiction_compliance"]),
+        ("ID / lineage", &["id_strategy"]),
+        ("Motion", &["motion", "motion_respects_reduced"]),
+    ];
+
+    let mut overlap_categories: Vec<&str> = Vec::new();
+    let mut overlap_phases: Vec<&str> = Vec::new();
+    let tokens: Vec<&str> = proposed_lower.split('_').collect();
+    for (bucket, phases) in &phase_categories {
+        for phase in phases.iter() {
+            let phase_tokens: Vec<&str> = phase.split('_').collect();
+            let shared = tokens.iter().any(|t| !t.is_empty() && phase_tokens.contains(t));
+            if shared || proposed_lower.contains(phase) || phase.contains(&proposed_lower) {
+                overlap_categories.push(bucket);
+                overlap_phases.push(phase);
+            }
+        }
+    }
+    overlap_categories.sort_unstable();
+    overlap_categories.dedup();
+    overlap_phases.sort_unstable();
+    overlap_phases.dedup();
+
+    let mut report = format!(
+        "Pre-flight guard: forge.add_audit_phase\n\
+         -----\n\
+         Proposed name: {}\n",
+        parsed.proposed_name
+    );
+    if let Some(ref summary) = parsed.finding_summary {
+        report.push_str(&format!("Finding summary: {}\n", summary));
+    }
+    report.push_str("\n");
+
+    if overlap_phases.is_empty() {
+        report.push_str(
+            "No obvious overlap with existing phase categories.\n\
+             \n\
+             Next steps:\n\
+             1. Follow skills/add-forge-phase/SKILL.md procedure.\n\
+             2. Browse all 75+ phases: ls crates/forge-phases/src/*.rs\n\
+             3. Decide if the finding belongs in an existing phase \
+             (extend that phase) vs warrants a new module.\n\
+             4. Confirm the phase is substrate-general (not site-\
+             specific) and observable from the build artifacts.\n",
+        );
+    } else {
+        report.push_str(&format!(
+            "Likely overlap with category: {}\n\
+             Existing phases that share name tokens: {}\n\
+             \n\
+             Before adding a new phase:\n\
+             1. Read each listed phase's lib.rs entry + finding shape.\n\
+             2. Could the proposed finding be added to an existing \
+             phase as a new finding kind (rather than a new module)?\n\
+             3. If a new phase is needed, follow \
+             skills/add-forge-phase/SKILL.md.\n",
+            overlap_categories.join(", "),
+            overlap_phases.join(", ")
+        ));
+    }
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": report
+        }]
+    })
 }
 
 /// Workflow #3: pre-flight guard before adding a new primitive.

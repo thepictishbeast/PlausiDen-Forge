@@ -154,6 +154,19 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.add_audit_phase` — Workflow #4 paired skill+MCP.
+///
+/// Pre-flight guard for adding a new audit phase: checks the
+/// proposed name against existing phase modules + buckets so the
+/// developer doesn't ship a near-duplicate.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct AddAuditPhaseArgs {
+    pub proposed_name: String,
+    #[serde(default)]
+    pub finding_summary: Option<String>,
+}
+
 /// `forge.add_primitive` — Workflow #3 paired skill+MCP.
 ///
 /// Pre-flight guard for adding a new primitive: checks the
@@ -320,6 +333,23 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_add_audit_phase_requires_name() {
+        let result = parse_args::<AddAuditPhaseArgs>("add_audit_phase", json!({}));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_add_audit_phase_optional_summary() {
+        let args = parse_args::<AddAuditPhaseArgs>(
+            "add_audit_phase",
+            json!({"proposed_name": "image_dimension_required"}),
+        )
+        .unwrap();
+        assert_eq!(args.proposed_name, "image_dimension_required");
+        assert!(args.finding_summary.is_none());
     }
 
     #[test]
