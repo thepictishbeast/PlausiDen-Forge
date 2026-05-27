@@ -64,6 +64,7 @@ pub mod resumption;
 pub mod session_context;
 pub mod session_progress;
 pub mod session_scope;
+pub mod spacing_rhythm_pool;
 pub mod site_identity;
 pub mod skill_telemetry;
 pub mod strict_exempts;
