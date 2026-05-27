@@ -44,6 +44,7 @@ pub mod iso_time;
 pub mod multi_pass;
 pub mod operator_corrections;
 pub mod originality;
+pub mod outcome_ratings;
 pub mod pipeline;
 pub mod progress_events;
 pub mod provenance;

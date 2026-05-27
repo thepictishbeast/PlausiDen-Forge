@@ -154,6 +154,36 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.record_outcome` — Layer-6 outcome tracking.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RecordOutcomeArgs {
+    pub outcomes_path: String,
+    pub tenant_id: String,
+    pub rater_id: String,
+    pub kind: String,
+    pub score: u32,
+    #[serde(default)]
+    pub notes: Option<String>,
+}
+
+/// `forge.cohort_summary` — Layer-6 cohort aggregation.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CohortSummaryArgs {
+    pub outcomes_path: String,
+    pub kind: String,
+    pub group_by: String,
+}
+
+/// `forge.operator_profile` — Layer-6 operator-rating profile.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct OperatorProfileArgs {
+    pub outcomes_path: String,
+    pub operator_id: String,
+}
+
 /// `forge.record_correction` — Layer-5 inline operator override.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -461,6 +491,40 @@ mod tests {
                 "tenant_id": "test",
                 "extra_field": "oops"
             }),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_record_outcome_requires_required_fields() {
+        let result = parse_args::<RecordOutcomeArgs>(
+            "record_outcome",
+            json!({"outcomes_path": "/tmp/o.jsonl"}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_record_outcome_full_ok() {
+        let args = parse_args::<RecordOutcomeArgs>(
+            "record_outcome",
+            json!({
+                "outcomes_path": "/tmp/o.jsonl",
+                "tenant_id": "alpha",
+                "rater_id": "paul",
+                "kind": "ship",
+                "score": 85
+            }),
+        )
+        .unwrap();
+        assert_eq!(args.score, 85);
+    }
+
+    #[test]
+    fn parse_cohort_summary_requires_group_by() {
+        let result = parse_args::<CohortSummaryArgs>(
+            "cohort_summary",
+            json!({"outcomes_path": "/tmp/o.jsonl", "kind": "ship"}),
         );
         assert!(result.is_err());
     }

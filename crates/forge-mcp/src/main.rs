@@ -41,12 +41,13 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 mod typed_args;
 use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs, AuthoringArgs,
-    BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs,
-    DoctrineForArgs, DoctrineViolationExplanationArgs, FixArgs, ManifestValidateArgs,
-    ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs, OrientArgs,
-    RecordCorrectionArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
-    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
-    VerifyContentOriginalityArgs, WorkflowsListArgs,
+    BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs, ConfigArgs,
+    DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs, FixArgs,
+    ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs,
+    OperatorProfileArgs, OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs,
+    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SkillInvocationMetaArgs,
+    SubstrateGapRegistrationArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
+    WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -259,6 +260,47 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.record_outcome",
+                "description": "Layer-6 (#379): record a tenant outcome rating (ship/traffic/engagement/retention/revenue/aesthetic). Score is 0..=100 (clamped).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["outcomes_path", "tenant_id", "rater_id", "kind", "score"],
+                    "properties": {
+                        "outcomes_path": {"type": "string", "description": "Absolute path to the JSONL outcomes registry."},
+                        "tenant_id": {"type": "string", "description": "Tenant being rated."},
+                        "rater_id": {"type": "string", "description": "Operator recording the rating."},
+                        "kind": {"type": "string", "description": "One of: ship, traffic, engagement, retention, revenue, aesthetic."},
+                        "score": {"type": "integer", "description": "0..=100; values above are clamped.", "minimum": 0, "maximum": 100},
+                        "notes": {"type": "string", "description": "Optional rater notes."}
+                    }
+                }
+            },
+            {
+                "name": "forge.cohort_summary",
+                "description": "Layer-6 (#379): aggregate outcomes by tenant or rater for a given kind. Returns per-key avg_score sorted descending.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["outcomes_path", "kind", "group_by"],
+                    "properties": {
+                        "outcomes_path": {"type": "string", "description": "Absolute path to the outcomes registry."},
+                        "kind": {"type": "string", "description": "Outcome kind to aggregate."},
+                        "group_by": {"type": "string", "description": "One of: tenant, rater."}
+                    }
+                }
+            },
+            {
+                "name": "forge.operator_profile",
+                "description": "Layer-6 (#379): build a per-kind average score profile for one operator across every outcome they've rated.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["outcomes_path", "operator_id"],
+                    "properties": {
+                        "outcomes_path": {"type": "string", "description": "Absolute path to the outcomes registry."},
+                        "operator_id": {"type": "string", "description": "Operator ID to profile."}
                     }
                 }
             },
@@ -878,6 +920,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 }
                 "forge.alternatives" => Some(tool_forge_alternatives(args)),
                 "forge.record_correction" => Some(tool_forge_record_correction(args)),
+                "forge.record_outcome" => Some(tool_forge_record_outcome(args)),
+                "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
+                "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
                     Some(tool_forge_operator_preferences(args))
                 }
@@ -1114,6 +1159,215 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Layer-6 (#379): record a tenant outcome rating.
+fn tool_forge_record_outcome(args: Value) -> Value {
+    use forge_core::outcome_ratings::{record, OutcomeKind};
+
+    let parsed: RecordOutcomeArgs = match parse_args("record_outcome", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let kind = match OutcomeKind::parse(&parsed.kind) {
+        Some(k) => k,
+        None => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown outcome kind: {}. Must be one of: ship, \
+                         traffic, engagement, retention, revenue, aesthetic.",
+                        parsed.kind
+                    )
+                }]
+            });
+        }
+    };
+
+    let timestamp = forge_core::iso_time::current_rfc3339_utc();
+    let path = std::path::Path::new(&parsed.outcomes_path);
+
+    match record(
+        path,
+        &parsed.tenant_id,
+        &parsed.rater_id,
+        kind,
+        parsed.score,
+        parsed.notes.as_deref(),
+        &timestamp,
+    ) {
+        Ok(entry) => json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Recorded outcome: forge.record_outcome\n\
+                     -----\n\
+                     id:           {id}\n\
+                     rated_at:     {at}\n\
+                     tenant_id:    {tid}\n\
+                     rater_id:     {rid}\n\
+                     kind:         {kind}\n\
+                     score:        {score}\n\
+                     notes:        {notes}\n\
+                     outcomes_path:{path}",
+                    id = entry.id,
+                    at = entry.rated_at,
+                    tid = entry.tenant_id,
+                    rid = entry.rater_id,
+                    kind = entry.kind.slug(),
+                    score = entry.score,
+                    notes = entry.notes.as_deref().unwrap_or("(none)"),
+                    path = parsed.outcomes_path,
+                )
+            }]
+        }),
+        Err(e) => json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!("outcome registry append failed: {}", e)
+            }]
+        }),
+    }
+}
+
+/// Layer-6 (#379): aggregate outcomes into a cohort summary.
+fn tool_forge_cohort_summary(args: Value) -> Value {
+    use forge_core::outcome_ratings::{
+        cohort_by_rater, cohort_by_tenant, read_all, OutcomeKind,
+    };
+
+    let parsed: CohortSummaryArgs = match parse_args("cohort_summary", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let kind = match OutcomeKind::parse(&parsed.kind) {
+        Some(k) => k,
+        None => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("Unknown outcome kind: {}", parsed.kind)
+                }]
+            });
+        }
+    };
+
+    let path = std::path::Path::new(&parsed.outcomes_path);
+    let entries = match read_all(path) {
+        Ok(e) => e,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("outcome registry read failed: {}", e)
+                }]
+            });
+        }
+    };
+
+    let rows = match parsed.group_by.as_str() {
+        "tenant" => cohort_by_tenant(&entries, kind),
+        "rater" => cohort_by_rater(&entries, kind),
+        other => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown group_by: {other}. Must be one of: tenant, rater."
+                    )
+                }]
+            });
+        }
+    };
+
+    let rows_json: Vec<Value> = rows
+        .iter()
+        .map(|r| {
+            json!({
+                "key": r.key,
+                "count": r.count,
+                "avg_score": r.avg_score,
+                "kind": r.kind.slug(),
+            })
+        })
+        .collect();
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Cohort summary: forge.cohort_summary\n\
+                 -----\n\
+                 kind:           {kind}\n\
+                 group_by:       {gb}\n\
+                 outcomes_path:  {path}\n\
+                 \n\
+                 Rows (JSON, sorted by avg_score desc):\n{rows}",
+                kind = parsed.kind,
+                gb = parsed.group_by,
+                path = parsed.outcomes_path,
+                rows = serde_json::to_string_pretty(&rows_json).unwrap_or_default(),
+            )
+        }]
+    })
+}
+
+/// Layer-6 (#379): per-operator rating profile.
+fn tool_forge_operator_profile(args: Value) -> Value {
+    use forge_core::outcome_ratings::{operator_profile, read_all};
+
+    let parsed: OperatorProfileArgs = match parse_args("operator_profile", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let path = std::path::Path::new(&parsed.outcomes_path);
+    let entries = match read_all(path) {
+        Ok(e) => e,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("outcome registry read failed: {}", e)
+                }]
+            });
+        }
+    };
+
+    let profile = operator_profile(&entries, &parsed.operator_id);
+    let per_kind: Vec<Value> = profile
+        .per_kind_avg
+        .iter()
+        .map(|(k, v)| json!({ "kind": k.slug(), "avg_score": v }))
+        .collect();
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Operator profile: forge.operator_profile\n\
+                 -----\n\
+                 operator_id:    {oid}\n\
+                 total_ratings:  {total}\n\
+                 outcomes_path:  {path}\n\
+                 \n\
+                 Per-kind avg score (JSON):\n{per_kind}",
+                oid = profile.operator_id,
+                total = profile.total_ratings,
+                path = parsed.outcomes_path,
+                per_kind = serde_json::to_string_pretty(&per_kind).unwrap_or_default(),
+            )
+        }]
+    })
 }
 
 /// Layer-5 (#378): record an inline operator override.
