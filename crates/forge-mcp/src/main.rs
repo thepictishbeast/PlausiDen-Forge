@@ -44,11 +44,11 @@ use typed_args::{
     AuditPlanExecutionArgs, AuthoringArgs, BricksArgs, BudgetsArgs, BuildArgs,
     BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs, ConfigArgs, DocsQueryArgs,
     DoctrineForArgs, DoctrineViolationExplanationArgs, ExemplarsArgs, FixArgs,
-    ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs,
-    OperatorProfileArgs, OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs,
-    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SkillInvocationMetaArgs,
-    SubstrateGapRegistrationArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
-    WorkflowsListArgs,
+    InteractionDefaultsArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs,
+    OperatorPreferencesArgs, OperatorProfileArgs, OrientArgs, RecordCorrectionArgs,
+    RecordOutcomeArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
+    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
+    VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -261,6 +261,17 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.interaction_defaults",
+                "description": "Substrate interaction-default registry (#388): canonical defaults for 7 interactive families (button, form, navigation, modal, disclosure, motion, stepper) + accepted-deviation closed sets. Surface for AI-DX accessibility doctrine: operators must defer to defaults; silent deviation is forbidden.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "family": {"type": "string", "description": "Filter to one family."},
+                        "check_deviation": {"type": "string", "description": "Test if this deviation slug is accepted for the given family. Requires `family` to be set."}
                     }
                 }
             },
@@ -983,6 +994,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                     Some(tool_forge_audit_plan_execution(args))
                 }
                 "forge.bricks" => Some(tool_forge_bricks(args)),
+                "forge.interaction_defaults" => {
+                    Some(tool_forge_interaction_defaults(args))
+                }
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1221,6 +1235,90 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Interaction-default query (#388).
+fn tool_forge_interaction_defaults(args: Value) -> Value {
+    use forge_core::interaction_defaults::{
+        all_defaults, check_deviation, default_for, InteractiveFamily,
+    };
+
+    let parsed: InteractionDefaultsArgs =
+        match parse_args("interaction_defaults", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let family_parsed = parsed.family.as_deref().and_then(|s| match s {
+        "button" => Some(InteractiveFamily::Button),
+        "form" => Some(InteractiveFamily::Form),
+        "navigation" => Some(InteractiveFamily::Navigation),
+        "modal" => Some(InteractiveFamily::Modal),
+        "disclosure" => Some(InteractiveFamily::Disclosure),
+        "motion" => Some(InteractiveFamily::Motion),
+        "stepper" => Some(InteractiveFamily::Stepper),
+        _ => None,
+    });
+
+    // If check_deviation set, require family + run check.
+    if let Some(ref dev) = parsed.check_deviation {
+        let Some(family) = family_parsed else {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": "check_deviation requires a valid `family` to test against."
+                }]
+            });
+        };
+        let accepted = check_deviation(family, dev);
+        return json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Deviation check: forge.interaction_defaults\n\
+                     -----\n\
+                     family:           {family}\n\
+                     deviation_slug:   {dev}\n\
+                     accepted:         {accepted}\n\
+                     \n\
+                     Per #388: silent deviation forbidden. Accepted=false \
+                     means the substrate refuses ship unless the operator \
+                     either uses the default or expands the closed deviation set.",
+                    family = parsed.family.as_deref().unwrap_or(""),
+                    dev = dev,
+                    accepted = accepted
+                )
+            }]
+        });
+    }
+
+    // Otherwise: list mode.
+    let entries: Vec<_> = if let Some(family) = family_parsed {
+        match default_for(family) {
+            Some(d) => vec![d],
+            None => vec![],
+        }
+    } else {
+        all_defaults().iter().collect()
+    };
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Interaction defaults: forge.interaction_defaults\n\
+                 -----\n\
+                 family: {fam}\n\
+                 count:  {count}\n\
+                 \n\
+                 Defaults (JSON):\n{json}",
+                fam = parsed.family.as_deref().unwrap_or("(all)"),
+                count = entries.len(),
+                json = serde_json::to_string_pretty(&entries).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Brick library query (#383).

@@ -154,6 +154,16 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.interaction_defaults` — interaction-default query.
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct InteractionDefaultsArgs {
+    #[serde(default)]
+    pub family: Option<String>,
+    #[serde(default)]
+    pub check_deviation: Option<String>,
+}
+
 /// `forge.bricks` — Brick-library query.
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -530,6 +540,16 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_interaction_defaults_empty_ok() {
+        let args = parse_args::<InteractionDefaultsArgs>(
+            "interaction_defaults",
+            json!({}),
+        )
+        .unwrap();
+        assert!(args.family.is_none());
     }
 
     #[test]

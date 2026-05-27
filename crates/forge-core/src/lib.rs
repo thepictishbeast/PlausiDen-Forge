@@ -43,6 +43,7 @@ pub mod gap_registry;
 pub mod generation_plan;
 pub mod hero_composition;
 pub mod identity_transition;
+pub mod interaction_defaults;
 pub mod iso_time;
 pub mod multi_pass;
 pub mod operator_corrections;
