@@ -18,6 +18,7 @@ Skills are typed, cross-AI-compatible (YAML frontmatter + Markdown body), versio
 | [forge-site-fingerprint-check](forge-site-fingerprint-check/SKILL.md) | Structural-fingerprint anti-duplicate gate against the fingerprint registry (paired with `forge.site_fingerprint_check` MCP tool) |
 | [forge-reference-extraction](forge-reference-extraction/SKILL.md) | Run the deterministic URL → SiteSpec pipeline against a captured reference site (paired with `forge.reference_extraction` MCP tool) |
 | [forge-substrate-gap-registration](forge-substrate-gap-registration/SKILL.md) | Register substrate-capability gaps into the canonical JSONL gap registry (paired with `forge.substrate_gap_registration` MCP tool) |
+| [forge-doctrine-violation-explanation](forge-doctrine-violation-explanation/SKILL.md) | When an audit phase flags a doctrine rule, explain the rule + rationale + concrete remediation (paired with `forge.doctrine_violation_explanation` MCP tool) |
 | [pixel-reproduce-site](pixel-reproduce-site/SKILL.md) | Reproducing a live site pixel-by-pixel via Forge for capability validation |
 | [extend-doctrine-rules](extend-doctrine-rules/SKILL.md) | Adding new rules to the AVP-Doctrine database |
 

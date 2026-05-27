@@ -186,7 +186,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   rule, rationale, and concrete remediation.",
         skill_dir: "forge-doctrine-violation-explanation",
         mcp_tool: "forge.doctrine_violation_explanation",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#373",
     },
     WorkflowEntry {
@@ -284,11 +284,11 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #372 shipped: 9 Paired (add substrate_gap_registration),
-        // 0 SkillOnly, 2 Planned. Sums to 11.
-        assert_eq!(paired.len(), 9);
+        // After #373 shipped: 10 Paired (add doctrine_violation_explanation),
+        // 0 SkillOnly, 1 Planned. Sums to 11.
+        assert_eq!(paired.len(), 10);
         assert_eq!(skill_only.len(), 0);
-        assert_eq!(planned.len(), 2);
+        assert_eq!(planned.len(), 1);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 

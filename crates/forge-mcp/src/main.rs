@@ -42,9 +42,10 @@ mod typed_args;
 use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
     BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
-    FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs,
-    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SubstrateGapRegistrationArgs,
-    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
+    DoctrineViolationExplanationArgs, FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs,
+    ModifySiteArgs, OrientArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
+    SubstrateGapRegistrationArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
+    WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -256,6 +257,28 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.doctrine_violation_explanation",
+                "description": "Explain a doctrine rule by ID — statement, rationale, remediation category, concrete steps. Paired with skills/forge-doctrine-violation-explanation/SKILL.md (#373). Closes cargo-cult exemption + substrate-gap-masking failure modes.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["rule_id"],
+                    "properties": {
+                        "rule_id": {
+                            "type": "string",
+                            "description": "Rule slug cited by the audit finding (e.g. prim-012, build-001)."
+                        },
+                        "violating_path": {
+                            "type": "string",
+                            "description": "Path that triggered the finding; threaded into the explanation for context."
+                        },
+                        "root": {
+                            "type": "string",
+                            "description": "Project root for forge doctrine lookup. Defaults to working directory."
                         }
                     }
                 }
@@ -713,6 +736,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.substrate_gap_registration" => {
                     Some(tool_forge_substrate_gap_registration(args))
                 }
+                "forge.doctrine_violation_explanation" => {
+                    Some(tool_forge_doctrine_violation_explanation(args).await)
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -946,6 +972,66 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #10: explain a doctrine rule by ID.
+///
+/// Delegates to `forge doctrine for <path> --rule <id>` (or path-
+/// agnostic lookup when no violating_path given) and adds a
+/// remediation-category hint surfaced from the rule slug prefix.
+async fn tool_forge_doctrine_violation_explanation(args: Value) -> Value {
+    let parsed: DoctrineViolationExplanationArgs =
+        match parse_args("doctrine_violation_explanation", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let root = parsed.root.as_deref().unwrap_or(".");
+
+    // Remediation-category heuristic from rule prefix. This is a
+    // best-effort surface; the rule's actual rationale (returned
+    // by forge doctrine for) is the authoritative source.
+    let category = if parsed.rule_id.starts_with("prim-") {
+        "structural_redesign — primitive doctrine; consider modify_primitive (#368) or add_primitive (#366)"
+    } else if parsed.rule_id.starts_with("content-") {
+        "content_change — edit cms/*.json then re-run forge build"
+    } else if parsed.rule_id.starts_with("build-") {
+        "mechanical_fix — typo / missing entry; edit the cited file"
+    } else if parsed.rule_id.starts_with("sec-") {
+        "escalate — security rule; do not exempt without explicit review"
+    } else if parsed.rule_id.starts_with("a11y-") {
+        "content_change — accessibility; usually edits to alt text / labels / contrast"
+    } else {
+        "consult — see rationale below; route per remediation tier in the SKILL.md"
+    };
+
+    let path_arg = parsed.violating_path.as_deref().unwrap_or(".");
+    let forge_args: Vec<&str> =
+        vec!["doctrine", "--root", root, "for", path_arg, "--terse"];
+    let doctrine_output = run_forge("doctrine for", &forge_args).await;
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Doctrine violation: forge.doctrine_violation_explanation\n\
+                 -----\n\
+                 rule_id:             {rule}\n\
+                 violating_path:      {path}\n\
+                 remediation_category:{cat}\n\
+                 \n\
+                 forge doctrine output:\n{doc}\n\
+                 \n\
+                 Follow skills/forge-doctrine-violation-explanation/SKILL.md\n\
+                 step 3 for per-category remediation.",
+                rule = parsed.rule_id,
+                path = parsed.violating_path.as_deref().unwrap_or("(none)"),
+                cat = category,
+                doc = serde_json::to_string_pretty(&doctrine_output)
+                    .unwrap_or_default(),
+            )
+        }]
+    })
 }
 
 /// Workflow #9: register a substrate-capability gap.

@@ -154,6 +154,17 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.doctrine_violation_explanation` — Workflow #10 paired skill+MCP.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct DoctrineViolationExplanationArgs {
+    pub rule_id: String,
+    #[serde(default)]
+    pub violating_path: Option<String>,
+    #[serde(default)]
+    pub root: Option<String>,
+}
+
 /// `forge.substrate_gap_registration` — Workflow #9 paired skill+MCP.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -404,6 +415,26 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_doctrine_violation_requires_rule_id() {
+        let result = parse_args::<DoctrineViolationExplanationArgs>(
+            "doctrine_violation_explanation",
+            json!({}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_doctrine_violation_optional_path() {
+        let args = parse_args::<DoctrineViolationExplanationArgs>(
+            "doctrine_violation_explanation",
+            json!({"rule_id": "prim-012"}),
+        )
+        .unwrap();
+        assert_eq!(args.rule_id, "prim-012");
+        assert!(args.violating_path.is_none());
     }
 
     #[test]
