@@ -192,6 +192,96 @@ pub struct SiteIdentity {
     /// Declared theme variants. Builds with `required = true`
     /// must produce the variant.
     pub theme_variant: Vec<ThemeVariant>,
+    /// Declared page-kind. When set, variation-arc phases
+    /// (`aesthetic_distinctiveness::sparse_page`,
+    /// `image_desert`, etc.) adjust their thresholds to match
+    /// the kind's expected shape — a brief page legitimately
+    /// has fewer sections than a marketing landing; an
+    /// editorial piece legitimately runs without images. When
+    /// unset, defaults to `MarketingLanding` (the current
+    /// behavior baseline). Per architecture audit 2026-05-21 +
+    /// docs/FORGE_LITE_DIAGNOSTIC_2026_05_22.md Category 4.
+    #[serde(default)]
+    pub kind: Option<PageKind>,
+}
+
+/// Page-kind declaration. Drives context-aware variation-arc
+/// thresholds. Each variant has a documented shape; the
+/// substrate's gates (sparse_page, image_desert, content
+/// floors, etc.) adapt to the kind's expectations rather than
+/// applying SaaS-marketing-landing assumptions universally.
+///
+/// Wire format: snake_case in `[site_identity] kind =
+/// "<slug>"`. Unknown / absent → defaults to MarketingLanding
+/// at the phase boundary (current behavior).
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize, Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+#[allow(missing_docs)]
+pub enum PageKind {
+    /// SaaS / commerce marketing landing. Requires ≥5 sections,
+    /// images, CTAs. The substrate's current baseline.
+    #[default]
+    MarketingLanding,
+    /// Short single-purpose brief. ≥2 sections; text-only OK;
+    /// images not required.
+    Brief,
+    /// Portfolio piece. ≥3 sections; images expected; less text-
+    /// dense than marketing.
+    Portfolio,
+    /// Editorial / long-form article. ≥4 sections; images
+    /// optional (text can stand alone); narrative shape.
+    Editorial,
+    /// Documentation / reference. ≥3 sections; structured
+    /// (headings + code + tables); images optional.
+    Documentation,
+    /// Civic / informational page. ≥3 sections; structured;
+    /// images optional.
+    Civic,
+    /// Commerce / product detail. ≥4 sections; images required;
+    /// price + CTA expected.
+    Commerce,
+}
+
+impl PageKind {
+    /// Minimum total non-decorative sections expected for this
+    /// kind. Consumed by `aesthetic_distinctiveness::sparse_page`.
+    #[must_use]
+    pub const fn min_sections(self) -> usize {
+        match self {
+            Self::MarketingLanding => 5,
+            Self::Brief => 2,
+            Self::Portfolio | Self::Documentation | Self::Civic => 3,
+            Self::Editorial | Self::Commerce => 4,
+        }
+    }
+
+    /// True when this kind expects images to be present. A
+    /// page of this kind with zero image references triggers
+    /// `image_desert`; a page of a kind that returns `false`
+    /// from this method does not.
+    #[must_use]
+    pub const fn expects_images(self) -> bool {
+        match self {
+            Self::MarketingLanding | Self::Portfolio | Self::Commerce => true,
+            Self::Brief | Self::Editorial | Self::Documentation | Self::Civic => false,
+        }
+    }
+
+    /// Stable kebab-case slug.
+    #[must_use]
+    pub const fn slug(self) -> &'static str {
+        match self {
+            Self::MarketingLanding => "marketing-landing",
+            Self::Brief => "brief",
+            Self::Portfolio => "portfolio",
+            Self::Editorial => "editorial",
+            Self::Documentation => "documentation",
+            Self::Civic => "civic",
+            Self::Commerce => "commerce",
+        }
+    }
 }
 
 /// Wrapper used to deserialize the top-level `forge.toml` so we
@@ -309,6 +399,54 @@ mod tests {
     use super::*;
     use std::env;
     use std::fs;
+
+    #[test]
+    fn page_kind_default_is_marketing_landing() {
+        assert_eq!(PageKind::default(), PageKind::MarketingLanding);
+    }
+
+    #[test]
+    fn page_kind_min_sections_per_kind() {
+        assert_eq!(PageKind::MarketingLanding.min_sections(), 5);
+        assert_eq!(PageKind::Brief.min_sections(), 2);
+        assert_eq!(PageKind::Portfolio.min_sections(), 3);
+        assert_eq!(PageKind::Editorial.min_sections(), 4);
+        assert_eq!(PageKind::Documentation.min_sections(), 3);
+        assert_eq!(PageKind::Civic.min_sections(), 3);
+        assert_eq!(PageKind::Commerce.min_sections(), 4);
+    }
+
+    #[test]
+    fn page_kind_expects_images_predicate() {
+        assert!(PageKind::MarketingLanding.expects_images());
+        assert!(PageKind::Portfolio.expects_images());
+        assert!(PageKind::Commerce.expects_images());
+        assert!(!PageKind::Brief.expects_images());
+        assert!(!PageKind::Editorial.expects_images());
+        assert!(!PageKind::Documentation.expects_images());
+        assert!(!PageKind::Civic.expects_images());
+    }
+
+    #[test]
+    fn page_kind_slug_round_trips_via_serde() {
+        for kind in [
+            PageKind::MarketingLanding,
+            PageKind::Brief,
+            PageKind::Portfolio,
+            PageKind::Editorial,
+            PageKind::Documentation,
+            PageKind::Civic,
+            PageKind::Commerce,
+        ] {
+            let json = serde_json::to_string(&kind).expect("serializes");
+            let parsed: PageKind = serde_json::from_str(&json).expect("round-trips");
+            assert_eq!(kind, parsed);
+            // Slug method's kebab form matches the snake-case
+            // serde wire form when underscores become hyphens.
+            let bare = json.trim_matches('"');
+            assert_eq!(bare.replace('_', "-"), kind.slug());
+        }
+    }
 
     fn temp_dir(name: &str) -> std::path::PathBuf {
         let p = env::temp_dir().join(format!(

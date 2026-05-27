@@ -57,6 +57,12 @@ impl Phase for AestheticDistinctivenessPhase {
 
     fn run(&self, ctx: &BuildCtx) -> Result<Vec<Finding>, BuildError> {
         let mut findings = Vec::new();
+        // Per-tenant page-kind for context-aware thresholds.
+        // Read once from [site_identity].kind in forge.toml;
+        // defaults to MarketingLanding (current baseline).
+        let page_kind = forge_core::site_identity::SiteIdentity::load(&ctx.root)
+            .and_then(|si| si.kind)
+            .unwrap_or(forge_core::site_identity::PageKind::MarketingLanding);
         // Layer tenant-corpus extensions on top of the baseline
         // per [[per-tenant-corpora-doctrine]] / commit 534f02c.
         let tenant = TenantCorpus::load(&ctx.root);
@@ -111,6 +117,7 @@ impl Phase for AestheticDistinctivenessPhase {
                 &value,
                 &tenant_extras,
                 &tenant_suppress,
+                page_kind,
                 &mut findings,
                 self.name(),
             );
@@ -124,6 +131,7 @@ fn check_page(
     page: &Value,
     tenant_extras: &[&str],
     tenant_suppress: &[&str],
+    page_kind: forge_core::site_identity::PageKind,
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
@@ -132,7 +140,7 @@ fn check_page(
     };
     let path_disp = path.display().to_string();
 
-    check_sparse_page(sections, &path_disp, findings, phase);
+    check_sparse_page(sections, &path_disp, page_kind, findings, phase);
     check_scaffold_only(sections, &path_disp, findings, phase);
     check_corporate_jargon(
         sections,
@@ -167,7 +175,7 @@ fn check_page(
     check_placeholder_email(sections, &path_disp, findings, phase);
     check_vague_cta_label(sections, &path_disp, findings, phase);
     check_roadmap_vagueness(sections, &path_disp, findings, phase);
-    check_image_desert(sections, &path_disp, findings, phase);
+    check_image_desert(sections, &path_disp, page_kind, findings, phase);
     check_short_paragraph_dominance(sections, &path_disp, findings, phase);
     check_adjacent_section_repetition(sections, &path_disp, findings, phase);
     check_emoji_in_body(sections, &path_disp, findings, phase);
@@ -177,6 +185,7 @@ fn check_page(
 fn check_sparse_page(
     sections: &[Value],
     path: &str,
+    page_kind: forge_core::site_identity::PageKind,
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
@@ -187,12 +196,14 @@ fn check_sparse_page(
             !matches!(k, "divider" | "spacer" | "announcement_bar")
         })
         .count();
-    if content_sections < 5 {
+    let min = page_kind.min_sections();
+    if content_sections < min {
         findings.push(Finding::warn(
             phase,
             path.to_owned(),
             format!(
-                "sparse_page: only {content_sections} content section(s); marketing landings should compose at least 5 distinct content blocks (heroes, body, comparison, pricing, CTA, etc.)"
+                "sparse_page: only {content_sections} content section(s); {kind} pages should compose at least {min} distinct content blocks",
+                kind = page_kind.slug()
             ),
         ));
     }
@@ -864,9 +875,16 @@ fn check_roadmap_vagueness(
 fn check_image_desert(
     sections: &[Value],
     path: &str,
+    page_kind: forge_core::site_identity::PageKind,
     findings: &mut Vec<Finding>,
     phase: &'static str,
 ) {
+    // Page-kind context: brief / editorial / documentation /
+    // civic legitimately run image-free. Skip the desert check
+    // entirely for those kinds.
+    if !page_kind.expects_images() {
+        return;
+    }
     let content_sections = sections
         .iter()
         .filter(|s| {
@@ -1320,10 +1338,108 @@ mod tests {
             &page,
             &[],
             &[],
+            forge_core::site_identity::PageKind::MarketingLanding,
             &mut findings,
             "aesthetic_distinctiveness",
         );
         assert!(findings.iter().any(|f| f.message.contains("sparse_page")));
+    }
+
+    #[test]
+    fn sparse_page_under_brief_kind_does_not_warn_at_2_sections() {
+        // Brief kind: min_sections = 2. A 2-section brief is fine.
+        let page = json!({
+            "sections": [
+                {"kind": "hero", "title": "A short brief"},
+                {"kind": "paragraph", "text": "Body text."}
+            ]
+        });
+        let mut findings = vec![];
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            forge_core::site_identity::PageKind::Brief,
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(!findings.iter().any(|f| f.message.contains("sparse_page")));
+    }
+
+    #[test]
+    fn sparse_page_under_portfolio_kind_warns_at_2_sections() {
+        // Portfolio kind: min_sections = 3. A 2-section portfolio
+        // tries to claim depth it doesn't have.
+        let page = json!({
+            "sections": [
+                {"kind": "image_hero", "title": "Selected work"},
+                {"kind": "feature_spotlight"}
+            ]
+        });
+        let mut findings = vec![];
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            forge_core::site_identity::PageKind::Portfolio,
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(findings.iter().any(|f| f.message.contains("sparse_page")));
+    }
+
+    #[test]
+    fn image_desert_does_not_fire_on_brief_kind() {
+        // Brief kind: legitimately text-only. image_desert should
+        // never fire regardless of section count or image presence.
+        let page = json!({
+            "sections": [
+                {"kind": "hero", "title": "Brief"},
+                {"kind": "paragraph", "text": "p1"},
+                {"kind": "paragraph", "text": "p2"},
+                {"kind": "paragraph", "text": "p3"},
+                {"kind": "paragraph", "text": "p4"},
+                {"kind": "paragraph", "text": "p5"}
+            ]
+        });
+        let mut findings = vec![];
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            forge_core::site_identity::PageKind::Brief,
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(!findings.iter().any(|f| f.message.contains("image_desert")));
+    }
+
+    #[test]
+    fn image_desert_fires_on_marketing_landing_with_no_images() {
+        let page = json!({
+            "sections": [
+                {"kind": "hero", "title": "Landing"},
+                {"kind": "paragraph", "text": "p1"},
+                {"kind": "paragraph", "text": "p2"},
+                {"kind": "paragraph", "text": "p3"},
+                {"kind": "paragraph", "text": "p4"},
+                {"kind": "paragraph", "text": "p5"}
+            ]
+        });
+        let mut findings = vec![];
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            forge_core::site_identity::PageKind::MarketingLanding,
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(findings.iter().any(|f| f.message.contains("image_desert")));
     }
 
     #[test]
@@ -1341,6 +1457,7 @@ mod tests {
             &page,
             &[],
             &[],
+            forge_core::site_identity::PageKind::MarketingLanding,
             &mut findings,
             "aesthetic_distinctiveness",
         );
