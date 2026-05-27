@@ -57,6 +57,7 @@ pub mod reference_capture;
 pub mod reference_composition;
 pub mod reference_mapping;
 pub mod resource_budgets;
+pub mod resumption;
 pub mod session_context;
 pub mod session_progress;
 pub mod session_scope;

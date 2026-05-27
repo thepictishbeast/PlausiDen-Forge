@@ -48,9 +48,9 @@ use typed_args::{
     ExemplarsArgs, FixArgs, InteractionDefaultsArgs, ManifestValidateArgs,
     ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs, OperatorProfileArgs,
     OrientArgs, ProgressListArgs, ProgressRecordArgs, RecordCorrectionArgs,
-    RecordOutcomeArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
-    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
-    VerifyContentOriginalityArgs, WorkflowsListArgs,
+    RecordOutcomeArgs, ReferenceExtractionArgs, ResumptionBriefArgs,
+    SiteFingerprintCheckArgs, SkillInvocationMetaArgs, SubstrateGapRegistrationArgs,
+    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -263,6 +263,19 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.resumption_brief",
+                "description": "Cross-session hand-off brief (#391): loads the progress log + builds a structured resumption brief with in_progress / blocked / recently_completed / pending_queue_head items + counts. The first call a new session makes.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["progress_path"],
+                    "properties": {
+                        "progress_path": {"type": "string", "description": "Absolute path to the JSONL progress log."},
+                        "recent_completed_limit": {"type": "integer", "description": "Max recently-completed items to surface. Default 5.", "minimum": 0},
+                        "pending_head_limit": {"type": "integer", "description": "Max pending queue head items to surface. Default 5.", "minimum": 0}
                     }
                 }
             },
@@ -1041,6 +1054,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.canonical_tasks" => Some(tool_forge_canonical_tasks(args)),
                 "forge.progress_record" => Some(tool_forge_progress_record(args)),
                 "forge.progress_list" => Some(tool_forge_progress_list(args)),
+                "forge.resumption_brief" => Some(tool_forge_resumption_brief(args)),
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1279,6 +1293,60 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Cross-session resumption brief (#391).
+fn tool_forge_resumption_brief(args: Value) -> Value {
+    use forge_core::resumption::{
+        build_brief, DEFAULT_PENDING_HEAD_LIMIT, DEFAULT_RECENT_COMPLETED_LIMIT,
+    };
+    use forge_core::session_progress::{read_events, resolved_items};
+
+    let parsed: ResumptionBriefArgs = match parse_args("resumption_brief", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let path = std::path::Path::new(&parsed.progress_path);
+    let events = match read_events(path) {
+        Ok(e) => e,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("progress log read failed: {}", e)
+                }]
+            });
+        }
+    };
+
+    let items = resolved_items(&events);
+    let recent_limit = parsed
+        .recent_completed_limit
+        .map(|n| n as usize)
+        .unwrap_or(DEFAULT_RECENT_COMPLETED_LIMIT);
+    let pending_limit = parsed
+        .pending_head_limit
+        .map(|n| n as usize)
+        .unwrap_or(DEFAULT_PENDING_HEAD_LIMIT);
+
+    let brief = build_brief(&items, recent_limit, pending_limit);
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Resumption brief: forge.resumption_brief\n\
+                 -----\n\
+                 progress_path: {path}\n\
+                 \n\
+                 Brief (JSON):\n{json}",
+                path = parsed.progress_path,
+                json = serde_json::to_string_pretty(&brief).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Append a session-progress event (#390).

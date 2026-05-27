@@ -154,6 +154,17 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.resumption_brief` — load progress log + build hand-off brief.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ResumptionBriefArgs {
+    pub progress_path: String,
+    #[serde(default)]
+    pub recent_completed_limit: Option<u32>,
+    #[serde(default)]
+    pub pending_head_limit: Option<u32>,
+}
+
 /// `forge.progress_record` — append a session-progress event.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -572,6 +583,22 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_resumption_brief_requires_progress_path() {
+        let result = parse_args::<ResumptionBriefArgs>("resumption_brief", json!({}));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_resumption_brief_optional_limits() {
+        let args = parse_args::<ResumptionBriefArgs>(
+            "resumption_brief",
+            json!({"progress_path": "/tmp/p.jsonl"}),
+        )
+        .unwrap();
+        assert!(args.recent_completed_limit.is_none());
     }
 
     #[test]
