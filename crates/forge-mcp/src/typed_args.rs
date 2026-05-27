@@ -154,6 +154,14 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.audit_plan_execution` — plan-vs-execution audit.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct AuditPlanExecutionArgs {
+    pub plan_json: String,
+    pub observed_json: String,
+}
+
 /// `forge.budgets` — Resource-budget query for a PageKind.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -510,6 +518,15 @@ mod tests {
                 "tenant_id": "test",
                 "extra_field": "oops"
             }),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_audit_plan_execution_requires_both() {
+        let result = parse_args::<AuditPlanExecutionArgs>(
+            "audit_plan_execution",
+            json!({"plan_json": "{}"}),
         );
         assert!(result.is_err());
     }

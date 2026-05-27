@@ -40,14 +40,14 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod typed_args;
 use typed_args::{
-    parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs, AuthoringArgs,
-    BudgetsArgs, BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs,
-    ConfigArgs, DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs,
-    ExemplarsArgs, FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs,
-    OperatorPreferencesArgs, OperatorProfileArgs, OrientArgs, RecordCorrectionArgs,
-    RecordOutcomeArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
-    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
-    VerifyContentOriginalityArgs, WorkflowsListArgs,
+    parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs,
+    AuditPlanExecutionArgs, AuthoringArgs, BudgetsArgs, BuildArgs, BuildSiteFromBriefArgs,
+    CodegenArgs, CohortSummaryArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
+    DoctrineViolationExplanationArgs, ExemplarsArgs, FixArgs, ManifestValidateArgs,
+    ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs, OperatorProfileArgs,
+    OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs, ReferenceExtractionArgs,
+    SiteFingerprintCheckArgs, SkillInvocationMetaArgs, SubstrateGapRegistrationArgs,
+    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -259,6 +259,24 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.audit_plan_execution",
+                "description": "Plan-vs-execution audit (#382): given a generation Plan + an ExecutionSnapshot (both as JSON strings), returns the set of observed divergences with severity (minor / moderate / major / discrepancy).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["plan_json", "observed_json"],
+                    "properties": {
+                        "plan_json": {
+                            "type": "string",
+                            "description": "Plan struct serialized as JSON."
+                        },
+                        "observed_json": {
+                            "type": "string",
+                            "description": "ExecutionSnapshot struct serialized as JSON: { page_kind, theme, density, section_count, section_kinds, prose_chars, image_count, animation_count }."
                         }
                     }
                 }
@@ -949,6 +967,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.record_outcome" => Some(tool_forge_record_outcome(args)),
                 "forge.exemplars" => Some(tool_forge_exemplars(args)),
                 "forge.budgets" => Some(tool_forge_budgets(args)),
+                "forge.audit_plan_execution" => {
+                    Some(tool_forge_audit_plan_execution(args))
+                }
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1187,6 +1208,84 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Plan-vs-execution audit (#382).
+fn tool_forge_audit_plan_execution(args: Value) -> Value {
+    use forge_core::generation_plan::{audit_execution, ExecutionSnapshot, Plan};
+
+    let parsed: AuditPlanExecutionArgs =
+        match parse_args("audit_plan_execution", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let plan: Plan = match serde_json::from_str(&parsed.plan_json) {
+        Ok(p) => p,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("plan_json parse error: {e}")
+                }]
+            });
+        }
+    };
+
+    let observed: ExecutionSnapshot = match serde_json::from_str(&parsed.observed_json) {
+        Ok(o) => o,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("observed_json parse error: {e}")
+                }]
+            });
+        }
+    };
+
+    let divergences = audit_execution(&plan, &observed);
+    let divs_json: Vec<Value> = divergences
+        .iter()
+        .map(|d| {
+            json!({
+                "field": d.field,
+                "planned": d.planned,
+                "observed": d.observed,
+                "magnitude": d.magnitude,
+                "severity": match d.severity {
+                    forge_core::generation_plan::DivergenceSeverity::Minor => "minor",
+                    forge_core::generation_plan::DivergenceSeverity::Moderate => "moderate",
+                    forge_core::generation_plan::DivergenceSeverity::Major => "major",
+                    forge_core::generation_plan::DivergenceSeverity::Discrepancy => "discrepancy",
+                    _ => "unknown",
+                },
+            })
+        })
+        .collect();
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Plan-vs-execution audit: forge.audit_plan_execution\n\
+                 -----\n\
+                 tenant_id:        {tid}\n\
+                 site_id:          {sid}\n\
+                 operator_id:      {oid}\n\
+                 divergence_count: {count}\n\
+                 \n\
+                 Divergences (JSON):\n{json}",
+                tid = plan.tenant_id,
+                sid = plan.site_id,
+                oid = plan.operator_id,
+                count = divergences.len(),
+                json = serde_json::to_string_pretty(&divs_json).unwrap_or_default(),
+            )
+        }]
+    })
 }
 
 /// Resource-budget query for a PageKind (#381).

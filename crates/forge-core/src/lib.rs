@@ -39,6 +39,7 @@ pub mod fingerprint_migration;
 pub mod fingerprint_registry;
 pub mod forge_lite;
 pub mod gap_registry;
+pub mod generation_plan;
 pub mod hero_composition;
 pub mod identity_transition;
 pub mod iso_time;
