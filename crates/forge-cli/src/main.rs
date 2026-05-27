@@ -1657,7 +1657,9 @@ fn run() -> Result<ExitCode> {
         // See forge-core::strict_promotions + architecture
         // audit 2026-05-21.
         let strict_promotions = forge_core::strict_promotions::StrictPromotions::load(&root);
+        let strict_exempts = forge_core::strict_exempts::StrictExempts::load(&root);
         let mut total_promoted = 0usize;
+        let mut total_suppressed = 0usize;
         for phase in &phases {
             let phase_started = std::time::Instant::now();
             println!("\n== phase: {} ==", phase.name());
@@ -1666,6 +1668,8 @@ fn run() -> Result<ExitCode> {
                 .with_context(|| format!("phase {}", phase.name()))?;
             let promoted = strict_promotions.promote(&mut findings);
             total_promoted += promoted;
+            let suppressed = strict_exempts.filter(&mut findings);
+            total_suppressed += suppressed;
             let elapsed = phase_started.elapsed().as_millis();
             if findings.is_empty() {
                 println!("  ok      no findings ({elapsed}ms)");
@@ -1679,6 +1683,11 @@ fn run() -> Result<ExitCode> {
         if total_promoted > 0 {
             println!(
                 "\n  note    [strict] promoted {total_promoted} finding(s) Warn→Strict per forge.toml"
+            );
+        }
+        if total_suppressed > 0 {
+            println!(
+                "  note    [strict.exempt] suppressed {total_suppressed} finding(s) per forge.toml"
             );
         }
         report

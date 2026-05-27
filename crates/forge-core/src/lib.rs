@@ -49,6 +49,7 @@ pub mod session_context;
 pub mod session_scope;
 pub mod site_identity;
 pub mod skill_telemetry;
+pub mod strict_exempts;
 pub mod strict_promotions;
 pub mod substrate_state;
 pub mod surveillance;
