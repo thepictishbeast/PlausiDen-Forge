@@ -154,6 +154,14 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.alternatives` — Layer-4 multi-pass alternatives surfacing.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct AlternativesArgs {
+    pub axis: String,
+    pub seed: String,
+}
+
 /// `forge.skill_invocation_meta` — Workflow #11 paired skill+MCP.
 ///
 /// Entry-point router: given a task description, surfaces the
@@ -433,6 +441,23 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_alternatives_requires_axis_and_seed() {
+        let result = parse_args::<AlternativesArgs>("alternatives", json!({"axis": "theme"}));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_alternatives_full_ok() {
+        let args = parse_args::<AlternativesArgs>(
+            "alternatives",
+            json!({"axis": "theme", "seed": "light"}),
+        )
+        .unwrap();
+        assert_eq!(args.axis, "theme");
+        assert_eq!(args.seed, "light");
     }
 
     #[test]

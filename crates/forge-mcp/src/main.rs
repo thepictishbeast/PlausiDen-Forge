@@ -40,12 +40,12 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod typed_args;
 use typed_args::{
-    parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
-    BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
-    DoctrineViolationExplanationArgs, FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs,
-    ModifySiteArgs, OrientArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
-    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
-    VerifyContentOriginalityArgs, WorkflowsListArgs,
+    parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs, AuthoringArgs,
+    BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs,
+    DoctrineForArgs, DoctrineViolationExplanationArgs, FixArgs, ManifestValidateArgs,
+    ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs, ReferenceExtractionArgs,
+    SiteFingerprintCheckArgs, SkillInvocationMetaArgs, SubstrateGapRegistrationArgs,
+    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -257,6 +257,24 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.alternatives",
+                "description": "Layer-4 multi-pass alternatives surfacing (#377): given an axis (theme, decoration, density) and a seed value, returns nearby variants with hand-curated rationale + divergence scores. Forces explicit operator selection vs accepting first-try output.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["axis", "seed"],
+                    "properties": {
+                        "axis": {
+                            "type": "string",
+                            "description": "One of: theme, decoration, density, page_kind, hero_background."
+                        },
+                        "seed": {
+                            "type": "string",
+                            "description": "Seed value the operator started with (e.g. 'light' for theme axis)."
                         }
                     }
                 }
@@ -828,6 +846,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.skill_invocation_meta" => {
                     Some(tool_forge_skill_invocation_meta(args))
                 }
+                "forge.alternatives" => Some(tool_forge_alternatives(args)),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -1061,6 +1080,42 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Layer-4 multi-pass alternatives surfacing.
+///
+/// Pure function. Calls forge-core::multi_pass::compose_alternatives
+/// to surface nearby variants for the given axis + seed.
+fn tool_forge_alternatives(args: Value) -> Value {
+    use forge_core::multi_pass::{compose_alternatives, AlternativeAxis};
+
+    let parsed: AlternativesArgs = match parse_args("alternatives", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let axis = match parsed.axis.as_str() {
+        "theme" => AlternativeAxis::Theme,
+        "decoration" => AlternativeAxis::Decoration,
+        "density" => AlternativeAxis::Density,
+        "page_kind" => AlternativeAxis::PageKind,
+        "hero_background" => AlternativeAxis::HeroBackground,
+        other => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown axis: {other}. Must be one of: theme, \
+                         decoration, density, page_kind, hero_background."
+                    )
+                }]
+            });
+        }
+    };
+
+    let report = compose_alternatives(axis, &parsed.seed);
+    serde_json::to_value(&report).unwrap_or(Value::Null)
 }
 
 /// Workflow #11: meta-skill entry-point router.
