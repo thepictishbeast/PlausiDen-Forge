@@ -38,6 +38,12 @@ use serde_json::{json, Value};
 use std::io::Write;
 use tokio::io::{AsyncBufReadExt, BufReader};
 
+mod typed_args;
+use typed_args::{
+    parse_args, AuthoringArgs, BuildArgs, CodegenArgs, ConfigArgs, DocsQueryArgs,
+    DoctrineForArgs, FixArgs, ManifestValidateArgs, OrientArgs, SynthesisPreviewArgs,
+};
+
 #[derive(Debug, Deserialize)]
 struct JsonRpcRequest {
     #[allow(dead_code)]
@@ -505,104 +511,90 @@ async fn run_forge(label: &str, forge_args: &[&str]) -> Value {
 }
 
 async fn tool_forge_orient(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
+    let parsed: OrientArgs = match parse_args("orient", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+    let root = parsed.root.as_deref().unwrap_or(".");
     run_forge("orient", &["orient", "--root", root]).await
 }
 
 async fn tool_forge_build(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
-    let json_mode = args.get("json").and_then(|v| v.as_bool()).unwrap_or(false);
+    let parsed: BuildArgs = match parse_args("build", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+    let root = parsed.root.as_deref().unwrap_or(".");
     let mut forge_args: Vec<&str> = vec!["build", "--root", root];
-    if json_mode {
+    if parsed.json {
         forge_args.push("--json");
     }
     run_forge("build", &forge_args).await
 }
 
 async fn tool_forge_doctrine_for(args: Value) -> Value {
-    let Some(path) = args.get("path").and_then(|v| v.as_str()) else {
-        return json!({
-            "isError": true,
-            "content": [{
-                "type": "text",
-                "text": "missing required argument: path"
-            }]
-        });
+    let parsed: DoctrineForArgs = match parse_args("doctrine.for", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
     };
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
-    let terse = args.get("terse").and_then(|v| v.as_bool()).unwrap_or(true);
-    let mut forge_args: Vec<&str> = vec!["doctrine", "--root", root, "for", path];
-    if terse {
+    let root = parsed.root.as_deref().unwrap_or(".");
+    let mut forge_args: Vec<&str> = vec!["doctrine", "--root", root, "for", &parsed.path];
+    if parsed.terse {
         forge_args.push("--terse");
     }
     run_forge("doctrine for", &forge_args).await
 }
 
 async fn tool_forge_authoring(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
+    let parsed: AuthoringArgs = match parse_args("authoring", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+    let root = parsed.root.as_deref().unwrap_or(".");
     run_forge("authoring", &["authoring", "--root", root]).await
 }
 
 async fn tool_forge_config(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
+    let parsed: ConfigArgs = match parse_args("config", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+    let root = parsed.root.as_deref().unwrap_or(".");
     run_forge("config", &["config", "--root", root]).await
 }
 
 async fn tool_forge_fix(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
+    let parsed: FixArgs = match parse_args("fix", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+    let root = parsed.root.as_deref().unwrap_or(".");
     run_forge("fix", &["fix", "--root", root]).await
 }
 
 async fn tool_forge_synthesis_preview(args: Value) -> Value {
-    let Some(spec_path) = args.get("spec_path").and_then(|v| v.as_str()) else {
-        return json!({
-            "isError": true,
-            "content": [{
-                "type": "text",
-                "text": "missing required argument: spec_path"
-            }]
-        });
+    let parsed: SynthesisPreviewArgs = match parse_args("synthesis.preview", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
     };
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
+    let root = parsed.root.as_deref().unwrap_or(".");
     run_forge(
         "synthesis preview",
-        &["synthesis", "--root", root, "preview", spec_path],
+        &["synthesis", "--root", root, "preview", &parsed.spec_path],
     )
     .await
 }
 
 async fn tool_forge_codegen(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
-    let dry_run = args.get("dry_run").and_then(|v| v.as_bool()).unwrap_or(false);
-    let out = args.get("out").and_then(|v| v.as_str());
+    let parsed: CodegenArgs = match parse_args("codegen", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+    let root = parsed.root.as_deref().unwrap_or(".");
     let mut forge_args: Vec<&str> = vec!["codegen", "--root", root];
-    if dry_run {
+    if parsed.dry_run {
         forge_args.push("--dry-run");
-    } else if let Some(o) = out {
+    } else if let Some(ref o) = parsed.out {
         forge_args.push("--out");
         forge_args.push(o);
     } else {
@@ -618,10 +610,11 @@ async fn tool_forge_codegen(args: Value) -> Value {
 }
 
 async fn tool_forge_manifest_validate(args: Value) -> Value {
-    let root = args
-        .get("root")
-        .and_then(|v| v.as_str())
-        .unwrap_or(".");
+    let parsed: ManifestValidateArgs = match parse_args("manifest.validate", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+    let root = parsed.root.as_deref().unwrap_or(".");
     run_forge("manifest validate", &["manifest", "--root", root, "validate"]).await
 }
 
@@ -657,44 +650,35 @@ fn tool_forge_docs_query(args: Value) -> Value {
         }
     }
 
+    let parsed: DocsQueryArgs = match parse_args("docs.query", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
     let index = canonical_index();
 
     // Exact-slug shortcut: when "slug" arg is provided, return
     // that single entry (or null) and ignore other filters.
-    if let Some(slug) = args.get("slug").and_then(|v| v.as_str()) {
+    if let Some(ref slug) = parsed.slug {
         return match index.get(slug) {
             Some(entry) => serde_json::to_value(entry).unwrap_or(Value::Null),
             None => Value::Null,
         };
     }
 
-    let kind = args
-        .get("kind")
-        .and_then(|v| v.as_str())
-        .and_then(parse_kind);
-    let tags_any: Vec<DocTag> = args
-        .get("tags_any")
-        .and_then(|v| v.as_array())
-        .map(|arr| arr.iter().filter_map(|t| t.as_str()).filter_map(parse_tag).collect())
-        .unwrap_or_default();
-    let slug_prefix = args
-        .get("slug_prefix")
-        .and_then(|v| v.as_str())
-        .map(str::to_owned);
-    let contains_text = args
-        .get("contains_text")
-        .and_then(|v| v.as_str())
-        .map(str::to_owned);
-    let limit = args
-        .get("limit")
-        .and_then(|v| v.as_u64())
-        .and_then(|n| usize::try_from(n).ok());
+    let kind = parsed.kind.as_deref().and_then(parse_kind);
+    let tags_any: Vec<DocTag> = parsed
+        .tags_any
+        .iter()
+        .filter_map(|s| parse_tag(s))
+        .collect();
+    let limit = parsed.limit.and_then(|n| usize::try_from(n).ok());
 
     let filter = DocQueryFilter {
         kind,
         tags_any,
-        slug_prefix,
-        contains_text,
+        slug_prefix: parsed.slug_prefix,
+        contains_text: parsed.contains_text,
         limit,
     };
     let entries = index.query(&filter);
