@@ -215,6 +215,41 @@ fn tool_list() -> Value {
                         }
                     }
                 }
+            },
+            {
+                "name": "forge.docs.query",
+                "description": "Query the substrate's progressive doc index (forge-core::doc_query). Returns hand-curated structured entries for doctrine, primitives, audit phases, workflows, and reframes. Reduces context consumption vs loading markdown pages upfront. Each filter is optional; absent filters return all entries.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "type": "string",
+                            "description": "Restrict to entries of this kind. One of: doctrine, primitive, audit_phase, workflow, reframe."
+                        },
+                        "tags_any": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Match entries that have at least one of these tags. Valid: tenant, primitive, audit_phase, deploy, authoring, doctrine, reframe, workflow."
+                        },
+                        "slug_prefix": {
+                            "type": "string",
+                            "description": "Slug prefix match (case-insensitive)."
+                        },
+                        "contains_text": {
+                            "type": "string",
+                            "description": "Substring search across title / summary / body (case-insensitive)."
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Cap the number of returned entries.",
+                            "minimum": 1
+                        },
+                        "slug": {
+                            "type": "string",
+                            "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
             }
         ]
     })
@@ -374,6 +409,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.synthesis.preview" => Some(tool_forge_synthesis_preview(args).await),
                 "forge.codegen" => Some(tool_forge_codegen(args).await),
                 "forge.manifest.validate" => Some(tool_forge_manifest_validate(args).await),
+                "forge.docs.query" => Some(tool_forge_docs_query(args)),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -553,6 +589,82 @@ async fn tool_forge_manifest_validate(args: Value) -> Value {
         .and_then(|v| v.as_str())
         .unwrap_or(".");
     run_forge("manifest validate", &["manifest", "--root", root, "validate"]).await
+}
+
+/// Query the substrate doc index. Pure in-process; no shell out.
+/// Wraps `forge_core::doc_query::canonical_index()`. Synchronous;
+/// not declared `async` because there's no I/O.
+fn tool_forge_docs_query(args: Value) -> Value {
+    use forge_core::doc_query::{canonical_index, DocKind, DocQueryFilter};
+    use forge_core::session_scope::DocTag;
+
+    fn parse_kind(s: &str) -> Option<DocKind> {
+        match s {
+            "doctrine" => Some(DocKind::Doctrine),
+            "primitive" => Some(DocKind::Primitive),
+            "audit_phase" | "audit-phase" => Some(DocKind::AuditPhase),
+            "workflow" => Some(DocKind::Workflow),
+            "reframe" => Some(DocKind::Reframe),
+            _ => None,
+        }
+    }
+
+    fn parse_tag(s: &str) -> Option<DocTag> {
+        match s {
+            "tenant" => Some(DocTag::Tenant),
+            "primitive" => Some(DocTag::Primitive),
+            "audit_phase" | "audit-phase" => Some(DocTag::AuditPhase),
+            "deploy" => Some(DocTag::Deploy),
+            "authoring" => Some(DocTag::Authoring),
+            "doctrine" => Some(DocTag::Doctrine),
+            "reframe" => Some(DocTag::Reframe),
+            "workflow" => Some(DocTag::Workflow),
+            _ => None,
+        }
+    }
+
+    let index = canonical_index();
+
+    // Exact-slug shortcut: when "slug" arg is provided, return
+    // that single entry (or null) and ignore other filters.
+    if let Some(slug) = args.get("slug").and_then(|v| v.as_str()) {
+        return match index.get(slug) {
+            Some(entry) => serde_json::to_value(entry).unwrap_or(Value::Null),
+            None => Value::Null,
+        };
+    }
+
+    let kind = args
+        .get("kind")
+        .and_then(|v| v.as_str())
+        .and_then(parse_kind);
+    let tags_any: Vec<DocTag> = args
+        .get("tags_any")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter_map(|t| t.as_str()).filter_map(parse_tag).collect())
+        .unwrap_or_default();
+    let slug_prefix = args
+        .get("slug_prefix")
+        .and_then(|v| v.as_str())
+        .map(str::to_owned);
+    let contains_text = args
+        .get("contains_text")
+        .and_then(|v| v.as_str())
+        .map(str::to_owned);
+    let limit = args
+        .get("limit")
+        .and_then(|v| v.as_u64())
+        .and_then(|n| usize::try_from(n).ok());
+
+    let filter = DocQueryFilter {
+        kind,
+        tags_any,
+        slug_prefix,
+        contains_text,
+        limit,
+    };
+    let entries = index.query(&filter);
+    serde_json::to_value(&entries).unwrap_or(Value::Null)
 }
 
 #[tokio::main]

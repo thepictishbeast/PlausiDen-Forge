@@ -121,6 +121,18 @@ struct Args {
 enum Cmd {
     /// Run every phase. Default when no subcommand is given.
     Build,
+    /// Query the substrate doc index (forge-core::doc_query).
+    ///
+    /// Surface for the progressive doc-query interface
+    /// (accessibility-axis primitive). The seeded canonical
+    /// index ships with hand-curated entries for the most-
+    /// frequently-needed doctrine, primitives, audit phases,
+    /// and workflows; this subcommand exposes filter +
+    /// retrieval without loading the whole index as prose.
+    Docs {
+        #[command(subcommand)]
+        action: DocsAction,
+    },
     /// Forge Lite diagnostic — resolve a narrow-surface lite page
     /// into the full CmsPage shape so the lite pipeline can be
     /// exercised end-to-end through the existing render + audit
@@ -660,6 +672,62 @@ enum LiteAction {
         /// Default is compact.
         #[arg(long, default_value_t = false)]
         pretty: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum DocsAction {
+    /// Query the substrate doc index with optional filters.
+    /// Each filter is optional; absent filters return all
+    /// entries. Results are sorted by slug for deterministic
+    /// output.
+    Query {
+        /// Restrict to entries of this kind. One of:
+        /// `doctrine`, `primitive`, `audit_phase`, `workflow`,
+        /// `reframe`.
+        #[arg(long)]
+        kind: Option<String>,
+        /// Match entries that have at least one of these
+        /// tags. Repeat the flag for multi-tag OR matching:
+        /// `--tag doctrine --tag workflow`. One of:
+        /// `tenant`, `primitive`, `audit_phase`, `deploy`,
+        /// `authoring`, `doctrine`, `reframe`, `workflow`.
+        #[arg(long = "tag")]
+        tags: Vec<String>,
+        /// Slug prefix match (case-insensitive).
+        #[arg(long)]
+        prefix: Option<String>,
+        /// Substring search across title / summary / body
+        /// (case-insensitive).
+        #[arg(long = "text")]
+        contains: Option<String>,
+        /// Cap the number of returned entries.
+        #[arg(long)]
+        limit: Option<usize>,
+        /// Output JSON instead of human-readable text. Useful
+        /// for piping into other tools.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+        /// Print full body content (not just summary). Default
+        /// is summary-only for compact output.
+        #[arg(long, default_value_t = false)]
+        full: bool,
+    },
+    /// Look up a single entry by exact slug.
+    Get {
+        /// The slug to look up.
+        slug: String,
+        /// Output JSON instead of human-readable text.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+    /// List all available entries (slug + title + kind only).
+    /// Equivalent to `query` with no filters and `--limit`
+    /// unset.
+    List {
+        /// Output JSON instead of human-readable text.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 }
 
@@ -1398,6 +1466,7 @@ fn run() -> Result<ExitCode> {
             return run_codegen(&root, out.as_deref(), *dry_run, crate_name.as_deref());
         }
         Some(Cmd::Lite { action }) => return Ok(run_lite(action)),
+        Some(Cmd::Docs { action }) => return Ok(run_docs(action)),
         Some(Cmd::Build) | None => {}
     }
 
@@ -8965,6 +9034,152 @@ fn run_lite(action: &LiteAction) -> std::process::ExitCode {
                 }
                 None => {
                     println!("{json}");
+                }
+            }
+            std::process::ExitCode::SUCCESS
+        }
+    }
+}
+
+/// `forge docs` — query the substrate doc index. Surface for
+/// forge-core::doc_query.
+fn run_docs(action: &DocsAction) -> std::process::ExitCode {
+    use forge_core::doc_query::{
+        canonical_index, DocEntry, DocKind, DocQueryFilter,
+    };
+    use forge_core::session_scope::DocTag;
+
+    fn parse_kind(s: &str) -> Option<DocKind> {
+        match s {
+            "doctrine" => Some(DocKind::Doctrine),
+            "primitive" => Some(DocKind::Primitive),
+            "audit_phase" | "audit-phase" => Some(DocKind::AuditPhase),
+            "workflow" => Some(DocKind::Workflow),
+            "reframe" => Some(DocKind::Reframe),
+            _ => None,
+        }
+    }
+
+    fn parse_tag(s: &str) -> Option<DocTag> {
+        match s {
+            "tenant" => Some(DocTag::Tenant),
+            "primitive" => Some(DocTag::Primitive),
+            "audit_phase" | "audit-phase" => Some(DocTag::AuditPhase),
+            "deploy" => Some(DocTag::Deploy),
+            "authoring" => Some(DocTag::Authoring),
+            "doctrine" => Some(DocTag::Doctrine),
+            "reframe" => Some(DocTag::Reframe),
+            "workflow" => Some(DocTag::Workflow),
+            _ => None,
+        }
+    }
+
+    fn print_entry_text(entry: &DocEntry, full: bool) {
+        println!("\n# {slug}", slug = entry.slug);
+        println!("  title:   {}", entry.title);
+        println!("  kind:    {:?}", entry.kind);
+        let tag_names: Vec<String> = entry.tags.iter().map(|t| format!("{t:?}")).collect();
+        println!("  tags:    [{}]", tag_names.join(", "));
+        println!("  summary: {}", entry.summary);
+        if !entry.related.is_empty() {
+            println!("  related: {}", entry.related.join(", "));
+        }
+        if full {
+            println!("\n  ---");
+            for line in entry.body.lines() {
+                println!("  {line}");
+            }
+            println!("  ---");
+        }
+    }
+
+    let index = canonical_index();
+
+    match action {
+        DocsAction::List { json } => {
+            let entries = index.query(&DocQueryFilter::default());
+            if *json {
+                match serde_json::to_string_pretty(&entries) {
+                    Ok(s) => println!("{s}"),
+                    Err(e) => {
+                        eprintln!("forge docs list: serialize: {e}");
+                        return std::process::ExitCode::from(2);
+                    }
+                }
+            } else {
+                for e in entries {
+                    println!("  {:<32} [{:?}] {}", e.slug, e.kind, e.title);
+                }
+            }
+            std::process::ExitCode::SUCCESS
+        }
+        DocsAction::Get { slug, json } => match index.get(slug) {
+            None => {
+                eprintln!("forge docs get: no entry with slug {slug:?}");
+                std::process::ExitCode::from(1)
+            }
+            Some(entry) => {
+                if *json {
+                    match serde_json::to_string_pretty(entry) {
+                        Ok(s) => println!("{s}"),
+                        Err(e) => {
+                            eprintln!("forge docs get: serialize: {e}");
+                            return std::process::ExitCode::from(2);
+                        }
+                    }
+                } else {
+                    print_entry_text(entry, true);
+                }
+                std::process::ExitCode::SUCCESS
+            }
+        },
+        DocsAction::Query {
+            kind,
+            tags,
+            prefix,
+            contains,
+            limit,
+            json,
+            full,
+        } => {
+            let kind_parsed = kind.as_deref().and_then(parse_kind);
+            if let Some(k) = kind {
+                if kind_parsed.is_none() {
+                    eprintln!("forge docs query: unknown kind {k:?}; valid: doctrine, primitive, audit_phase, workflow, reframe");
+                    return std::process::ExitCode::from(1);
+                }
+            }
+            let mut tag_parsed: Vec<DocTag> = Vec::with_capacity(tags.len());
+            for t in tags {
+                match parse_tag(t) {
+                    Some(tag) => tag_parsed.push(tag),
+                    None => {
+                        eprintln!("forge docs query: unknown tag {t:?}; valid: tenant, primitive, audit_phase, deploy, authoring, doctrine, reframe, workflow");
+                        return std::process::ExitCode::from(1);
+                    }
+                }
+            }
+            let filter = DocQueryFilter {
+                kind: kind_parsed,
+                tags_any: tag_parsed,
+                slug_prefix: prefix.clone(),
+                contains_text: contains.clone(),
+                limit: *limit,
+            };
+            let entries = index.query(&filter);
+            if *json {
+                match serde_json::to_string_pretty(&entries) {
+                    Ok(s) => println!("{s}"),
+                    Err(e) => {
+                        eprintln!("forge docs query: serialize: {e}");
+                        return std::process::ExitCode::from(2);
+                    }
+                }
+            } else if entries.is_empty() {
+                println!("  (no entries match the filter)");
+            } else {
+                for e in entries {
+                    print_entry_text(e, *full);
                 }
             }
             std::process::ExitCode::SUCCESS
