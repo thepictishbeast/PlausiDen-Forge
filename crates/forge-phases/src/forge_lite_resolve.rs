@@ -61,7 +61,7 @@ pub fn resolve(
         description: lite.description.clone(),
         brand: lite.brand.clone(),
         brand_logo: None,
-        path: lite.path.clone(),
+        path: normalize_path(&lite.path),
         theme: Some(map_theme(lite.theme).to_owned()),
         chrome: None,
         content_width: None,
@@ -77,6 +77,33 @@ pub fn resolve(
 
 fn map_theme(theme: ForgeLiteTheme) -> &'static str {
     theme.slug()
+}
+
+/// Normalize a lite-page path to satisfy the substrate's
+/// path_consistency contract: every CMS path must end with `/`,
+/// end with `.html`, or be exactly `/`.
+///
+/// Per docs/FORGE_LITE_DIAGNOSTIC_2026_05_22.md Category 2: lite
+/// fixtures often author bare paths like `/work` or `/brief`
+/// because the form is intuitive; path_consistency upstream
+/// strict-fails them. The resolver normalizes here at the seam
+/// so the lite contract doesn't leak substrate path conventions
+/// to the operator.
+///
+/// Rules:
+/// - Empty / missing leading `/` → caller already failed
+///   ForgeLitePage::validate; resolver wouldn't reach this point
+/// - Exactly `/` → unchanged
+/// - Already ends with `/` → unchanged
+/// - Already ends with `.html` → unchanged
+/// - Otherwise → append `/`
+#[must_use]
+fn normalize_path(path: &str) -> String {
+    if path == "/" || path.ends_with('/') || path.ends_with(".html") {
+        path.to_owned()
+    } else {
+        format!("{path}/")
+    }
 }
 
 fn cta_or_none(label: &Option<String>, href: &Option<String>) -> Option<HeroCta> {
@@ -436,5 +463,43 @@ mod tests {
             CmsSection::Hero { cta, .. } => assert!(cta.is_none()),
             _ => panic!("expected Hero"),
         }
+    }
+
+    #[test]
+    fn normalize_path_appends_trailing_slash() {
+        assert_eq!(normalize_path("/work"), "/work/");
+        assert_eq!(normalize_path("/brief"), "/brief/");
+        assert_eq!(normalize_path("/notes/bounded-interfaces"), "/notes/bounded-interfaces/");
+    }
+
+    #[test]
+    fn normalize_path_preserves_root() {
+        assert_eq!(normalize_path("/"), "/");
+    }
+
+    #[test]
+    fn normalize_path_preserves_trailing_slash() {
+        assert_eq!(normalize_path("/work/"), "/work/");
+        assert_eq!(normalize_path("/notes/x/"), "/notes/x/");
+    }
+
+    #[test]
+    fn normalize_path_preserves_html_suffix() {
+        assert_eq!(normalize_path("/work.html"), "/work.html");
+        assert_eq!(normalize_path("/brief/index.html"), "/brief/index.html");
+    }
+
+    #[test]
+    fn resolve_normalizes_path() {
+        let lite = ForgeLitePage {
+            title: "T".to_owned(),
+            description: "D".to_owned(),
+            path: "/work".to_owned(),
+            theme: ForgeLiteTheme::Light,
+            brand: None,
+            sections: Vec::new(),
+        };
+        let page = resolve(&lite).expect("ok");
+        assert_eq!(page.path, "/work/");
     }
 }
