@@ -42,12 +42,12 @@ mod typed_args;
 use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs, AuthoringArgs,
     BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs, ConfigArgs,
-    DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs, FixArgs,
-    ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs,
-    OperatorProfileArgs, OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs,
-    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SkillInvocationMetaArgs,
-    SubstrateGapRegistrationArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
-    WorkflowsListArgs,
+    DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs, ExemplarsArgs,
+    FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs,
+    OperatorPreferencesArgs, OperatorProfileArgs, OrientArgs, RecordCorrectionArgs,
+    RecordOutcomeArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
+    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
+    VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -260,6 +260,18 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.exemplars",
+                "description": "Query the substrate's hand-curated exemplar / anti-exemplar / contrast-pair libraries (#380). Filter by kind (exemplar / anti_exemplar / contrast_pair) + optional category and id. All filters optional; empty args returns full inventory.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "kind": {"type": "string", "description": "One of: exemplar, anti_exemplar, contrast_pair."},
+                        "category": {"type": "string", "description": "Filter exemplars by category: marketing_landing, brief, editorial, civic, documentation, portfolio."},
+                        "id": {"type": "string", "description": "Look up a single entry by exact ID."}
                     }
                 }
             },
@@ -921,6 +933,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.alternatives" => Some(tool_forge_alternatives(args)),
                 "forge.record_correction" => Some(tool_forge_record_correction(args)),
                 "forge.record_outcome" => Some(tool_forge_record_outcome(args)),
+                "forge.exemplars" => Some(tool_forge_exemplars(args)),
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1159,6 +1172,99 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Query the substrate exemplar / anti-exemplar / contrast-pair
+/// libraries (#380).
+fn tool_forge_exemplars(args: Value) -> Value {
+    use forge_core::exemplar_library::{
+        all_anti_exemplars, all_contrast_pairs, all_exemplars,
+        exemplars_by_category, get_anti_exemplar, get_exemplar,
+        ExemplarCategory,
+    };
+
+    let parsed: ExemplarsArgs = match parse_args("exemplars", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let category_filter = parsed.category.as_deref().and_then(|s| match s {
+        "marketing_landing" => Some(ExemplarCategory::MarketingLanding),
+        "brief" => Some(ExemplarCategory::Brief),
+        "editorial" => Some(ExemplarCategory::Editorial),
+        "civic" => Some(ExemplarCategory::Civic),
+        "documentation" => Some(ExemplarCategory::Documentation),
+        "portfolio" => Some(ExemplarCategory::Portfolio),
+        _ => None,
+    });
+
+    // ID-shortcut: return single entry if id provided.
+    if let Some(ref id) = parsed.id {
+        if let Some(ex) = get_exemplar(id) {
+            return serde_json::to_value(ex).unwrap_or(Value::Null);
+        }
+        if let Some(ae) = get_anti_exemplar(id) {
+            return serde_json::to_value(ae).unwrap_or(Value::Null);
+        }
+        return Value::Null;
+    }
+
+    let kind = parsed.kind.as_deref().unwrap_or("");
+    let result = match kind {
+        "exemplar" => {
+            let entries: Vec<_> = if let Some(cat) = category_filter {
+                exemplars_by_category(cat)
+            } else {
+                all_exemplars().iter().collect()
+            };
+            serde_json::to_value(&entries).unwrap_or(Value::Null)
+        }
+        "anti_exemplar" => {
+            serde_json::to_value(all_anti_exemplars()).unwrap_or(Value::Null)
+        }
+        "contrast_pair" => {
+            serde_json::to_value(all_contrast_pairs()).unwrap_or(Value::Null)
+        }
+        "" => {
+            // No kind: return full inventory keyed by kind.
+            json!({
+                "exemplars": all_exemplars(),
+                "anti_exemplars": all_anti_exemplars(),
+                "contrast_pairs": all_contrast_pairs(),
+            })
+        }
+        other => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown kind: {other}. Must be one of: exemplar, \
+                         anti_exemplar, contrast_pair."
+                    )
+                }]
+            });
+        }
+    };
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Exemplar library: forge.exemplars\n\
+                 -----\n\
+                 kind:     {kind}\n\
+                 category: {cat}\n\
+                 id:       {id}\n\
+                 \n\
+                 Result (JSON):\n{result}",
+                kind = if kind.is_empty() { "(all)" } else { kind },
+                cat = parsed.category.as_deref().unwrap_or("(any)"),
+                id = parsed.id.as_deref().unwrap_or("(any)"),
+                result = serde_json::to_string_pretty(&result).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Layer-6 (#379): record a tenant outcome rating.

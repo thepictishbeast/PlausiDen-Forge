@@ -154,6 +154,18 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.exemplars` — Exemplar / anti-exemplar / contrast-pair query.
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ExemplarsArgs {
+    #[serde(default)]
+    pub kind: Option<String>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub id: Option<String>,
+}
+
 /// `forge.record_outcome` — Layer-6 outcome tracking.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -492,6 +504,18 @@ mod tests {
                 "extra_field": "oops"
             }),
         );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_exemplars_empty_ok() {
+        let args = parse_args::<ExemplarsArgs>("exemplars", json!({})).unwrap();
+        assert!(args.kind.is_none());
+    }
+
+    #[test]
+    fn parse_exemplars_unknown_field_rejected() {
+        let result = parse_args::<ExemplarsArgs>("exemplars", json!({"bogus": true}));
         assert!(result.is_err());
     }
 
