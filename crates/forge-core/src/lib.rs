@@ -42,6 +42,7 @@ pub mod hero_composition;
 pub mod identity_transition;
 pub mod iso_time;
 pub mod multi_pass;
+pub mod operator_corrections;
 pub mod originality;
 pub mod pipeline;
 pub mod progress_events;

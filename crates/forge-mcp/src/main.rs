@@ -43,9 +43,10 @@ use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs, AuthoringArgs,
     BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs,
     DoctrineForArgs, DoctrineViolationExplanationArgs, FixArgs, ManifestValidateArgs,
-    ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs, ReferenceExtractionArgs,
-    SiteFingerprintCheckArgs, SkillInvocationMetaArgs, SubstrateGapRegistrationArgs,
-    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
+    ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs, OrientArgs,
+    RecordCorrectionArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
+    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
+    VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -258,6 +259,35 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.record_correction",
+                "description": "Layer-5 (#378): record an inline operator override of a substrate decision. Pins the correction to the tenant's identity so future builds remember it.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["corrections_path", "tenant_id", "operator_id", "axis", "original_value", "corrected_value"],
+                    "properties": {
+                        "corrections_path": {"type": "string", "description": "Absolute path to the JSONL corrections registry. Created if absent."},
+                        "tenant_id": {"type": "string", "description": "Tenant the correction applies to."},
+                        "operator_id": {"type": "string", "description": "Operator who recorded the correction (for nearby-correction surfacing)."},
+                        "axis": {"type": "string", "description": "Axis of the correction (theme / decoration / density / etc.)."},
+                        "original_value": {"type": "string", "description": "The value the substrate originally chose."},
+                        "corrected_value": {"type": "string", "description": "The value the operator overrode it to."},
+                        "reason": {"type": "string", "description": "Optional reason for the correction."}
+                    }
+                }
+            },
+            {
+                "name": "forge.operator_preferences",
+                "description": "Layer-5 (#378): aggregate an operator's correction history into a preferences summary. Surfaces what the operator typically overrides so the substrate can pre-apply on new tenants.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["corrections_path", "operator_id"],
+                    "properties": {
+                        "corrections_path": {"type": "string", "description": "Absolute path to the corrections registry."},
+                        "operator_id": {"type": "string", "description": "Operator ID to aggregate corrections for."}
                     }
                 }
             },
@@ -847,6 +877,10 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                     Some(tool_forge_skill_invocation_meta(args))
                 }
                 "forge.alternatives" => Some(tool_forge_alternatives(args)),
+                "forge.record_correction" => Some(tool_forge_record_correction(args)),
+                "forge.operator_preferences" => {
+                    Some(tool_forge_operator_preferences(args))
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -1080,6 +1114,121 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Layer-5 (#378): record an inline operator override.
+fn tool_forge_record_correction(args: Value) -> Value {
+    use forge_core::operator_corrections::record;
+
+    let parsed: RecordCorrectionArgs = match parse_args("record_correction", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let timestamp = forge_core::iso_time::current_rfc3339_utc();
+    let path = std::path::Path::new(&parsed.corrections_path);
+
+    match record(
+        path,
+        &parsed.tenant_id,
+        &parsed.operator_id,
+        &parsed.axis,
+        &parsed.original_value,
+        &parsed.corrected_value,
+        parsed.reason.as_deref(),
+        &timestamp,
+    ) {
+        Ok(entry) => json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Recorded correction: forge.record_correction\n\
+                     -----\n\
+                     id:               {id}\n\
+                     recorded_at:      {at}\n\
+                     tenant_id:        {tid}\n\
+                     operator_id:      {oid}\n\
+                     axis:             {axis}\n\
+                     original_value:   {orig}\n\
+                     corrected_value:  {corr}\n\
+                     reason:           {reason}\n\
+                     corrections_path: {path}",
+                    id = entry.id,
+                    at = entry.recorded_at,
+                    tid = entry.tenant_id,
+                    oid = entry.operator_id,
+                    axis = entry.axis,
+                    orig = entry.original_value,
+                    corr = entry.corrected_value,
+                    reason = entry.reason.as_deref().unwrap_or("(none)"),
+                    path = parsed.corrections_path,
+                )
+            }]
+        }),
+        Err(e) => json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!("correction registry append failed: {}", e)
+            }]
+        }),
+    }
+}
+
+/// Layer-5 (#378): aggregate operator correction history.
+fn tool_forge_operator_preferences(args: Value) -> Value {
+    use forge_core::operator_corrections::{operator_preferences, read_all};
+
+    let parsed: OperatorPreferencesArgs =
+        match parse_args("operator_preferences", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let path = std::path::Path::new(&parsed.corrections_path);
+    let entries = match read_all(path) {
+        Ok(e) => e,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("correction registry read failed: {}", e)
+                }]
+            });
+        }
+    };
+
+    let prefs = operator_preferences(&entries, &parsed.operator_id);
+    let prefs_json: Vec<Value> = prefs
+        .iter()
+        .map(|(axis, val, count)| {
+            json!({
+                "axis": axis,
+                "preferred_value": val,
+                "occurrences": count,
+            })
+        })
+        .collect();
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Operator preferences: forge.operator_preferences\n\
+                 -----\n\
+                 operator_id:      {oid}\n\
+                 corrections_path: {path}\n\
+                 total_corrections:{count}\n\
+                 \n\
+                 Aggregated preferences (JSON, sorted by occurrences desc):\n{json}",
+                oid = parsed.operator_id,
+                path = parsed.corrections_path,
+                count = entries.iter().filter(|e| e.operator_id == parsed.operator_id).count(),
+                json = serde_json::to_string_pretty(&prefs_json).unwrap_or_default(),
+            )
+        }]
+    })
 }
 
 /// Layer-4 multi-pass alternatives surfacing.

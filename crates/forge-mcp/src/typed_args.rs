@@ -154,6 +154,28 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.record_correction` — Layer-5 inline operator override.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct RecordCorrectionArgs {
+    pub corrections_path: String,
+    pub tenant_id: String,
+    pub operator_id: String,
+    pub axis: String,
+    pub original_value: String,
+    pub corrected_value: String,
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+/// `forge.operator_preferences` — Layer-5 operator-pattern lookup.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct OperatorPreferencesArgs {
+    pub corrections_path: String,
+    pub operator_id: String,
+}
+
 /// `forge.alternatives` — Layer-4 multi-pass alternatives surfacing.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -439,6 +461,41 @@ mod tests {
                 "tenant_id": "test",
                 "extra_field": "oops"
             }),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_record_correction_requires_all_required_fields() {
+        let result = parse_args::<RecordCorrectionArgs>(
+            "record_correction",
+            json!({"corrections_path": "/tmp/c.jsonl", "tenant_id": "alpha"}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_record_correction_reason_optional() {
+        let args = parse_args::<RecordCorrectionArgs>(
+            "record_correction",
+            json!({
+                "corrections_path": "/tmp/c.jsonl",
+                "tenant_id": "alpha",
+                "operator_id": "paul",
+                "axis": "theme",
+                "original_value": "light",
+                "corrected_value": "editorial"
+            }),
+        )
+        .unwrap();
+        assert!(args.reason.is_none());
+    }
+
+    #[test]
+    fn parse_operator_preferences_requires_both_fields() {
+        let result = parse_args::<OperatorPreferencesArgs>(
+            "operator_preferences",
+            json!({"operator_id": "paul"}),
         );
         assert!(result.is_err());
     }
