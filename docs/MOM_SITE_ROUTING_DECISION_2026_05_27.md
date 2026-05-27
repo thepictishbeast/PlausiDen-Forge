@@ -1,10 +1,29 @@
 # Mom's site (ProsperityClub) — routing decision (2026-05-27)
 
-Per task #346. Resolves the open question of whether ProsperityClub
-ships through the Forge substrate or through a non-Forge build
-path.
+> **⚠️ SUPERSEDED 2026-05-27 (same day).** Per owner directive
+> issued ~hours after this doc shipped: substrate must grow to
+> handle ProsperityClub's needs in Rust rather than routing
+> around. The original Option 1 decision is reversed; the
+> substrate-growth path is now active.
+>
+> Substrate work completed in response (#406-#412):
+> - **#406** tenant brand palette — substrate already supported per-tenant hex; mom's forge.toml updated to her real #733635 red / #257C4E green / #DBA830 gold (captured from live site via Crawler reference-capture)
+> - **#407** button hover-color transition — substrate-general CSS-var override mechanism (`--loom-color-button-primary-hover` etc.); any tenant can opt in to red→green or any other transition
+> - **#408** HeroSlideshow primitive — new CmsSection variant with pure-CSS auto-rotation, per-slide eyebrow/title/lede/CTA overlay, arbitrary image src (.webp/.jpg/.png/.avif)
+> - **#410** HeroBackground default → None — neutralizes the substrate-default-band gradient bleed per #360 doctrine
+> - **#411** ProsperityClub tenant content — palette + 4-slide carousel authored against the live site
+>
+> Reframe-doctrine update: tenant-specific brand identity NOW
+> belongs in `tenant_style` + substrate-general primitive surfaces,
+> NOT outside Forge. The `[[dont-pixel-reproduce-outside-band]]`
+> doctrine still applies for sites whose vocabulary the substrate
+> can't express; ProsperityClub turned out to be expressible once
+> the gaps (per-tenant palette + hover-color + slideshow + gradient-
+> default neutralization) were filled.
+>
+> The original Option-1 analysis below is preserved for context.
 
-## Decision
+## Decision (superseded)
 
 **Route ProsperityClub to a non-Forge build path (Option 1).**
 
