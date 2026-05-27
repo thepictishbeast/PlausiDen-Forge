@@ -39,6 +39,7 @@ pub mod extractors;
 pub mod fingerprint;
 pub mod fingerprint_migration;
 pub mod fingerprint_registry;
+pub mod footer_pool;
 pub mod forge_lite;
 pub mod gap_registry;
 pub mod generation_plan;
