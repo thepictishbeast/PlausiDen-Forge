@@ -154,6 +154,26 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.verify_content_originality` — Workflow #6 paired skill+MCP.
+///
+/// Anti-reuse gate: scans tenant strings vs corpus strings via
+/// n-gram shingles, surfaces overlaps with verdict (ok/flag/block).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct VerifyContentOriginalityArgs {
+    pub tenant_root: String,
+    #[serde(default)]
+    pub corpus_roots: Vec<String>,
+    #[serde(default = "VerifyContentOriginalityArgs::default_min_ngram_words")]
+    pub min_ngram_words: u32,
+}
+
+impl VerifyContentOriginalityArgs {
+    const fn default_min_ngram_words() -> u32 {
+        6
+    }
+}
+
 /// `forge.modify_primitive` — Workflow #5 paired skill+MCP.
 ///
 /// Classifies a proposed primitive modification per the
@@ -345,6 +365,26 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_verify_originality_requires_tenant_root() {
+        let result = parse_args::<VerifyContentOriginalityArgs>(
+            "verify_content_originality",
+            json!({}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_verify_originality_defaults_min_ngram() {
+        let args = parse_args::<VerifyContentOriginalityArgs>(
+            "verify_content_originality",
+            json!({"tenant_root": "/tmp/tenant"}),
+        )
+        .unwrap();
+        assert_eq!(args.min_ngram_words, 6);
+        assert!(args.corpus_roots.is_empty());
     }
 
     #[test]

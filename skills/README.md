@@ -14,6 +14,7 @@ Skills are typed, cross-AI-compatible (YAML frontmatter + Markdown body), versio
 | [forge-build-site-from-brief](forge-build-site-from-brief/SKILL.md) | Building a tenant site from a written brief (paired with `forge.build_site_from_brief` MCP tool) |
 | [forge-modify-site](forge-modify-site/SKILL.md) | Applying a scoped modification to an existing site (paired with `forge.modify_site` MCP tool) |
 | [forge-modify-primitive](forge-modify-primitive/SKILL.md) | Modifying an existing primitive without breaking back-compat (paired with `forge.modify_primitive` MCP tool) |
+| [forge-verify-content-originality](forge-verify-content-originality/SKILL.md) | Anti-reuse gate: detect verbatim content overlap with reference corpora (paired with `forge.verify_content_originality` MCP tool) |
 | [pixel-reproduce-site](pixel-reproduce-site/SKILL.md) | Reproducing a live site pixel-by-pixel via Forge for capability validation |
 | [extend-doctrine-rules](extend-doctrine-rules/SKILL.md) | Adding new rules to the AVP-Doctrine database |
 

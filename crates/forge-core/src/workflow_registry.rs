@@ -150,7 +150,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   corpora; anti-reuse gate.",
         skill_dir: "forge-verify-content-originality",
         mcp_tool: "forge.verify_content_originality",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#369",
     },
     WorkflowEntry {
@@ -284,11 +284,11 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #368 shipped: 5 Paired (add modify_primitive),
-        // 0 SkillOnly, 6 Planned. Sums to 11.
-        assert_eq!(paired.len(), 5);
+        // After #369 shipped: 6 Paired (add verify_content_originality),
+        // 0 SkillOnly, 5 Planned. Sums to 11.
+        assert_eq!(paired.len(), 6);
         assert_eq!(skill_only.len(), 0);
-        assert_eq!(planned.len(), 6);
+        assert_eq!(planned.len(), 5);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 

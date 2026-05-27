@@ -43,7 +43,7 @@ use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
     BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
     FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs,
-    SynthesisPreviewArgs, WorkflowsListArgs,
+    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -255,6 +255,31 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.verify_content_originality",
+                "description": "Anti-reuse gate: scans tenant cms/*.json strings vs reference corpora via n-gram shingles, returns overlaps + verdict (ok/flag/block). Paired with skills/forge-verify-content-originality/SKILL.md (#369).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["tenant_root"],
+                    "properties": {
+                        "tenant_root": {
+                            "type": "string",
+                            "description": "Absolute path to the tenant root (cms/*.json files are scanned)."
+                        },
+                        "corpus_roots": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Absolute paths to reference corpora directories. Each path's *.json files are scanned recursively."
+                        },
+                        "min_ngram_words": {
+                            "type": "integer",
+                            "description": "Shingle length in words. Default 6. Clamped 2..=20.",
+                            "minimum": 2,
+                            "maximum": 20
                         }
                     }
                 }
@@ -595,6 +620,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.add_primitive" => Some(tool_forge_add_primitive(args)),
                 "forge.add_audit_phase" => Some(tool_forge_add_audit_phase(args)),
                 "forge.modify_primitive" => Some(tool_forge_modify_primitive(args)),
+                "forge.verify_content_originality" => {
+                    Some(tool_forge_verify_content_originality(args))
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -828,6 +856,88 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #6: verify content originality (anti-reuse gate).
+///
+/// Loads tenant cms/*.json + corpus *.json files, extracts string
+/// fields, runs the deterministic n-gram shingle check from
+/// forge-core::originality. Returns the structured report.
+fn tool_forge_verify_content_originality(args: Value) -> Value {
+    use forge_core::originality::check_originality;
+
+    let parsed: VerifyContentOriginalityArgs =
+        match parse_args("verify_content_originality", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let tenant_strings = collect_strings_from_root(&parsed.tenant_root);
+    let corpus_strings: Vec<String> = parsed
+        .corpus_roots
+        .iter()
+        .flat_map(|p| collect_strings_from_root(p))
+        .collect();
+
+    let report = check_originality(&tenant_strings, &corpus_strings, parsed.min_ngram_words);
+    serde_json::to_value(&report).unwrap_or(Value::Null)
+}
+
+/// Walk a directory recursively, find every `*.json` file, parse,
+/// and extract every leaf string value. Pure data extraction; no
+/// schema awareness beyond "valid JSON".
+fn collect_strings_from_root(root: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let path = std::path::Path::new(root);
+    if !path.exists() {
+        return out;
+    }
+    if path.is_file() {
+        if let Ok(text) = std::fs::read_to_string(path) {
+            if let Ok(value) = serde_json::from_str::<Value>(&text) {
+                walk_value_for_strings(&value, &mut out);
+            }
+        }
+        return out;
+    }
+    let mut stack = vec![path.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let entries = match std::fs::read_dir(&dir) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_dir() {
+                stack.push(p);
+            } else if p.extension().and_then(|e| e.to_str()) == Some("json") {
+                if let Ok(text) = std::fs::read_to_string(&p) {
+                    if let Ok(value) = serde_json::from_str::<Value>(&text) {
+                        walk_value_for_strings(&value, &mut out);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Walk a serde_json::Value tree, pushing every String leaf into `out`.
+fn walk_value_for_strings(v: &Value, out: &mut Vec<String>) {
+    match v {
+        Value::String(s) => out.push(s.clone()),
+        Value::Array(arr) => {
+            for item in arr {
+                walk_value_for_strings(item, out);
+            }
+        }
+        Value::Object(map) => {
+            for (_, val) in map {
+                walk_value_for_strings(val, out);
+            }
+        }
+        _ => {}
+    }
 }
 
 /// Workflow #5: classify a proposed primitive modification.

@@ -39,6 +39,7 @@ pub mod forge_lite;
 pub mod hero_composition;
 pub mod identity_transition;
 pub mod iso_time;
+pub mod originality;
 pub mod pipeline;
 pub mod progress_events;
 pub mod provenance;
