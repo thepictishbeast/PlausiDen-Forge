@@ -29,6 +29,7 @@
 pub mod anti_pattern_dictionary;
 pub mod attest;
 pub mod brick_library;
+pub mod button_pool;
 pub mod canonical_tasks;
 pub mod content_substance;
 pub mod cross_build_audit;
