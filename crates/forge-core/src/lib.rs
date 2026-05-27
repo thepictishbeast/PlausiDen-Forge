@@ -52,6 +52,7 @@ pub mod provenance;
 pub mod reference_capture;
 pub mod reference_composition;
 pub mod reference_mapping;
+pub mod resource_budgets;
 pub mod session_context;
 pub mod session_scope;
 pub mod site_identity;

@@ -41,9 +41,9 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 mod typed_args;
 use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs, AuthoringArgs,
-    BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs, ConfigArgs,
-    DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs, ExemplarsArgs,
-    FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs,
+    BudgetsArgs, BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs,
+    ConfigArgs, DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs,
+    ExemplarsArgs, FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs,
     OperatorPreferencesArgs, OperatorProfileArgs, OrientArgs, RecordCorrectionArgs,
     RecordOutcomeArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
     SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
@@ -259,6 +259,20 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.budgets",
+                "description": "Resource-budget query (#381): given a PageKind, return the canonical per-resource budgets (primitives, fonts, colors, images, animations, prose_chars). Used to constrain generation before audit phases fire.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["page_kind"],
+                    "properties": {
+                        "page_kind": {
+                            "type": "string",
+                            "description": "PageKind slug (marketing_landing, brief, editorial, civic, documentation). Unknown values fall back to marketing_landing."
                         }
                     }
                 }
@@ -934,6 +948,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.record_correction" => Some(tool_forge_record_correction(args)),
                 "forge.record_outcome" => Some(tool_forge_record_outcome(args)),
                 "forge.exemplars" => Some(tool_forge_exemplars(args)),
+                "forge.budgets" => Some(tool_forge_budgets(args)),
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1172,6 +1187,34 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Resource-budget query for a PageKind (#381).
+fn tool_forge_budgets(args: Value) -> Value {
+    use forge_core::resource_budgets::budgets_for;
+
+    let parsed: BudgetsArgs = match parse_args("budgets", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let budget_set = budgets_for(&parsed.page_kind);
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Resource budgets: forge.budgets\n\
+                 -----\n\
+                 requested_page_kind: {req}\n\
+                 resolved_page_kind:  {resolved}\n\
+                 \n\
+                 Budgets (JSON):\n{json}",
+                req = parsed.page_kind,
+                resolved = budget_set.page_kind,
+                json = serde_json::to_string_pretty(&budget_set).unwrap_or_default(),
+            )
+        }]
+    })
 }
 
 /// Query the substrate exemplar / anti-exemplar / contrast-pair

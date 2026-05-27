@@ -154,6 +154,13 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.budgets` — Resource-budget query for a PageKind.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct BudgetsArgs {
+    pub page_kind: String,
+}
+
 /// `forge.exemplars` — Exemplar / anti-exemplar / contrast-pair query.
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -505,6 +512,22 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_budgets_requires_page_kind() {
+        let result = parse_args::<BudgetsArgs>("budgets", json!({}));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_budgets_ok() {
+        let args = parse_args::<BudgetsArgs>(
+            "budgets",
+            json!({"page_kind": "brief"}),
+        )
+        .unwrap();
+        assert_eq!(args.page_kind, "brief");
     }
 
     #[test]
