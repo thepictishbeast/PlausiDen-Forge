@@ -26,6 +26,7 @@
 // alongside this flip.
 #![deny(missing_docs)]
 
+pub mod anti_pattern_dictionary;
 pub mod attest;
 pub mod content_substance;
 pub mod cross_build_audit;

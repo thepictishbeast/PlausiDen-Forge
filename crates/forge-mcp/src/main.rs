@@ -1447,6 +1447,7 @@ fn tool_forge_reference_extraction(args: Value) -> Value {
 /// the SiteFingerprint, then (if registry_path provided) calls
 /// fingerprint_registry::find_near_duplicates to surface matches.
 fn tool_forge_site_fingerprint_check(args: Value) -> Value {
+    use forge_core::anti_pattern_dictionary::check_against as check_anti_patterns;
     use forge_core::fingerprint::build_from_cms_dir;
     use forge_core::fingerprint_registry::find_near_duplicates;
 
@@ -1484,6 +1485,25 @@ fn tool_forge_site_fingerprint_check(args: Value) -> Value {
     };
 
     let commitment = fingerprint.commitment_hex();
+
+    // Layer-3 (#376): every fingerprint check also runs against
+    // the anti-pattern dictionary. The dictionary catches band-
+    // collapse patterns that fingerprint-registry near-duplicate
+    // detection misses (no individual tenant duplicates them; the
+    // whole fleet converges).
+    let anti_pattern_matches = check_anti_patterns(&fingerprint);
+    let anti_pattern_summary = json!({
+        "match_count": anti_pattern_matches.len(),
+        "matches": anti_pattern_matches.iter().map(|m| json!({
+            "pattern_id": m.pattern_id,
+            "severity": m.severity.slug(),
+            "page": m.page,
+            "matched_kinds": m.matched_kinds,
+        })).collect::<Vec<_>>(),
+        "highest_severity": anti_pattern_matches.first()
+            .map(|m| m.severity.slug())
+            .unwrap_or("none"),
+    });
 
     let registry_summary = if let Some(ref reg_path) = parsed.registry_path {
         let path = std::path::Path::new(reg_path);
@@ -1538,10 +1558,13 @@ fn tool_forge_site_fingerprint_check(args: Value) -> Value {
                  commitment_hex:     {}\n\
                  distance_threshold: {}\n\
                  \n\
+                 Anti-pattern dictionary (JSON):\n{}\n\
+                 \n\
                  Registry summary (JSON):\n{}",
                 parsed.tenant_root,
                 commitment,
                 parsed.distance_threshold,
+                serde_json::to_string_pretty(&anti_pattern_summary).unwrap_or_default(),
                 serde_json::to_string_pretty(&registry_summary).unwrap_or_default()
             )
         }]
