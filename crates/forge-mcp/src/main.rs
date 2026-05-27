@@ -43,7 +43,8 @@ use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
     BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
     FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs,
-    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
+    SiteFingerprintCheckArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
+    WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -255,6 +256,29 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.site_fingerprint_check",
+                "description": "Compute a tenant's structural fingerprint (section ordering, primitive distribution, density, composition rhythm, asset distribution) and check against the fingerprint registry for near-duplicates. Paired with skills/forge-site-fingerprint-check/SKILL.md (#370).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["tenant_root"],
+                    "properties": {
+                        "tenant_root": {
+                            "type": "string",
+                            "description": "Absolute path to the tenant root; tenant_root/cms/ is read."
+                        },
+                        "registry_path": {
+                            "type": "string",
+                            "description": "Path to the fingerprint registry. When absent, no near-duplicate check runs (fingerprint is computed and returned alone)."
+                        },
+                        "distance_threshold": {
+                            "type": "integer",
+                            "description": "Component-distance threshold for near-duplicate detection. Default 4.",
+                            "minimum": 0
                         }
                     }
                 }
@@ -623,6 +647,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.verify_content_originality" => {
                     Some(tool_forge_verify_content_originality(args))
                 }
+                "forge.site_fingerprint_check" => {
+                    Some(tool_forge_site_fingerprint_check(args))
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -856,6 +883,113 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #7: compute site fingerprint + check vs registry.
+///
+/// Calls forge-core::fingerprint::build_from_cms_dir to compute
+/// the SiteFingerprint, then (if registry_path provided) calls
+/// fingerprint_registry::find_near_duplicates to surface matches.
+fn tool_forge_site_fingerprint_check(args: Value) -> Value {
+    use forge_core::fingerprint::build_from_cms_dir;
+    use forge_core::fingerprint_registry::find_near_duplicates;
+
+    let parsed: SiteFingerprintCheckArgs =
+        match parse_args("site_fingerprint_check", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let cms_dir = std::path::Path::new(&parsed.tenant_root).join("cms");
+    if !cms_dir.is_dir() {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "tenant_root/cms not a directory: {}",
+                    cms_dir.display()
+                )
+            }]
+        });
+    }
+
+    let fingerprint = match build_from_cms_dir(&cms_dir) {
+        Ok(fp) => fp,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("fingerprint build failed: {}", e)
+                }]
+            });
+        }
+    };
+
+    let commitment = fingerprint.commitment_hex();
+
+    let registry_summary = if let Some(ref reg_path) = parsed.registry_path {
+        let path = std::path::Path::new(reg_path);
+        if !path.exists() {
+            json!({
+                "registry_present": false,
+                "note": format!("registry_path does not exist: {}", reg_path)
+            })
+        } else {
+            match find_near_duplicates(path, &fingerprint, parsed.distance_threshold) {
+                Ok(matches) => {
+                    let verdict = match matches.first().map(|(_, d)| *d) {
+                        None => "ok",
+                        Some(0) => "block",
+                        Some(d) if d <= parsed.distance_threshold / 2 => "block",
+                        Some(_) => "flag",
+                    };
+                    json!({
+                        "registry_present": true,
+                        "total_entries_scanned": matches.len(),
+                        "near_duplicate_count": matches.len(),
+                        "nearest_distance": matches.first().map(|(_, d)| *d),
+                        "verdict": verdict,
+                        "matches": matches.iter().map(|(e, d)| json!({
+                            "tenant_id": e.tenant_id,
+                            "site_id": e.site_id,
+                            "distance": d,
+                            "commitment_hex": e.fingerprint.commitment_hex(),
+                        })).collect::<Vec<_>>()
+                    })
+                }
+                Err(e) => json!({
+                    "registry_present": true,
+                    "error": format!("registry read failed: {}", e)
+                }),
+            }
+        }
+    } else {
+        json!({
+            "registry_present": false,
+            "note": "No registry_path provided; fingerprint computed only."
+        })
+    };
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Fingerprint: forge.site_fingerprint_check\n\
+                 -----\n\
+                 tenant_root:        {}\n\
+                 commitment_hex:     {}\n\
+                 distance_threshold: {}\n\
+                 \n\
+                 Registry summary (JSON):\n{}",
+                parsed.tenant_root,
+                commitment,
+                parsed.distance_threshold,
+                serde_json::to_string_pretty(&registry_summary).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Workflow #6: verify content originality (anti-reuse gate).

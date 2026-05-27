@@ -159,7 +159,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   fingerprint against the anti-pattern registry.",
         skill_dir: "forge-site-fingerprint-check",
         mcp_tool: "forge.site_fingerprint_check",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#370",
     },
     WorkflowEntry {
@@ -284,11 +284,11 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #369 shipped: 6 Paired (add verify_content_originality),
-        // 0 SkillOnly, 5 Planned. Sums to 11.
-        assert_eq!(paired.len(), 6);
+        // After #370 shipped: 7 Paired (add site_fingerprint_check),
+        // 0 SkillOnly, 4 Planned. Sums to 11.
+        assert_eq!(paired.len(), 7);
         assert_eq!(skill_only.len(), 0);
-        assert_eq!(planned.len(), 5);
+        assert_eq!(planned.len(), 4);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 

@@ -154,6 +154,23 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.site_fingerprint_check` — Workflow #7 paired skill+MCP.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct SiteFingerprintCheckArgs {
+    pub tenant_root: String,
+    #[serde(default)]
+    pub registry_path: Option<String>,
+    #[serde(default = "SiteFingerprintCheckArgs::default_threshold")]
+    pub distance_threshold: u32,
+}
+
+impl SiteFingerprintCheckArgs {
+    const fn default_threshold() -> u32 {
+        4
+    }
+}
+
 /// `forge.verify_content_originality` — Workflow #6 paired skill+MCP.
 ///
 /// Anti-reuse gate: scans tenant strings vs corpus strings via
@@ -365,6 +382,23 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_fingerprint_check_requires_tenant_root() {
+        let result = parse_args::<SiteFingerprintCheckArgs>("site_fingerprint_check", json!({}));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_fingerprint_check_defaults_threshold() {
+        let args = parse_args::<SiteFingerprintCheckArgs>(
+            "site_fingerprint_check",
+            json!({"tenant_root": "/tmp/tenant"}),
+        )
+        .unwrap();
+        assert_eq!(args.distance_threshold, 4);
+        assert!(args.registry_path.is_none());
     }
 
     #[test]
