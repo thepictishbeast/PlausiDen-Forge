@@ -177,7 +177,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   for resolution); feeds the gap registry.",
         skill_dir: "forge-substrate-gap-registration",
         mcp_tool: "forge.substrate_gap_registration",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#372",
     },
     WorkflowEntry {
@@ -284,11 +284,11 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #371 shipped: 8 Paired (add reference_extraction),
-        // 0 SkillOnly, 3 Planned. Sums to 11.
-        assert_eq!(paired.len(), 8);
+        // After #372 shipped: 9 Paired (add substrate_gap_registration),
+        // 0 SkillOnly, 2 Planned. Sums to 11.
+        assert_eq!(paired.len(), 9);
         assert_eq!(skill_only.len(), 0);
-        assert_eq!(planned.len(), 3);
+        assert_eq!(planned.len(), 2);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 

@@ -154,6 +154,19 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.substrate_gap_registration` — Workflow #9 paired skill+MCP.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct SubstrateGapRegistrationArgs {
+    pub registry_path: String,
+    pub kind: String,
+    pub observed_in: String,
+    pub summary: String,
+    pub proposed_resolution: String,
+    #[serde(default)]
+    pub related_tasks: Vec<String>,
+}
+
 /// `forge.reference_extraction` — Workflow #8 paired skill+MCP.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -391,6 +404,32 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_gap_registration_requires_all_fields() {
+        let result = parse_args::<SubstrateGapRegistrationArgs>(
+            "substrate_gap_registration",
+            json!({"registry_path": "/tmp/gaps.jsonl"}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_gap_registration_full_ok() {
+        let args = parse_args::<SubstrateGapRegistrationArgs>(
+            "substrate_gap_registration",
+            json!({
+                "registry_path": "/tmp/gaps.jsonl",
+                "kind": "primitive",
+                "observed_in": "tenant-alpha",
+                "summary": "Need ComicStrip",
+                "proposed_resolution": "Add CmsSection::ComicStrip",
+                "related_tasks": ["#359"]
+            }),
+        )
+        .unwrap();
+        assert_eq!(args.related_tasks.len(), 1);
     }
 
     #[test]

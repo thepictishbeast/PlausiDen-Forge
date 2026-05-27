@@ -43,8 +43,8 @@ use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
     BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
     FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs,
-    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SynthesisPreviewArgs,
-    VerifyContentOriginalityArgs, WorkflowsListArgs,
+    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SubstrateGapRegistrationArgs,
+    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -256,6 +256,41 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.substrate_gap_registration",
+                "description": "Register a substrate-capability gap into the canonical JSONL gap registry. Paired with skills/forge-substrate-gap-registration/SKILL.md (#372). Per substrate-reframe doctrine: don't route around gaps; register them.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["registry_path", "kind", "observed_in", "summary", "proposed_resolution"],
+                    "properties": {
+                        "registry_path": {
+                            "type": "string",
+                            "description": "Absolute path to the JSONL registry file. Created if absent."
+                        },
+                        "kind": {
+                            "type": "string",
+                            "description": "One of: primitive, audit_phase, theme, page_kind, page_field, doctrine_rule, tooling."
+                        },
+                        "observed_in": {
+                            "type": "string",
+                            "description": "Tenant ID or URL where the gap was observed."
+                        },
+                        "summary": {
+                            "type": "string",
+                            "description": "One-line description of the gap."
+                        },
+                        "proposed_resolution": {
+                            "type": "string",
+                            "description": "Concrete proposed substrate change to close the gap."
+                        },
+                        "related_tasks": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional task IDs that reference or unblock this gap."
                         }
                     }
                 }
@@ -675,6 +710,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.reference_extraction" => {
                     Some(tool_forge_reference_extraction(args))
                 }
+                "forge.substrate_gap_registration" => {
+                    Some(tool_forge_substrate_gap_registration(args))
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -908,6 +946,85 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #9: register a substrate-capability gap.
+///
+/// Validates the kind against the closed taxonomy, then appends a
+/// new GapEntry to the JSONL registry. Returns the assigned ID +
+/// timestamp. Pure substrate operation — no shell-outs.
+fn tool_forge_substrate_gap_registration(args: Value) -> Value {
+    use forge_core::gap_registry::{append, GapKind};
+
+    let parsed: SubstrateGapRegistrationArgs =
+        match parse_args("substrate_gap_registration", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let kind = match GapKind::parse(&parsed.kind) {
+        Some(k) => k,
+        None => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown kind: {}. Must be one of: primitive, audit_phase, \
+                         theme, page_kind, page_field, doctrine_rule, tooling.",
+                        parsed.kind
+                    )
+                }]
+            });
+        }
+    };
+
+    let timestamp = forge_core::iso_time::current_rfc3339_utc();
+
+    let path = std::path::Path::new(&parsed.registry_path);
+    match append(
+        path,
+        kind,
+        &parsed.observed_in,
+        &parsed.summary,
+        &parsed.proposed_resolution,
+        parsed.related_tasks.clone(),
+        &timestamp,
+    ) {
+        Ok(entry) => json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Registered: forge.substrate_gap_registration\n\
+                     -----\n\
+                     id:                  {id}\n\
+                     registered_at:       {at}\n\
+                     kind:                {kind}\n\
+                     observed_in:         {oi}\n\
+                     summary:             {summ}\n\
+                     proposed_resolution: {prop}\n\
+                     status:              open\n\
+                     related_tasks:       {rt}\n\
+                     registry_path:       {path}",
+                    id = entry.id,
+                    at = entry.registered_at,
+                    kind = entry.kind.slug(),
+                    oi = entry.observed_in,
+                    summ = entry.summary,
+                    prop = entry.proposed_resolution,
+                    rt = entry.related_tasks.join(", "),
+                    path = parsed.registry_path,
+                )
+            }]
+        }),
+        Err(e) => json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!("gap registry append failed: {}", e)
+            }]
+        }),
+    }
 }
 
 /// Workflow #8: reference-extraction pipeline entry point.
