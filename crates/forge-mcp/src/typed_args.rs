@@ -136,6 +136,16 @@ pub(crate) struct ManifestValidateArgs {
     pub root: Option<String>,
 }
 
+/// `forge.workflows.list` — { status?: String, slug?: String }
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct WorkflowsListArgs {
+    #[serde(default)]
+    pub status: Option<String>,
+    #[serde(default)]
+    pub slug: Option<String>,
+}
+
 /// `forge.docs.query` — multi-field filter.
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]

@@ -42,6 +42,7 @@ mod typed_args;
 use typed_args::{
     parse_args, AuthoringArgs, BuildArgs, CodegenArgs, ConfigArgs, DocsQueryArgs,
     DoctrineForArgs, FixArgs, ManifestValidateArgs, OrientArgs, SynthesisPreviewArgs,
+    WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -256,6 +257,23 @@ fn tool_list() -> Value {
                         }
                     }
                 }
+            },
+            {
+                "name": "forge.workflows.list",
+                "description": "List the substrate's paired (skill, MCP-tool) workflows. Each workflow has a SKILL.md + an MCP tool; this surface lets agents discover them programmatically. Each filter is optional; absent filter returns the full registry.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "status": {
+                            "type": "string",
+                            "description": "Restrict to workflows in this pairing status. One of: planned, skill_only, mcp_only, paired."
+                        },
+                        "slug": {
+                            "type": "string",
+                            "description": "Look up a single workflow by exact slug (snake_case, no `forge_` prefix). When set, status filter is ignored."
+                        }
+                    }
+                }
             }
         ]
     })
@@ -450,6 +468,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.codegen" => Some(tool_forge_codegen(args).await),
                 "forge.manifest.validate" => Some(tool_forge_manifest_validate(args).await),
                 "forge.docs.query" => Some(tool_forge_docs_query(args)),
+                "forge.workflows.list" => Some(tool_forge_workflows_list(args)),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -682,6 +701,41 @@ fn tool_forge_docs_query(args: Value) -> Value {
         limit,
     };
     let entries = index.query(&filter);
+    serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// List the paired (skill, MCP-tool) workflow registry.
+/// Wraps `forge_core::workflow_registry`. Synchronous; pure.
+fn tool_forge_workflows_list(args: Value) -> Value {
+    use forge_core::workflow_registry::{
+        all_workflows, get_workflow, workflows_with_status, PairingStatus,
+    };
+
+    let parsed: WorkflowsListArgs = match parse_args("workflows.list", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    // Exact-slug shortcut.
+    if let Some(ref slug) = parsed.slug {
+        return match get_workflow(slug) {
+            Some(entry) => serde_json::to_value(entry).unwrap_or(Value::Null),
+            None => Value::Null,
+        };
+    }
+
+    let status_filter = parsed.status.as_deref().and_then(|s| match s {
+        "planned" => Some(PairingStatus::Planned),
+        "skill_only" => Some(PairingStatus::SkillOnly),
+        "mcp_only" => Some(PairingStatus::McpOnly),
+        "paired" => Some(PairingStatus::Paired),
+        _ => None,
+    });
+
+    let entries: Vec<_> = match status_filter {
+        Some(status) => workflows_with_status(status),
+        None => all_workflows().iter().collect(),
+    };
     serde_json::to_value(&entries).unwrap_or(Value::Null)
 }
 

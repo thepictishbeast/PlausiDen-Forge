@@ -57,6 +57,7 @@ pub mod synthesis;
 pub mod tenant_corpus;
 pub mod tenant_style;
 pub mod tenant_variables;
+pub mod workflow_registry;
 
 use std::path::PathBuf;
 
