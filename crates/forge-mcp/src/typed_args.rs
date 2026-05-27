@@ -154,6 +154,14 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.canonical_tasks` — task-category → workflow lookup.
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CanonicalTasksArgs {
+    #[serde(default)]
+    pub category: Option<String>,
+}
+
 /// `forge.interaction_defaults` — interaction-default query.
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -540,6 +548,12 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_canonical_tasks_empty_ok() {
+        let args = parse_args::<CanonicalTasksArgs>("canonical_tasks", json!({})).unwrap();
+        assert!(args.category.is_none());
     }
 
     #[test]

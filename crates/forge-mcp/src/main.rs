@@ -42,13 +42,13 @@ mod typed_args;
 use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs,
     AuditPlanExecutionArgs, AuthoringArgs, BricksArgs, BudgetsArgs, BuildArgs,
-    BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs, ConfigArgs, DocsQueryArgs,
-    DoctrineForArgs, DoctrineViolationExplanationArgs, ExemplarsArgs, FixArgs,
-    InteractionDefaultsArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs,
-    OperatorPreferencesArgs, OperatorProfileArgs, OrientArgs, RecordCorrectionArgs,
-    RecordOutcomeArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
-    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
-    VerifyContentOriginalityArgs, WorkflowsListArgs,
+    BuildSiteFromBriefArgs, CanonicalTasksArgs, CodegenArgs, CohortSummaryArgs,
+    ConfigArgs, DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs,
+    ExemplarsArgs, FixArgs, InteractionDefaultsArgs, ManifestValidateArgs,
+    ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs, OperatorProfileArgs,
+    OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs, ReferenceExtractionArgs,
+    SiteFingerprintCheckArgs, SkillInvocationMetaArgs, SubstrateGapRegistrationArgs,
+    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -261,6 +261,16 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.canonical_tasks",
+                "description": "Opinionated-workflow registry (#389): every common task category maps to exactly one canonical workflow_registry entry. Empty args returns full mapping; category arg returns single entry.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "category": {"type": "string", "description": "Task category slug (e.g., build_site_from_brief, discover_workflow). Empty returns all."}
                     }
                 }
             },
@@ -997,6 +1007,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.interaction_defaults" => {
                     Some(tool_forge_interaction_defaults(args))
                 }
+                "forge.canonical_tasks" => Some(tool_forge_canonical_tasks(args)),
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1235,6 +1246,78 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Canonical-task mapping query (#389).
+fn tool_forge_canonical_tasks(args: Value) -> Value {
+    use forge_core::canonical_tasks::{canonical_for, TaskCategory, TASK_CATEGORIES};
+
+    let parsed: CanonicalTasksArgs = match parse_args("canonical_tasks", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let parse_cat = |s: &str| -> Option<TaskCategory> {
+        match s {
+            "build_site_from_brief" => Some(TaskCategory::BuildSiteFromBrief),
+            "modify_existing_site" => Some(TaskCategory::ModifyExistingSite),
+            "add_primitive" => Some(TaskCategory::AddPrimitive),
+            "modify_primitive" => Some(TaskCategory::ModifyPrimitive),
+            "add_audit_phase" => Some(TaskCategory::AddAuditPhase),
+            "verify_content_originality" => Some(TaskCategory::VerifyContentOriginality),
+            "site_fingerprint_check" => Some(TaskCategory::SiteFingerprintCheck),
+            "reference_extraction" => Some(TaskCategory::ReferenceExtraction),
+            "register_substrate_gap" => Some(TaskCategory::RegisterSubstrateGap),
+            "explain_doctrine_violation" => Some(TaskCategory::ExplainDoctrineViolation),
+            "discover_workflow" => Some(TaskCategory::DiscoverWorkflow),
+            _ => None,
+        }
+    };
+
+    if let Some(ref cat_slug) = parsed.category {
+        let Some(cat) = parse_cat(cat_slug) else {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("Unknown category: {cat_slug}")
+                }]
+            });
+        };
+        return json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Canonical task mapping: forge.canonical_tasks\n\
+                     -----\n\
+                     category:         {slug}\n\
+                     canonical_workflow:{wf}",
+                    slug = cat.slug(),
+                    wf = canonical_for(cat)
+                )
+            }]
+        });
+    }
+
+    let mappings: Vec<Value> = TASK_CATEGORIES
+        .iter()
+        .map(|c| {
+            json!({
+                "category": c.slug(),
+                "canonical_workflow": canonical_for(*c),
+            })
+        })
+        .collect();
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Canonical task → workflow mapping (1:1):\n{}",
+                serde_json::to_string_pretty(&mappings).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Interaction-default query (#388).
