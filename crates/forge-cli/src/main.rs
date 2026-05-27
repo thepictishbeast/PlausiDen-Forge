@@ -133,6 +133,18 @@ enum Cmd {
         #[command(subcommand)]
         action: DocsAction,
     },
+    /// Inspect the session-scope vocabulary
+    /// (forge-core::session_scope; accessibility primitive).
+    ///
+    /// Each Claude / operator session can declare a scope via
+    /// FORGE_SESSION_SCOPE; tools and doc-tags get filtered
+    /// to that scope to manage cognitive load. This subcommand
+    /// lets operators see what scopes exist, what's in each,
+    /// and which (if any) is active.
+    Scope {
+        #[command(subcommand)]
+        action: ScopeAction,
+    },
     /// Forge Lite diagnostic — resolve a narrow-surface lite page
     /// into the full CmsPage shape so the lite pipeline can be
     /// exercised end-to-end through the existing render + audit
@@ -672,6 +684,33 @@ enum LiteAction {
         /// Default is compact.
         #[arg(long, default_value_t = false)]
         pretty: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ScopeAction {
+    /// List all known session scopes with slug + label.
+    List {
+        /// Output JSON instead of human-readable text.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+    /// Show what's in scope for the named scope: tools list +
+    /// doc tags.
+    Show {
+        /// Scope slug (e.g. "build-site", "modify-primitive").
+        scope: String,
+        /// Output JSON instead of human-readable text.
+        #[arg(long, default_value_t = false)]
+        json: bool,
+    },
+    /// Show the currently-active scope (from
+    /// FORGE_SESSION_SCOPE env var) + what's in it. Falls back
+    /// to "unscoped" if env is unset / unknown slug.
+    Active {
+        /// Output JSON instead of human-readable text.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 }
 
@@ -1467,6 +1506,7 @@ fn run() -> Result<ExitCode> {
         }
         Some(Cmd::Lite { action }) => return Ok(run_lite(action)),
         Some(Cmd::Docs { action }) => return Ok(run_docs(action)),
+        Some(Cmd::Scope { action }) => return Ok(run_scope(action)),
         Some(Cmd::Build) | None => {}
     }
 
@@ -9041,6 +9081,131 @@ fn run_lite(action: &LiteAction) -> std::process::ExitCode {
     }
 }
 
+/// `forge scope` — inspect the session-scope vocabulary.
+/// Surface for forge-core::session_scope.
+fn run_scope(action: &ScopeAction) -> std::process::ExitCode {
+    use forge_core::session_scope::{
+        docs_in_scope, tools_in_scope, SessionScope,
+    };
+
+    const ALL_SCOPES: &[SessionScope] = &[
+        SessionScope::BuildSite,
+        SessionScope::ModifyPrimitive,
+        SessionScope::DebugAudit,
+        SessionScope::ExtendDeployTarget,
+        SessionScope::AuthorContent,
+        SessionScope::InvestigateSubstrate,
+        SessionScope::Unscoped,
+    ];
+
+    fn print_scope_human(scope: SessionScope) {
+        let tools = tools_in_scope(scope);
+        let docs = docs_in_scope(scope);
+        println!("\n  scope:  {} ({})", scope.slug(), scope.label());
+        if tools.is_empty() {
+            println!("    tools: (none — full surface passes through unfiltered)");
+        } else {
+            println!("    tools: {}", tools.join(", "));
+        }
+        let tag_names: Vec<String> = docs.iter().map(|t| format!("{t:?}")).collect();
+        if tag_names.is_empty() {
+            println!("    docs:  (none)");
+        } else {
+            println!("    docs:  [{}]", tag_names.join(", "));
+        }
+    }
+
+    fn scope_json(scope: SessionScope) -> serde_json::Value {
+        let docs = docs_in_scope(scope);
+        serde_json::json!({
+            "slug": scope.slug(),
+            "label": scope.label(),
+            "tools_in_scope": tools_in_scope(scope),
+            "doc_tags_in_scope": docs.iter().map(|t| format!("{t:?}")).collect::<Vec<_>>(),
+        })
+    }
+
+    match action {
+        ScopeAction::List { json } => {
+            if *json {
+                let payload: Vec<serde_json::Value> =
+                    ALL_SCOPES.iter().map(|s| scope_json(*s)).collect();
+                match serde_json::to_string_pretty(&payload) {
+                    Ok(s) => println!("{s}"),
+                    Err(e) => {
+                        eprintln!("forge scope list: serialize: {e}");
+                        return std::process::ExitCode::from(2);
+                    }
+                }
+            } else {
+                println!("# Session scopes (forge-core::session_scope)");
+                for s in ALL_SCOPES {
+                    print_scope_human(*s);
+                }
+            }
+            std::process::ExitCode::SUCCESS
+        }
+        ScopeAction::Show { scope, json } => match SessionScope::from_slug(scope) {
+            None => {
+                eprintln!(
+                    "forge scope show: unknown scope {scope:?}; run `forge scope list` for valid slugs"
+                );
+                std::process::ExitCode::from(1)
+            }
+            Some(s) => {
+                if *json {
+                    match serde_json::to_string_pretty(&scope_json(s)) {
+                        Ok(out) => println!("{out}"),
+                        Err(e) => {
+                            eprintln!("forge scope show: serialize: {e}");
+                            return std::process::ExitCode::from(2);
+                        }
+                    }
+                } else {
+                    print_scope_human(s);
+                }
+                std::process::ExitCode::SUCCESS
+            }
+        },
+        ScopeAction::Active { json } => {
+            let env = std::env::var("FORGE_SESSION_SCOPE").ok();
+            let active = env
+                .as_deref()
+                .and_then(SessionScope::from_slug)
+                .unwrap_or(SessionScope::Unscoped);
+            if *json {
+                let payload = serde_json::json!({
+                    "env_value": env,
+                    "active_scope": scope_json(active),
+                });
+                match serde_json::to_string_pretty(&payload) {
+                    Ok(out) => println!("{out}"),
+                    Err(e) => {
+                        eprintln!("forge scope active: serialize: {e}");
+                        return std::process::ExitCode::from(2);
+                    }
+                }
+            } else {
+                match env.as_deref() {
+                    Some(value) if SessionScope::from_slug(value).is_some() => {
+                        println!("FORGE_SESSION_SCOPE = {value:?}");
+                    }
+                    Some(value) => {
+                        println!(
+                            "FORGE_SESSION_SCOPE = {value:?} (UNKNOWN — falling back to unscoped)"
+                        );
+                    }
+                    None => {
+                        println!("FORGE_SESSION_SCOPE = unset (falling back to unscoped)");
+                    }
+                }
+                print_scope_human(active);
+            }
+            std::process::ExitCode::SUCCESS
+        }
+    }
+}
+
 /// `forge docs` — query the substrate doc index. Surface for
 /// forge-core::doc_query.
 fn run_docs(action: &DocsAction) -> std::process::ExitCode {
@@ -9377,11 +9542,26 @@ fn run_orient(
         }
     };
 
+    // Session-scope brief (per forge-core::session_scope; #385).
+    // Reads FORGE_SESSION_SCOPE env; falls back to Unscoped.
+    let session_scope = std::env::var("FORGE_SESSION_SCOPE")
+        .ok()
+        .and_then(|s| forge_core::session_scope::SessionScope::from_slug(&s))
+        .unwrap_or(forge_core::session_scope::SessionScope::Unscoped);
+    let scope_tools = forge_core::session_scope::tools_in_scope(session_scope);
+    let scope_docs = forge_core::session_scope::docs_in_scope(session_scope);
+
     if json {
         let payload = serde_json::json!({
             "status": "ok",
             "scope": scope_path.display().to_string(),
             "forge_root": forge_root.display().to_string(),
+            "session_scope": {
+                "slug": session_scope.slug(),
+                "label": session_scope.label(),
+                "tools_in_scope": scope_tools,
+                "doc_tags_in_scope": scope_docs.iter().map(|t| format!("{t:?}")).collect::<Vec<_>>(),
+            },
             "doctrine": {
                 "dir": doctrine_dir.display().to_string(),
                 "status": doctrine_status,
@@ -9399,10 +9579,20 @@ fn run_orient(
 
     // Human-readable output.
     println!("# forge orient — session brief\n");
-    println!("Scope:       {}", scope_path.display());
-    println!("Forge root:  {}", forge_root.display());
+    println!("Scope:           {}", scope_path.display());
+    println!("Forge root:      {}", forge_root.display());
     println!(
-        "Doctrine:    {} ({})\n",
+        "Session scope:   {} ({})",
+        session_scope.label(),
+        session_scope.slug()
+    );
+    if scope_tools.is_empty() {
+        println!("  → full tool surface (no scope filter active)");
+    } else {
+        println!("  → in-scope tools: {}", scope_tools.join(", "));
+    }
+    println!(
+        "Doctrine:        {} ({})\n",
         doctrine_dir.display(),
         doctrine_status
     );

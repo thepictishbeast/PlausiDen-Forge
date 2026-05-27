@@ -267,11 +267,28 @@ fn tool_list() -> Value {
 /// Unset env var, unknown slug, or `unscoped` → pass the full
 /// list through unchanged (back-compat for callers that
 /// haven't adopted the scope pattern).
-fn filter_tool_list_by_session_scope(full: Value) -> Value {
-    let scope = std::env::var("FORGE_SESSION_SCOPE")
+/// Read the active session scope from `FORGE_SESSION_SCOPE` env.
+/// Returns `Unscoped` when env is unset or contains an unknown
+/// slug — those code-paths get the unfiltered tool surface.
+///
+/// Kept as a thin helper so callers (the production stdio loop)
+/// can pass the resolved scope explicitly into
+/// [`filter_tool_list_by_session_scope`]; tests pass scopes
+/// directly without touching the process env (avoiding env-var
+/// contention between parallel test threads).
+fn current_session_scope() -> forge_core::session_scope::SessionScope {
+    std::env::var("FORGE_SESSION_SCOPE")
         .ok()
         .and_then(|s| forge_core::session_scope::SessionScope::from_slug(&s))
-        .unwrap_or(forge_core::session_scope::SessionScope::Unscoped);
+        .unwrap_or(forge_core::session_scope::SessionScope::Unscoped)
+}
+
+/// Filter the full tool list by the supplied session scope.
+/// Pure function over the supplied scope; reads no process state.
+fn filter_tool_list_by_scope(
+    full: Value,
+    scope: forge_core::session_scope::SessionScope,
+) -> Value {
     let allowed = forge_core::session_scope::tools_in_scope(scope);
     if allowed.is_empty() {
         // Empty → unscoped; pass through.
@@ -299,6 +316,13 @@ fn filter_tool_list_by_session_scope(full: Value) -> Value {
         Value::String(scope.slug().to_owned()),
     );
     Value::Object(obj)
+}
+
+/// Convenience wrapper that reads env via
+/// [`current_session_scope`] and delegates to
+/// [`filter_tool_list_by_scope`]. Production code path.
+fn filter_tool_list_by_session_scope(full: Value) -> Value {
+    filter_tool_list_by_scope(full, current_session_scope())
 }
 
 #[cfg(test)]
@@ -335,20 +359,23 @@ mod scope_filter_tests {
     }
 
     #[test]
-    fn unscoped_env_passes_through() {
-        // SAFETY: serial test; cargo test on this fn doesn't
-        // run in parallel with other env-touching tests since
-        // they're in the same module.
-        std::env::remove_var("FORGE_SESSION_SCOPE");
-        let out = filter_tool_list_by_session_scope(mock_full_list());
+    fn unscoped_passes_through() {
+        // Use the explicit-scope filter to avoid env-var
+        // contention between parallel test threads.
+        let out = filter_tool_list_by_scope(
+            mock_full_list(),
+            forge_core::session_scope::SessionScope::Unscoped,
+        );
         assert_eq!(count_tools(&out), 5);
         assert!(out.get("_session_scope").is_none());
     }
 
     #[test]
     fn build_site_scope_drops_substrate_tools() {
-        std::env::set_var("FORGE_SESSION_SCOPE", "build-site");
-        let out = filter_tool_list_by_session_scope(mock_full_list());
+        let out = filter_tool_list_by_scope(
+            mock_full_list(),
+            forge_core::session_scope::SessionScope::BuildSite,
+        );
         let kept = names(&out);
         assert!(kept.contains(&"forge.orient".to_owned()));
         assert!(kept.contains(&"forge.build".to_owned()));
@@ -359,28 +386,35 @@ mod scope_filter_tests {
             out.get("_session_scope").and_then(|v| v.as_str()),
             Some("build-site")
         );
-        std::env::remove_var("FORGE_SESSION_SCOPE");
     }
 
     #[test]
     fn modify_primitive_scope_keeps_substrate_tools() {
-        std::env::set_var("FORGE_SESSION_SCOPE", "modify-primitive");
-        let out = filter_tool_list_by_session_scope(mock_full_list());
+        let out = filter_tool_list_by_scope(
+            mock_full_list(),
+            forge_core::session_scope::SessionScope::ModifyPrimitive,
+        );
         let kept = names(&out);
         assert!(kept.contains(&"forge.manifest.validate".to_owned()));
         assert!(kept.contains(&"forge.codegen".to_owned()));
         assert!(!kept.contains(&"forge.authoring".to_owned()));
-        std::env::remove_var("FORGE_SESSION_SCOPE");
     }
 
     #[test]
-    fn unknown_scope_passes_through() {
-        std::env::set_var("FORGE_SESSION_SCOPE", "does-not-exist");
-        let out = filter_tool_list_by_session_scope(mock_full_list());
-        // Unknown slug → SessionScope::Unscoped → empty allow →
-        // pass-through.
+    fn unknown_slug_in_env_falls_back_to_unscoped() {
+        // current_session_scope() handles env+parse together;
+        // unknown slug → Unscoped → no filtering. We test the
+        // parse path explicitly without touching shared env.
+        assert!(matches!(
+            forge_core::session_scope::SessionScope::from_slug("does-not-exist"),
+            None
+        ));
+        // And Unscoped → pass-through:
+        let out = filter_tool_list_by_scope(
+            mock_full_list(),
+            forge_core::session_scope::SessionScope::Unscoped,
+        );
         assert_eq!(count_tools(&out), 5);
-        std::env::remove_var("FORGE_SESSION_SCOPE");
     }
 }
 
