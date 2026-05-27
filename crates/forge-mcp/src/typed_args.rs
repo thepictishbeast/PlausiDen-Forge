@@ -154,6 +154,15 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.reference_extraction` — Workflow #8 paired skill+MCP.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ReferenceExtractionArgs {
+    pub capture_dir: String,
+    pub site_id: String,
+    pub tenant_id: String,
+}
+
 /// `forge.site_fingerprint_check` — Workflow #7 paired skill+MCP.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -380,6 +389,15 @@ mod tests {
                 "tenant_id": "test",
                 "extra_field": "oops"
             }),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_reference_extraction_requires_three_fields() {
+        let result = parse_args::<ReferenceExtractionArgs>(
+            "reference_extraction",
+            json!({"capture_dir": "/tmp/cap"}),
         );
         assert!(result.is_err());
     }

@@ -16,6 +16,7 @@ Skills are typed, cross-AI-compatible (YAML frontmatter + Markdown body), versio
 | [forge-modify-primitive](forge-modify-primitive/SKILL.md) | Modifying an existing primitive without breaking back-compat (paired with `forge.modify_primitive` MCP tool) |
 | [forge-verify-content-originality](forge-verify-content-originality/SKILL.md) | Anti-reuse gate: detect verbatim content overlap with reference corpora (paired with `forge.verify_content_originality` MCP tool) |
 | [forge-site-fingerprint-check](forge-site-fingerprint-check/SKILL.md) | Structural-fingerprint anti-duplicate gate against the fingerprint registry (paired with `forge.site_fingerprint_check` MCP tool) |
+| [forge-reference-extraction](forge-reference-extraction/SKILL.md) | Run the deterministic URL → SiteSpec pipeline against a captured reference site (paired with `forge.reference_extraction` MCP tool) |
 | [pixel-reproduce-site](pixel-reproduce-site/SKILL.md) | Reproducing a live site pixel-by-pixel via Forge for capability validation |
 | [extend-doctrine-rules](extend-doctrine-rules/SKILL.md) | Adding new rules to the AVP-Doctrine database |
 

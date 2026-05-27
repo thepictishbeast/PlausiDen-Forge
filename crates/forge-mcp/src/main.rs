@@ -43,8 +43,8 @@ use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
     BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
     FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs,
-    SiteFingerprintCheckArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
-    WorkflowsListArgs,
+    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SynthesisPreviewArgs,
+    VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -256,6 +256,28 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.reference_extraction",
+                "description": "Load a Crawler-emitted CaptureManifest and prepare for the URL → SiteSpec pipeline. Validates the manifest + surfaces capture inventory. Paired with skills/forge-reference-extraction/SKILL.md (#371). Per-axis extractor invocation lands once the chromiumoxide runner is verified end-to-end (see docs/SUBSTRATE_REFERENCE_PIPELINE_AUDIT_2026_05_27.md).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["capture_dir", "site_id", "tenant_id"],
+                    "properties": {
+                        "capture_dir": {
+                            "type": "string",
+                            "description": "Absolute path to the Crawler capture directory containing manifest.json."
+                        },
+                        "site_id": {
+                            "type": "string",
+                            "description": "Kebab-case site identifier for the emitted SiteSpec."
+                        },
+                        "tenant_id": {
+                            "type": "string",
+                            "description": "Kebab-case tenant identifier for the emitted SiteSpec."
                         }
                     }
                 }
@@ -650,6 +672,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.site_fingerprint_check" => {
                     Some(tool_forge_site_fingerprint_check(args))
                 }
+                "forge.reference_extraction" => {
+                    Some(tool_forge_reference_extraction(args))
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -883,6 +908,93 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #8: reference-extraction pipeline entry point.
+///
+/// Loads the CaptureManifest at <capture_dir>/manifest.json, validates
+/// the capture inventory, and surfaces a structured report. Per-axis
+/// extractor invocation (palette/typography/spacing/motion/structural/
+/// voice/sections/interactive) lands once the chromiumoxide runner is
+/// verified end-to-end. The integration boundary is documented in
+/// docs/SUBSTRATE_REFERENCE_PIPELINE_AUDIT_2026_05_27.md.
+fn tool_forge_reference_extraction(args: Value) -> Value {
+    use forge_core::reference_capture::CaptureManifest;
+
+    let parsed: ReferenceExtractionArgs =
+        match parse_args("reference_extraction", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let manifest_path = std::path::Path::new(&parsed.capture_dir).join("manifest.json");
+    if !manifest_path.is_file() {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "manifest.json not found at: {}\n\
+                     Run the Crawler reference-capture mode against the URL first.",
+                    manifest_path.display()
+                )
+            }]
+        });
+    }
+
+    let manifest = match CaptureManifest::read(&manifest_path) {
+        Ok(m) => m,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("CaptureManifest read failed: {}", e)
+                }]
+            });
+        }
+    };
+
+    let viewports: Vec<u32> =
+        manifest.captures.iter().map(|c| c.viewport_px).collect();
+    let total_images: u32 =
+        manifest.captures.iter().map(|c| c.network_summary.image_count).sum();
+    let total_fonts: usize = manifest
+        .captures
+        .iter()
+        .map(|c| c.network_summary.fonts_loaded.len())
+        .sum();
+
+    let summary = json!({
+        "spec": manifest.spec.slug(),
+        "site_slug": manifest.site_slug,
+        "url": manifest.url,
+        "updated_at": manifest.updated_at,
+        "capture_count": manifest.captures.len(),
+        "viewports_px": viewports,
+        "total_images_across_captures": total_images,
+        "total_fonts_loaded_across_captures": total_fonts,
+        "target_site_id": parsed.site_id,
+        "target_tenant_id": parsed.tenant_id,
+        "extraction_status": "manifest_validated_extractor_pending",
+        "next_step": "Per-axis extraction lands once chromiumoxide runner verification \
+                      completes. See docs/SUBSTRATE_REFERENCE_PIPELINE_AUDIT_2026_05_27.md."
+    });
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Reference extraction: forge.reference_extraction\n\
+                 -----\n\
+                 capture_dir: {}\n\
+                 \n\
+                 {}",
+                parsed.capture_dir,
+                serde_json::to_string_pretty(&summary).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Workflow #7: compute site fingerprint + check vs registry.
