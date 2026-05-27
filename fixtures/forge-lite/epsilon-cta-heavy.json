@@ -1,7 +1,7 @@
 {
   "title": "Epsilon — Take the next step",
   "description": "Generic placeholder fixture exercising the lite CTA-heavy landing primitive sequence (hero + feature spotlight + CTA + logo cloud + large spacer).",
-  "path": "/sign-up",
+  "path": "/",
   "theme": "warm",
   "brand": "Epsilon",
   "sections": [

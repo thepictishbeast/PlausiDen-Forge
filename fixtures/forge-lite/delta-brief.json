@@ -1,7 +1,7 @@
 {
   "title": "Delta — A single-page brief",
   "description": "Generic placeholder fixture exercising the lite minimal-brief primitive sequence (hero + paragraph + divider + paragraph).",
-  "path": "/brief",
+  "path": "/",
   "theme": "light",
   "brand": "Delta",
   "sections": [
