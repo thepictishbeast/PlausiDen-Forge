@@ -13,6 +13,7 @@ Skills are typed, cross-AI-compatible (YAML frontmatter + Markdown body), versio
 | [author-cms-content](author-cms-content/SKILL.md) | Authoring `cms/*.json` for a new site or new page |
 | [forge-build-site-from-brief](forge-build-site-from-brief/SKILL.md) | Building a tenant site from a written brief (paired with `forge.build_site_from_brief` MCP tool) |
 | [forge-modify-site](forge-modify-site/SKILL.md) | Applying a scoped modification to an existing site (paired with `forge.modify_site` MCP tool) |
+| [forge-modify-primitive](forge-modify-primitive/SKILL.md) | Modifying an existing primitive without breaking back-compat (paired with `forge.modify_primitive` MCP tool) |
 | [pixel-reproduce-site](pixel-reproduce-site/SKILL.md) | Reproducing a live site pixel-by-pixel via Forge for capability validation |
 | [extend-doctrine-rules](extend-doctrine-rules/SKILL.md) | Adding new rules to the AVP-Doctrine database |
 

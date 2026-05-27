@@ -42,8 +42,8 @@ mod typed_args;
 use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AuthoringArgs, BuildArgs,
     BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
-    FixArgs, ManifestValidateArgs, ModifySiteArgs, OrientArgs, SynthesisPreviewArgs,
-    WorkflowsListArgs,
+    FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OrientArgs,
+    SynthesisPreviewArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -255,6 +255,28 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.modify_primitive",
+                "description": "Classify a proposed primitive modification per the backward_compat_version_discipline 4-category taxonomy and surface the substrate-side requirements for that category. Paired with skills/forge-modify-primitive/SKILL.md (#368).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["primitive_name", "change_kind", "change_summary"],
+                    "properties": {
+                        "primitive_name": {
+                            "type": "string",
+                            "description": "Exact Rust type name being modified (e.g. FeatureSpotlightDecoration)."
+                        },
+                        "change_kind": {
+                            "type": "string",
+                            "description": "One of: invisible, additive, auto_migration, operator_action."
+                        },
+                        "change_summary": {
+                            "type": "string",
+                            "description": "One-line description of the change."
                         }
                     }
                 }
@@ -572,6 +594,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.modify_site" => Some(tool_forge_modify_site(args).await),
                 "forge.add_primitive" => Some(tool_forge_add_primitive(args)),
                 "forge.add_audit_phase" => Some(tool_forge_add_audit_phase(args)),
+                "forge.modify_primitive" => Some(tool_forge_modify_primitive(args)),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -805,6 +828,97 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #5: classify a proposed primitive modification.
+///
+/// Per the backward_compat_version_discipline doctrine, every
+/// change to an existing primitive falls into one of four
+/// categories with distinct substrate-side discipline. This tool
+/// validates the operator's classification and surfaces the
+/// per-category requirements.
+fn tool_forge_modify_primitive(args: Value) -> Value {
+    let parsed: ModifyPrimitiveArgs = match parse_args("modify_primitive", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let (category_label, requirements) = match parsed.change_kind.as_str() {
+        "invisible" => (
+            "Invisible (internal refactor, no wire-shape change)",
+            "Discipline:\n\
+             - No tenant-visible change\n\
+             - Run the full test suite; verify no behavior change\n\
+             - No serde / schema implication\n\
+             - No doc_query update needed",
+        ),
+        "additive" => (
+            "Additive (backward-compatible extension)",
+            "Discipline:\n\
+             - New enum variant OR new field with #[serde(default)]\n\
+             - Extend render impl to handle the new shape\n\
+             - Add a snapshot test pinning new render output\n\
+             - Add a doc_query entry surfacing the new variant\n\
+             - Existing tenant content MUST still build unchanged",
+        ),
+        "auto_migration" => (
+            "Auto-migration (renamed via signed migration registry)",
+            "Discipline:\n\
+             - Add new shape alongside the old (#[serde(alias = \"old\")])\n\
+             - Register migration entry in the signed migration registry\n\
+             - Update doc_query: new name preferred, old marked deprecated\n\
+             - Plan a future cycle for old-name removal\n\
+             - Migration registry signature is the canonical record",
+        ),
+        "operator_action" => (
+            "Operator-action (breaking change requiring tenant edits)",
+            "Discipline:\n\
+             - Feature-flag the new shape in a separate module\n\
+             - Emit forge build Warn finding in the current cycle\n\
+             - Plan Strict-promotion + release-notes for next major\n\
+             - Document the migration path in docs/MIGRATIONS.md\n\
+             - Tenants must edit their content before next cycle",
+        ),
+        other => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown change_kind: {other}. Must be one of: invisible, additive, auto_migration, operator_action.\n\
+                         See backward_compat_version_discipline doctrine for the 4-category taxonomy."
+                    )
+                }]
+            });
+        }
+    };
+
+    let report = format!(
+        "Classification: forge.modify_primitive\n\
+         -----\n\
+         Primitive:      {name}\n\
+         Change kind:    {kind}\n\
+         Summary:        {summary}\n\
+         Category:       {label}\n\
+         \n\
+         {req}\n\
+         \n\
+         Follow skills/forge-modify-primitive/SKILL.md for procedural\n\
+         guidance + the [[backward-compat-version-discipline]] doctrine\n\
+         for the rationale.",
+        name = parsed.primitive_name,
+        kind = parsed.change_kind,
+        summary = parsed.change_summary,
+        label = category_label,
+        req = requirements,
+    );
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": report
+        }]
+    })
 }
 
 /// Workflow #4: pre-flight guard before adding a new audit phase.

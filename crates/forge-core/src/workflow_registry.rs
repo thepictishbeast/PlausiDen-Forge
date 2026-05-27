@@ -141,7 +141,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   decoration change) without breaking back-compat.",
         skill_dir: "forge-modify-primitive",
         mcp_tool: "forge.modify_primitive",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#368",
     },
     WorkflowEntry {
@@ -284,12 +284,11 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #367 shipped: 4 Paired (build_site_from_brief,
-        // modify_site, add_primitive, add_audit_phase), 0 SkillOnly,
-        // 7 Planned. Sums to 11.
-        assert_eq!(paired.len(), 4);
+        // After #368 shipped: 5 Paired (add modify_primitive),
+        // 0 SkillOnly, 6 Planned. Sums to 11.
+        assert_eq!(paired.len(), 5);
         assert_eq!(skill_only.len(), 0);
-        assert_eq!(planned.len(), 7);
+        assert_eq!(planned.len(), 6);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 

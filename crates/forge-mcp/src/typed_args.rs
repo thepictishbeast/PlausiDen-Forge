@@ -154,6 +154,18 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.modify_primitive` — Workflow #5 paired skill+MCP.
+///
+/// Classifies a proposed primitive modification per the
+/// backward_compat_version_discipline 4-category taxonomy.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ModifyPrimitiveArgs {
+    pub primitive_name: String,
+    pub change_kind: String,
+    pub change_summary: String,
+}
+
 /// `forge.add_audit_phase` — Workflow #4 paired skill+MCP.
 ///
 /// Pre-flight guard for adding a new audit phase: checks the
@@ -333,6 +345,29 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_modify_primitive_requires_three_fields() {
+        let result = parse_args::<ModifyPrimitiveArgs>(
+            "modify_primitive",
+            json!({"primitive_name": "FeatureSpotlight"}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_modify_primitive_full_ok() {
+        let args = parse_args::<ModifyPrimitiveArgs>(
+            "modify_primitive",
+            json!({
+                "primitive_name": "FeatureSpotlightDecoration",
+                "change_kind": "additive",
+                "change_summary": "Add Brutalist variant"
+            }),
+        )
+        .unwrap();
+        assert_eq!(args.change_kind, "additive");
     }
 
     #[test]
