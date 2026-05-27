@@ -617,6 +617,73 @@ fn filter_tool_list_by_session_scope(full: Value) -> Value {
 }
 
 #[cfg(test)]
+mod pairing_invariant_tests {
+    //! Per task #375: enforce that every workflow registered as
+    //! `Paired` in forge_core::workflow_registry has its mcp_tool
+    //! name wired in this binary's tool_list().
+    use super::*;
+    use forge_core::workflow_registry::{all_workflows, PairingStatus};
+
+    fn registered_tool_names() -> Vec<String> {
+        let list = tool_list();
+        list.get("tools")
+            .and_then(|t| t.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|t| t.get("name").and_then(|n| n.as_str()))
+                    .map(|s| s.to_owned())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
+    #[test]
+    fn every_paired_workflow_has_mcp_tool_registered() {
+        let registered = registered_tool_names();
+        let mut missing: Vec<String> = Vec::new();
+
+        for entry in all_workflows() {
+            if entry.status != PairingStatus::Paired {
+                continue;
+            }
+            if !registered.iter().any(|n| n == entry.mcp_tool) {
+                missing.push(format!(
+                    "workflow '{}' (status: Paired) — expected MCP tool '{}' \
+                     in tool_list()",
+                    entry.slug, entry.mcp_tool
+                ));
+            }
+        }
+
+        if !missing.is_empty() {
+            panic!(
+                "Paired workflows missing MCP-tool registration:\n{}",
+                missing.join("\n")
+            );
+        }
+    }
+
+    #[test]
+    fn no_mcp_only_workflows_register_without_skill() {
+        // McpOnly is a transient status — the registry should NOT
+        // have any entries in this state at any commit. If a
+        // developer wires an MCP tool before writing the SKILL.md,
+        // they should still mark the entry as Planned until the
+        // SKILL.md lands.
+        let mcp_only_count = all_workflows()
+            .iter()
+            .filter(|e| e.status == PairingStatus::McpOnly)
+            .count();
+        assert_eq!(
+            mcp_only_count, 0,
+            "McpOnly is transient — commit either marks Planned (no MCP \
+             yet wired) or Paired (both shipped). Found {} McpOnly entries.",
+            mcp_only_count
+        );
+    }
+}
+
+#[cfg(test)]
 mod scope_filter_tests {
     use super::*;
 
