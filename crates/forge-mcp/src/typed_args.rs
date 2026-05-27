@@ -154,6 +154,30 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.progress_record` — append a session-progress event.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ProgressRecordArgs {
+    pub progress_path: String,
+    pub session_id: String,
+    pub item_id: String,
+    pub summary: String,
+    pub status: String,
+    #[serde(default)]
+    pub blocker: Option<String>,
+    #[serde(default)]
+    pub refs: Vec<String>,
+}
+
+/// `forge.progress_list` — list resolved items, optionally filtered.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ProgressListArgs {
+    pub progress_path: String,
+    #[serde(default)]
+    pub status: Option<String>,
+}
+
 /// `forge.canonical_tasks` — task-category → workflow lookup.
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -548,6 +572,25 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_progress_record_requires_required_fields() {
+        let result = parse_args::<ProgressRecordArgs>(
+            "progress_record",
+            json!({"progress_path": "/tmp/p.jsonl"}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_progress_list_optional_status() {
+        let args = parse_args::<ProgressListArgs>(
+            "progress_list",
+            json!({"progress_path": "/tmp/p.jsonl"}),
+        )
+        .unwrap();
+        assert!(args.status.is_none());
     }
 
     #[test]

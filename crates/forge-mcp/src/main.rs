@@ -1,3 +1,4 @@
+#![recursion_limit = "512"]
 //! `forge-mcp` — Model Context Protocol server for the Forge
 //! substrate.
 //!
@@ -46,9 +47,10 @@ use typed_args::{
     ConfigArgs, DocsQueryArgs, DoctrineForArgs, DoctrineViolationExplanationArgs,
     ExemplarsArgs, FixArgs, InteractionDefaultsArgs, ManifestValidateArgs,
     ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs, OperatorProfileArgs,
-    OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs, ReferenceExtractionArgs,
-    SiteFingerprintCheckArgs, SkillInvocationMetaArgs, SubstrateGapRegistrationArgs,
-    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
+    OrientArgs, ProgressListArgs, ProgressRecordArgs, RecordCorrectionArgs,
+    RecordOutcomeArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
+    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
+    VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -261,6 +263,35 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.progress_record",
+                "description": "Record a session-progress event (#390). Append-only JSONL; status transitions are new events with the same item_id.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["progress_path", "session_id", "item_id", "summary", "status"],
+                    "properties": {
+                        "progress_path": {"type": "string", "description": "Absolute path to the JSONL progress log."},
+                        "session_id": {"type": "string", "description": "Session identifier."},
+                        "item_id": {"type": "string", "description": "Item identifier (stable across events)."},
+                        "summary": {"type": "string", "description": "Item summary at this event."},
+                        "status": {"type": "string", "description": "One of: pending, in_progress, completed, cancelled, blocked."},
+                        "blocker": {"type": "string", "description": "Optional blocker description (typical for status=blocked)."},
+                        "refs": {"type": "array", "items": {"type": "string"}, "description": "Optional links to commits, PRs, tasks."}
+                    }
+                }
+            },
+            {
+                "name": "forge.progress_list",
+                "description": "List resolved progress items (#390): replays the JSONL event log to surface current state per item_id. Latest event wins.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["progress_path"],
+                    "properties": {
+                        "progress_path": {"type": "string", "description": "Absolute path to the JSONL progress log."},
+                        "status": {"type": "string", "description": "Filter to items in this status."}
                     }
                 }
             },
@@ -1008,6 +1039,8 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                     Some(tool_forge_interaction_defaults(args))
                 }
                 "forge.canonical_tasks" => Some(tool_forge_canonical_tasks(args)),
+                "forge.progress_record" => Some(tool_forge_progress_record(args)),
+                "forge.progress_list" => Some(tool_forge_progress_list(args)),
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1246,6 +1279,145 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Append a session-progress event (#390).
+fn tool_forge_progress_record(args: Value) -> Value {
+    use forge_core::session_progress::{record_event, ItemStatus};
+
+    let parsed: ProgressRecordArgs = match parse_args("progress_record", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let status = match ItemStatus::parse(&parsed.status) {
+        Some(s) => s,
+        None => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown status: {}. Must be one of: pending, \
+                         in_progress, completed, cancelled, blocked.",
+                        parsed.status
+                    )
+                }]
+            });
+        }
+    };
+
+    let timestamp = forge_core::iso_time::current_rfc3339_utc();
+    let path = std::path::Path::new(&parsed.progress_path);
+
+    match record_event(
+        path,
+        &parsed.session_id,
+        &parsed.item_id,
+        &parsed.summary,
+        status,
+        parsed.blocker.as_deref(),
+        parsed.refs.clone(),
+        &timestamp,
+    ) {
+        Ok(entry) => json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Progress event recorded: forge.progress_record\n\
+                     -----\n\
+                     event_id:    {eid}\n\
+                     recorded_at: {at}\n\
+                     session_id:  {sid}\n\
+                     item_id:     {iid}\n\
+                     status:      {status}\n\
+                     summary:     {summ}\n\
+                     blocker:     {blk}\n\
+                     refs:        {refs}\n\
+                     progress_path:{path}",
+                    eid = entry.event_id,
+                    at = entry.recorded_at,
+                    sid = entry.session_id,
+                    iid = entry.item_id,
+                    status = entry.status.slug(),
+                    summ = entry.summary,
+                    blk = entry.blocker.as_deref().unwrap_or("(none)"),
+                    refs = entry.refs.join(", "),
+                    path = parsed.progress_path,
+                )
+            }]
+        }),
+        Err(e) => json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!("progress event append failed: {}", e)
+            }]
+        }),
+    }
+}
+
+/// List resolved progress items (#390).
+fn tool_forge_progress_list(args: Value) -> Value {
+    use forge_core::session_progress::{
+        items_by_status, read_events, resolved_items, ItemStatus,
+    };
+
+    let parsed: ProgressListArgs = match parse_args("progress_list", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    let path = std::path::Path::new(&parsed.progress_path);
+    let events = match read_events(path) {
+        Ok(e) => e,
+        Err(e) => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!("progress log read failed: {}", e)
+                }]
+            });
+        }
+    };
+
+    let items = resolved_items(&events);
+    let filtered = if let Some(ref s) = parsed.status {
+        match ItemStatus::parse(s) {
+            Some(status) => items_by_status(&items, status),
+            None => {
+                return json!({
+                    "isError": true,
+                    "content": [{
+                        "type": "text",
+                        "text": format!("Unknown status filter: {s}")
+                    }]
+                });
+            }
+        }
+    } else {
+        items
+    };
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Progress items: forge.progress_list\n\
+                 -----\n\
+                 progress_path: {path}\n\
+                 status_filter: {sf}\n\
+                 total_items:   {count}\n\
+                 \n\
+                 Items (JSON, sorted by item_id):\n{json}",
+                path = parsed.progress_path,
+                sf = parsed.status.as_deref().unwrap_or("(any)"),
+                count = filtered.len(),
+                json = serde_json::to_string_pretty(&filtered).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Canonical-task mapping query (#389).
