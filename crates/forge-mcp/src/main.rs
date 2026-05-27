@@ -41,13 +41,14 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 mod typed_args;
 use typed_args::{
     parse_args, AddAuditPhaseArgs, AddPrimitiveArgs, AlternativesArgs,
-    AuditPlanExecutionArgs, AuthoringArgs, BudgetsArgs, BuildArgs, BuildSiteFromBriefArgs,
-    CodegenArgs, CohortSummaryArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
-    DoctrineViolationExplanationArgs, ExemplarsArgs, FixArgs, ManifestValidateArgs,
-    ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs, OperatorProfileArgs,
-    OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs, ReferenceExtractionArgs,
-    SiteFingerprintCheckArgs, SkillInvocationMetaArgs, SubstrateGapRegistrationArgs,
-    SynthesisPreviewArgs, VerifyContentOriginalityArgs, WorkflowsListArgs,
+    AuditPlanExecutionArgs, AuthoringArgs, BricksArgs, BudgetsArgs, BuildArgs,
+    BuildSiteFromBriefArgs, CodegenArgs, CohortSummaryArgs, ConfigArgs, DocsQueryArgs,
+    DoctrineForArgs, DoctrineViolationExplanationArgs, ExemplarsArgs, FixArgs,
+    ManifestValidateArgs, ModifyPrimitiveArgs, ModifySiteArgs, OperatorPreferencesArgs,
+    OperatorProfileArgs, OrientArgs, RecordCorrectionArgs, RecordOutcomeArgs,
+    ReferenceExtractionArgs, SiteFingerprintCheckArgs, SkillInvocationMetaArgs,
+    SubstrateGapRegistrationArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
+    WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -260,6 +261,17 @@ fn tool_list() -> Value {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
                         }
+                    }
+                }
+            },
+            {
+                "name": "forge.bricks",
+                "description": "Brick library (#383): pre-built multi-primitive compositions. Empty args returns full inventory; fit filter (universal/marketing_landing/brief/editorial/civic/documentation/portfolio) returns matching + Universal; id returns single entry.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "fit": {"type": "string", "description": "PageKind fit filter."},
+                        "id": {"type": "string", "description": "Look up a single brick by ID."}
                     }
                 }
             },
@@ -970,6 +982,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.audit_plan_execution" => {
                     Some(tool_forge_audit_plan_execution(args))
                 }
+                "forge.bricks" => Some(tool_forge_bricks(args)),
                 "forge.cohort_summary" => Some(tool_forge_cohort_summary(args)),
                 "forge.operator_profile" => Some(tool_forge_operator_profile(args)),
                 "forge.operator_preferences" => {
@@ -1208,6 +1221,62 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Brick library query (#383).
+fn tool_forge_bricks(args: Value) -> Value {
+    use forge_core::brick_library::{
+        all_bricks, bricks_for_fit, get_brick, BrickFit,
+    };
+
+    let parsed: BricksArgs = match parse_args("bricks", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    if let Some(ref id) = parsed.id {
+        return match get_brick(id) {
+            Some(b) => serde_json::to_value(b).unwrap_or(Value::Null),
+            None => Value::Null,
+        };
+    }
+
+    let fit_filter = parsed.fit.as_deref().and_then(|s| match s {
+        "universal" => Some(BrickFit::Universal),
+        "marketing_landing" => Some(BrickFit::MarketingLanding),
+        "brief" => Some(BrickFit::Brief),
+        "editorial" => Some(BrickFit::Editorial),
+        "civic" => Some(BrickFit::Civic),
+        "documentation" => Some(BrickFit::Documentation),
+        "portfolio" => Some(BrickFit::Portfolio),
+        _ => None,
+    });
+
+    let entries: Vec<&_> = if let Some(fit) = fit_filter {
+        bricks_for_fit(fit)
+    } else {
+        all_bricks().iter().collect()
+    };
+
+    let json_val = serde_json::to_value(&entries).unwrap_or(Value::Null);
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Brick library: forge.bricks\n\
+                 -----\n\
+                 fit:   {fit}\n\
+                 id:    {id}\n\
+                 count: {count}\n\
+                 \n\
+                 Bricks (JSON):\n{json}",
+                fit = parsed.fit.as_deref().unwrap_or("(any)"),
+                id = parsed.id.as_deref().unwrap_or("(any)"),
+                count = entries.len(),
+                json = serde_json::to_string_pretty(&json_val).unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Plan-vs-execution audit (#382).

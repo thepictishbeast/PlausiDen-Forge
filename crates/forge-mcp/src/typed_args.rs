@@ -154,6 +154,16 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.bricks` — Brick-library query.
+#[derive(Debug, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct BricksArgs {
+    #[serde(default)]
+    pub fit: Option<String>,
+    #[serde(default)]
+    pub id: Option<String>,
+}
+
 /// `forge.audit_plan_execution` — plan-vs-execution audit.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -519,6 +529,18 @@ mod tests {
                 "extra_field": "oops"
             }),
         );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_bricks_empty_ok() {
+        let args = parse_args::<BricksArgs>("bricks", json!({})).unwrap();
+        assert!(args.fit.is_none() && args.id.is_none());
+    }
+
+    #[test]
+    fn parse_bricks_rejects_unknown() {
+        let result = parse_args::<BricksArgs>("bricks", json!({"bogus": 1}));
         assert!(result.is_err());
     }
 
