@@ -123,7 +123,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   tests, doc-query entry, and audit-phase coverage.",
         skill_dir: "add-loom-primitive",
         mcp_tool: "forge.add_primitive",
-        status: PairingStatus::SkillOnly,
+        status: PairingStatus::Paired,
         task_ref: "#366",
     },
     WorkflowEntry {
@@ -284,11 +284,11 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #365 shipped: 2 Paired (build_site_from_brief +
-        // modify_site), 2 SkillOnly (add-loom-primitive, add-forge-
-        // phase), 7 Planned. Sums to 11.
-        assert_eq!(paired.len(), 2);
-        assert_eq!(skill_only.len(), 2);
+        // After #366 shipped: 3 Paired (build_site_from_brief,
+        // modify_site, add_primitive), 1 SkillOnly (add-forge-phase),
+        // 7 Planned. Sums to 11.
+        assert_eq!(paired.len(), 3);
+        assert_eq!(skill_only.len(), 1);
         assert_eq!(planned.len(), 7);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }

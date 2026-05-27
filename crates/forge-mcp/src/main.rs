@@ -40,9 +40,9 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod typed_args;
 use typed_args::{
-    parse_args, AuthoringArgs, BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs,
-    DocsQueryArgs, DoctrineForArgs, FixArgs, ManifestValidateArgs, ModifySiteArgs,
-    OrientArgs, SynthesisPreviewArgs, WorkflowsListArgs,
+    parse_args, AddPrimitiveArgs, AuthoringArgs, BuildArgs, BuildSiteFromBriefArgs,
+    CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs, FixArgs, ManifestValidateArgs,
+    ModifySiteArgs, OrientArgs, SynthesisPreviewArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -254,6 +254,28 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.add_primitive",
+                "description": "Pre-flight guard for adding a new primitive. Checks the proposed name against existing variants (case-insensitive substring + slug match) and surfaces near-duplicates. Paired with skills/add-loom-primitive/SKILL.md (#366).",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["proposed_name", "primitive_kind"],
+                    "properties": {
+                        "proposed_name": {
+                            "type": "string",
+                            "description": "Camel-case name for the proposed primitive (e.g., TimelineEvent)."
+                        },
+                        "primitive_kind": {
+                            "type": "string",
+                            "description": "One of: section (CmsSection variant), block (CmsBlock variant)."
+                        },
+                        "shape_summary": {
+                            "type": "string",
+                            "description": "One-line description of the primitive shape; surfaced in the duplicate-check report."
                         }
                     }
                 }
@@ -529,6 +551,7 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                     Some(tool_forge_build_site_from_brief(args).await)
                 }
                 "forge.modify_site" => Some(tool_forge_modify_site(args).await),
+                "forge.add_primitive" => Some(tool_forge_add_primitive(args)),
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -762,6 +785,123 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #3: pre-flight guard before adding a new primitive.
+///
+/// Pure function; no I/O. Takes the proposed name + kind and
+/// surfaces nearby existing variants from the substrate reachability
+/// reference set so the developer doesn't ship a near-duplicate.
+///
+/// Procedural guidance lives in `skills/add-loom-primitive/SKILL.md`.
+fn tool_forge_add_primitive(args: Value) -> Value {
+    let parsed: AddPrimitiveArgs = match parse_args("add_primitive", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    // Validate kind at boundary.
+    let kind_label = match parsed.primitive_kind.as_str() {
+        "section" => "CmsSection",
+        "block" => "CmsBlock",
+        other => {
+            return json!({
+                "isError": true,
+                "content": [{
+                    "type": "text",
+                    "text": format!(
+                        "Unknown primitive_kind: {}. Must be one of: section, block.",
+                        other
+                    )
+                }]
+            });
+        }
+    };
+
+    // Known near-duplicate buckets from the reachability audit
+    // (SUBSTRATE_REACHABILITY_AUDIT_2026_05_27.md). For a proposed
+    // name, surface the bucket(s) it overlaps with so the developer
+    // checks each before adding a new variant.
+    //
+    // This is intentionally a hand-curated set, not a fuzzy
+    // similarity search — explicit signal beats heuristic.
+    let proposed_lower = parsed.proposed_name.to_lowercase();
+    let related_buckets: Vec<(&str, &[&str])> = vec![
+        ("Hero family", &["hero", "hero_editorial", "hero_split", "hero_minimal", "image_hero"]),
+        ("Card family", &["card_feed", "feed_post", "review_card", "case_study", "product_card", "profile_card"]),
+        ("Image / photo", &["picture", "image_grid", "image_hero", "mosaic_grid", "slideshow", "figure", "figure_group"]),
+        ("Form family", &["form", "form_input", "form_select", "form_textarea", "form_toggle", "form_submit", "form_file", "form_date", "form_color", "form_search", "form_slider"]),
+        ("Auth flow", &["auth_card", "auth_flow_stepper", "mfa_prompt", "password_reset", "signed_in_card"]),
+        ("Commerce", &["product_card", "product_gallery", "product_grid", "product_spec", "cart_drawer", "add_to_cart", "price_tag", "pricing"]),
+        ("List / feed", &["card_feed", "thread_list", "thread_row", "comment_thread", "chat_thread"]),
+        ("Quote / testimonial", &["pull_quote", "testimonial", "review_card"]),
+        ("Code / dev", &["code", "code_shell", "math_block", "diagram"]),
+    ];
+
+    let mut overlaps: Vec<&str> = Vec::new();
+    let mut nearby_variants: Vec<&str> = Vec::new();
+    for (bucket_name, members) in &related_buckets {
+        for member in members.iter() {
+            if proposed_lower.contains(member) || member.contains(&proposed_lower) {
+                overlaps.push(bucket_name);
+                nearby_variants.push(member);
+            }
+        }
+    }
+    overlaps.sort_unstable();
+    overlaps.dedup();
+    nearby_variants.sort_unstable();
+    nearby_variants.dedup();
+
+    let mut report = format!(
+        "Pre-flight guard: forge.add_primitive\n\
+         -----\n\
+         Proposed name:   {}\n\
+         Primitive kind:  {} ({})\n",
+        parsed.proposed_name, parsed.primitive_kind, kind_label
+    );
+    if let Some(ref summary) = parsed.shape_summary {
+        report.push_str(&format!("Shape summary:   {}\n", summary));
+    }
+    report.push_str("\n");
+
+    if overlaps.is_empty() {
+        report.push_str(
+            "No obvious near-duplicate buckets detected.\n\
+             \n\
+             Next steps:\n\
+             1. Follow skills/add-loom-primitive/SKILL.md procedure.\n\
+             2. Check all 163 CmsSection variants directly: grep -nE \\\n   \
+                'pub enum CmsSection' crates/loom-cms-render/src/lib.rs\n\
+             3. Confirm no existing primitive satisfies the shape via \
+             property composition (per Hero pilot pattern, #387).\n\
+             4. Verify the need is substrate-general per prim-012, \
+             not site-specific.\n",
+        );
+    } else {
+        report.push_str(&format!(
+            "Near-duplicate buckets found: {}\n\
+             Nearby existing variants: {}\n\
+             \n\
+             Before adding a new variant:\n\
+             1. Read each nearby variant's existing definition + render impl.\n\
+             2. Could the shape be expressed by extending an existing variant \
+             (new field, new enum case for a sub-enum)?\n\
+             3. Could the shape be expressed via property composition \
+             (per Hero family pilot pattern, #387)?\n\
+             4. If a new primitive is genuinely needed, follow \
+             skills/add-loom-primitive/SKILL.md.\n",
+            overlaps.join(", "),
+            nearby_variants.join(", ")
+        ));
+    }
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": report
+        }]
+    })
 }
 
 /// Workflow #2: apply a scoped modification to an existing tenant.

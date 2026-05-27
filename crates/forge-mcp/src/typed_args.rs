@@ -154,6 +154,20 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.add_primitive` — Workflow #3 paired skill+MCP.
+///
+/// Pre-flight guard for adding a new primitive: checks the
+/// proposed name against existing variants + reach data so the
+/// developer doesn't ship a near-duplicate.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct AddPrimitiveArgs {
+    pub proposed_name: String,
+    pub primitive_kind: String,
+    #[serde(default)]
+    pub shape_summary: Option<String>,
+}
+
 /// `forge.modify_site` — Workflow #2 paired skill+MCP.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -306,6 +320,29 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_add_primitive_requires_two_fields() {
+        let result = parse_args::<AddPrimitiveArgs>(
+            "add_primitive",
+            json!({"proposed_name": "TimelineEvent"}),
+        );
+        assert!(result.is_err(), "missing primitive_kind should fail");
+    }
+
+    #[test]
+    fn parse_add_primitive_accepts_optional_summary() {
+        let args = parse_args::<AddPrimitiveArgs>(
+            "add_primitive",
+            json!({
+                "proposed_name": "TimelineEvent",
+                "primitive_kind": "section",
+                "shape_summary": "Date + title + summary, vertically stacked"
+            }),
+        )
+        .unwrap();
+        assert!(args.shape_summary.is_some());
     }
 
     #[test]
