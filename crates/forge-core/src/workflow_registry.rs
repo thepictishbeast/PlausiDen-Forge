@@ -195,7 +195,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   the current task? Used as orientation when scope is ambiguous.",
         skill_dir: "forge-skill-invocation-meta",
         mcp_tool: "forge.skill_invocation_meta",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#374",
     },
 ];
@@ -284,11 +284,11 @@ mod tests {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
         let paired = workflows_with_status(PairingStatus::Paired);
-        // After #373 shipped: 10 Paired (add doctrine_violation_explanation),
-        // 0 SkillOnly, 1 Planned. Sums to 11.
-        assert_eq!(paired.len(), 10);
+        // After #374 shipped: 11 Paired (full registry coverage),
+        // 0 SkillOnly, 0 Planned. Sums to 11.
+        assert_eq!(paired.len(), 11);
         assert_eq!(skill_only.len(), 0);
-        assert_eq!(planned.len(), 1);
+        assert_eq!(planned.len(), 0);
         assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 

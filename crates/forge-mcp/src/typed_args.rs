@@ -154,6 +154,24 @@ impl BuildSiteFromBriefArgs {
     }
 }
 
+/// `forge.skill_invocation_meta` — Workflow #11 paired skill+MCP.
+///
+/// Entry-point router: given a task description, surfaces the
+/// matching workflow candidates from `workflow_registry`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct SkillInvocationMetaArgs {
+    pub task_description: String,
+    #[serde(default = "SkillInvocationMetaArgs::default_max_candidates")]
+    pub max_candidates: u32,
+}
+
+impl SkillInvocationMetaArgs {
+    const fn default_max_candidates() -> u32 {
+        5
+    }
+}
+
 /// `forge.doctrine_violation_explanation` — Workflow #10 paired skill+MCP.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -415,6 +433,25 @@ mod tests {
             }),
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_skill_invocation_meta_requires_description() {
+        let result = parse_args::<SkillInvocationMetaArgs>(
+            "skill_invocation_meta",
+            json!({}),
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_skill_invocation_meta_defaults_max_candidates() {
+        let args = parse_args::<SkillInvocationMetaArgs>(
+            "skill_invocation_meta",
+            json!({"task_description": "swap theme to editorial"}),
+        )
+        .unwrap();
+        assert_eq!(args.max_candidates, 5);
     }
 
     #[test]

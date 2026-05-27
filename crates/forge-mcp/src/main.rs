@@ -44,8 +44,8 @@ use typed_args::{
     BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs, DocsQueryArgs, DoctrineForArgs,
     DoctrineViolationExplanationArgs, FixArgs, ManifestValidateArgs, ModifyPrimitiveArgs,
     ModifySiteArgs, OrientArgs, ReferenceExtractionArgs, SiteFingerprintCheckArgs,
-    SubstrateGapRegistrationArgs, SynthesisPreviewArgs, VerifyContentOriginalityArgs,
-    WorkflowsListArgs,
+    SkillInvocationMetaArgs, SubstrateGapRegistrationArgs, SynthesisPreviewArgs,
+    VerifyContentOriginalityArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -257,6 +257,25 @@ fn tool_list() -> Value {
                         "slug": {
                             "type": "string",
                             "description": "Look up a single entry by exact slug. When set, other filters are ignored and a single entry (or null) is returned."
+                        }
+                    }
+                }
+            },
+            {
+                "name": "forge.skill_invocation_meta",
+                "description": "Entry-point router: given a task description, returns ranked workflow candidates from the registry. Paired with skills/forge-skill-invocation-meta/SKILL.md (#374). The first step for any non-trivial substrate operation.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["task_description"],
+                    "properties": {
+                        "task_description": {
+                            "type": "string",
+                            "description": "Freeform sentence describing what the operator wants to accomplish."
+                        },
+                        "max_candidates": {
+                            "type": "integer",
+                            "description": "Cap on returned candidates. Default 5.",
+                            "minimum": 1
                         }
                     }
                 }
@@ -739,6 +758,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.doctrine_violation_explanation" => {
                     Some(tool_forge_doctrine_violation_explanation(args).await)
                 }
+                "forge.skill_invocation_meta" => {
+                    Some(tool_forge_skill_invocation_meta(args))
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -972,6 +994,158 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #11: meta-skill entry-point router.
+///
+/// Token-based matching against every workflow_registry entry's
+/// slug + summary. Pure function; no I/O.
+fn tool_forge_skill_invocation_meta(args: Value) -> Value {
+    use forge_core::workflow_registry::all_workflows;
+
+    let parsed: SkillInvocationMetaArgs =
+        match parse_args("skill_invocation_meta", args) {
+            Ok(p) => p,
+            Err(err_value) => return err_value,
+        };
+
+    let task_lower = parsed.task_description.to_lowercase();
+    let task_tokens: std::collections::HashSet<&str> = task_lower
+        .split(|c: char| !c.is_alphanumeric() && c != '_')
+        .filter(|t| !t.is_empty() && t.len() > 2)
+        .collect();
+
+    // Action verbs that route strongly to specific workflows.
+    let verb_routes: &[(&str, &str)] = &[
+        ("build", "build_site_from_brief"),
+        ("brief", "build_site_from_brief"),
+        ("modify", "modify_site"),
+        ("change", "modify_site"),
+        ("swap", "modify_site"),
+        ("primitive", "modify_primitive"),
+        ("variant", "modify_primitive"),
+        ("phase", "add_audit_phase"),
+        ("audit", "add_audit_phase"),
+        ("originality", "verify_content_originality"),
+        ("duplicate", "verify_content_originality"),
+        ("reuse", "verify_content_originality"),
+        ("fingerprint", "site_fingerprint_check"),
+        ("structural", "site_fingerprint_check"),
+        ("extract", "reference_extraction"),
+        ("reference", "reference_extraction"),
+        ("url", "reference_extraction"),
+        ("gap", "substrate_gap_registration"),
+        ("register", "substrate_gap_registration"),
+        ("missing", "substrate_gap_registration"),
+        ("violation", "doctrine_violation_explanation"),
+        ("doctrine", "doctrine_violation_explanation"),
+        ("explain", "doctrine_violation_explanation"),
+    ];
+
+    #[derive(Clone)]
+    struct Candidate {
+        slug: &'static str,
+        skill_dir: &'static str,
+        mcp_tool: &'static str,
+        summary: &'static str,
+        score: u32,
+        reasons: Vec<String>,
+    }
+
+    let mut candidates: Vec<Candidate> = all_workflows()
+        .iter()
+        .map(|w| Candidate {
+            slug: w.slug,
+            skill_dir: w.skill_dir,
+            mcp_tool: w.mcp_tool,
+            summary: w.summary,
+            score: 0,
+            reasons: Vec::new(),
+        })
+        .collect();
+
+    // Score: slug-token matches worth 2, summary-token matches worth 1.
+    for cand in &mut candidates {
+        for slug_tok in cand.slug.split('_') {
+            if task_tokens.contains(slug_tok) {
+                cand.score += 2;
+                cand.reasons.push(format!("slug:'{}'", slug_tok));
+            }
+        }
+        let summary_lower = cand.summary.to_lowercase();
+        for tok in &task_tokens {
+            if summary_lower.contains(tok) {
+                cand.score += 1;
+                cand.reasons.push(format!("summary:'{}'", tok));
+            }
+        }
+        // Verb route bonus.
+        for (verb, route_slug) in verb_routes {
+            if task_tokens.contains(verb) && cand.slug == *route_slug {
+                cand.score += 3;
+                cand.reasons.push(format!("verb-route:'{}'", verb));
+            }
+        }
+    }
+
+    candidates.retain(|c| c.score > 0);
+    candidates.sort_by(|a, b| b.score.cmp(&a.score));
+    let max_n = parsed.max_candidates as usize;
+    candidates.truncate(max_n);
+
+    if candidates.is_empty() {
+        return json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Skill-invocation meta: no candidates matched.\n\
+                     -----\n\
+                     task_description: {}\n\
+                     \n\
+                     Two paths forward:\n\
+                     1. Refine the task description with substrate vocabulary \
+                     (theme, primitive, audit, fingerprint, etc.) and re-call.\n\
+                     2. Register as a substrate gap via \
+                     forge.substrate_gap_registration (#372) with kind: tooling.",
+                    parsed.task_description
+                )
+            }]
+        });
+    }
+
+    let candidates_json: Vec<Value> = candidates
+        .iter()
+        .map(|c| {
+            json!({
+                "slug": c.slug,
+                "skill_dir": c.skill_dir,
+                "mcp_tool": c.mcp_tool,
+                "summary": c.summary,
+                "score": c.score,
+                "match_reasons": c.reasons
+            })
+        })
+        .collect();
+
+    json!({
+        "content": [{
+            "type": "text",
+            "text": format!(
+                "Skill-invocation meta: candidates\n\
+                 -----\n\
+                 task_description: {}\n\
+                 \n\
+                 Top candidates (sorted by score):\n{}\n\
+                 \n\
+                 Read each candidate's SKILL.md `When to invoke` section\n\
+                 before committing. Per skills/forge-skill-invocation-meta/\n\
+                 SKILL.md: the meta returns candidates, not commitments.",
+                parsed.task_description,
+                serde_json::to_string_pretty(&candidates_json)
+                    .unwrap_or_default()
+            )
+        }]
+    })
 }
 
 /// Workflow #10: explain a doctrine rule by ID.
