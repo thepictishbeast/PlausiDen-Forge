@@ -136,6 +136,24 @@ pub(crate) struct ManifestValidateArgs {
     pub root: Option<String>,
 }
 
+/// `forge.build_site_from_brief` — Workflow #1 paired skill+MCP.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct BuildSiteFromBriefArgs {
+    pub brief_path: String,
+    pub tenant_root: String,
+    pub site_id: String,
+    pub tenant_id: String,
+    #[serde(default = "BuildSiteFromBriefArgs::default_dry_run")]
+    pub dry_run: bool,
+}
+
+impl BuildSiteFromBriefArgs {
+    const fn default_dry_run() -> bool {
+        true
+    }
+}
+
 /// `forge.workflows.list` — { status?: String, slug?: String }
 #[derive(Debug, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
@@ -232,6 +250,45 @@ mod tests {
         let args = parse_args::<CodegenArgs>("codegen", json!({})).unwrap();
         assert!(args.out.is_none());
         assert!(!args.dry_run);
+    }
+
+    #[test]
+    fn parse_build_site_from_brief_requires_all_four_fields() {
+        let result = parse_args::<BuildSiteFromBriefArgs>(
+            "build_site_from_brief",
+            json!({"brief_path": "/tmp/brief.toml"}),
+        );
+        assert!(result.is_err(), "missing tenant_root/site_id/tenant_id should fail");
+    }
+
+    #[test]
+    fn parse_build_site_from_brief_dry_run_defaults_true() {
+        let args = parse_args::<BuildSiteFromBriefArgs>(
+            "build_site_from_brief",
+            json!({
+                "brief_path": "/tmp/brief.toml",
+                "tenant_root": "/tmp/tenant",
+                "site_id": "test",
+                "tenant_id": "test"
+            }),
+        )
+        .unwrap();
+        assert!(args.dry_run);
+    }
+
+    #[test]
+    fn parse_build_site_from_brief_rejects_unknown_field() {
+        let result = parse_args::<BuildSiteFromBriefArgs>(
+            "build_site_from_brief",
+            json!({
+                "brief_path": "/tmp/brief.toml",
+                "tenant_root": "/tmp/tenant",
+                "site_id": "test",
+                "tenant_id": "test",
+                "extra_field": "oops"
+            }),
+        );
+        assert!(result.is_err());
     }
 
     #[test]

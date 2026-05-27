@@ -11,6 +11,7 @@ Skills are typed, cross-AI-compatible (YAML frontmatter + Markdown body), versio
 | [add-forge-phase](add-forge-phase/SKILL.md) | Adding a new Forge audit phase that implements the `Phase` trait |
 | [add-loom-primitive](add-loom-primitive/SKILL.md) | Adding a new Loom primitive (or variant) for sites to compose with |
 | [author-cms-content](author-cms-content/SKILL.md) | Authoring `cms/*.json` for a new site or new page |
+| [forge-build-site-from-brief](forge-build-site-from-brief/SKILL.md) | Building a tenant site from a written brief (paired with `forge.build_site_from_brief` MCP tool) |
 | [pixel-reproduce-site](pixel-reproduce-site/SKILL.md) | Reproducing a live site pixel-by-pixel via Forge for capability validation |
 | [extend-doctrine-rules](extend-doctrine-rules/SKILL.md) | Adding new rules to the AVP-Doctrine database |
 

@@ -105,7 +105,7 @@ pub const WORKFLOW_REGISTRY: &[WorkflowEntry] = &[
                   emits SiteSpec, runs forge build, surfaces audit findings.",
         skill_dir: "forge-build-site-from-brief",
         mcp_tool: "forge.build_site_from_brief",
-        status: PairingStatus::Planned,
+        status: PairingStatus::Paired,
         task_ref: "#364",
     },
     WorkflowEntry {
@@ -283,10 +283,14 @@ mod tests {
     fn workflows_with_status_filters() {
         let planned = workflows_with_status(PairingStatus::Planned);
         let skill_only = workflows_with_status(PairingStatus::SkillOnly);
-        // 2 skill-only at registration time (add-loom-primitive +
-        // add-forge-phase). Remaining 9 are Planned.
+        let paired = workflows_with_status(PairingStatus::Paired);
+        // After #364 shipped: 1 Paired (build_site_from_brief),
+        // 2 SkillOnly (add-loom-primitive, add-forge-phase),
+        // 8 Planned. Sums to 11.
+        assert_eq!(paired.len(), 1);
         assert_eq!(skill_only.len(), 2);
-        assert_eq!(planned.len(), 9);
+        assert_eq!(planned.len(), 8);
+        assert_eq!(paired.len() + skill_only.len() + planned.len(), 11);
     }
 
     #[test]

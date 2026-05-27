@@ -40,9 +40,9 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod typed_args;
 use typed_args::{
-    parse_args, AuthoringArgs, BuildArgs, CodegenArgs, ConfigArgs, DocsQueryArgs,
-    DoctrineForArgs, FixArgs, ManifestValidateArgs, OrientArgs, SynthesisPreviewArgs,
-    WorkflowsListArgs,
+    parse_args, AuthoringArgs, BuildArgs, BuildSiteFromBriefArgs, CodegenArgs, ConfigArgs,
+    DocsQueryArgs, DoctrineForArgs, FixArgs, ManifestValidateArgs, OrientArgs,
+    SynthesisPreviewArgs, WorkflowsListArgs,
 };
 
 #[derive(Debug, Deserialize)]
@@ -259,6 +259,36 @@ fn tool_list() -> Value {
                 }
             },
             {
+                "name": "forge.build_site_from_brief",
+                "description": "Build a tenant site from a written brief: parses the brief, scaffolds SiteSpec, optionally writes cms/*.json and runs forge build. Paired with skills/forge-build-site-from-brief/SKILL.md (#364). Default dry_run: prints planned SiteSpec without writing.",
+                "inputSchema": {
+                    "type": "object",
+                    "required": ["brief_path", "tenant_root", "site_id", "tenant_id"],
+                    "properties": {
+                        "brief_path": {
+                            "type": "string",
+                            "description": "Absolute path to the brief file (TOML / JSON / Markdown)."
+                        },
+                        "tenant_root": {
+                            "type": "string",
+                            "description": "Absolute path where the tenant repo will live."
+                        },
+                        "site_id": {
+                            "type": "string",
+                            "description": "Kebab-case site identifier."
+                        },
+                        "tenant_id": {
+                            "type": "string",
+                            "description": "Kebab-case tenant identifier (often same as site_id)."
+                        },
+                        "dry_run": {
+                            "type": "boolean",
+                            "description": "Default true. When true, prints planned SiteSpec without writing. When false, writes cms/*.json and runs forge build."
+                        }
+                    }
+                }
+            },
+            {
                 "name": "forge.workflows.list",
                 "description": "List the substrate's paired (skill, MCP-tool) workflows. Each workflow has a SKILL.md + an MCP tool; this surface lets agents discover them programmatically. Each filter is optional; absent filter returns the full registry.",
                 "inputSchema": {
@@ -469,6 +499,9 @@ async fn handle_request(req: JsonRpcRequest) -> JsonRpcResponse {
                 "forge.manifest.validate" => Some(tool_forge_manifest_validate(args).await),
                 "forge.docs.query" => Some(tool_forge_docs_query(args)),
                 "forge.workflows.list" => Some(tool_forge_workflows_list(args)),
+                "forge.build_site_from_brief" => {
+                    Some(tool_forge_build_site_from_brief(args).await)
+                }
                 other => {
                     return JsonRpcResponse {
                         jsonrpc: "2.0",
@@ -702,6 +735,96 @@ fn tool_forge_docs_query(args: Value) -> Value {
     };
     let entries = index.query(&filter);
     serde_json::to_value(&entries).unwrap_or(Value::Null)
+}
+
+/// Workflow #1: build a tenant site from a written brief.
+///
+/// Thin orchestrator at the MCP layer: validates inputs, then
+/// delegates to existing forge subcommands. The procedural
+/// guidance lives in `skills/forge-build-site-from-brief/SKILL.md`.
+///
+/// Dry-run path: validates the brief exists + readable, reports
+/// the planned tenant_root structure, no writes.
+///
+/// Real-run path: requires the operator to follow the skill
+/// procedure (build SiteSpec, write cms files), then runs
+/// `forge build --root <tenant_root>` and surfaces the report.
+async fn tool_forge_build_site_from_brief(args: Value) -> Value {
+    let parsed: BuildSiteFromBriefArgs = match parse_args("build_site_from_brief", args) {
+        Ok(p) => p,
+        Err(err_value) => return err_value,
+    };
+
+    // Validate brief exists + readable. This is the minimum boundary
+    // contract the substrate enforces; brief-shape validation belongs
+    // to the skill procedure, not the MCP tool.
+    if !std::path::Path::new(&parsed.brief_path).is_file() {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "brief_path not a file or unreadable: {}",
+                    parsed.brief_path
+                )
+            }]
+        });
+    }
+
+    if parsed.dry_run {
+        // Dry-run: report what a real-run would do.
+        return json!({
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "Dry-run: forge.build_site_from_brief\n\
+                     -----\n\
+                     brief_path:  {brief}\n\
+                     tenant_root: {root}\n\
+                     site_id:     {site}\n\
+                     tenant_id:   {tenant}\n\
+                     \n\
+                     Real-run (dry_run: false) would:\n\
+                     1. Parse the brief at {brief}\n\
+                     2. Scaffold SiteSpec via forge-core::synthesis\n\
+                     3. Write {root}/cms/<page>.json files\n\
+                     4. Run `forge build --root {root}`\n\
+                     5. Return the structured build report\n\
+                     \n\
+                     Follow skills/forge-build-site-from-brief/SKILL.md\n\
+                     for procedural guidance.",
+                    brief = parsed.brief_path,
+                    root = parsed.tenant_root,
+                    site = parsed.site_id,
+                    tenant = parsed.tenant_id
+                )
+            }]
+        });
+    }
+
+    // Real-run path: requires tenant_root to exist with cms/*.json
+    // already populated per skill procedure. The MCP tool runs the
+    // build phase against that prepared root.
+    if !std::path::Path::new(&parsed.tenant_root).is_dir() {
+        return json!({
+            "isError": true,
+            "content": [{
+                "type": "text",
+                "text": format!(
+                    "tenant_root not a directory: {}\n\
+                     Follow skills/forge-build-site-from-brief/SKILL.md \
+                     step 4 to write cms/*.json before real-run.",
+                    parsed.tenant_root
+                )
+            }]
+        });
+    }
+
+    run_forge(
+        "build_site_from_brief",
+        &["build", "--root", &parsed.tenant_root, "--json"],
+    )
+    .await
 }
 
 /// List the paired (skill, MCP-tool) workflow registry.
