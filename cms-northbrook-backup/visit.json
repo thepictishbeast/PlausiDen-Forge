@@ -1,0 +1,253 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Visit — Northbrook Observatory",
+  "description": "Hours, directions, accessibility, what to bring, and our dark-sky pledge.",
+  "brand": "Northbrook Observatory",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Monthly sky-report", "href": "/contact.html#newsletter", "data_backend": "cta-newsletter-sky"},
+    {"label": "Schedule a visit", "href": "/visit.html#schedule", "data_backend": "cta-schedule-visit"}
+  ],
+  "path": "/visit.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Visit",
+        "links": [
+          {"label": "Visit", "href": "/visit.html", "data_backend": "view-visit"},
+          {"label": "Public observing",   "href": "/programs.html#public", "data_backend": "view-programs"},
+          {"label": "School programs",    "href": "/programs.html#schools", "data_backend": "view-programs"},
+          {"label": "Accessibility",      "href": "/visit.html#access",    "data_backend": "view-visit"}
+        ]
+      },
+      {
+        "heading": "Read",
+        "links": [
+          {"label": "About", "href": "/about.html",       "data_backend": "view-about"},
+          {"label": "Field notes",           "href": "/field-notes.html", "data_backend": "view-field-archive"},
+          {"label": "Current research",      "href": "/programs.html#research", "data_backend": "view-programs"}
+        ]
+      },
+      {
+        "heading": "Support",
+        "links": [
+          {"label": "Donate",                "href": "/about.html#support", "data_backend": "cta-donate"},
+          {"label": "Volunteer",             "href": "/contact.html#volunteer",       "data_backend": "view-contact"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Northbrook Observatory",
+      "phone": "603-555-0188",
+      "email": "stars@northbrook-observatory.example",
+      "address": "1240 Ridge Road, Northbrook, NH 03234",
+      "jurisdiction": "Grafton County, New Hampshire"
+    },
+    "legal_links": [
+      {"label": "Dark-sky pledge", "href": "/visit.html#darksky", "data_backend": "view-visit"},
+      {"label": "Land acknowledgement", "href": "/about.html#land", "data_backend": "view-about"}
+    ],
+    "colophon": "© 2026 Northbrook Observatory · A 501(c)(3) nonprofit · Founded 1888"
+  },
+  "nav_links": [
+    {"label": "About",       "href": "/about.html",       "data_backend": "view-about"},
+    {"label": "Programs",    "href": "/programs.html",    "data_backend": "view-programs"},
+    {"label": "Field notes", "href": "/field-notes.html", "data_backend": "view-field-archive"},
+    {"label": "Visit",       "href": "/visit.html",       "data_backend": "view-visit", "current": true},
+    {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Visit",
+      "title": "Coming up the ridge.",
+      "lede": "Ridge Road runs eight miles west from the village of Northbrook. The observatory sits at the top, behind a gate that we open an hour before doors. Be patient — the last mile is unpaved and full of frost heaves through April.",
+      "cta": {
+        "label": "Schedule a visit",
+        "href": "/visit.html#schedule",
+        "data_backend": "cta-schedule-visit"
+      },
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-95.jpg",
+        "alt": "Editorial photograph of a wooded ridge road at dusk with the silhouette of an observatory dome at the top.",
+        "overlay": "dark"
+      },
+      "height": "comfortable"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Schedule.","id":"schedule"
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Public observing nights — 2026",
+      "items": [
+        {
+          "key": "Friday 2026-06-12",
+          "value": "Saturn at opposition, rings 4.2° open. Cassini Division clearly resolved on average seeing.",
+          "hint": "Doors 21:30 · Dome opens at full dark · Closes 23:30"
+        },
+        {
+          "key": "Friday 2026-07-10",
+          "value": "Perseid meteors, early phase. Outdoor observing only — dome closed for radiant counting.",
+          "hint": "Doors 21:30 · Outdoor only · Closes when visitor count drops below 3"
+        },
+        {
+          "key": "Friday 2026-08-14",
+          "value": "Perseid peak + late-summer deep-sky tour (M27 / M57 / Veil).",
+          "hint": "Doors 21:00 · Dome + lawn · Closes 00:30 (subject to ZHR)"
+        },
+        {
+          "key": "Friday 2026-09-11",
+          "value": "Harvest Moon. Bright lunar program, no deep-sky. Excellent for first-time visitors.",
+          "hint": "Doors 19:30 (early — moon rises at 20:00) · Closes 22:00"
+        },
+        {
+          "key": "Friday 2026-10-09",
+          "value": "Autumn deep-sky program. Andromeda Galaxy, Triangulum, Double Cluster.",
+          "hint": "Doors 19:00 · Dome opens 19:45 · Closes 22:30"
+        },
+        {
+          "key": "Friday 2026-11-13",
+          "value": "Leonid meteors + outer-planet imaging session.",
+          "hint": "Doors 18:30 · Outdoor + dome rotation · Closes 22:00"
+        }
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "Public nights are free to attend, no registration required. For group visits (6 or more), please email at least two weeks in advance so we can scale staffing. For school programs, six weeks is preferred — see the Programs page."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Directions."
+    },
+    {
+      "kind": "paragraph",
+      "text": "1240 Ridge Road, Northbrook, NH 03234. From the village of Northbrook, take Main Street west — it becomes Ridge Road past the cemetery. Continue eight miles. The last mile is unpaved; passenger vehicles are fine in dry conditions but watch for frost heaves in spring and ice in winter. The gate is unsigned — there's a brass-plated plaque on a post on the right side just before the driveway. The driveway is on the left."
+    },
+    {
+      "kind": "def_list",
+      "items": [
+        {
+          "term": "From Plymouth (NH)",
+          "definition": "I-93 north to Exit 26. Right on US-3. Left on Main Street in Northbrook village. Ridge Road begins at the cemetery. Allow 35 minutes from the highway."
+        },
+        {
+          "term": "From Concord (NH)",
+          "definition": "I-93 north to Exit 26. Follow as above. Allow 75 minutes from Concord."
+        },
+        {
+          "term": "From Hanover (NH) / Dartmouth",
+          "definition": "NH-118 east to Warren. NH-25 east to Wentworth. NH-25C / Pemigewasset Road south to Northbrook. Allow 65 minutes from Hanover."
+        },
+        {
+          "term": "From Boston (MA)",
+          "definition": "I-93 north all the way. Allow 2 hours 45 minutes in clear conditions; longer in winter."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Accessibility.","id":"access"
+    },
+    {
+      "kind": "paragraph",
+      "text": "We have worked hard on this since the 2018 refit and there's still ground to cover. Below is the current honest accounting — write to us if your situation isn't addressed and we'll figure something out before your visit."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "What we have",
+      "items": [
+        {
+          "key": "Ground floor",
+          "value": "Lobby, accessible restroom, lawn observing area, and the original-floor display are all step-free. Door widths meet ADA. The parking area is gravel but firm; we have two designated accessible spaces near the main entrance.",
+          "hint": "Step-free path of travel"
+        },
+        {
+          "key": "Dome floor (telescope)",
+          "value": "Reachable by a 14-step stairwell or by an installed platform lift (refit 2018). Lift weight capacity 600 lb / 272 kg. Maximum chair footprint approximately 30 × 50 inches.",
+          "hint": "Lift available"
+        },
+        {
+          "key": "Eyepiece access",
+          "value": "Cassegrain configuration means the eyepiece sits at a near-constant 1.4m above the dome floor. We have a fixed step (one step, 18 cm rise) and a tripod-mounted seated eyepiece adapter that brings the view down to seated height for any visitor who prefers it.",
+          "hint": "Seated viewing available"
+        },
+        {
+          "key": "Audio program",
+          "value": "Volunteer hosts can describe what's in the eyepiece in detail. For visitors who'd prefer that to looking through the eyepiece themselves — say so and we'll set up.",
+          "hint": "For low-vision and blind visitors"
+        },
+        {
+          "key": "Service animals",
+          "value": "Welcome everywhere on the property. The platform lift can accommodate handler + service animal. Please bring water; the dome interior is dry.",
+          "hint": "No species restriction; we follow ADA"
+        }
+      ]
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "What we don't yet have",
+      "items": [
+        {
+          "key": "Restroom on the dome floor",
+          "value": "There is none. The accessible restroom is on the ground floor. Plan accordingly — the lift takes 90 seconds each way.",
+          "hint": "Working on it; needs the 2027 capital cycle"
+        },
+        {
+          "key": "ASL interpretation",
+          "value": "We do not have ASL interpreters on staff. We can hire one for advance-booked group visits with two weeks' notice; let us know and we will absorb the cost.",
+          "hint": "Available on request"
+        },
+        {
+          "key": "Audio induction loop",
+          "value": "Not installed in the dome. The dome's acoustic profile (dome echo, motor noise during rotation) is genuinely difficult for hearing-aid users.",
+          "hint": "On the equipment-list backlog"
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Dark-sky pledge.","id":"darksky"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The observatory is a charter signatory to the New Hampshire Dark Sky Coalition. We commit, in writing, to the following — and we expect visitors to honour the same standards on the property and on Ridge Road during the approach."
+    },
+    {
+      "kind": "def_list",
+      "items": [
+        {
+          "term": "On the property",
+          "definition": "Outdoor fixtures are full cutoff, amber-spectrum (1800K), and on motion sensors. Lobby windows are blackout-curtained during dome operation. No outdoor advertising. No floodlighting of the dome or the building, ever."
+        },
+        {
+          "term": "During visits",
+          "definition": "White flashlights inside the dome are not permitted. Red flashlights are available at the door. Mobile-phone screens should be set to red mode or below 5% brightness. We can lend red filters for headlamps."
+        },
+        {
+          "term": "On Ridge Road",
+          "definition": "If you arrive after dome-opening, please drive with parking lights only for the final half-mile. The road is straight and slow; we have signage. Headlights wash the lawn-observing field."
+        },
+        {
+          "term": "Off-site advocacy",
+          "definition": "We comment on every town-meeting article in Grafton County that proposes new street lighting, big-box development, or commercial signage taller than ten feet. The dark we have is the dark we keep by paying attention every time someone proposes the opposite."
+        }
+      ]
+    },
+    {
+      "kind": "pull_quote",
+      "body": "Light pollution is the only environmental damage that can be undone in a single switch.",
+      "attribution": "from the NH Dark Sky Coalition annual report"
+    }
+  ]
+}

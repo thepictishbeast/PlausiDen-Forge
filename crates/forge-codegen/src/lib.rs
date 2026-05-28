@@ -770,6 +770,8 @@ mod tests {
         loom_cms_render::CmsPage {
             brand: None,
             brand_logo: None,
+        utility_strip: None,
+        nav_bar_color_role: None,
             theme: None,
             chrome: None,
             content_width: None,

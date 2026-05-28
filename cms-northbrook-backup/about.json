@@ -1,0 +1,213 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "About — Northbrook Observatory",
+  "description": "History, mission, telescope specs, the people who keep the dome turning, and how to support the observatory's public-night program.",
+  "brand": "Northbrook Observatory",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Monthly sky-report", "href": "/contact.html#newsletter", "data_backend": "cta-newsletter-sky"},
+    {"label": "Schedule a visit", "href": "/visit.html#schedule", "data_backend": "cta-schedule-visit"}
+  ],
+  "path": "/about.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Visit",
+        "links": [
+          {"label": "Visit", "href": "/visit.html", "data_backend": "view-visit"},
+          {"label": "Public observing",   "href": "/programs.html#public", "data_backend": "view-programs"},
+          {"label": "School programs",    "href": "/programs.html#schools", "data_backend": "view-programs"},
+          {"label": "Accessibility",      "href": "/visit.html#access",    "data_backend": "view-visit"}
+        ]
+      },
+      {
+        "heading": "Read",
+        "links": [
+          {"label": "About", "href": "/about.html",       "data_backend": "view-about"},
+          {"label": "Field notes",           "href": "/field-notes.html", "data_backend": "view-field-archive"},
+          {"label": "Current research",      "href": "/programs.html#research", "data_backend": "view-programs"}
+        ]
+      },
+      {
+        "heading": "Support",
+        "links": [
+          {"label": "Donate",                "href": "/about.html#support", "data_backend": "cta-donate"},
+          {"label": "Volunteer",             "href": "/contact.html#volunteer",       "data_backend": "view-contact"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Northbrook Observatory",
+      "phone": "603-555-0188",
+      "email": "stars@northbrook-observatory.example",
+      "address": "1240 Ridge Road, Northbrook, NH 03234",
+      "jurisdiction": "Grafton County, New Hampshire"
+    },
+    "legal_links": [
+      {"label": "Dark-sky pledge", "href": "/visit.html#darksky", "data_backend": "view-visit"},
+      {"label": "Land acknowledgement", "href": "/about.html#land", "data_backend": "view-about"}
+    ],
+    "colophon": "© 2026 Northbrook Observatory · A 501(c)(3) nonprofit · Founded 1888"
+  },
+  "nav_links": [
+    {"label": "About",       "href": "/about.html",       "data_backend": "view-about",        "current": true},
+    {"label": "Programs",    "href": "/programs.html",    "data_backend": "view-programs"},
+    {"label": "Field notes", "href": "/field-notes.html", "data_backend": "view-field-archive"},
+    {"label": "Visit",       "href": "/visit.html",       "data_backend": "view-visit"},
+    {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact"}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "About",
+      "title": "Northbrook Observatory.",
+      "lede": "A 501(c)(3) public-research observatory on Ridge Road, eight miles west of the village of Northbrook. We host monthly public observing nights, school programs from October through May, and a small research portfolio centered on photometry of variable stars.",
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-22.jpg",
+        "alt": "Editorial photograph of the observatory dome against an evening sky, with the surrounding forest in silhouette.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Mission."
+    },
+    {
+      "kind": "paragraph",
+      "text": "The observatory exists for two reasons: to give people who don't otherwise get to look through a forty-inch telescope a chance to do so, and to keep the building standing through another generation. Every program we run, every grant we accept, every dollar we raise points back at one of those two ends."
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Timeline."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "From the founding to the current campaign",
+      "items": [
+        {
+          "key": "1888",
+          "value": "Edgar Northbrook builds a 12-inch refractor on his family's ridge property. The dome is wood-framed, hand-cranked, and clad in copper.",
+          "hint": "Founding"
+        },
+        {
+          "key": "1923",
+          "value": "Edgar's estate donates the observatory and 14 acres of surrounding forest to the town of Northbrook on the condition that it remain free to the public.",
+          "hint": "Donation"
+        },
+        {
+          "key": "1953",
+          "value": "NSF Cooperative grant funds replacement of the original optics with a 40-inch f/8 Cassegrain reflector. The dome is electrified the same year.",
+          "hint": "Modernization"
+        },
+        {
+          "key": "1978",
+          "value": "Dome rotation motor replaced after a winter ice-storm jammed the original. Volunteer machine shop in Plymouth fabricates the gear ring.",
+          "hint": "Mechanical refit"
+        },
+        {
+          "key": "1991",
+          "value": "Observation floor rebuilt in laminated oak. Original 1888 floorboards moved to a display in the lobby.",
+          "hint": "Floor refit"
+        },
+        {
+          "key": "2018",
+          "value": "Capital campaign funds full mount + control-system rebuild — Paramount ME II head, closed-loop encoders, CCD imager, low-resolution spectrograph.",
+          "hint": "Drive refit"
+        },
+        {
+          "key": "2024",
+          "value": "Roof copper recladding completed. Original 1888 copper retained where intact; new copper sourced from a Vermont mill.",
+          "hint": "Envelope refit"
+        }
+      ]
+    },
+    {
+      "kind": "figure",
+      "asset_slug": "photos/stock-44",
+      "caption": "The original 1888 floorboards, now displayed in the lobby. The dark circle at the center is wear from the equatorial pier base.",
+      "credit": "Photograph by the observatory archive"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Staff & board."
+    },
+    {
+      "kind": "def_list",
+      "items": [
+        {
+          "term": "Dr. Hannah Reyes — Director",
+          "definition": "PhD Astronomy, Dartmouth 2009. Variable-star photometry. On the AAVSO observing program review committee. Joined Northbrook in 2018 for the refit; stayed because the sky is better than Cambridge."
+        },
+        {
+          "term": "Marc Belanger — Observer (part-time)",
+          "definition": "Retired ham-radio operator from Lincoln, NH. Runs the Friday night dome rotation. Knows every constellation by feel and can find M13 in fog."
+        },
+        {
+          "term": "Tess Okafor — Observer (part-time)",
+          "definition": "MS Physics, UNH 2021. Maintains the imaging pipeline and the website. Splits time between the observatory and her family's farm in Bath, two valleys north."
+        },
+        {
+          "term": "Board of trustees",
+          "definition": "Seven trustees, three-year staggered terms. Two seats reserved for Northbrook town residents; one for a representative of the Abenaki Heritage Trust. Currently chaired by Dr. Jane Ouellette (UNH Physics, emeritus)."
+        }
+      ]
+    },
+    {
+      "kind": "pull_quote",
+      "body": "The dome is small. The sky is the size it has always been.",
+      "attribution": "Dr. Hannah Reyes, in the 2024 annual report"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Support.","id":"support"
+    },
+    {
+      "kind": "paragraph",
+      "text": "We are a 501(c)(3) nonprofit. The town of Northbrook covers the land tax and one-third of utilities; the rest comes from program fees, grants, and individual giving. Roughly 40% of our annual budget arrives in October and November as year-end donations — if you've been to a public night and enjoyed it, that's when the gift goes furthest."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Ways to support",
+      "items": [
+        {
+          "key": "One-time gift",
+          "value": "Any amount. Sent by check to the address below or via the donation page (link to follow when we finish migrating the payment processor).",
+          "hint": "Tax-deductible"
+        },
+        {
+          "key": "Adopt-a-night",
+          "value": "$500 covers staff time + dome operation + heating for one public observing night. Adopters are named on the night's program (with permission) and receive a print of an image taken that evening.",
+          "hint": "Twelve nights per year"
+        },
+        {
+          "key": "Monthly giving",
+          "value": "$10 / $25 / $50 per month underwrites the school-program scholarships that let rural Grafton County classrooms visit free of charge.",
+          "hint": "Recurring"
+        },
+        {
+          "key": "Estate / planned gift",
+          "value": "Speak to our board chair directly — most years one planned gift covers an entire capital project. The 2024 roof recladding was funded this way.",
+          "hint": "Confidential conversation"
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Land acknowledgement.","id":"land"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The observatory and the ridge it stands on are within the unceded ancestral territory of the Cowasuck Band of the Pennacook-Abenaki People. We host an annual stargazing evening in collaboration with the Abenaki Heritage Trust on the spring equinox, and 5% of public-night program fees are forwarded to the Trust's land-rematriation program."
+    }
+  ]
+}

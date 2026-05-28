@@ -61,6 +61,8 @@ pub fn resolve(
         description: lite.description.clone(),
         brand: lite.brand.clone(),
         brand_logo: None,
+        utility_strip: None,
+        nav_bar_color_role: None,
         path: normalize_path(&lite.path),
         theme: Some(map_theme(lite.theme).to_owned()),
         chrome: None,

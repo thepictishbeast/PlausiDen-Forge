@@ -1,3 +1,4 @@
+/* SYNC-FROM-LOOM:sha384-YZn0UOI49mCgeWxXdJ2Vj0e2z+4gNvDdj6aOYPrnOxXvHF+EnQbG7+4VHO3NGubH — auto-synced by forge render at build */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -6415,47 +6416,54 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   object-fit: cover;
 }
 
-/* Logo cloud — customer trust strip.
+/* Logo cloud — wordmark / partner strip.
+ * Renderer (loom-cms-render LogoCloud) emits:
+ *   <section class="loom-logo-cloud">
+ *     <h2 class="loom-logo-cloud__heading">…</h2>?
+ *     <div class="loom-logo-cloud__row">
+ *       <span class="loom-logo-cloud__item">…</span> …
+ *     </div>
+ *   </section>
+ * Substrate-de-consumer-shaping (2026-05-20):
+ *   Default = start-aligned row + full-color items. Centered marketing
+ *   layout is opt-in via `.loom-logo-cloud--centered`. Grayscale-mute
+ *   for the brand-graveyard SaaS look is opt-in via
+ *   `.loom-logo-cloud--muted` (also fades any future <img>/<svg> children).
  */
 .loom-logo-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--loom-space-6);
   padding: var(--loom-space-6) 0;
   color: var(--loom-color-ink-muted, var(--loom-color-ink));
+  text-align: start;
 }
-.loom-logo-cloud > img,
-.loom-logo-cloud > svg {
-  block-size: 1.75rem;
-  opacity: 0.7;
-  filter: grayscale(100%);
+.loom-logo-cloud__heading {
+  margin: 0 0 var(--loom-space-4);
+  font: 600 0.78rem/1 var(--loom-font-display, inherit);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent);
 }
-
-/* CTA — call-to-action banner + card variants.
- */
-.loom-cta-banner {
+.loom-logo-cloud__row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--loom-space-4);
-  padding: var(--loom-space-6) var(--loom-space-5, var(--loom-space-4));
-  background: var(--loom-color-accent);
-  color: var(--loom-color-on-accent, white);
-  border-radius: var(--loom-radius-lg, 0.75rem);
+  justify-content: flex-start;
+  gap: var(--loom-space-6);
 }
-.loom-cta-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--loom-space-3);
-  padding: var(--loom-space-6);
-  background: var(--loom-color-surface);
-  border-radius: var(--loom-radius-lg, 0.75rem);
-  border: 1px solid var(--loom-color-border, var(--loom-color-ink));
+.loom-logo-cloud__item {
+  font: 600 1rem/1 var(--loom-font-display, inherit);
+  letter-spacing: -0.01em;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-logo-cloud--centered { text-align: center; }
+.loom-logo-cloud--centered .loom-logo-cloud__row { justify-content: center; }
+.loom-logo-cloud--muted .loom-logo-cloud__item {
+  opacity: 0.7;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent);
+}
+.loom-logo-cloud--muted img,
+.loom-logo-cloud--muted svg {
+  opacity: 0.7;
+  filter: grayscale(100%);
 }
 
 /* FAQ — built on native <details>/<summary> for free accessibility.
@@ -8521,10 +8529,20 @@ body[data-chrome="floating-pill"]::after {
 }
 .loom-floating-pill__links {
   display: flex; gap: 0.3rem; flex: 1 1 auto;
+  /* 2026-05-20: allow pills to wrap to a second row at tablet widths
+   * (~760-1100px) where the brand + nav + actions can't fit on one
+   * line. Without this the labels squeeze and each word wraps INSIDE
+   * its pill, which is unreadable. */
+  flex-wrap: wrap;
   margin-left: 0.75rem;
+  row-gap: 0.4rem;
 }
 .loom-floating-pill__links a {
   text-decoration: none;
+  /* 2026-05-20: nowrap on the label keeps each nav item on a single
+   * line. The wrap happens at the container (flex-wrap above), not
+   * inside the pill. */
+  white-space: nowrap;
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
@@ -8592,3 +8610,355 @@ body[data-chrome="floating-pill"] .loom-split-hero {
 /* Minimal chrome — body adjustments so first section has top
  * breathing room since there's no header reserving space. */
 body[data-chrome="minimal"] main#content { padding-top: 2rem; }
+
+/* ============================================================
+ * Editorial composition primitives — substrate-deepening additions
+ * for HeroEditorial / CodeShell / PullQuote-editorial / KvPair tone
+ * Shipped as part of the editorial-vocabulary completion arc.
+ *
+ * Shape commitments enforced upstream in tests:
+ *   * No SaaS-trope ornaments (no decorative quote-mark glyphs,
+ *     no fake macOS traffic-light circles, no gradient header
+ *     bars, no italic-by-default).
+ *   * AMOLED tone uses true black (#000) for OLED pixels-off.
+ *   * Density attributes drive vertical rhythm; horizontal sizing
+ *     remains the layout grid's responsibility.
+ * ============================================================ */
+
+/* HeroEditorial — asymmetric 2-col composition, no eyebrow pill,
+ * no gradient overlay, no fade-in animations.
+ * Three background tones via [data-background] attribute. */
+.loom-section-hero-editorial {
+  padding: clamp(3rem, 7vw, 6rem) clamp(1rem, 4vw, 2.5rem);
+  background: var(--loom-color-bg, var(--loom-bg, #f8fafc));
+  color: var(--loom-color-ink, var(--loom-fg, #0f172a));
+}
+.loom-section-hero-editorial[data-background="plain"] {
+  background: var(--loom-color-surface, #fff);
+}
+.loom-section-hero-editorial[data-background="amoled"] {
+  background: #000;
+  color: var(--loom-color-on-dark, #e5e7eb);
+}
+.loom-section-hero-editorial__grid {
+  max-width: 80rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .loom-section-hero-editorial__grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 3rem;
+  }
+}
+.loom-section-hero-editorial__lead {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 1.5vw, 1.5rem);
+}
+.loom-section-hero-editorial__kicker {
+  font: 500 0.8125rem/1.4 var(--loom-font-mono, ui-monospace, "JetBrains Mono", monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: color-mix(in oklab, currentColor 60%, transparent);
+  margin: 0;
+}
+.loom-section-hero-editorial__headline {
+  font: 600 clamp(2.25rem, 5vw, 3.75rem)/1.05 var(--loom-font-display, ui-serif, Georgia, serif);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.loom-section-hero-editorial__accent {
+  color: var(--loom-color-primary, var(--loom-accent, #2563eb));
+}
+.loom-section-hero-editorial__lede {
+  font: 400 clamp(1rem, 1.5vw, 1.125rem)/1.55 var(--loom-font-body, system-ui, sans-serif);
+  max-width: 65ch;
+  color: color-mix(in oklab, currentColor 80%, transparent);
+  margin: 0;
+}
+.loom-section-hero-editorial__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border: 1px solid currentColor;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 500;
+  align-self: flex-start;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.loom-section-hero-editorial__cta:hover {
+  background: currentColor;
+  color: var(--loom-color-bg, #fff);
+}
+.loom-section-hero-editorial__cta:hover .loom-section-hero-editorial__cta-label {
+  color: inherit;
+}
+.loom-section-hero-editorial__cta[data-invalid="true"] {
+  outline: 2px dashed var(--loom-color-warn, #f59e0b);
+  outline-offset: 4px;
+}
+
+/* CodeShell — typed-line terminal transcript. Per-line semantic
+ * coloring; prompt glyph unselectable so copying yields just the
+ * command. No fake traffic-light circles, no gradient header. */
+.loom-code-shell {
+  border: 1px solid var(--loom-color-border, #e2e8f0);
+  background: var(--loom-color-surface, #f8fafc);
+  color: var(--loom-color-ink, #0f172a);
+  overflow: hidden;
+  margin: 1.5rem 0;
+}
+.loom-code-shell[data-tone="amoled"] {
+  background: #000;
+  color: var(--loom-color-on-dark, #e5e7eb);
+  border-color: #1e293b;
+}
+.loom-code-shell__header {
+  padding: 0.5rem 1rem;
+  font: 500 0.75rem/1 var(--loom-font-mono, ui-monospace, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: color-mix(in oklab, currentColor 65%, transparent);
+  background: color-mix(in oklab, currentColor 6%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, currentColor 12%, transparent);
+}
+.loom-code-shell__pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  font: 0.875rem/1.55 var(--loom-font-mono, ui-monospace, monospace);
+}
+.loom-code-shell__code {
+  display: block;
+  font-family: inherit;
+}
+.loom-code-shell__line {
+  display: block;
+}
+.loom-code-shell__line--command {
+  color: currentColor;
+}
+.loom-code-shell__line--output {
+  color: color-mix(in oklab, currentColor 75%, transparent);
+  padding-left: 1rem;
+}
+.loom-code-shell__line--comment {
+  color: color-mix(in oklab, currentColor 50%, transparent);
+  font-style: italic;
+}
+.loom-code-shell__line--error {
+  color: var(--loom-color-danger, #b91c1c);
+  padding-left: 1rem;
+}
+.loom-code-shell[data-tone="amoled"] .loom-code-shell__line--error {
+  color: #f87171;
+}
+.loom-code-shell__prompt {
+  opacity: 0.55;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* PullQuote — editorial overrides via [data-emphasis="display"]
+ * + [data-tone="amoled"]. The legacy default (centered, decorative
+ * quote-mark glyph, italic) stays for back-compat callers that
+ * don't opt into the editorial composition. */
+.loom-pull-quote[data-emphasis="display"] {
+  text-align: left;
+  padding: 1.5rem 0 1.5rem 2rem;
+  border-left: 2px solid color-mix(in oklab, currentColor 30%, transparent);
+  max-width: 60rem;
+  margin: 2rem auto;
+}
+.loom-pull-quote[data-emphasis="display"]::before {
+  content: none;
+}
+.loom-pull-quote[data-emphasis="display"] .loom-pull-quote__body {
+  font: 600 clamp(1.5rem, 3vw, 2.25rem)/1.25 var(--loom-font-display, ui-serif, Georgia, serif);
+  font-style: normal;
+  letter-spacing: -0.018em;
+}
+.loom-pull-quote[data-tone="amoled"] {
+  background: #000;
+  color: var(--loom-color-on-dark, #e5e7eb);
+  padding-block: 2rem;
+}
+.loom-pull-quote[data-tone="amoled"] .loom-pull-quote__body {
+  color: #f1f5f9;
+}
+.loom-pull-quote[data-tone="amoled"] .loom-pull-quote__attribution {
+  color: color-mix(in oklab, #f1f5f9 65%, transparent);
+}
+.loom-pull-quote[data-tone="amoled"][data-emphasis="display"] {
+  border-left-color: color-mix(in oklab, #f1f5f9 30%, transparent);
+}
+
+/* KvPair — density + tone overrides. The default skin (from line
+ * ~7200) handles the comfortable / slate baseline. */
+.loom-kv-section[data-density="compact"] .loom-kv-row {
+  padding-block: 0.5rem;
+}
+.loom-kv-section[data-density="spacious"] .loom-kv-row {
+  padding-block: 1.25rem;
+}
+.loom-kv-section[data-tone="amoled"] {
+  background: #000;
+  color: var(--loom-color-on-dark, #e5e7eb);
+  padding: 1.5rem;
+}
+.loom-kv-section[data-tone="amoled"] .loom-kv-key {
+  color: color-mix(in oklab, #f1f5f9 65%, transparent);
+}
+.loom-kv-section[data-tone="amoled"] .loom-kv-value {
+  color: #f1f5f9;
+}
+.loom-kv-section[data-tone="amoled"] .loom-kv-hint {
+  color: color-mix(in oklab, #f1f5f9 55%, transparent);
+}
+
+/* prefers-reduced-motion — the editorial primitives ship no
+ * animations by design, but ensure any future motion is gated. */
+@media (prefers-reduced-motion: reduce) {
+  .loom-section-hero-editorial,
+  .loom-code-shell,
+  .loom-pull-quote {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+ * Polish tokens — refinement-tier decoration classes (#107).
+ * Generated by loom-tokens::polish::PolishToken. Each class is
+ * opt-in: primitives emit them only when the operator (or a
+ * consumer-shaped doctrine override) requests the polish.
+ *
+ * 12 polish variants across 4 categories — background, border,
+ * glow, motion. The Rust enum is the source of truth; if you
+ * change a class name here, change the enum slug to match.
+ * ============================================================ */
+
+/* ----- Background polish ----- */
+
+.loom-polish-dot-grid {
+  background-image:
+    radial-gradient(
+      circle at 1px 1px,
+      color-mix(in oklab, var(--loom-color-ink, #0f172a) 12%, transparent) 1px,
+      transparent 0
+    );
+  background-size: 24px 24px;
+  background-position: 0 0;
+}
+.loom-polish-linear-mesh {
+  background-image:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 4%, transparent) 0%,
+      transparent 60%
+    );
+}
+.loom-polish-topographic {
+  background-image:
+    repeating-radial-gradient(
+      ellipse at 30% 50%,
+      transparent 0,
+      transparent 40px,
+      color-mix(in oklab, var(--loom-color-ink, #0f172a) 6%, transparent) 41px,
+      color-mix(in oklab, var(--loom-color-ink, #0f172a) 6%, transparent) 42px
+    );
+}
+
+/* ----- Border polish ----- */
+
+.loom-polish-editorial-rule {
+  border-top: 2px solid var(--loom-color-primary, var(--loom-accent));
+  padding-top: 1.5rem;
+}
+.loom-polish-inset-frame {
+  position: relative;
+}
+.loom-polish-inset-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0.5rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-ink, #0f172a) 20%, transparent);
+  pointer-events: none;
+}
+.loom-polish-blueprint-corner {
+  position: relative;
+}
+.loom-polish-blueprint-corner::before,
+.loom-polish-blueprint-corner::after {
+  content: "";
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--loom-color-primary, var(--loom-accent));
+  pointer-events: none;
+}
+.loom-polish-blueprint-corner::before {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+.loom-polish-blueprint-corner::after {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* ----- Glow polish ----- */
+
+.loom-polish-soft-glow {
+  box-shadow:
+    0 0 24px -4px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 22%, transparent);
+}
+.loom-polish-brand-halo {
+  box-shadow:
+    0 0 48px -8px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 40%, transparent);
+}
+.loom-polish-amoled-rim {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 60%, transparent);
+}
+
+/* ----- Motion polish — all honor prefers-reduced-motion ----- */
+
+@keyframes loom-polish-slow-reveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.loom-polish-slow-reveal {
+  animation: loom-polish-slow-reveal 600ms ease-out both;
+}
+.loom-polish-page-turn {
+  animation: loom-polish-slow-reveal 320ms ease-out both;
+}
+.loom-polish-cursor-tilt {
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform-origin: center;
+}
+.loom-polish-cursor-tilt:hover {
+  transform: rotate(1deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loom-polish-slow-reveal,
+  .loom-polish-page-turn,
+  .loom-polish-cursor-tilt,
+  .loom-polish-cursor-tilt:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

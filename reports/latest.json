@@ -2,724 +2,1199 @@
   "mode": "poc",
   "findings": [
     {
-      "phase": "loom_sync",
-      "path": "static/loom-skin.css",
-      "message": "no SYNC-FROM-LOOM marker — skin.css has never been auto-synced from Loom. Run `forge --sync-loom`.",
-      "severity": "warn"
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/forge.toml",
+      "message": "forge.toml missing [platform] block",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "per VERSION_DISCIPLINE.md, every site declares its pinned forge_version + loom_version + crawler_version so upgrades are explicit, not silent",
+        "substrate_fix": "add `[platform]\\nforge_version = \"<exact>\"\\nloom_version = \"<exact>\"\\ncrawler_version = \"<exact>\"` to forge.toml",
+        "skill": "author-cms-content"
+      }
     },
     {
-      "phase": "tokens",
-      "path": "about.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/plausiden.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
     },
     {
-      "phase": "tokens",
-      "path": "contact.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/index.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
     },
     {
-      "phase": "tokens",
-      "path": "field-notes.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/render.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
     },
     {
-      "phase": "tokens",
-      "path": "index.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/vercel.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
     },
     {
-      "phase": "tokens",
-      "path": "programs.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/stripe.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
     },
     {
-      "phase": "tokens",
-      "path": "visit.html",
-      "message": "raw hex color in HTML",
-      "severity": "warn"
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/github.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/linear.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--privacy-policy.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/notion.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/fly.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/about.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--terms-and-conditions.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/sacred-vote.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "semver_enforcement",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/anthropic.json",
+      "message": "cms page missing `version` field",
+      "severity": "warn",
+      "enforces_rules": [
+        "build-001"
+      ],
+      "advocacy": {
+        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
+        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "perf_budget",
-      "path": "visit.html",
-      "message": "25.3K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "contact.html",
-      "message": "20.8K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "field-notes.html",
+      "path": "stripe.html",
       "message": "20.5K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
+      "severity": "warn",
+      "advocacy": {
+        "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
+        "substrate_fix": "HTML over budget at 20.5K: audit blocks / split route",
+        "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
+      }
     },
     {
       "phase": "perf_budget",
       "path": "index.html",
-      "message": "22.1K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
+      "message": "24.9K HTML > 20.0K budget — audit blocks / split route",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
+        "substrate_fix": "HTML over budget at 24.9K: audit blocks / split route",
+        "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
+      }
     },
     {
       "phase": "perf_budget",
-      "path": "about.html",
-      "message": "23.5K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
-    },
-    {
-      "phase": "perf_budget",
-      "path": "programs.html",
-      "message": "23.1K HTML > 20.0K budget — audit blocks / split route",
-      "severity": "warn"
+      "path": "plausiden.html",
+      "message": "21.2K HTML > 20.0K budget — audit blocks / split route",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
+        "substrate_fix": "HTML over budget at 21.2K: audit blocks / split route",
+        "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
+      }
     },
     {
       "phase": "perf_budget",
       "path": "loom.css",
       "message": "90.9K CSS > 64.0K budget — split into per-route bundles",
-      "severity": "warn"
+      "severity": "warn",
+      "advocacy": {
+        "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
+        "substrate_fix": "CSS over budget at 90.9K: split into per-route bundles",
+        "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
+      }
     },
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "332K CSS > 64.0K budget — split into per-route bundles",
-      "severity": "warn"
+      "message": "343K CSS > 64.0K budget — split into per-route bundles",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
+        "substrate_fix": "CSS over budget at 343K: split into per-route bundles",
+        "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
+      }
     },
     {
       "phase": "perf_budget",
       "path": "eruda.min.js",
       "message": "488K JS > 8.00K budget — code-split or tree-shake",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "about.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "contact.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "field-notes.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "index.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "programs.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "sri",
-      "path": "visit.html",
-      "message": "link → loom-skin.css has no integrity attribute",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-blog] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-blog] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-changelog] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-changelog] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-contact] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "severity": "warn",
+      "advocacy": {
+        "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
+        "substrate_fix": "JS over budget at 488K: code-split or tree-shake",
+        "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-contact] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [cta-contact] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[cta-docs] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-docs] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-donate] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-encrypted-inquiry] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-encrypted-inquiry] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-github] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-github] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-newsletter-sky] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-passkey-enroll] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-passkey-enroll] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-platform] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[cta-join-free] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [cta-join-free] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[cta-platform] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-pricing] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-pricing] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-quote] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-quote] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-schedule-visit] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-signin] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-signin] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-signout] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-signout] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-start] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-start] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-subscribe] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-subscribe] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-trial] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-trial] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-why] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[cta-why] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-cta-contact] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-cta-contact] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-about] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [cta-platform] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[prosperity-view-about] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-blog] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [prosperity-view-about] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[prosperity-view-blog] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-contact] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [prosperity-view-blog] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[prosperity-view-contact] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-finance] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-finance] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-master-class] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [prosperity-view-contact] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[prosperity-view-master-class] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-prosper] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [prosperity-view-master-class] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[prosperity-view-prosper] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[prosperity-view-resources] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [prosperity-view-prosper] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[prosperity-view-resources] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [prosperity-view-resources] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-about] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-about] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-annotator] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-about-deborah] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-about-deborah] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-annotator] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "message": "[view-annuities] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-annuities] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-blog] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-auto] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-auto] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-blog] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-blog] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-cms] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-cms] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-contact] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-crawler] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-crawler] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-docs] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-debt] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-debt] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-docs] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-docs] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-field-archive] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "message": "[view-faqs] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-faqs] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-field-notes] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-field-notes] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-forge] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-forge] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-home] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-health] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-health] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-home] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-home] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-lfi] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-home-renters] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-home-renters] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-lfi] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "message": "[view-insurance-foundation] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-insurance-foundation] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-loom] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-learn-social-class] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-learn-social-class] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-loom] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "message": "[view-middle-class] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-middle-class] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-platform] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-our-team] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-our-team] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "backend_coverage",
+      "path": "backends.toml",
+      "message": "[view-perm-life] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-perm-life] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
       "message": "[view-platform] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-platform] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-post] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-poverty] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-poverty] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-post] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "message": "[view-privacy] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-privacy] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-pricing] declared but no UI references it (dead spec)",
-      "severity": "warn"
+      "message": "[view-term-life] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-term-life] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-pricing] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "message": "[view-terms] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-terms] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
     },
     {
       "phase": "backend_coverage",
       "path": "backends.toml",
-      "message": "[view-programs] declared but impl_files is empty (PARTIAL — stub)",
+      "message": "[view-wages] declared but impl_files is empty (PARTIAL — stub)",
+      "severity": "warn",
+      "enforces_rules": [
+        "sec-007"
+      ],
+      "advocacy": {
+        "why": "a backend with empty impl_files is a partial declaration; phantom_button passes (the slug exists) but at runtime the backend has nowhere to dispatch to",
+        "substrate_fix": "populate impl_files for [view-wages] with the Rust module path(s) that handle the backend's verbs — OR remove the declaration if the implementation isn't planned",
+        "skill": "author-cms-content"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/prosper-in-life/\" → static/prosper-in-life/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/prosper-in-life/.json so render writes static/prosper-in-life/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/blogs-finance-insurance/\" → static/blogs-finance-insurance/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/blogs-finance-insurance/.json so render writes static/blogs-finance-insurance/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/financial-resources/\" → static/financial-resources/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/financial-resources/.json so render writes static/financial-resources/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/how-to-contact-us/\" → static/how-to-contact-us/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/how-to-contact-us/.json so render writes static/how-to-contact-us/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/master-class-sign-up/\" → static/master-class-sign-up/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/master-class-sign-up/.json so render writes static/master-class-sign-up/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/contact/\" → static/contact/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/contact/.json so render writes static/contact/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/membership/\" → static/membership/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/membership/.json so render writes static/membership/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/prosper-in-life/how-social-class-affects-your-life/\" → static/prosper-in-life/how-social-class-affects-your-life/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/prosper-in-life/how-social-class-affects-your-life/.json so render writes static/prosper-in-life/how-social-class-affects-your-life/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/what-is-considered-middle-class/\" → static/what-is-considered-middle-class/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/what-is-considered-middle-class/.json so render writes static/what-is-considered-middle-class/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/escaping-poverty-and-making-ends-meet/\" → static/escaping-poverty-and-making-ends-meet/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/escaping-poverty-and-making-ends-meet/.json so render writes static/escaping-poverty-and-making-ends-meet/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/strategies-to-get-out-of-debt-quickly/\" → static/strategies-to-get-out-of-debt-quickly/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/strategies-to-get-out-of-debt-quickly/.json so render writes static/strategies-to-get-out-of-debt-quickly/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/the-ugly-truth-about-what-you-are-paid/\" → static/the-ugly-truth-about-what-you-are-paid/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/the-ugly-truth-about-what-you-are-paid/.json so render writes static/the-ugly-truth-about-what-you-are-paid/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/why-insurance-is-essential-for-financial-well-being/\" → static/why-insurance-is-essential-for-financial-well-being/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/why-insurance-is-essential-for-financial-well-being/.json so render writes static/why-insurance-is-essential-for-financial-well-being/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/understand-your-health-insurance-options/\" → static/understand-your-health-insurance-options/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/understand-your-health-insurance-options/.json so render writes static/understand-your-health-insurance-options/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/what-is-term-insurance-the-basics/\" → static/what-is-term-insurance-the-basics/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/what-is-term-insurance-the-basics/.json so render writes static/what-is-term-insurance-the-basics/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/all-you-need-to-know-about-permanent-life-insurance/\" → static/all-you-need-to-know-about-permanent-life-insurance/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/all-you-need-to-know-about-permanent-life-insurance/.json so render writes static/all-you-need-to-know-about-permanent-life-insurance/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/how-do-annuities-work-and-what-are-the-benefits/\" → static/how-do-annuities-work-and-what-are-the-benefits/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/how-do-annuities-work-and-what-are-the-benefits/.json so render writes static/how-do-annuities-work-and-what-are-the-benefits/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/how-to-protect-your-valuables-with-renters-homeowners-insurance/\" → static/how-to-protect-your-valuables-with-renters-homeowners-insurance/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/how-to-protect-your-valuables-with-renters-homeowners-insurance/.json so render writes static/how-to-protect-your-valuables-with-renters-homeowners-insurance/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/everything-you-need-to-know-about-auto-insurance/\" → static/everything-you-need-to-know-about-auto-insurance/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/everything-you-need-to-know-about-auto-insurance/.json so render writes static/everything-you-need-to-know-about-auto-insurance/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/about/our-team/\" → static/about/our-team/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/about/our-team/.json so render writes static/about/our-team/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "index.html",
+      "message": "href=\"/about/prosperity-club-faqs/\" → static/about/prosperity-club-faqs/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/about/prosperity-club-faqs/.json so render writes static/about/prosperity-club-faqs/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "plausiden.html",
+      "message": "href=\"/solutions/\" → static/solutions/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/solutions/.json so render writes static/solutions/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "plausiden.html",
+      "message": "href=\"/engineering/\" → static/engineering/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/engineering/.json so render writes static/engineering/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "plausiden.html",
+      "message": "href=\"/plausiden-contact/\" → static/plausiden-contact/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/plausiden-contact/.json so render writes static/plausiden-contact/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "plausiden.html",
+      "message": "href=\"/careers/\" → static/careers/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/careers/.json so render writes static/careers/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "plausiden.html",
+      "message": "href=\"/ai/\" → static/ai/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/ai/.json so render writes static/ai/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "plausiden.html",
+      "message": "href=\"/software/\" → static/software/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/software/.json so render writes static/software/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "plausiden.html",
+      "message": "href=\"/hardware/\" → static/hardware/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/hardware/.json so render writes static/hardware/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "sacred-vote.html",
+      "message": "href=\"/audit/\" → static/audit/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/audit/.json so render writes static/audit/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "unbuilt_route",
+      "path": "sacred-vote.html",
+      "message": "href=\"/engineering/\" → static/engineering/ does not exist",
+      "severity": "warn",
+      "advocacy": {
+        "why": "every internal href in shipped HTML must resolve to a file in static/. an unresolved href ships to readers as a 404 — silent in the build, loud in the browser",
+        "substrate_fix": "either: (a) add cms/engineering/.json so render writes static/engineering/, OR (b) remove the dead link from the rendering source (CMS body / Loom primitive props)",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually `touch static/<route>.html` to make the gate pass — that file is regenerated only from cms/*.json on write_canonical builds and will be flagged as an orphan"
+      }
+    },
+    {
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/plausiden.json#section-2-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 6 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-services] declared but no UI references it (dead spec)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/plausiden.json#section-5-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-services] declared but impl_files is empty (PARTIAL — stub)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/index.json#section-8-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-signin] declared but no UI references it (dead spec)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/render.json#section-3-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-signin] declared but impl_files is empty (PARTIAL — stub)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/vercel.json#section-2-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-tier-enterprise] declared but no UI references it (dead spec)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/stripe.json#section-2-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 6 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-tier-enterprise] declared but impl_files is empty (PARTIAL — stub)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/github.json#section-3-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-tier-solo] declared but no UI references it (dead spec)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/linear.json#section-3-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-tier-solo] declared but impl_files is empty (PARTIAL — stub)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--privacy-policy.json",
+      "message": "image_desert: page has 16 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "severity": "warn",
+      "advocacy": {
+        "why": "a page that's all text reads as either (a) a legal disclosure where text density is the point or (b) an unfinished page where the editor forgot the visual layer; the detector can't distinguish, so it flags both and lets the editor decide",
+        "substrate_fix": "if this is genuinely text-only by intent (privacy / terms / disclosure), add a single illustrative section above the body (an image_hero with a 'compact' or 'narrow' height, an asset_slug pointer to a relevant icon, or a feature_spotlight with one item carrying an icon_slug). If this is unfinished, add 2-3 visual sections to break up the wall of text",
+        "skill": "compose-loom-page",
+        "anti_pattern": "don't stuff a stock photo onto a legal page just to silence this gate — the gate exists to flag uninhabited pages, not to require photos on every page. A single icon next to the title is enough visual anchor for a disclosure page"
+      }
+    },
+    {
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/notion.json#section-3-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-tier-team] declared but no UI references it (dead spec)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/fly.json#section-3-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-tier-team] declared but impl_files is empty (PARTIAL — stub)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--terms-and-conditions.json",
+      "message": "image_desert: page has 16 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
+      "severity": "warn",
+      "advocacy": {
+        "why": "a page that's all text reads as either (a) a legal disclosure where text density is the point or (b) an unfinished page where the editor forgot the visual layer; the detector can't distinguish, so it flags both and lets the editor decide",
+        "substrate_fix": "if this is genuinely text-only by intent (privacy / terms / disclosure), add a single illustrative section above the body (an image_hero with a 'compact' or 'narrow' height, an asset_slug pointer to a relevant icon, or a feature_spotlight with one item carrying an icon_slug). If this is unfinished, add 2-3 visual sections to break up the wall of text",
+        "skill": "compose-loom-page",
+        "anti_pattern": "don't stuff a stock photo onto a legal page just to silence this gate — the gate exists to flag uninhabited pages, not to require photos on every page. A single icon next to the title is enough visual anchor for a disclosure page"
+      }
+    },
+    {
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/sacred-vote.json#section-2-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-trial] declared but no UI references it (dead spec)",
+      "phase": "aesthetic_distinctiveness",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/anthropic.json#section-3-feature_spotlight",
+      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 6 items — varying the iconography breaks the visual repeat",
       "severity": "warn"
     },
     {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-trial] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-visit] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-why] declared but no UI references it (dead spec)",
-      "severity": "warn"
-    },
-    {
-      "phase": "backend_coverage",
-      "path": "backends.toml",
-      "message": "[view-why] declared but impl_files is empty (PARTIAL — stub)",
-      "severity": "warn"
+      "phase": "slop_dictionary",
+      "path": "/home/paul/projects/PlausiDen-Forge/cms/linear.json#section-0-image_hero.lede",
+      "message": "image_hero.lede contains marketing phrase \"purpose-built\" (within \"Purpose-built for planning and building products with AI agents. Linear is shaped by the practices the highest-throughput product teams converged on independently.\"). The substring is unambiguous SaaS-marketing slop — rewrite the sentence to drop it.",
+      "severity": "warn",
+      "advocacy": {
+        "why": "phrases like 'ai-native', 'industry-leading', 'next-generation' are marketing modifiers that carry no editorial substance; their presence anywhere is a tell that the copy was generated rather than written.",
+        "substrate_fix": "remove the phrase \"purpose-built\" and restate what the sentence is actually about. If you can't restate it without the cliche, the sentence has no content to restate — drop the field.",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't rewrite to a synonym from the same family ('cutting-edge' → 'state-of-the-art') — the family is the problem."
+      }
     },
     {
       "phase": "crawl",
       "path": "127.0.0.1:8123",
       "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
-      "severity": "warn"
+      "severity": "warn",
+      "advocacy": {
+        "why": "crawl probes the dev server via raw TCP connect to 127.0.0.1:8123 before invoking the crawler — prevents the cascade-of-fake-regressions when the server is silently down (every axis reports failure for the wrong reason)",
+        "substrate_fix": "start a static file server at 127.0.0.1:8123 pointing at static/ (e.g. `python3 -m http.server 8123 --directory static`, or any equivalent that serves the freshly rendered tree), then re-run forge build",
+        "anti_pattern": "don't bind the dev server to a different port without updating the probe — crawl is hard-pinned to 8123 because the journey URLs hard-code it"
+      }
     }
   ],
   "strict_count": 0,
-  "warn_count": 119,
-  "duration_ms": 15,
-  "prev_hash": "d1be1132acee10dfbf5b695ddf664e3e371fe1057fb7787fae9b71535ee775e8",
-  "chain_length": 152,
-  "started": "2026-05-20T02:20:07.381761725Z"
+  "warn_count": 98,
+  "duration_ms": 31,
+  "prev_hash": "e1f14f8d24a4fa3c27b5a74facec3f695202d5224b926b2d1889a29204a74ad4",
+  "chain_length": 328,
+  "started": "2026-05-21T06:17:13Z"
 }

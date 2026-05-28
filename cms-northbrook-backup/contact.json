@@ -1,0 +1,161 @@
+{
+  "$schema": "../cms-schema.json",
+  "title": "Contact — Northbrook Observatory",
+  "description": "Get in touch with the observatory — phone, email, mailing address, and the monthly sky-report newsletter.",
+  "brand": "Northbrook Observatory",
+  "chrome": "floating_pill",
+  "theme": "dark",
+  "nav_actions": [
+    {"label": "Monthly sky-report", "href": "/contact.html#newsletter", "data_backend": "cta-newsletter-sky"},
+    {"label": "Schedule a visit", "href": "/visit.html#schedule", "data_backend": "cta-schedule-visit"}
+  ],
+  "path": "/contact.html",
+  "site_origin": "https://dev.plausiden.com",
+  "footer": {
+    "columns": [
+      {
+        "heading": "Visit",
+        "links": [
+          {"label": "Visit", "href": "/visit.html", "data_backend": "view-visit"},
+          {"label": "Public observing",   "href": "/programs.html#public", "data_backend": "view-programs"},
+          {"label": "School programs",    "href": "/programs.html#schools", "data_backend": "view-programs"},
+          {"label": "Accessibility",      "href": "/visit.html#access",    "data_backend": "view-visit"}
+        ]
+      },
+      {
+        "heading": "Read",
+        "links": [
+          {"label": "About", "href": "/about.html",       "data_backend": "view-about"},
+          {"label": "Field notes",           "href": "/field-notes.html", "data_backend": "view-field-archive"},
+          {"label": "Current research",      "href": "/programs.html#research", "data_backend": "view-programs"}
+        ]
+      },
+      {
+        "heading": "Support",
+        "links": [
+          {"label": "Donate",                "href": "/about.html#support", "data_backend": "cta-donate"},
+          {"label": "Volunteer",             "href": "/contact.html#volunteer",       "data_backend": "view-contact"}
+        ]
+      }
+    ],
+    "contact": {
+      "heading": "Northbrook Observatory",
+      "phone": "603-555-0188",
+      "email": "stars@northbrook-observatory.example",
+      "address": "1240 Ridge Road, Northbrook, NH 03234",
+      "jurisdiction": "Grafton County, New Hampshire"
+    },
+    "legal_links": [
+      {"label": "Dark-sky pledge", "href": "/visit.html#darksky", "data_backend": "view-visit"},
+      {"label": "Land acknowledgement", "href": "/about.html#land", "data_backend": "view-about"}
+    ],
+    "colophon": "© 2026 Northbrook Observatory · A 501(c)(3) nonprofit · Founded 1888"
+  },
+  "nav_links": [
+    {"label": "About",       "href": "/about.html",       "data_backend": "view-about"},
+    {"label": "Programs",    "href": "/programs.html",    "data_backend": "view-programs"},
+    {"label": "Field notes", "href": "/field-notes.html", "data_backend": "view-field-archive"},
+    {"label": "Visit",       "href": "/visit.html",       "data_backend": "view-visit"},
+    {"label": "Contact",     "href": "/contact.html",     "data_backend": "view-contact", "current": true}
+  ],
+  "sections": [
+    {
+      "kind": "image_hero",
+      "align": "start",
+      "eyebrow": "Contact",
+      "title": "Reach the dome.",
+      "lede": "We answer the phone during business hours October through May, and on Friday afternoons June through September. Email reaches all three staff and is the most reliable way to get a same-day reply.",
+      "background": {
+        "kind": "photo",
+        "src": "/assets/photos/stock-77.jpg",
+        "alt": "Editorial photograph of a desk lamp and a clipboard near a telescope eyepiece.",
+        "overlay": "dark"
+      },
+      "height": "compact"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Ways to reach us."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Direct contact",
+      "items": [
+        {
+          "key": "Phone",
+          "value": "603-555-0188",
+          "hint": "Tuesday through Friday, 10:00 to 16:00 EST. Voicemail forwarded to the director's mobile during a public observing weekend."
+        },
+        {
+          "key": "Email",
+          "value": "stars@northbrook-observatory.example",
+          "hint": "Routes to all three staff. Replies typically within one business day; faster on Friday afternoons."
+        },
+        {
+          "key": "Mailing address",
+          "value": "Northbrook Observatory, 1240 Ridge Road, Northbrook, NH 03234",
+          "hint": "Donations by check should be addressed to \"Northbrook Observatory Trust\" with memo line \"general fund\" unless otherwise specified."
+        },
+        {
+          "key": "Press inquiries",
+          "value": "press@northbrook-observatory.example",
+          "hint": "Routes to the director. Please include the publication, deadline, and topic in your first message."
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Newsletter.","id":"newsletter"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The monthly sky-report goes out on the first of every month. One page, one PDF, in plain English: what's up this month, when to look, what to bring, what we'll have the dome pointed at on the public night. We send to about 1,400 subscribers from across northern New England. We do not sell your address; we do not have third-party trackers in the mail; the unsubscribe link works on the first click."
+    },
+    {
+      "kind": "kv_pair",
+      "heading": "Subscribe",
+      "items": [
+        {
+          "key": "By email",
+          "value": "Send a blank message with subject \"subscribe\" to stars@northbrook-observatory.example. We add you to the list within one business day and reply with the most recent issue.",
+          "hint": "Manual but reliable"
+        },
+        {
+          "key": "By post",
+          "value": "Mail a postcard with your name and email address to the address above. We'll subscribe you and discard the postcard.",
+          "hint": "For neighbours without reliable email"
+        },
+        {
+          "key": "By RSS",
+          "value": "The web edition of each issue is published at /sky-report/ with a corresponding entry in /sky-report/feed.xml. Use any feed reader.",
+          "hint": "For people who prefer to pull rather than push"
+        }
+      ]
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Volunteer.","id":"volunteer"
+    },
+    {
+      "kind": "paragraph",
+      "text": "We have room on the volunteer roster for two more public-night hosts. Hosts arrive an hour before doors, help park cars, set up the lawn chairs, point at the right constellations, and answer the same five questions in the same friendly way for the eighth time. The shift runs until last visitor leaves, typically 23:30 in summer and 22:00 in winter. We provide hot tea, a red headlamp, and a small honorarium that doesn't quite cover the gas back to Plymouth."
+    },
+    {
+      "kind": "pull_quote",
+      "body": "If you can stay calm while a six-year-old asks what's beyond the universe and you don't actually know — you're a host.",
+      "attribution": "Hannah Reyes, volunteer-onboarding email"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "text": "Research collaboration."
+    },
+    {
+      "kind": "paragraph",
+      "text": "If you are a working astronomer or a graduate student looking for a small northern-mid-latitude site for variable-star photometry or low-resolution spectroscopy: write directly to the director. We have telescope-time we can offer to projects that fit our cadence (around 40 photometric nights a year, no queue manager, manual scheduling) and don't need an aperture larger than ours. We co-author when we contribute data, but otherwise stay out of the way."
+    }
+  ]
+}
