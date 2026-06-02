@@ -1,6 +1,6 @@
 # Forge / Loom / CMS / Crawler — improvement loop roadmap
 
-> 60 tasks ordered by priority. Owner directive 2026-05-04: keep
+> 68 tasks ordered by priority. Owner directive 2026-05-04: keep
 > looping. Each iteration of the loop picks the top unstarted
 > task, reads relevant code line-by-line, adds debug logging,
 > implements, runs the full forge build + crawler audit, fixes
@@ -137,7 +137,46 @@
 60. 📋 Forward-compat plan: design CMS schema upgrades to
     auto-migrate old TOML to new shape via `cms migrate`.
 
+## Animations & interactive content (8)
+
+> ★ Owner-requested 2026-06-01: "we need more animations and
+> interactive content in forge." ELEVATE these above the queued
+> (📋) items in the sections above — treat as the next priorities
+> after anything currently 🚧 in flight. Every motion MUST ship a
+> `prefers-reduced-motion` fallback (gated by task 12 `forge
+> motion`).
+
+61. 📋 **Motion tokens in Loom.** `--motion-duration-{fast,base,
+    slow}` + `--motion-ease-{standard,emphasized,decel}` + a
+    `data-animate="fade-up|scale-in|slide-in"` opt-in attribute on
+    Loom primitives. Single source of truth so plugin authors get
+    consistent, reduced-motion-safe motion for free.
+62. 📋 **Scroll-reveal entrances.** IntersectionObserver-driven
+    fade/slide-in for cards + sections on first viewport entry,
+    staggered via `--index`. No-JS and reduced-motion paths render
+    fully visible immediately (progressive enhancement).
+63. 📋 **Primitive microinteractions.** Hover elevation + tactile
+    press-transform on Button / Card / ListRow + focus-visible
+    ring animation. All ≤150ms; reduced-motion → opacity-only.
+64. 📋 **Animated counters.** Count-up on reveal for StatGroup /
+    LeaderRow BlockKinds (task 41); reduced-motion jumps straight
+    to the final value (no tween).
+65. 📋 **Route / page transitions.** View Transitions API for
+    Forge-rendered route changes where supported; graceful
+    instant-swap fallback elsewhere.
+66. 📋 **Interactive BlockKinds.** Accordion / Tabs / Carousel as
+    progressive enhancement — `details/summary` + CSS scroll-snap
+    baseline, JS upgrades for keyboard + ARIA (reuse the task 31
+    Loom primitives).
+67. 📋 **Animated SVG / Lottie component.** Typed Loom component
+    with autoplay-muted + reduced-motion governance, mirroring the
+    `<video>` governance in task 27.
+68. 📋 **Crawler interaction trace.** Record a short hover / click
+    / scroll trace per page and flag janky transitions (any
+    long-task > 50ms during an animation). Extends tasks 5 + 56 so
+    "more animation" can't silently regress performance.
+
 ---
 
-*Update one ✅ per loop iteration. When all 60 close, generate
-the next 60 from the open backlog + new findings.*
+*Update one ✅ per loop iteration. When all 68 close, generate
+the next batch from the open backlog + new findings.*
