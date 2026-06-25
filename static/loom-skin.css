@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-YZn0UOI49mCgeWxXdJ2Vj0e2z+4gNvDdj6aOYPrnOxXvHF+EnQbG7+4VHO3NGubH — auto-synced by forge render at build */
+/* SYNC-FROM-LOOM:sha384-uW8b8ZiHt5vnhURoDCeGX6PIGC6X8Xo0j+xDyoKe8R/3I9G9nT6MZmusq/tKLWwR — auto-synced by forge render at build */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -764,6 +764,83 @@
     --loom-leading-tight: 1.1;
     --loom-leading-snug:  1.3;
     --loom-leading-base:  1.5;
+
+    /* ── Atomic-primitive cascade tokens (#336) ──
+     * Every var() consumed by skin.css below needs a base
+     * declaration here so theme_consistency's "consumed but
+     * undefined" gate stays green. Values mirror the
+     * fallback strings each cascade rule carries inline. */
+    --loom-color-bg: #ffffff;
+    --loom-color-text: hsl(222 47% 11%);
+    --loom-color-muted: hsl(215 16% 47%);
+    --loom-color-accent-2: hsl(239 84% 67%);
+    --loom-color-focus: hsl(217 91% 60%);
+    --loom-color-on-primary: #ffffff;
+    --loom-color-on-dark: #ffffff;
+    --loom-color-primary-hover: hsl(220 90% 22%);
+
+    /* Hero / Quote / Code / Table / Avatar / Kbd surfaces */
+    --loom-color-hero-bg: transparent;
+    --loom-color-quote-bg: transparent;
+    --loom-color-quote-text: hsl(215 25% 27%);
+    --loom-color-code-bg: hsl(214 32% 95%);
+    --loom-color-code-text: hsl(222 47% 11%);
+    --loom-color-table-stripe: hsl(210 40% 98%);
+    --loom-color-progress-track: hsl(214 32% 91%);
+    --loom-color-avatar-bg: hsl(214 32% 91%);
+    --loom-color-avatar-text: hsl(215 25% 27%);
+    --loom-color-kbd-bg: hsl(214 32% 95%);
+    --loom-color-kbd-text: hsl(215 25% 27%);
+    --loom-color-kbd-border: hsl(213 27% 84%);
+
+    /* Stat trend + Stepper state */
+    --loom-color-trend-up: hsl(158 64% 39%);
+    --loom-color-trend-down: hsl(347 77% 49%);
+    --loom-color-stepper-done: hsl(158 64% 39%);
+    --loom-color-stepper-done-bg: hsl(152 81% 96%);
+    --loom-color-stepper-current: hsl(221 83% 53%);
+    --loom-color-stepper-current-bg: hsl(214 100% 97%);
+
+    /* Badge tones — each carries {bg, text, border} */
+    --loom-color-badge-neutral-bg: hsl(214 32% 95%);
+    --loom-color-badge-neutral-text: hsl(215 25% 27%);
+    --loom-color-badge-neutral-border: hsl(213 27% 84%);
+    --loom-color-badge-info-bg: hsl(204 94% 94%);
+    --loom-color-badge-info-text: hsl(201 90% 35%);
+    --loom-color-badge-info-border: hsl(199 95% 74%);
+    --loom-color-badge-success-bg: hsl(149 80% 90%);
+    --loom-color-badge-success-text: hsl(158 64% 30%);
+    --loom-color-badge-success-border: hsl(156 72% 67%);
+    --loom-color-badge-warning-bg: hsl(48 96% 89%);
+    --loom-color-badge-warning-text: hsl(23 83% 31%);
+    --loom-color-badge-warning-border: hsl(46 97% 65%);
+    --loom-color-badge-danger-bg: hsl(356 100% 94%);
+    --loom-color-badge-danger-text: hsl(345 83% 41%);
+    --loom-color-badge-danger-border: hsl(352 96% 79%);
+    --loom-color-badge-accent-bg: hsl(226 100% 94%);
+    --loom-color-badge-accent-text: hsl(229 76% 40%);
+    --loom-color-badge-accent-border: hsl(230 94% 77%);
+
+    /* Legacy-namespace bridge. ~478 places in skin.css consume the
+       pre-#336 var names (--loom-accent / --loom-fg / --loom-bg /
+       --loom-border / --loom-muted / --loom-primary) directly. The
+       modern tenant_style emits the --loom-color-* namespace only.
+       Without this bridge, tenants who set their palette via
+       forge.toml [style.palette] see partial colorization: rules
+       using new vars pick up the override, rules using legacy vars
+       fall through to hardcoded fallbacks. Substrate-general
+       (works for any tenant, not tied to any specific palette). */
+    --loom-accent:   var(--loom-color-accent, hsl(239 84% 67%));
+    --loom-accent-2: var(--loom-color-accent-2, hsl(239 84% 67%));
+    --loom-fg:       var(--loom-color-ink, hsl(222 47% 11%));
+    --loom-bg:       var(--loom-color-bg, #ffffff);
+    --loom-border:   var(--loom-color-border, hsl(214 32% 91%));
+    --loom-muted:    var(--loom-color-muted, hsl(215 16% 47%));
+    --loom-primary:  var(--loom-color-primary, hsl(217 91% 60%));
+    --loom-secondary:var(--loom-color-secondary, hsl(143 64% 32%));
+    --loom-link:     var(--loom-color-link, var(--loom-color-primary, hsl(217 91% 60%)));
+    --loom-text:     var(--loom-color-text, var(--loom-color-ink, hsl(222 47% 11%)));
+    --loom-surface:  var(--loom-color-surface, var(--loom-color-bg, #ffffff));
   }
   @media (min-width: 768px) {
     :root {
@@ -3387,6 +3464,42 @@
     --loom-color-gradient-b:    hsl(35 80% 45%);
   }
 
+  /* data-theme="editorial" — magazine / publication aesthetic.
+   * Warm-neutral cream canvas, dark ink, accent in publication-red.
+   * Designed for kinfolk / NYT Magazine / longform-editorial sites.
+   * Pairs with [style.fonts] override for serif display + serif body;
+   * the substrate intentionally does NOT bundle a serif font because
+   * font-loading is a tenant decision (license, performance, network).
+   * Per docs/SUBSTRATE_GAP_CATALOG_2026_05_27.md Tier 1 #2 + #358. */
+  :root[data-theme="editorial"] {
+    --loom-color-bg-canvas:     hsl(38 22% 95%);
+    --loom-color-surface:       hsl(38 25% 97%);
+    --loom-color-surface-muted: hsl(38 18% 90%);
+    --loom-color-surface-subtle: hsl(38 20% 93%);
+    --loom-color-bg-overlay:    hsl(28 30% 18% / 8%);
+    --loom-color-ink:           hsl(28 30% 14%);
+    --loom-color-ink-muted:     hsl(28 18% 38%);
+    --loom-color-border:        hsl(38 14% 78%);
+    --loom-color-border-strong: hsl(38 14% 58%);
+    --loom-color-primary:       hsl(0 55% 38%);
+    --loom-color-primary-fg:    hsl(38 25% 97%);
+    --loom-color-accent:        hsl(0 55% 38%);
+    --loom-color-on-accent:     hsl(38 25% 97%);
+    --loom-color-accent-glow:   hsl(0 45% 50%);
+    --loom-color-info:          hsl(210 50% 32%);
+    --loom-color-info-subtle:   hsl(38 30% 88%);
+    --loom-color-success:       hsl(140 38% 28%);
+    --loom-color-success-subtle: hsl(140 35% 86%);
+    --loom-color-warn:          hsl(35 75% 32%);
+    --loom-color-warning:       hsl(35 75% 32%);
+    --loom-color-warning-subtle: hsl(35 60% 86%);
+    --loom-color-danger:        hsl(0 55% 38%);
+    --loom-color-danger-subtle: hsl(0 50% 90%);
+    --loom-color-tier-medium:   hsl(28 15% 42%);
+    --loom-color-gradient-a:    hsl(0 55% 38%);
+    --loom-color-gradient-b:    hsl(28 30% 14%);
+  }
+
   /* Font variants — swap the entire type system.
    * data-font="display" is the default (already set in tokens layer). */
   :root[data-font="serif"] {
@@ -5103,10 +5216,48 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 @media (prefers-reduced-motion: no-preference) {
   .loom-button {
-    transition: filter 160ms ease, transform 160ms ease;
+    transition: filter 160ms ease, transform 160ms ease,
+                background-color 220ms ease, color 220ms ease,
+                border-color 220ms ease;
   }
   .loom-button:hover:not(:disabled) { filter: brightness(1.08); }
   .loom-button:active:not(:disabled) { transform: translateY(1px); }
+}
+
+/* Tenant-overridable hover color swap. Default (no override) leaves
+   the brightness shift above as the only hover feedback. When a
+   tenant sets one of these CSS variables via tenant_style, the
+   button :hover state swaps to that color — supports any palette,
+   not tied to any specific tenant's brand. */
+.loom-button:hover:not(:disabled) {
+  background: var(--loom-color-button-bg-hover, inherit);
+  color: var(--loom-color-button-fg-hover, inherit);
+}
+.loom-button[data-variant="primary"]:hover:not(:disabled) {
+  background: var(--loom-color-button-primary-hover,
+                  var(--loom-color-button-bg-hover,
+                  var(--loom-color-accent)));
+  color: var(--loom-color-button-primary-fg-hover,
+              var(--loom-color-on-accent, #ffffff));
+}
+.loom-button[data-variant="secondary"]:hover:not(:disabled) {
+  background: var(--loom-color-button-secondary-hover,
+                  var(--loom-color-button-bg-hover,
+                  var(--loom-color-surface-subtle,
+                  var(--loom-color-surface))));
+  color: var(--loom-color-button-secondary-fg-hover,
+              var(--loom-color-ink));
+}
+.loom-button[data-variant="ghost"]:hover:not(:disabled) {
+  background: var(--loom-color-button-ghost-hover,
+                  color-mix(in oklab, var(--loom-color-primary) 10%, transparent));
+  color: var(--loom-color-button-ghost-fg-hover,
+              var(--loom-color-primary));
+}
+.loom-button[data-variant="primary"] {
+  background: var(--loom-color-primary, var(--loom-color-accent));
+  color: var(--loom-color-on-primary, var(--loom-color-on-accent, #fff));
+  border-color: transparent;
 }
 .loom-button[data-variant="secondary"] {
   background: var(--loom-color-surface-subtle, var(--loom-color-surface));
@@ -6298,11 +6449,23 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 .loom-page-footer__columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+  gap: 1.25rem;
   max-width: 80rem;
   width: 100%;
   margin: 0 auto;
+}
+.loom-page-footer__col {
+  min-width: 0;
+}
+.loom-page-footer__col-body {
+  margin: 0 0 .75rem;
+  font-size: .92rem;
+  line-height: 1.5;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
+}
+.loom-page-footer__col-button {
+  margin-top: 0.75rem;
 }
 .loom-page-footer__col h3.loom-page-footer__heading {
   margin: 0 0 0.75rem;
@@ -6341,6 +6504,38 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-page-footer__jurisdiction {
   font-style: italic;
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent) !important;
+}
+.loom-page-footer__contact {
+  position: relative;
+}
+.loom-page-footer__contact-bg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right center;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+.loom-page-footer__contact > * {
+  position: relative;
+  z-index: 1;
+}
+.loom-page-footer__col-lang {
+  margin-top: 0.4rem;
+}
+.loom-page-footer__col-lang .loom-lang-selector {
+  position: static;
+}
+.loom-page-footer__col-lang .loom-lang-selector > summary {
+  background: var(--loom-color-surface, #fff);
+  border: 1px solid color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 25%, transparent);
+  border-radius: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.92rem;
 }
 .loom-page-footer__legal {
   max-width: 80rem;
@@ -6903,7 +7098,7 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
  * (callers that explicitly want the centered-marketing shape).
  * ============================================================ */
 .loom-feature-spotlight {
-  padding: clamp(3rem, 5vw, 5rem) 0;
+  padding: clamp(.5rem, 1vw, .9rem) 0;
 }
 .loom-feature-spotlight__heading {
   font: 800 clamp(1.75rem, 3.5vw, 2.5rem)/1.1 var(--loom-font-display);
@@ -6958,6 +7153,24 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   margin-bottom: 1.2rem;
   font: 700 1.4rem/1 var(--loom-font-display);
   color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-feature-spotlight__photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--loom-radius, 10px);
+  margin-bottom: 1rem;
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 6%, transparent);
+}
+.loom-feature-spotlight.deco-editorial .loom-feature-spotlight__photo {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--loom-radius-sm, 6px);
+  margin-bottom: 1.1rem;
+}
+.loom-feature-spotlight.deco-minimal .loom-feature-spotlight__photo {
+  aspect-ratio: 1 / 1;
+  border-radius: 0;
 }
 .loom-feature-spotlight__title {
   margin: 0 0 0.55rem;
@@ -8961,4 +9174,3538 @@ body[data-chrome="minimal"] main#content { padding-top: 2rem; }
     transform: none !important;
     opacity: 1 !important;
   }
+}
+
+/* ===================================================================
+ * Atomic CmsBlock primitives — Loom PR #84 + Button follow-on.
+ *
+ * Block primitives carry composition (typography, spacing, alignment)
+ * via data-* attributes resolved against the tenant's [style] config.
+ * Two tenants composing identical block trees render distinctly
+ * because their palettes / fonts / density tokens differ.
+ * =================================================================== */
+
+.loom-compose {
+  margin-block: 2.5rem;
+}
+.loom-compose__heading {
+  margin: 0 0 1.25rem;
+  font: 700 1.75rem/1.2 var(--loom-font-display);
+  letter-spacing: -0.022em;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-compose__tree {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Text + Heading */
+.loom-block-text {
+  margin: 0;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
+  line-height: 1.65;
+  font-size: 1.02rem;
+}
+.loom-block-heading {
+  margin: 0;
+  font-family: var(--loom-font-display);
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-heading[data-level="1"] { font-size: 2.5rem; line-height: 1.1; }
+.loom-block-heading[data-level="2"] { font-size: 1.75rem; line-height: 1.2; }
+.loom-block-heading[data-level="3"] { font-size: 1.35rem; line-height: 1.25; }
+.loom-block-heading[data-level="4"] { font-size: 1.15rem; line-height: 1.3; }
+.loom-block-heading[data-level="5"] { font-size: 1.02rem; line-height: 1.35; }
+.loom-block-heading[data-level="6"] { font-size: 0.92rem; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Image */
+.loom-block-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--loom-radius, 10px);
+}
+
+/* Link + Button */
+.loom-block-link {
+  color: var(--loom-color-primary, var(--loom-link));
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+.loom-block-link[data-invalid="true"] {
+  outline: 2px dashed color-mix(in oklab, var(--loom-color-danger, #ef4444) 70%, transparent);
+  outline-offset: 2px;
+}
+.loom-block-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-family: var(--loom-font-display);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--loom-radius, 10px);
+  border: 1px solid transparent;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              transform var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+  cursor: pointer;
+  min-height: var(--loom-tap-min, 44px);
+}
+.loom-block-button[data-size="sm"] { padding: 0.4rem 0.85rem; font-size: 0.9rem; }
+.loom-block-button[data-size="md"] { padding: 0.55rem 1.15rem; font-size: 1rem; }
+.loom-block-button[data-size="lg"] { padding: 0.7rem 1.5rem; font-size: 1.1rem; }
+.loom-block-button[data-variant="primary"] {
+  background: var(--loom-color-primary, var(--loom-accent));
+  color: var(--loom-color-on-primary, #fff);
+}
+.loom-block-button[data-variant="primary"]:hover {
+  background: var(--loom-color-primary-hover, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 80%, black));
+}
+.loom-block-button[data-variant="secondary"] {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 8%, transparent);
+  color: var(--loom-color-primary, var(--loom-accent));
+  border-color: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 30%, transparent);
+}
+.loom-block-button[data-variant="secondary"]:hover {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 16%, transparent);
+}
+.loom-block-button[data-variant="ghost"] {
+  background: transparent;
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-block-button[data-variant="ghost"]:hover {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 10%, transparent);
+}
+.loom-block-button[data-variant="destructive"] {
+  background: var(--loom-color-danger, #b91c1c);
+  color: #fff;
+}
+.loom-block-button[data-variant="destructive"]:hover {
+  background: color-mix(in oklab, var(--loom-color-danger, #b91c1c) 80%, black);
+}
+.loom-block-button[data-invalid="true"] {
+  outline: 2px dashed color-mix(in oklab, var(--loom-color-danger, #ef4444) 70%, transparent);
+  outline-offset: 2px;
+}
+
+/* Spacer */
+.loom-block-spacer[data-size="none"] { height: 0; }
+.loom-block-spacer[data-size="xs"]   { height: 0.25rem; }
+.loom-block-spacer[data-size="sm"]   { height: 0.5rem; }
+.loom-block-spacer[data-size="md"]   { height: 1rem; }
+.loom-block-spacer[data-size="lg"]   { height: 2rem; }
+.loom-block-spacer[data-size="xl"]   { height: 3rem; }
+.loom-block-spacer[data-size="xxl"]  { height: 4.5rem; }
+
+/* Divider */
+.loom-block-divider {
+  border: 0;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  margin: 1.5rem 0;
+}
+
+/* Container / Row / Column */
+.loom-block-container { display: block; }
+.loom-block-container[data-padding="xs"]  { padding: 0.5rem; }
+.loom-block-container[data-padding="sm"]  { padding: 0.75rem; }
+.loom-block-container[data-padding="md"]  { padding: 1rem; }
+.loom-block-container[data-padding="lg"]  { padding: 1.5rem; }
+.loom-block-container[data-padding="xl"]  { padding: 2rem; }
+.loom-block-container[data-padding="xxl"] { padding: 3rem; }
+
+.loom-block-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.loom-block-column {
+  display: flex;
+  flex-direction: column;
+}
+.loom-block-row[data-gap="xs"],   .loom-block-column[data-gap="xs"]   { gap: 0.25rem; }
+.loom-block-row[data-gap="sm"],   .loom-block-column[data-gap="sm"]   { gap: 0.5rem; }
+.loom-block-row[data-gap="md"],   .loom-block-column[data-gap="md"]   { gap: 1rem; }
+.loom-block-row[data-gap="lg"],   .loom-block-column[data-gap="lg"]   { gap: 1.5rem; }
+.loom-block-row[data-gap="xl"],   .loom-block-column[data-gap="xl"]   { gap: 2rem; }
+.loom-block-row[data-gap="xxl"],  .loom-block-column[data-gap="xxl"]  { gap: 3rem; }
+.loom-block-row[data-align="start"],    .loom-block-column[data-align="start"]    { align-items: flex-start; }
+.loom-block-row[data-align="center"],   .loom-block-column[data-align="center"]   { align-items: center; }
+.loom-block-row[data-align="end"],      .loom-block-column[data-align="end"]      { align-items: flex-end; }
+.loom-block-row[data-align="stretch"],  .loom-block-column[data-align="stretch"]  { align-items: stretch; }
+.loom-block-row[data-align="baseline"], .loom-block-column[data-align="baseline"] { align-items: baseline; }
+
+/* === CmsBlock::Switch ============================================== */
+.loom-block-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+.loom-block-switch__input {
+  /* Hidden but focusable + click-through to track. Visually-hidden
+   * technique so screen readers + keyboard users get the native
+   * <input type=checkbox role=switch> semantics. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.loom-block-switch__track {
+  display: inline-flex;
+  align-items: center;
+  width: 2.5rem;
+  height: 1.4rem;
+  padding: 0.15rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 25%, transparent);
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+  flex-shrink: 0;
+}
+.loom-block-switch__thumb {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+  background: var(--loom-color-bg, var(--loom-bg, #fff));
+  box-shadow: var(--loom-shadow-sm, 0 1px 2px rgba(0,0,0,0.1));
+  transition: transform var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-switch__input:checked + .loom-block-switch__track {
+  background: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-block-switch__input:checked + .loom-block-switch__track .loom-block-switch__thumb {
+  transform: translateX(1.1rem);
+}
+.loom-block-switch__input:focus-visible + .loom-block-switch__track {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 3px;
+}
+.loom-block-switch__input:disabled ~ .loom-block-switch__track {
+  opacity: 0.5;
+}
+.loom-block-switch__input:disabled ~ * {
+  cursor: not-allowed;
+}
+.loom-block-switch__label {
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-size: 0.95rem;
+}
+
+/* === CmsBlock::Slider ============================================== */
+.loom-block-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.loom-block-slider__label {
+  font-size: 0.95rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.loom-block-slider__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-block-slider__input {
+  width: 100%;
+  accent-color: var(--loom-color-primary, var(--loom-accent));
+  cursor: pointer;
+}
+.loom-block-slider__input:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.loom-block-slider__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* === CmsBlock::Tooltip ============================================= */
+.loom-block-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 50%, transparent);
+  cursor: help;
+  outline-offset: 4px;
+}
+.loom-block-tooltip__trigger {
+  font: inherit;
+  color: inherit;
+}
+.loom-block-tooltip__content {
+  position: absolute;
+  z-index: 100;
+  max-width: 18rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--loom-radius-sm, 6px);
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 92%, transparent);
+  color: var(--loom-color-bg, var(--loom-bg, #fff));
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-weight: 400;
+  box-shadow: var(--loom-shadow-md, 0 4px 14px rgba(0,0,0,0.15));
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              transform var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              visibility 0s var(--loom-motion-fast, 120ms);
+  pointer-events: none;
+  white-space: normal;
+}
+.loom-block-tooltip:hover > .loom-block-tooltip__content,
+.loom-block-tooltip:focus-visible > .loom-block-tooltip__content,
+.loom-block-tooltip:focus-within > .loom-block-tooltip__content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+/* Placement variants — anchor + offset the body relative to the trigger. */
+.loom-block-tooltip[data-placement="top"]    > .loom-block-tooltip__content { bottom: calc(100% + 8px); left: 50%; transform: translate(-50%, 4px); }
+.loom-block-tooltip[data-placement="top"]:hover    > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="top"]:focus-visible > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="top"]:focus-within  > .loom-block-tooltip__content { transform: translate(-50%, 0); }
+.loom-block-tooltip[data-placement="bottom"] > .loom-block-tooltip__content { top: calc(100% + 8px); left: 50%; transform: translate(-50%, -4px); }
+.loom-block-tooltip[data-placement="bottom"]:hover > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="bottom"]:focus-visible > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="bottom"]:focus-within  > .loom-block-tooltip__content { transform: translate(-50%, 0); }
+.loom-block-tooltip[data-placement="left"]   > .loom-block-tooltip__content { right: calc(100% + 8px); top: 50%; transform: translate(4px, -50%); }
+.loom-block-tooltip[data-placement="left"]:hover > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="left"]:focus-visible > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="left"]:focus-within  > .loom-block-tooltip__content { transform: translate(0, -50%); }
+.loom-block-tooltip[data-placement="right"]  > .loom-block-tooltip__content { left: calc(100% + 8px); top: 50%; transform: translate(-4px, -50%); }
+.loom-block-tooltip[data-placement="right"]:hover > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="right"]:focus-visible > .loom-block-tooltip__content,
+.loom-block-tooltip[data-placement="right"]:focus-within  > .loom-block-tooltip__content { transform: translate(0, -50%); }
+
+/* === CmsBlock::Dialog ============================================== */
+.loom-block-dialog {
+  padding: 0;
+  border: 0;
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  max-width: min(40rem, calc(100vw - 2rem));
+  width: 100%;
+  box-shadow: var(--loom-shadow-lg, 0 18px 40px rgba(0,0,0,0.15));
+}
+.loom-block-dialog::backdrop {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 50%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.loom-block-dialog__close-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0.75rem 0.75rem 0;
+}
+.loom-block-dialog__close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--loom-radius-full, 9999px);
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent);
+  cursor: pointer;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-dialog__close:hover {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 8%, transparent);
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-dialog__close:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+}
+.loom-block-dialog__title {
+  margin: 0;
+  padding: 0 1.5rem 0.5rem;
+  font-family: var(--loom-font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-dialog__content {
+  padding: 0.5rem 1.5rem 1.5rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+
+/* === CmsBlock::Tabs ================================================ */
+.loom-block-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.loom-block-tabs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+}
+.loom-block-tabs__trigger {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent);
+  cursor: pointer;
+  transition: color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+.loom-block-tabs__trigger:hover {
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-tabs__trigger[aria-selected="true"] {
+  color: var(--loom-color-primary, var(--loom-accent));
+  border-bottom-color: var(--loom-color-primary, var(--loom-accent));
+  font-weight: 600;
+}
+.loom-block-tabs__trigger:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+  border-radius: var(--loom-radius-sm, 6px);
+}
+.loom-block-tabs__panel {
+  padding: 0.5rem 0;
+}
+.loom-block-tabs__panel:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+  border-radius: var(--loom-radius-sm, 6px);
+}
+
+/* === CmsBlock::Popover ============================================= */
+.loom-block-popover {
+  position: relative;
+  display: inline-block;
+}
+.loom-block-popover__trigger {
+  appearance: none;
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 8%, transparent);
+  border: 1px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 25%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--loom-color-primary, var(--loom-accent));
+  cursor: pointer;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-popover__trigger:hover {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 16%, transparent);
+}
+.loom-block-popover__trigger:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+}
+/* Native popover positioning — browser places the popover at the
+ * top of the layout layer; we anchor it relative to the trigger
+ * via inset-area when CSS anchor-positioning is available, else
+ * fall back to position:fixed centred. */
+.loom-block-popover__content {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  box-shadow: var(--loom-shadow-md, 0 4px 14px rgba(0,0,0,0.08));
+  max-width: 22rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.loom-block-popover__content:popover-open + * {
+  /* Trigger gets aria-expanded toggled by browser when supported. */
+}
+/* Anchor positioning (Chromium 125+, Safari TP) — when available */
+@supports (anchor-name: --x) {
+  .loom-block-popover__trigger {
+    anchor-name: --loom-popover-anchor;
+  }
+  .loom-block-popover__content {
+    position-anchor: --loom-popover-anchor;
+  }
+  .loom-block-popover__content[data-placement="top"]    { position-area: top span-all; }
+  .loom-block-popover__content[data-placement="bottom"] { position-area: bottom span-all; }
+  .loom-block-popover__content[data-placement="left"]   { position-area: left span-all; }
+  .loom-block-popover__content[data-placement="right"]  { position-area: right span-all; }
+}
+
+/* === CmsBlock::DropdownMenu ========================================= */
+.loom-block-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.loom-block-dropdown__trigger {
+  appearance: none;
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.loom-block-dropdown__trigger:hover {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 4%, transparent);
+}
+.loom-block-dropdown__trigger:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+}
+.loom-block-dropdown__menu {
+  margin: 0;
+  padding: 0.3rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  box-shadow: var(--loom-shadow-lg, 0 18px 40px rgba(0,0,0,0.12));
+  min-width: 11rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.loom-block-dropdown__item {
+  display: block;
+  padding: 0.45rem 0.7rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--loom-radius-sm, 6px);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-dropdown__item:hover:not([aria-disabled="true"]):not([disabled]) {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 10%, transparent);
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-block-dropdown__item:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: -1px;
+}
+.loom-block-dropdown__item[aria-disabled="true"],
+.loom-block-dropdown__item[disabled] {
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 40%, transparent);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.loom-block-dropdown__item[data-invalid="true"] {
+  color: var(--loom-color-danger, #b91c1c);
+}
+.loom-block-dropdown__separator {
+  border: 0;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 50%, transparent);
+  margin: 0.3rem 0;
+}
+
+/* === CmsBlock::Combobox ============================================ */
+.loom-block-combobox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.loom-block-combobox__label {
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-weight: 500;
+}
+.loom-block-combobox__input {
+  appearance: none;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  font: inherit;
+  font-size: 0.95rem;
+  transition: border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              box-shadow var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-combobox__input:focus-visible {
+  outline: none;
+  border-color: var(--loom-color-primary, var(--loom-accent));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent);
+}
+.loom-block-combobox__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === CmsBlock::Toast =============================================== */
+.loom-block-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  box-shadow: var(--loom-shadow-md, 0 4px 14px rgba(0,0,0,0.08));
+  max-width: 28rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  position: relative;
+}
+.loom-block-toast[data-tone="info"]    { border-left: 4px solid var(--loom-color-primary, var(--loom-accent)); }
+.loom-block-toast[data-tone="success"] { border-left: 4px solid var(--loom-color-success, #16a34a); }
+.loom-block-toast[data-tone="warning"] { border-left: 4px solid var(--loom-color-warning, #d97706); }
+.loom-block-toast[data-tone="error"]   { border-left: 4px solid var(--loom-color-danger,  #b91c1c); }
+.loom-block-toast__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.loom-block-toast__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-toast__message {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
+}
+.loom-block-toast__close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--loom-radius-full, 9999px);
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-toast__close:hover {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 8%, transparent);
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-toast__close:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+}
+
+/* === CmsBlock::NumberField ========================================= */
+.loom-block-number-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.loom-block-number-field__label {
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-weight: 500;
+}
+.loom-block-number-field__input {
+  appearance: textfield;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  font: inherit;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+  transition: border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              box-shadow var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-number-field__input:focus-visible {
+  outline: none;
+  border-color: var(--loom-color-primary, var(--loom-accent));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent);
+}
+.loom-block-number-field__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.loom-block-number-field__input:invalid:not(:focus) {
+  border-color: var(--loom-color-danger, #b91c1c);
+}
+
+/* === CmsBlock::DatePicker / TimeField / ColorPicker ================ *
+ * Shared form-field cascade — labels + input chrome track the
+ * NumberField + Combobox treatment for consistent visual rhythm
+ * across all form primitives. */
+.loom-block-date-picker,
+.loom-block-time-field,
+.loom-block-color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.loom-block-date-picker__label,
+.loom-block-time-field__label,
+.loom-block-color-picker__label {
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-weight: 500;
+}
+.loom-block-date-picker__input,
+.loom-block-time-field__input {
+  appearance: textfield;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  font: inherit;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              box-shadow var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-date-picker__input:focus-visible,
+.loom-block-time-field__input:focus-visible,
+.loom-block-color-picker__input:focus-visible {
+  outline: none;
+  border-color: var(--loom-color-primary, var(--loom-accent));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent);
+}
+.loom-block-color-picker__input {
+  appearance: none;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  width: 3.5rem;
+  height: 2.5rem;
+  padding: 0.25rem;
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  cursor: pointer;
+}
+.loom-block-date-picker__input:disabled,
+.loom-block-time-field__input:disabled,
+.loom-block-color-picker__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.loom-block-date-picker__input:invalid:not(:focus),
+.loom-block-time-field__input:invalid:not(:focus) {
+  border-color: var(--loom-color-danger, #b91c1c);
+}
+
+/* === CmsBlock::Checkbox ============================================ */
+.loom-block-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.95rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-checkbox__input {
+  accent-color: var(--loom-color-primary, var(--loom-accent));
+  width: 1.05rem;
+  height: 1.05rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.loom-block-checkbox__input:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.loom-block-checkbox__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.loom-block-checkbox__input:disabled ~ .loom-block-checkbox__label {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === CmsBlock::RadioGroup ========================================== */
+.loom-block-radio-group {
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  padding: 0.85rem 1rem 1rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.loom-block-radio-group__legend {
+  padding: 0 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-radio-group__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-radio-group__input {
+  accent-color: var(--loom-color-primary, var(--loom-accent));
+  width: 1.05rem;
+  height: 1.05rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.loom-block-radio-group__input:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+.loom-block-radio-group:disabled,
+.loom-block-radio-group__input:disabled {
+  opacity: 0.6;
+}
+.loom-block-radio-group__input:disabled ~ .loom-block-radio-group__label {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* === CmsBlock::Select ============================================== */
+.loom-block-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.loom-block-select__label {
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-weight: 500;
+}
+.loom-block-select__input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.55rem 2.25rem 0.55rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff))
+              url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='currentColor' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>")
+              right 0.85rem center no-repeat;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              box-shadow var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-select__input:focus-visible {
+  outline: none;
+  border-color: var(--loom-color-primary, var(--loom-accent));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent);
+}
+.loom-block-select__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === CmsBlock::TagInput ============================================ */
+.loom-block-tag-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.loom-block-tag-input__label {
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-weight: 500;
+}
+.loom-block-tag-input__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  transition: border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              box-shadow var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+  min-height: 2.4rem;
+}
+.loom-block-tag-input__chips:focus-within {
+  border-color: var(--loom-color-primary, var(--loom-accent));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent);
+}
+.loom-block-tag-input__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.25rem 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 12%, transparent);
+  color: var(--loom-color-primary, var(--loom-accent));
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.loom-block-tag-input__chip-remove {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 9999px;
+  width: 1.2rem;
+  height: 1.2rem;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.loom-block-tag-input__chip-remove:hover {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 22%, transparent);
+}
+.loom-block-tag-input__chip-remove:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 1px;
+}
+.loom-block-tag-input__input {
+  flex: 1;
+  min-width: 6rem;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  padding: 0.25rem 0.2rem;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-tag-input__input:disabled,
+.loom-block-tag-input__chip-remove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === CmsBlock::Breadcrumb ========================================== */
+.loom-block-breadcrumb {
+  font-size: 0.9rem;
+}
+.loom-block-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.25rem;
+}
+.loom-block-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 65%, transparent);
+}
+.loom-block-breadcrumb__link {
+  color: var(--loom-color-primary, var(--loom-accent));
+  text-decoration: none;
+}
+.loom-block-breadcrumb__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.loom-block-breadcrumb__current {
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-weight: 500;
+}
+.loom-block-breadcrumb__separator {
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 45%, transparent);
+  user-select: none;
+}
+
+/* === CmsBlock::Pagination ========================================== */
+.loom-block-pagination {
+  display: flex;
+  justify-content: center;
+}
+.loom-block-pagination__list {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.25rem;
+  align-items: center;
+}
+.loom-block-pagination__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.6rem;
+  border-radius: var(--loom-radius-sm, 6px);
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-pagination__link:hover:not([aria-disabled="true"]):not(.loom-block-pagination__link--current) {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 8%, transparent);
+  border-color: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 35%, transparent);
+}
+.loom-block-pagination__link--current {
+  background: var(--loom-color-primary, var(--loom-accent));
+  color: var(--loom-color-on-primary, #fff);
+  border-color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-block-pagination__link[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.loom-block-pagination__link:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+}
+.loom-block-pagination__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 50%, transparent);
+  user-select: none;
+}
+
+/* === CmsBlock::ScrollArea ========================================== */
+.loom-block-scroll-area {
+  overflow: auto;
+  border-radius: var(--loom-radius-sm, 6px);
+  /* Sensible defaults; tenant [style.spacing] override-friendly. */
+  scrollbar-color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 35%, transparent) transparent;
+  scrollbar-width: thin;
+}
+.loom-block-scroll-area[data-axis="vertical"]   { overflow-y: auto;  overflow-x: hidden; }
+.loom-block-scroll-area[data-axis="horizontal"] { overflow-x: auto;  overflow-y: hidden; }
+.loom-block-scroll-area[data-axis="both"]       { overflow: auto; }
+.loom-block-scroll-area[data-max-height="xs"]  { max-height: 4rem; }
+.loom-block-scroll-area[data-max-height="sm"]  { max-height: 8rem; }
+.loom-block-scroll-area[data-max-height="md"]  { max-height: 16rem; }
+.loom-block-scroll-area[data-max-height="lg"]  { max-height: 24rem; }
+.loom-block-scroll-area[data-max-height="xl"]  { max-height: 36rem; }
+.loom-block-scroll-area[data-max-height="xxl"] { max-height: 48rem; }
+
+/* === CmsBlock::NavigationMenu ====================================== */
+.loom-block-nav-menu {
+  font-size: 0.95rem;
+}
+.loom-block-nav-menu__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.loom-block-nav-menu__item {
+  position: relative;
+  display: inline-block;
+}
+.loom-block-nav-menu__link,
+.loom-block-nav-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--loom-radius-sm, 6px);
+  color: var(--loom-color-ink, var(--loom-fg));
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  list-style: none;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-nav-menu__link:hover,
+.loom-block-nav-menu__trigger:hover {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 6%, transparent);
+}
+.loom-block-nav-menu__link[aria-current="page"] {
+  color: var(--loom-color-primary, var(--loom-accent));
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 10%, transparent);
+}
+.loom-block-nav-menu__link:focus-visible,
+.loom-block-nav-menu__trigger:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+}
+.loom-block-nav-menu__link[data-invalid="true"] {
+  color: var(--loom-color-danger, #b91c1c);
+}
+.loom-block-nav-menu__submenu summary::-webkit-details-marker {
+  display: none;
+}
+.loom-block-nav-menu__submenu summary::marker {
+  content: "";
+}
+.loom-block-nav-menu__trigger::after {
+  content: "▾";
+  font-size: 0.7em;
+  margin-left: 0.15rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent);
+}
+.loom-block-nav-menu__submenu[open] > .loom-block-nav-menu__sublist {
+  display: block;
+}
+.loom-block-nav-menu__sublist {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  display: none;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.3rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  box-shadow: var(--loom-shadow-md, 0 4px 14px rgba(0,0,0,0.08));
+  list-style: none;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.loom-block-nav-menu__sublist .loom-block-nav-menu__link,
+.loom-block-nav-menu__sublist .loom-block-nav-menu__trigger {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+.loom-block-nav-menu__sublist .loom-block-nav-menu__sublist {
+  position: static;
+  display: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0 0 0 0.5rem;
+  background: transparent;
+}
+.loom-block-nav-menu__sublist .loom-block-nav-menu__submenu[open] > .loom-block-nav-menu__sublist {
+  display: block;
+}
+
+/* === CmsBlock::Menubar ============================================= */
+.loom-block-menubar {
+  display: inline-flex;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+}
+.loom-block-menubar__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.05rem;
+  margin: 0;
+  padding: 0.15rem;
+  list-style: none;
+}
+.loom-block-menubar__item {
+  position: relative;
+}
+.loom-block-menubar__leaf,
+.loom-block-menubar__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--loom-radius-sm, 6px);
+  background: transparent;
+  border: 0;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+  list-style: none;
+}
+.loom-block-menubar__leaf:hover:not([aria-disabled="true"]):not([disabled]),
+.loom-block-menubar__trigger:hover {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 10%, transparent);
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-block-menubar__leaf:focus-visible,
+.loom-block-menubar__trigger:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: -1px;
+}
+.loom-block-menubar__leaf[aria-disabled="true"],
+.loom-block-menubar__leaf[disabled] {
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 40%, transparent);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.loom-block-menubar__leaf-accelerator {
+  font-family: var(--loom-font-mono, monospace);
+  font-size: 0.78rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 50%, transparent);
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.loom-block-menubar__submenu summary::-webkit-details-marker { display: none; }
+.loom-block-menubar__submenu summary::marker { content: ""; }
+.loom-block-menubar__trigger::after {
+  content: "▾";
+  font-size: 0.7em;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent);
+}
+.loom-block-menubar__sublist {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  display: none;
+  min-width: 13rem;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  box-shadow: var(--loom-shadow-md, 0 4px 14px rgba(0,0,0,0.08));
+}
+.loom-block-menubar__submenu[open] > .loom-block-menubar__sublist {
+  display: block;
+}
+.loom-block-menubar__sublist .loom-block-menubar__leaf,
+.loom-block-menubar__sublist .loom-block-menubar__trigger {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* === CmsBlock::Resizable =========================================== */
+.loom-block-resizable {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 12rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  overflow: hidden;
+}
+.loom-block-resizable[data-orientation="horizontal"] {
+  flex-direction: row;
+}
+.loom-block-resizable[data-orientation="vertical"] {
+  flex-direction: column;
+}
+.loom-block-resizable__pane {
+  flex-grow: 0;
+  flex-shrink: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+.loom-block-resizable__handle {
+  flex: 0 0 auto;
+  background: color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  cursor: col-resize;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-resizable[data-orientation="horizontal"] > .loom-block-resizable__handle {
+  width: 4px;
+  cursor: col-resize;
+}
+.loom-block-resizable[data-orientation="vertical"] > .loom-block-resizable__handle {
+  height: 4px;
+  cursor: row-resize;
+}
+.loom-block-resizable__handle:hover,
+.loom-block-resizable__handle:focus-visible {
+  background: var(--loom-color-primary, var(--loom-accent));
+  outline: none;
+}
+
+/* === CmsBlock::ContextMenu ========================================= */
+.loom-block-context-menu {
+  margin: 0;
+  padding: 0.3rem;
+  min-width: 12rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  box-shadow: var(--loom-shadow-lg, 0 18px 40px rgba(0,0,0,0.12));
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  /* popover=manual visibility flips on .showPopover(); CSS just
+   * pre-styles the surface so the open transition looks correct. */
+}
+.loom-block-context-menu__item {
+  display: block;
+  padding: 0.45rem 0.7rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--loom-radius-sm, 6px);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-context-menu__item:hover:not([aria-disabled="true"]):not([disabled]) {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 10%, transparent);
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-block-context-menu__item:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: -1px;
+}
+.loom-block-context-menu__item[aria-disabled="true"],
+.loom-block-context-menu__item[disabled] {
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 40%, transparent);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.loom-block-context-menu__item[data-invalid="true"] {
+  color: var(--loom-color-danger, #b91c1c);
+}
+.loom-block-context-menu__separator {
+  border: 0;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 50%, transparent);
+  margin: 0.3rem 0;
+}
+
+/* === CmsBlock::AspectRatio ========================================= */
+.loom-block-aspect-ratio {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--loom-radius-sm, 6px);
+}
+.loom-block-aspect-ratio > * {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* === CmsBlock::Toolbar ============================================= */
+.loom-block-toolbar {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  flex-wrap: wrap;
+  align-items: center;
+}
+.loom-block-toolbar[data-orientation="vertical"] {
+  flex-direction: column;
+  align-items: stretch;
+  width: max-content;
+}
+
+/* === CmsBlock::ToggleGroup ========================================= */
+.loom-block-toggle-group {
+  display: inline-flex;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  overflow: hidden;
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+}
+.loom-block-toggle-group__item {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-right: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  cursor: pointer;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-toggle-group__item:last-child {
+  border-right: 0;
+}
+.loom-block-toggle-group__item:hover:not([disabled]) {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 5%, transparent);
+}
+.loom-block-toggle-group__item[aria-pressed="true"] {
+  background: var(--loom-color-primary, var(--loom-accent));
+  color: var(--loom-color-on-primary, #fff);
+}
+.loom-block-toggle-group__item:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: -1px;
+  z-index: 1;
+}
+.loom-block-toggle-group__item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* === CmsBlock::Sheet =============================================== */
+.loom-block-sheet {
+  padding: 0;
+  border: 0;
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  box-shadow: var(--loom-shadow-lg, 0 18px 40px rgba(0,0,0,0.18));
+  overflow: hidden;
+  max-width: none;
+  max-height: none;
+}
+.loom-block-sheet::backdrop {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 50%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.loom-block-sheet[data-edge="right"] {
+  top: 0; right: 0; bottom: 0; left: auto;
+  height: 100vh;
+  width: min(28rem, 100vw);
+  margin: 0 0 0 auto;
+  border-radius: 0;
+}
+.loom-block-sheet[data-edge="left"] {
+  top: 0; left: 0; bottom: 0; right: auto;
+  height: 100vh;
+  width: min(28rem, 100vw);
+  margin: 0 auto 0 0;
+  border-radius: 0;
+}
+.loom-block-sheet[data-edge="top"] {
+  top: 0; left: 0; right: 0; bottom: auto;
+  width: 100vw;
+  height: min(28rem, 100vh);
+  margin: 0 auto auto;
+  border-radius: 0;
+}
+.loom-block-sheet[data-edge="bottom"] {
+  bottom: 0; left: 0; right: 0; top: auto;
+  width: 100vw;
+  height: min(28rem, 100vh);
+  margin: auto auto 0;
+  border-radius: var(--loom-radius-lg, 18px) var(--loom-radius-lg, 18px) 0 0;
+}
+.loom-block-sheet__close-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0.75rem 0.75rem 0;
+}
+.loom-block-sheet__close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--loom-radius-full, 9999px);
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent);
+  cursor: pointer;
+}
+.loom-block-sheet__close:hover {
+  background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 8%, transparent);
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-sheet__close:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 2px;
+}
+.loom-block-sheet__title {
+  margin: 0;
+  padding: 0 1.5rem 0.5rem;
+  font-family: var(--loom-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-block-sheet__content {
+  padding: 0.5rem 1.5rem 1.5rem;
+  overflow-y: auto;
+}
+
+/* === CmsBlock::HoverCard =========================================== */
+.loom-block-hover-card {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 50%, transparent);
+  cursor: help;
+}
+.loom-block-hover-card__content {
+  position: absolute;
+  z-index: 100;
+  width: 18rem;
+  padding: 1rem;
+  border-radius: var(--loom-radius, 10px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 60%, transparent);
+  box-shadow: var(--loom-shadow-md, 0 4px 14px rgba(0,0,0,0.08));
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity var(--loom-motion-base, 220ms) var(--loom-ease-out, ease),
+              transform var(--loom-motion-base, 220ms) var(--loom-ease-out, ease),
+              visibility 0s var(--loom-motion-base, 220ms);
+  pointer-events: none;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.loom-block-hover-card:hover > .loom-block-hover-card__content,
+.loom-block-hover-card:focus-visible > .loom-block-hover-card__content,
+.loom-block-hover-card:focus-within > .loom-block-hover-card__content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 100ms;
+  pointer-events: auto;
+}
+.loom-block-hover-card[data-placement="top"]    > .loom-block-hover-card__content { bottom: calc(100% + 8px); left: 50%; transform: translate(-50%, 4px); }
+.loom-block-hover-card[data-placement="top"]:hover    > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="top"]:focus-visible > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="top"]:focus-within  > .loom-block-hover-card__content { transform: translate(-50%, 0); }
+.loom-block-hover-card[data-placement="bottom"] > .loom-block-hover-card__content { top: calc(100% + 8px); left: 50%; transform: translate(-50%, -4px); }
+.loom-block-hover-card[data-placement="bottom"]:hover > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="bottom"]:focus-visible > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="bottom"]:focus-within  > .loom-block-hover-card__content { transform: translate(-50%, 0); }
+.loom-block-hover-card[data-placement="left"]   > .loom-block-hover-card__content { right: calc(100% + 8px); top: 50%; transform: translate(4px, -50%); }
+.loom-block-hover-card[data-placement="left"]:hover > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="left"]:focus-visible > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="left"]:focus-within  > .loom-block-hover-card__content { transform: translate(0, -50%); }
+.loom-block-hover-card[data-placement="right"]  > .loom-block-hover-card__content { left: calc(100% + 8px); top: 50%; transform: translate(-4px, -50%); }
+.loom-block-hover-card[data-placement="right"]:hover > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="right"]:focus-visible > .loom-block-hover-card__content,
+.loom-block-hover-card[data-placement="right"]:focus-within  > .loom-block-hover-card__content { transform: translate(0, -50%); }
+
+/* === CmsBlock::Form ================================================ */
+.loom-block-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 32rem;
+}
+.loom-block-form > * {
+  margin: 0;
+}
+.loom-block-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.loom-block-form__submit {
+  appearance: none;
+  background: var(--loom-color-primary, var(--loom-accent));
+  color: var(--loom-color-on-primary, #fff);
+  border: 0;
+  border-radius: var(--loom-radius, 10px);
+  padding: 0.6rem 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+  min-height: var(--loom-tap-min, 44px);
+}
+.loom-block-form__submit:hover {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 80%, black);
+}
+.loom-block-form__submit:focus-visible {
+  outline: 2px solid var(--loom-color-primary, var(--loom-accent));
+  outline-offset: 3px;
+}
+.loom-block-form[data-invalid="true"] {
+  outline: 2px dashed var(--loom-color-danger, #b91c1c);
+  outline-offset: 4px;
+}
+
+/* === CmsBlock::List ================================================ */
+/* Semantic ul/ol primitive. Marker style + indent come from tenant
+   [style] config so visual register varies between tenants without
+   per-instance overrides. */
+.loom-block-list {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  color: var(--loom-color-text, inherit);
+  font-size: var(--loom-font-body, 1rem);
+  line-height: var(--loom-leading-body, 1.6);
+}
+.loom-block-list[data-style="unordered"] {
+  list-style-type: var(--loom-list-bullet, disc);
+}
+.loom-block-list[data-style="ordered"] {
+  list-style-type: var(--loom-list-marker, decimal);
+}
+.loom-block-list__item {
+  padding-left: 0.25rem;
+}
+.loom-block-list__item::marker {
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 55%, transparent));
+}
+
+/* === CmsBlock::Quote =============================================== */
+/* Semantic <blockquote> primitive. Editorial register (rule color,
+   indent, italics) flows from tenant [style] config; substrate only
+   asserts the structural intent. */
+.loom-block-quote {
+  margin: 0;
+  padding: 0.75rem 1rem 0.75rem 1.25rem;
+  border-left: 3px solid var(--loom-color-accent, var(--loom-color-primary, currentColor));
+  background: var(--loom-color-quote-bg, transparent);
+  color: var(--loom-color-quote-text, var(--loom-color-text, inherit));
+  font-style: var(--loom-quote-style, italic);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.loom-block-quote__text {
+  margin: 0;
+  font-size: var(--loom-font-quote, 1.05rem);
+  line-height: var(--loom-leading-quote, 1.55);
+}
+.loom-block-quote__cite {
+  font-style: normal;
+  font-size: 0.875rem;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 60%, transparent));
+}
+.loom-block-quote__cite::before {
+  content: "— ";
+}
+
+/* === CmsBlock::Code ================================================ */
+/* Pre-formatted code block. Substrate emits NO syntax highlighting;
+   tenants plug a highlighter (Prism, highlight.js, server-side
+   syntect) over the same DOM. Cascade asserts monospace + scrollable
+   on overflow + tenant-overridable surface color. */
+.loom-block-code {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  background: var(--loom-color-code-bg, color-mix(in oklab, var(--loom-color-text, currentColor) 6%, transparent));
+  color: var(--loom-color-code-text, var(--loom-color-text, inherit));
+  font-family: var(--loom-font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace);
+  font-size: var(--loom-font-code, 0.9rem);
+  line-height: var(--loom-leading-code, 1.55);
+  border-radius: var(--loom-radius-code, var(--loom-radius-sm, 0.25rem));
+  overflow-x: auto;
+  white-space: pre;
+}
+.loom-block-code__code {
+  font-family: inherit;
+  background: transparent;
+  color: inherit;
+}
+
+/* === CmsBlock::Grid ================================================ */
+/* CSS-grid layout primitive. Explicit column count (clamped 1..=12)
+   with token-scale gap. Cascade collapses to a single column at
+   narrow viewports per tenant responsive density config.
+
+   Distinct from .loom-block-row / .loom-block-column (flexbox) —
+   Grid projects display: grid for cell-based layouts. */
+.loom-block-grid {
+  display: grid;
+  gap: 1rem;
+}
+.loom-block-grid[data-columns="1"]  { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="2"]  { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="3"]  { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="4"]  { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="5"]  { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="6"]  { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="7"]  { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="8"]  { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="9"]  { grid-template-columns: repeat(9, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="10"] { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="11"] { grid-template-columns: repeat(11, minmax(0, 1fr)); }
+.loom-block-grid[data-columns="12"] { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.loom-block-grid[data-gap="none"] { gap: 0; }
+.loom-block-grid[data-gap="xs"]   { gap: 0.25rem; }
+.loom-block-grid[data-gap="sm"]   { gap: 0.5rem; }
+.loom-block-grid[data-gap="md"]   { gap: 1rem; }
+.loom-block-grid[data-gap="lg"]   { gap: 2rem; }
+.loom-block-grid[data-gap="xl"]   { gap: 3rem; }
+.loom-block-grid[data-gap="xxl"]  { gap: 4rem; }
+@media (max-width: 640px) {
+  .loom-block-grid[data-columns]:not([data-columns="1"]) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === CmsBlock::Card ================================================ */
+/* Visual card surface with header / body / footer slots. Substrate
+   asserts structure + slot data-attrs; visual register (surface
+   color, radius, shadow, border) flows from tenant [style] config. */
+.loom-block-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--loom-color-surface, color-mix(in oklab, var(--loom-color-text, currentColor) 3%, transparent));
+  color: var(--loom-color-text, inherit);
+  border: 1px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 12%, transparent));
+  border-radius: var(--loom-radius-card, var(--loom-radius-md, 0.5rem));
+  box-shadow: var(--loom-shadow-card, 0 1px 2px rgb(0 0 0 / 0.04));
+  overflow: hidden;
+}
+.loom-block-card__header,
+.loom-block-card__body,
+.loom-block-card__footer {
+  padding: var(--loom-card-padding, 1rem 1.25rem);
+}
+.loom-block-card__header {
+  border-bottom: 1px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 10%, transparent));
+}
+.loom-block-card__footer {
+  border-top: 1px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 10%, transparent));
+  background: var(--loom-color-surface-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 1.5%, transparent));
+}
+
+/* === CmsBlock::Video =============================================== */
+/* Native <video> embed. Substrate emits controls + preload="metadata"
+   only; autoplay / muted-autoplay / scroll-trigger are intentionally
+   absent (engagement-pattern decisions live at the tenant tier). */
+.loom-block-video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  background: var(--loom-color-surface-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 4%, transparent));
+  border-radius: var(--loom-radius-video, var(--loom-radius-md, 0.5rem));
+}
+.loom-block-video__fallback {
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 60%, transparent));
+}
+
+/* === CmsBlock::Iframe ============================================== */
+/* Sandboxed third-party embed. Substrate emits sandbox + lazy-load +
+   no-referrer; visual chrome (aspect ratio, border, radius) flows
+   from tenant [style] config. */
+.loom-block-iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  background: var(--loom-color-surface-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 4%, transparent));
+  border-radius: var(--loom-radius-iframe, var(--loom-radius-md, 0.5rem));
+  aspect-ratio: var(--loom-iframe-aspect, 16 / 9);
+}
+
+/* === CmsBlock::Badge =============================================== */
+/* Inline status pill. Substrate emits structure + tone data-attr;
+   visual register flows from tenant [style] config via the canonical
+   tone tokens. Non-interactive — distinct from CmsBlock::Button. */
+.loom-block-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: var(--loom-radius-badge, 9999px);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.loom-block-badge[data-tone="neutral"] {
+  background: var(--loom-color-badge-neutral-bg, color-mix(in oklab, var(--loom-color-text, currentColor) 8%, transparent));
+  color: var(--loom-color-badge-neutral-text, var(--loom-color-text, inherit));
+  border-color: var(--loom-color-badge-neutral-border, color-mix(in oklab, var(--loom-color-text, currentColor) 18%, transparent));
+}
+.loom-block-badge[data-tone="info"] {
+  background: var(--loom-color-badge-info-bg, #e0f2fe);
+  color: var(--loom-color-badge-info-text, #075985);
+  border-color: var(--loom-color-badge-info-border, #7dd3fc);
+}
+.loom-block-badge[data-tone="success"] {
+  background: var(--loom-color-badge-success-bg, #dcfce7);
+  color: var(--loom-color-badge-success-text, #166534);
+  border-color: var(--loom-color-badge-success-border, #86efac);
+}
+.loom-block-badge[data-tone="warning"] {
+  background: var(--loom-color-badge-warning-bg, #fef3c7);
+  color: var(--loom-color-badge-warning-text, #92400e);
+  border-color: var(--loom-color-badge-warning-border, #fcd34d);
+}
+.loom-block-badge[data-tone="danger"] {
+  background: var(--loom-color-badge-danger-bg, #fee2e2);
+  color: var(--loom-color-badge-danger-text, #991b1b);
+  border-color: var(--loom-color-badge-danger-border, #fca5a5);
+}
+.loom-block-badge[data-tone="accent"] {
+  background: var(--loom-color-badge-accent-bg, color-mix(in oklab, var(--loom-color-accent, var(--loom-color-primary, #3a7afe)) 18%, transparent));
+  color: var(--loom-color-badge-accent-text, var(--loom-color-accent, var(--loom-color-primary, #3a7afe)));
+  border-color: var(--loom-color-badge-accent-border, color-mix(in oklab, var(--loom-color-accent, var(--loom-color-primary, #3a7afe)) 35%, transparent));
+}
+
+/* === CmsBlock::Avatar ============================================== */
+/* User / brand avatar with initials fallback. Substrate asserts
+   structure + size data-attr; visual register (fill, radius, font)
+   flows from tenant [style] config. */
+.loom-block-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--loom-color-avatar-bg, color-mix(in oklab, var(--loom-color-text, currentColor) 8%, transparent));
+  color: var(--loom-color-avatar-text, var(--loom-color-text, inherit));
+  border-radius: var(--loom-radius-avatar, 9999px);
+  font-weight: 600;
+  user-select: none;
+  flex-shrink: 0;
+}
+.loom-block-avatar[data-size="sm"] {
+  width: var(--loom-avatar-sm, 1.75rem);
+  height: var(--loom-avatar-sm, 1.75rem);
+  font-size: 0.625rem;
+}
+.loom-block-avatar[data-size="md"] {
+  width: var(--loom-avatar-md, 2.5rem);
+  height: var(--loom-avatar-md, 2.5rem);
+  font-size: 0.875rem;
+}
+.loom-block-avatar[data-size="lg"] {
+  width: var(--loom-avatar-lg, 3.5rem);
+  height: var(--loom-avatar-lg, 3.5rem);
+  font-size: 1.125rem;
+}
+.loom-block-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.loom-block-avatar__initials {
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+/* === CmsBlock::Alert =============================================== */
+/* Block-level banner notification. Reuses the Badge tone palette
+   (--loom-color-badge-<tone>-{bg,text,border}) so a tenant's
+   [style] config drives both inline pills and block banners
+   through the same six semantic tokens.
+
+   role=alert/status set by the renderer per WAI-ARIA Authoring
+   Practices: alert for Danger/Warning (urgent), status for the
+   informational tones. */
+.loom-block-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--loom-radius-alert, var(--loom-radius-md, 0.5rem));
+  margin: 0;
+}
+.loom-block-alert__title {
+  font-weight: 700;
+  line-height: 1.3;
+}
+.loom-block-alert__body {
+  margin: 0;
+  line-height: 1.55;
+}
+.loom-block-alert[data-tone="neutral"] {
+  background: var(--loom-color-badge-neutral-bg, color-mix(in oklab, var(--loom-color-text, currentColor) 6%, transparent));
+  color: var(--loom-color-badge-neutral-text, var(--loom-color-text, inherit));
+  border-color: var(--loom-color-badge-neutral-border, color-mix(in oklab, var(--loom-color-text, currentColor) 16%, transparent));
+}
+.loom-block-alert[data-tone="info"] {
+  background: var(--loom-color-badge-info-bg, #e0f2fe);
+  color: var(--loom-color-badge-info-text, #075985);
+  border-color: var(--loom-color-badge-info-border, #7dd3fc);
+}
+.loom-block-alert[data-tone="success"] {
+  background: var(--loom-color-badge-success-bg, #dcfce7);
+  color: var(--loom-color-badge-success-text, #166534);
+  border-color: var(--loom-color-badge-success-border, #86efac);
+}
+.loom-block-alert[data-tone="warning"] {
+  background: var(--loom-color-badge-warning-bg, #fef3c7);
+  color: var(--loom-color-badge-warning-text, #92400e);
+  border-color: var(--loom-color-badge-warning-border, #fcd34d);
+}
+.loom-block-alert[data-tone="danger"] {
+  background: var(--loom-color-badge-danger-bg, #fee2e2);
+  color: var(--loom-color-badge-danger-text, #991b1b);
+  border-color: var(--loom-color-badge-danger-border, #fca5a5);
+}
+.loom-block-alert[data-tone="accent"] {
+  background: var(--loom-color-badge-accent-bg, color-mix(in oklab, var(--loom-color-accent, var(--loom-color-primary, #3a7afe)) 14%, transparent));
+  color: var(--loom-color-badge-accent-text, var(--loom-color-accent, var(--loom-color-primary, #3a7afe)));
+  border-color: var(--loom-color-badge-accent-border, color-mix(in oklab, var(--loom-color-accent, var(--loom-color-primary, #3a7afe)) 30%, transparent));
+}
+
+/* === CmsBlock::Table =============================================== */
+/* Semantic data table. Substrate asserts <table>/<thead>/<tbody>/
+   <caption>/scope=col; tenant [style] config drives the visual
+   register (zebra striping, border, density). */
+.loom-block-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--loom-font-table, 0.9375rem);
+  line-height: 1.45;
+  color: var(--loom-color-text, inherit);
+}
+.loom-block-table__caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0 0 0.5rem;
+  font-weight: 600;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 70%, transparent));
+}
+.loom-block-table__th {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 2px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 18%, transparent));
+  background: var(--loom-color-surface-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 4%, transparent));
+}
+.loom-block-table__td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 10%, transparent));
+  vertical-align: top;
+}
+.loom-block-table__tr:nth-child(even) > .loom-block-table__td {
+  background: var(--loom-color-table-stripe, color-mix(in oklab, var(--loom-color-text, currentColor) 2%, transparent));
+}
+
+/* === CmsBlock::DefinitionList ====================================== */
+/* Semantic <dl>/<dt>/<dd> primitive. The HTML spec's purpose-built
+   shape for key/value content. Substrate asserts structure; tenant
+   [style] config drives the visual register (term weight, desc
+   indent, density). */
+.loom-block-deflist {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: 0.5rem 1.5rem;
+  color: var(--loom-color-text, inherit);
+  font-size: var(--loom-font-body, 1rem);
+  line-height: 1.55;
+}
+.loom-block-deflist__term {
+  font-weight: 600;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 70%, transparent));
+}
+.loom-block-deflist__desc {
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .loom-block-deflist {
+    grid-template-columns: 1fr;
+    gap: 0.125rem 0;
+  }
+  .loom-block-deflist__desc {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* === CmsBlock::Stat ================================================ */
+/* Single-number callout. Semantic <dl>/<dt>/<dd> so the value is the
+   description of the label. Substrate asserts structure + trend
+   data-attr; tenant [style] drives font scale + trend colors. */
+.loom-block-stat {
+  margin: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.125rem;
+}
+.loom-block-stat__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 65%, transparent));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.loom-block-stat__value {
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.loom-block-stat__value-text {
+  font-size: var(--loom-font-stat, 2.5rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--loom-color-text, inherit);
+  font-variant-numeric: tabular-nums;
+}
+.loom-block-stat__trend {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.loom-block-stat__trend[data-trend="up"]   { color: var(--loom-color-trend-up, #16a34a); }
+.loom-block-stat__trend[data-trend="down"] { color: var(--loom-color-trend-down, #dc2626); }
+.loom-block-stat__trend[data-trend="flat"] { color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 60%, transparent)); }
+
+/* === CmsBlock::Timeline ============================================ */
+/* Sequential events display. Semantic <ol> with one <li> per event;
+   substrate ships the vertical rail + node marker, tenants restyle
+   via cascade variables. */
+.loom-block-timeline {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.loom-block-timeline::before {
+  content: "";
+  position: absolute;
+  left: 0.625rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  background: var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 18%, transparent));
+  border-radius: 1px;
+}
+.loom-block-timeline__item {
+  position: relative;
+}
+.loom-block-timeline__marker {
+  position: absolute;
+  left: -2rem;
+  top: 0.375rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: var(--loom-color-accent, var(--loom-color-primary, currentColor));
+  border: 2px solid var(--loom-color-bg, #fff);
+  box-shadow: 0 0 0 2px var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 18%, transparent));
+}
+.loom-block-timeline__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.loom-block-timeline__when {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 60%, transparent));
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.loom-block-timeline__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--loom-color-text, inherit);
+  line-height: 1.3;
+}
+.loom-block-timeline__desc {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--loom-color-text, inherit);
+}
+
+/* === CmsBlock::ProgressBar ========================================= */
+/* Native HTML <progress> with tenant-tone styling. The base
+   <progress> element ships with browser-default chrome; the cascade
+   normalises and tones it via :: pseudo-elements (WebKit + Firefox
+   selectors). */
+.loom-block-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.loom-block-progress__label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 65%, transparent));
+}
+.loom-block-progress__bar {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 0.5rem;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--loom-color-progress-track, color-mix(in oklab, var(--loom-color-text, currentColor) 10%, transparent));
+  overflow: hidden;
+}
+/* WebKit / Blink */
+.loom-block-progress__bar::-webkit-progress-bar {
+  background: var(--loom-color-progress-track, color-mix(in oklab, var(--loom-color-text, currentColor) 10%, transparent));
+  border-radius: 9999px;
+}
+.loom-block-progress__bar::-webkit-progress-value {
+  border-radius: 9999px;
+  transition: width 220ms ease;
+}
+/* Firefox */
+.loom-block-progress__bar::-moz-progress-bar {
+  border-radius: 9999px;
+  transition: width 220ms ease;
+}
+.loom-block-progress__value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--loom-color-text, inherit);
+  align-self: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+.loom-block-progress[data-tone="neutral"]  .loom-block-progress__bar::-webkit-progress-value { background: var(--loom-color-badge-neutral-text, currentColor); }
+.loom-block-progress[data-tone="neutral"]  .loom-block-progress__bar::-moz-progress-bar      { background: var(--loom-color-badge-neutral-text, currentColor); }
+.loom-block-progress[data-tone="info"]     .loom-block-progress__bar::-webkit-progress-value { background: var(--loom-color-badge-info-text, #0284c7); }
+.loom-block-progress[data-tone="info"]     .loom-block-progress__bar::-moz-progress-bar      { background: var(--loom-color-badge-info-text, #0284c7); }
+.loom-block-progress[data-tone="success"]  .loom-block-progress__bar::-webkit-progress-value { background: var(--loom-color-badge-success-text, #16a34a); }
+.loom-block-progress[data-tone="success"]  .loom-block-progress__bar::-moz-progress-bar      { background: var(--loom-color-badge-success-text, #16a34a); }
+.loom-block-progress[data-tone="warning"]  .loom-block-progress__bar::-webkit-progress-value { background: var(--loom-color-badge-warning-text, #ca8a04); }
+.loom-block-progress[data-tone="warning"]  .loom-block-progress__bar::-moz-progress-bar      { background: var(--loom-color-badge-warning-text, #ca8a04); }
+.loom-block-progress[data-tone="danger"]   .loom-block-progress__bar::-webkit-progress-value { background: var(--loom-color-badge-danger-text, #dc2626); }
+.loom-block-progress[data-tone="danger"]   .loom-block-progress__bar::-moz-progress-bar      { background: var(--loom-color-badge-danger-text, #dc2626); }
+.loom-block-progress[data-tone="accent"]   .loom-block-progress__bar::-webkit-progress-value { background: var(--loom-color-accent, var(--loom-color-primary, #3a7afe)); }
+.loom-block-progress[data-tone="accent"]   .loom-block-progress__bar::-moz-progress-bar      { background: var(--loom-color-accent, var(--loom-color-primary, #3a7afe)); }
+
+/* === CmsBlock::EmptyState ========================================== */
+/* Canonical "no items yet" pattern. Centered title + supporting prose
+   + optional action link. Tenant cascade drives spacing + accent
+   colors; substrate ships an a11y-correct shape (role=status, ordered
+   text hierarchy). */
+.loom-block-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  border: 1px dashed var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 18%, transparent));
+  border-radius: var(--loom-radius-empty, var(--loom-radius-md, 0.75rem));
+  background: var(--loom-color-surface-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 3%, transparent));
+  color: var(--loom-color-text, inherit);
+}
+.loom-block-empty__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.loom-block-empty__body {
+  margin: 0;
+  max-width: 28rem;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 65%, transparent));
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.loom-block-empty__action {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--loom-color-accent, var(--loom-color-primary, #3a7afe));
+  color: var(--loom-color-on-accent, #fff);
+  border-radius: var(--loom-radius-button, var(--loom-radius-sm, 0.375rem));
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+.loom-block-empty__action:hover {
+  opacity: 0.92;
+}
+.loom-block-empty__action:focus-visible {
+  outline: 2px solid var(--loom-color-focus, var(--loom-color-accent, #3a7afe));
+  outline-offset: 2px;
+}
+
+/* === CmsBlock::Stepper ============================================= */
+/* Multi-step process indicator. Semantic <ol> with one <li> per step;
+   per-step data-state drives color + checkmark / number rendering. */
+.loom-block-stepper {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.loom-block-stepper__step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 150ms ease;
+}
+.loom-block-stepper__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: currentColor;
+  color: var(--loom-color-bg, #fff);
+  flex-shrink: 0;
+}
+.loom-block-stepper__label {
+  white-space: nowrap;
+}
+.loom-block-stepper__step[data-state="done"] {
+  color: var(--loom-color-stepper-done, var(--loom-color-badge-success-text, #16a34a));
+  background: var(--loom-color-stepper-done-bg, color-mix(in oklab, var(--loom-color-stepper-done, #16a34a) 12%, transparent));
+}
+.loom-block-stepper__step[data-state="current"] {
+  color: var(--loom-color-stepper-current, var(--loom-color-accent, var(--loom-color-primary, #3a7afe)));
+  background: var(--loom-color-stepper-current-bg, color-mix(in oklab, var(--loom-color-stepper-current, #3a7afe) 14%, transparent));
+}
+.loom-block-stepper__step[data-state="upcoming"] {
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 50%, transparent));
+  background: transparent;
+}
+
+/* === CmsBlock::KbdShortcut ========================================= */
+/* Semantic <kbd> elements with cascade-driven keycap appearance.
+   Tenant cascade overrides via --loom-color-kbd-{bg,text,border}. */
+.loom-block-kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  vertical-align: baseline;
+  font-family: var(--loom-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+.loom-block-kbd__key {
+  display: inline-block;
+  padding: 0.0625rem 0.4rem;
+  background: var(--loom-color-kbd-bg, color-mix(in oklab, var(--loom-color-text, currentColor) 5%, transparent));
+  color: var(--loom-color-kbd-text, var(--loom-color-text, inherit));
+  border: 1px solid var(--loom-color-kbd-border, color-mix(in oklab, var(--loom-color-text, currentColor) 18%, transparent));
+  border-bottom-width: 2px;
+  border-radius: var(--loom-radius-kbd, 0.25rem);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+  box-shadow: inset 0 -1px 0 0 var(--loom-color-kbd-border, color-mix(in oklab, var(--loom-color-text, currentColor) 12%, transparent));
+}
+.loom-block-kbd__sep {
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 50%, transparent));
+  font-size: 0.8125rem;
+  font-weight: 500;
+  user-select: none;
+}
+
+/* === CmsBlock::Marquee ============================================= */
+/* Horizontally-scrolling marquee — logo wall / news ticker / press
+   mentions. Items are duplicated in the DOM (substrate-emitted) so the
+   CSS keyframe loops seamlessly. The second copy is aria-hidden so
+   screen readers don't announce duplicates.
+
+   Honours prefers-reduced-motion: animation disabled, first group
+   shown statically. No JS layer. */
+.loom-block-marquee {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+}
+.loom-block-marquee__track {
+  display: flex;
+  width: max-content;
+  gap: 3rem;
+  animation: loom-marquee-scroll var(--loom-marquee-duration, 40s) linear infinite;
+}
+.loom-block-marquee__group {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  flex-shrink: 0;
+}
+.loom-block-marquee[data-speed="slow"]   .loom-block-marquee__track { --loom-marquee-duration: 60s; }
+.loom-block-marquee[data-speed="medium"] .loom-block-marquee__track { --loom-marquee-duration: 40s; }
+.loom-block-marquee[data-speed="fast"]   .loom-block-marquee__track { --loom-marquee-duration: 24s; }
+.loom-block-marquee[data-direction="right"] .loom-block-marquee__track {
+  animation-direction: reverse;
+}
+@keyframes loom-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loom-block-marquee__track {
+    animation: none;
+  }
+  /* Hide the cloned group so static rendering doesn't show duplicates */
+  .loom-block-marquee__group[aria-hidden="true"] {
+    display: none;
+  }
+}
+
+/* === CmsBlock::Carousel ============================================ */
+/* Slide gallery via CSS scroll-snap. Native swipe + keyboard arrow
+   navigation; no JS required. Screen readers navigate slide-by-slide
+   via the per-slide aria-label="N of total". */
+.loom-block-carousel {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--loom-radius-carousel, var(--loom-radius-md, 0.75rem));
+}
+.loom-block-carousel__track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* Track shows native scrollbar on hover for keyboard discoverability */
+  scrollbar-width: thin;
+}
+.loom-block-carousel__slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  padding: 1rem;
+  min-height: var(--loom-carousel-slide-min-height, 12rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loom-block-carousel__track {
+    scroll-behavior: auto;
+  }
+}
+
+/* === NavStyle / FooterStyle variants (#331) ======================== */
+/* Substrate ships four NavStyle + four FooterStyle variants. Cascade
+   keys off the `data-loom-nav-style` / `data-loom-footer-style`
+   attributes the renderer sets per the typed enum. Each variant
+   delivers a meaningfully different visual register — not just
+   color tweaks — so tenants composing identical CMS content render
+   distinctly when they pick different styles. */
+
+/* NavStyle::Centered — brand centred between two link halves. */
+nav[data-loom-nav-style="centered"] > div {
+  justify-content: space-between;
+}
+nav[data-loom-nav-style="centered"] > div > a:first-child {
+  order: 2;
+  margin: 0 auto;
+}
+nav[data-loom-nav-style="centered"] > div > div.hidden {
+  order: 1;
+  flex: 1;
+}
+
+/* NavStyle::Compact — tighter chrome. */
+nav[data-loom-nav-style="compact"] {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+nav[data-loom-nav-style="compact"] span.font-display {
+  font-size: 1rem;
+}
+nav[data-loom-nav-style="compact"] > div {
+  gap: 1rem !important;
+}
+
+/* FooterStyle::Minimal — hide column blocks; keep brand + bottom band. */
+footer[data-loom-footer-style="minimal"] .grid {
+  display: block;
+}
+footer[data-loom-footer-style="minimal"] .grid > div + div {
+  display: none;
+}
+footer[data-loom-footer-style="minimal"] {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+/* FooterStyle::Dense — tighter footer chrome. */
+footer[data-loom-footer-style="dense"] {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  font-size: 0.875rem;
+}
+footer[data-loom-footer-style="dense"] .grid {
+  gap: 1.5rem;
+}
+footer[data-loom-footer-style="dense"] h3 {
+  font-size: 0.95rem;
+}
+
+/* === CmsSection::HeroSplit ========================================= */
+/* Image-on-one-side, text-on-the-other hero. Cascade flips
+   flex-direction based on data-image-side. */
+.loom-section-hero-split {
+  padding: 5rem 0;
+  background: var(--loom-color-hero-bg, var(--loom-color-bg, transparent));
+}
+.loom-section-hero-split__grid {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+.loom-section-hero-split[data-image-side="left"] .loom-section-hero-split__grid {
+  flex-direction: row-reverse;
+}
+.loom-section-hero-split__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.loom-section-hero-split__title {
+  margin: 0;
+  font-size: var(--loom-font-hero, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--loom-color-text, inherit);
+}
+.loom-section-hero-split__lede {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 70%, transparent));
+  max-width: 36rem;
+}
+.loom-section-hero-split__cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--loom-color-accent, var(--loom-color-primary, #3a7afe));
+  color: var(--loom-color-on-accent, #fff);
+  border-radius: var(--loom-radius-button, var(--loom-radius-md, 0.5rem));
+  font-weight: 600;
+  text-decoration: none;
+}
+.loom-section-hero-split__media {
+  flex: 1;
+}
+.loom-section-hero-split__image {
+  width: 100%;
+  height: auto;
+  border-radius: var(--loom-radius-image, var(--loom-radius-md, 0.75rem));
+}
+.loom-section-hero-split__placeholder {
+  aspect-ratio: 4 / 3;
+  background: var(--loom-color-surface-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 5%, transparent));
+  border-radius: var(--loom-radius-image, var(--loom-radius-md, 0.75rem));
+}
+@media (max-width: 768px) {
+  .loom-section-hero-split__grid {
+    flex-direction: column !important;
+  }
+}
+
+/* === CmsSection::HeroMinimal ======================================= */
+/* Text-only hero. No decoration, no eyebrow, no background tint.
+   Just title + optional lede + optional CTA, centered. */
+.loom-section-hero-minimal {
+  padding: 4rem 1.5rem 3rem;
+  text-align: left;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+.loom-section-hero-minimal__title {
+  margin: 0;
+  font-size: var(--loom-font-hero, 2.75rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--loom-color-text, inherit);
+}
+.loom-section-hero-minimal__lede {
+  margin: 1rem 0 0;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 65%, transparent));
+}
+.loom-section-hero-minimal__cta {
+  display: inline-flex;
+  margin-top: 1.5rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 0.125rem;
+  text-underline-offset: 0.25rem;
+  color: var(--loom-color-accent, var(--loom-color-primary, #3a7afe));
+}
+
+/* === CmsBlock::Figure ============================================== */
+/* Semantic <figure> with <img> + <figcaption>. Substrate asserts
+   structure; visual register (radius, caption font, credit weight)
+   flows from tenant [style] config. */
+.loom-block-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.loom-block-figure__image {
+  width: 100%;
+  height: auto;
+  border-radius: var(--loom-radius-figure, var(--loom-radius-md, 0.5rem));
+}
+.loom-block-figure__caption {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 65%, transparent));
+}
+.loom-block-figure__caption-text {
+  color: var(--loom-color-text, inherit);
+}
+.loom-block-figure__credit {
+  font-size: 0.75rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+/* ===================================================================
+ * loom-hero-slideshow — pure-CSS auto-rotating hero with text overlay
+ * Substrate-general; any tenant can use. No JS. Respects
+ * prefers-reduced-motion (slides held statically when set).
+ * ===================================================================
+ */
+.loom-hero-slideshow {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: clamp(360px, 50vw, 640px);
+  overflow: hidden;
+  background: var(--loom-color-surface, #ffffff);
+}
+.loom-hero-slideshow__slide {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  transition: opacity 600ms ease-in-out;
+}
+.loom-hero-slideshow__slide[data-active="true"] {
+  /* First slide gets a small head start so the page does not load
+     blank for the duration of the first interval. */
+  opacity: 1;
+}
+.loom-hero-slideshow__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--loom-hero-bg-position, 75% center);
+  z-index: 0;
+}
+.loom-hero-slideshow__overlay {
+  position: relative;
+  z-index: 1;
+  max-width: 56ch;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  color: var(--loom-color-on-hero, var(--loom-color-ink, #111));
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+}
+.loom-hero-slideshow--align-start  .loom-hero-slideshow__overlay { margin-right: auto; }
+.loom-hero-slideshow--align-center .loom-hero-slideshow__overlay { margin: 0 auto; text-align: center; }
+.loom-hero-slideshow--align-end    .loom-hero-slideshow__overlay { margin-left: auto; text-align: right; }
+.loom-hero-slideshow__eyebrow {
+  margin: 0 0 .5em;
+  font-size: .875rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--loom-color-primary);
+}
+.loom-hero-slideshow__title {
+  margin: 0 0 .5em;
+  font-family: var(--loom-font-display, var(--loom-font-body));
+  font-size: clamp(1.4rem, 2.8vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.loom-hero-slideshow__lede {
+  margin: 0 0 1.25em;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.55;
+  max-width: 50ch;
+}
+.loom-hero-slideshow__slide .loom-button {
+  align-self: flex-start;
+}
+.loom-hero-slideshow__cta-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+}
+.loom-hero-slideshow__cta-row .loom-button {
+  align-self: auto;
+  padding: 0.9em 1.6em;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 0;
+}
+.loom-hero-slideshow--align-center .loom-hero-slideshow__slide .loom-button { align-self: center; }
+.loom-hero-slideshow--align-end    .loom-hero-slideshow__slide .loom-button { align-self: flex-end; }
+
+/* Hero slideshow OVERLAY layout: text card sits over the full-bleed
+   image. White card bg with shadow, bounded width, left-aligned by
+   default (align-class controls horizontal placement). */
+.loom-hero-slideshow--overlay .loom-hero-slideshow__overlay {
+  background: color-mix(in oklab, var(--loom-color-bg, #fff) 92%, transparent);
+  color: var(--loom-color-ink, #111);
+  text-shadow: none;
+  max-width: 36rem;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  margin: clamp(1rem, 4vw, 3rem);
+  border-radius: var(--loom-radius-md, 6px);
+  box-shadow: var(--loom-shadow-md, 0 4px 24px rgba(0,0,0,.15));
+  height: auto;
+  align-self: center;
+}
+.loom-hero-slideshow--overlay .loom-hero-slideshow__eyebrow,
+.loom-hero-slideshow--overlay .loom-hero-slideshow__title,
+.loom-hero-slideshow--overlay .loom-hero-slideshow__lede {
+  text-shadow: none;
+}
+.loom-hero-slideshow--overlay .loom-hero-slideshow__cta-row .loom-button {
+  padding: 0.7rem 1.1rem !important;
+  font-size: 0.85rem !important;
+}
+.loom-hero-slideshow--overlay .loom-hero-slideshow__title {
+  color: var(--loom-color-ink, #111);
+}
+.loom-hero-slideshow--overlay .loom-hero-slideshow__lede {
+  color: var(--loom-color-ink, #111);
+}
+.loom-hero-slideshow--overlay {
+  min-height: clamp(360px, 30vw, 480px);
+}
+.loom-hero-slideshow--split {
+  min-height: clamp(320px, 28vw, 440px);
+}
+@media (max-width: 768px) {
+  .loom-hero-slideshow--overlay .loom-hero-slideshow__overlay {
+    margin: 1rem;
+    max-width: none;
+    padding: 1.25rem;
+  }
+}
+
+/* Hero slideshow prev/next nav arrows — substrate-general primitive.
+   Renders as round buttons stacked vertically on the right edge. */
+.loom-hero-slideshow__nav {
+  position: absolute;
+  right: clamp(0.5rem, 2vw, 1.5rem);
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--loom-radius-sm, 4px);
+  border: 1px solid var(--loom-color-border, rgba(255,255,255,0.4));
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--loom-color-ink, #111);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-hero-slideshow__nav:hover {
+  background: var(--loom-color-primary, var(--loom-color-ink));
+  color: var(--loom-color-on-primary, #fff);
+}
+.loom-hero-slideshow__nav::before {
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+}
+.loom-hero-slideshow__nav--prev {
+  top: calc(50% - 40px);
+}
+.loom-hero-slideshow__nav--prev::before { content: "‹"; }
+.loom-hero-slideshow__nav--next {
+  top: calc(50% + 4px);
+}
+.loom-hero-slideshow__nav--next::before { content: "›"; }
+
+@keyframes loom-hero-slideshow-cycle {
+  /* Each slide is visible for ~1/N of the cycle with smooth fade.
+     Working for N=2..=6 with --loom-slideshow-slide-count to
+     parameterize. Calibrated tight enough that overlap is minimal. */
+  0%   { opacity: 0; }
+  3%   { opacity: 1; }
+  22%  { opacity: 1; }
+  26%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+/* Static-fallback for chromiumoxide / screenshots: only the
+   data-active slide gets opacity:1, preventing all-stacked render
+   issues during capture. Animation still drives interactive cycle. */
+.loom-hero-slideshow__slide:not([data-active="true"]) {
+  pointer-events: none;
+}
+
+/* CSS-only auto-rotation as primary driver (JS is now redundant
+   sync for the prev/next arrow buttons, not required for rotation).
+   Explicit longhand because some headless renderers parse the
+   shorthand inconsistently. */
+.loom-hero-slideshow__slide {
+  animation-name: loom-hero-slideshow-cycle;
+  animation-duration: var(--loom-slideshow-total-ms, 20000ms);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-fill-mode: backwards;
+  animation-delay: calc(
+    var(--loom-slideshow-slide-index, 0) *
+    (var(--loom-slideshow-total-ms, 20000ms) / var(--loom-slideshow-slide-count, 4))
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loom-hero-slideshow__slide {
+    animation: none;
+    opacity: 0;
+  }
+  .loom-hero-slideshow__slide[data-active="true"] { opacity: 1; }
+}
+
+/* ===================================================================
+ * loom-utility-strip — narrow top-of-page bar (#414)
+ * Substrate-general; any tenant opts in via CmsPage.utility_strip.
+ * =================================================================== */
+.loom-utility-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.875rem;
+  background: var(--loom-color-muted, #f3f4f6);
+  color: var(--loom-color-ink, #111);
+}
+div.loom-utility-strip[data-bg-role="primary"]   { background: var(--loom-color-primary) !important;   color: var(--loom-color-on-primary, #fff) !important; }
+div.loom-utility-strip[data-bg-role="secondary"] { background: var(--loom-color-secondary) !important; color: var(--loom-color-on-secondary, #fff) !important; }
+.loom-utility-strip[data-bg-role="accent"]    { background: var(--loom-color-accent);    color: var(--loom-color-on-accent, #fff); }
+.loom-utility-strip[data-bg-role="surface"]   { background: var(--loom-color-bg);        color: var(--loom-color-ink); }
+.loom-utility-strip__left  { margin-right: auto; }
+.loom-utility-strip__right { margin-left: auto; }
+.loom-utility-strip a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Color-banded nav: when CmsPage.nav_bar_color_role is set, the
+   header gets a colored band background + matching foreground. */
+.loom-page-header[data-nav-bg-role] {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: none;
+}
+header.loom-page-header[data-nav-bg-role="primary"] {
+  background: var(--loom-color-primary) !important;
+  color: var(--loom-color-on-primary, #fff) !important;
+}
+.loom-page-header[data-nav-bg-role="primary"] .loom-page-nav a,
+.loom-page-header[data-nav-bg-role="primary"] .loom-page-brand {
+  color: var(--loom-color-on-primary, #fff);
+}
+.loom-page-header[data-nav-bg-role="primary"] .loom-page-nav a:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--loom-color-on-primary, #fff);
+}
+/* nav_border_role variant — white nav with thin colored accent line
+   under the entire header. Used INSTEAD of nav-bg-role; never both. */
+header.loom-page-header[data-nav-border-role="primary"] {
+  border-bottom: 3px solid var(--loom-color-primary) !important;
+}
+header.loom-page-header[data-nav-border-role="secondary"] {
+  border-bottom: 3px solid var(--loom-color-secondary) !important;
+}
+header.loom-page-header[data-nav-border-role="accent"] {
+  border-bottom: 3px solid var(--loom-color-accent) !important;
+}
+header.loom-page-header[data-nav-bg-role="secondary"] {
+  background: var(--loom-color-secondary) !important;
+  color: var(--loom-color-on-secondary, #fff) !important;
+}
+.loom-page-header[data-nav-bg-role="secondary"] .loom-page-nav a,
+.loom-page-header[data-nav-bg-role="secondary"] .loom-page-brand {
+  color: var(--loom-color-on-secondary, #fff);
+}
+.loom-page-header[data-nav-bg-role="accent"] {
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, #111);
+}
+.loom-page-header[data-nav-bg-role="accent"] .loom-page-nav a,
+.loom-page-header[data-nav-bg-role="accent"] .loom-page-brand {
+  color: var(--loom-color-on-accent, #111);
+}
+
+/* ===================================================================
+ * loom-image-text-row — two-column image+text marketing row (#415)
+ * Substrate-general; any tenant authors. Image-left or image-right
+ * variants. Collapses to stacked single-column on narrow viewports.
+ * =================================================================== */
+.loom-image-text-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: clamp(1rem, 2.5vw, 2rem);
+  align-items: start;
+  padding: clamp(.5rem, .75vw, .75rem) clamp(1rem, 3vw, 2rem);
+  max-width: 80rem;
+  margin: 0 auto;
+}
+.loom-image-text-row--image-right {
+  grid-template-columns: 1fr 220px;
+}
+.loom-image-text-row--image-right .loom-image-text-row__media { order: 2; }
+.loom-image-text-row--image-right .loom-image-text-row__body  { order: 1; }
+.loom-image-text-row__media {
+  margin: 0;
+  border-radius: var(--loom-radius-lg, 14px);
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+}
+.loom-image-text-row__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 240px;
+  margin: 0 auto;
+}
+.loom-image-text-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.loom-image-text-row__eyebrow {
+  margin: 0;
+  font-size: .875rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--loom-color-primary, var(--loom-primary));
+}
+.loom-image-text-row__heading {
+  margin: 0;
+  font-family: var(--loom-font-display, var(--loom-font-body));
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--loom-color-ink, var(--loom-fg));
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.loom-image-text-row__prose {
+  margin: 0;
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-image-text-row__mid-heading {
+  margin: 0;
+  font-family: var(--loom-font-display, var(--loom-font-body));
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--loom-color-primary, var(--loom-primary));
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.loom-image-text-row__heading-accent {
+  color: var(--loom-color-accent, var(--loom-accent));
+}
+.loom-image-text-row__bullets {
+  margin: 0;
+  padding-left: 1.4rem;
+  list-style: disc outside;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.loom-image-text-row__bullets li {
+  margin-bottom: .2rem;
+}
+.loom-image-text-row__body .loom-button {
+  align-self: flex-start;
+  margin-top: .75rem;
+}
+@media (max-width: 768px) {
+  .loom-image-text-row {
+    grid-template-columns: 1fr;
+  }
+  .loom-image-text-row--image-right .loom-image-text-row__media { order: 1; }
+  .loom-image-text-row--image-right .loom-image-text-row__body  { order: 2; }
+}
+
+/* ===================================================================
+ * loom-feature-spotlight.deco-bordered — WP-style bordered cards (#416)
+ * Each card has a 4px colored top border + bold uppercase heading
+ * in the same color + light card chrome. Border color cycles
+ * primary → secondary → accent → primary across cards. Generic;
+ * any tenant can opt in via decoration="bordered".
+ * =================================================================== */
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__grid {
+  gap: 1.25rem;
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__item {
+  background: var(--loom-color-bg, #fff);
+  border-radius: 4px;
+  border-top: 4px solid var(--loom-color-primary);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__item:nth-child(3n+2) {
+  border-top-color: var(--loom-color-secondary);
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__item:nth-child(3n+3) {
+  border-top-color: var(--loom-color-accent);
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__title {
+  color: var(--loom-color-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  line-height: 1.3;
+  margin: 0 0 .5rem;
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__title::after {
+  content: "  \2192";
+  display: inline;
+  font-weight: 700;
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__item:nth-child(3n+2) .loom-feature-spotlight__title {
+  color: var(--loom-color-secondary);
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__item:nth-child(3n+3) .loom-feature-spotlight__title {
+  color: var(--loom-color-accent);
+}
+.loom-feature-spotlight.deco-bordered .loom-feature-spotlight__body {
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-size: .88rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ===================================================================
+ * loom-hero-slideshow--split — text-left + image-right layout (#418)
+ * Default mode is overlay (text on top of full-bleed image). Split
+ * puts text in a left column and image in a right column, both
+ * 50% width on desktop, stacked on mobile.
+ * =================================================================== */
+.loom-hero-slideshow--split {
+  min-height: clamp(420px, 36vw, 520px);
+  position: relative;
+}
+/* Slides STAY position:absolute (inherited from base) so the
+   opacity-cycle keeps working. Inside each slide, content is
+   laid out in a 2-col grid via the existing position:absolute
+   inset:0 + display:grid combination. */
+.loom-hero-slideshow--split .loom-hero-slideshow__slide {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: stretch;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  height: 100%;
+  inset: 0;
+}
+.loom-hero-slideshow--split .loom-hero-slideshow__bg {
+  position: relative;
+  inset: auto;
+  grid-column: 2;
+  grid-row: 1;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  max-height: 480px;
+  object-fit: cover;
+  object-position: var(--loom-hero-bg-position, right center);
+  border-radius: 0;
+  align-self: stretch;
+}
+.loom-hero-slideshow--split .loom-hero-slideshow__overlay {
+  grid-column: 1;
+  position: relative;
+  padding: 0;
+  height: auto;
+  margin: 0;
+  max-width: none;
+  text-shadow: none;
+  z-index: 2;
+}
+.loom-hero-slideshow--split .loom-hero-slideshow__title {
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+.loom-hero-slideshow--split .loom-hero-slideshow__lede {
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+@media (max-width: 768px) {
+  /* Mobile: slides remain position:absolute so all N slides overlap
+     in the same area (data-active toggles which one is visible).
+     Parent gets explicit height that fits stacked image + overlay. */
+  .loom-hero-slideshow--split {
+    min-height: 640px;
+    height: 640px;
+  }
+  .loom-hero-slideshow--split .loom-hero-slideshow__slide {
+    grid-template-columns: 1fr;
+    grid-template-rows: 280px 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .loom-hero-slideshow--split .loom-hero-slideshow__bg {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+  }
+  .loom-hero-slideshow--split .loom-hero-slideshow__overlay {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+}
+
+/* ===================================================================
+ * loom-page-footer extensions — buttons + decoration + back-to-top (#417)
+ * Substrate-general additions to the existing rich footer.
+ * =================================================================== */
+.loom-page-footer[data-bg-role="surface"]   { background: var(--loom-color-surface, var(--loom-color-bg, #fff)); }
+.loom-page-footer[data-bg-role="muted"]     { background: color-mix(in oklab, var(--loom-color-muted, #f3f4f6) 50%, var(--loom-color-bg, #fff)); }
+.loom-page-footer[data-bg-role="secondary"] {
+  background: color-mix(in oklab, var(--loom-color-secondary) 12%, var(--loom-color-bg, #fff));
+}
+.loom-page-footer__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem 0.5rem;
+  justify-content: flex-start;
+}
+.loom-page-footer__decoration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loom-page-footer__decoration-img {
+  max-width: 100%;
+  max-height: 240px;
+  height: auto;
+  object-fit: contain;
+  opacity: .9;
+}
+.loom-page-footer__back-to-top {
+  display: inline-block;
+  padding: .5rem 1rem;
+  margin: 1.25rem 1.75rem 0;
+  font-size: .875rem;
+  color: var(--loom-color-primary);
+  text-decoration: none;
+  border: 1px solid var(--loom-color-border, var(--loom-border));
+  border-radius: var(--loom-radius-full, 9999px);
+  transition: background var(--loom-motion-fast) var(--loom-ease-out);
+}
+.loom-page-footer__back-to-top:hover {
+  background: color-mix(in oklab, var(--loom-color-primary) 10%, transparent);
+}
+
+/* Brand logo image — substrate-general sizing. Auto-fits within
+   the page-header height; tenants can override via tenant_style or
+   forge.toml [identity.logo_max_height]. */
+.loom-page-brand__logo {
+  display: block;
+  max-height: clamp(80px, 10vw, 160px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.loom-page-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* When the header has a colored nav-bg, force a 2-row layout:
+   brand-row on white above, colored nav-row below. Achieves her
+   real-site layout via flex-wrap without changing the substrate HTML. */
+.loom-page-header[data-nav-bg-role] {
+  padding: 0 !important;
+}
+.loom-page-header[data-nav-bg-role] .loom-page-nav {
+  flex-wrap: wrap;
+  padding: 0;
+}
+.loom-page-header[data-nav-bg-role] .loom-page-brand {
+  flex: 0 0 100%;
+  background: var(--loom-color-bg, #fff) !important;
+  color: var(--loom-color-ink, #111) !important;
+  padding: 1rem 1.75rem !important;
+  border-bottom: 1px solid var(--loom-color-border, #eee);
+  margin: 0 !important;
+}
+.loom-page-header[data-nav-bg-role] .loom-page-brand img {
+  max-height: 70px;
+}
+.loom-page-header[data-nav-bg-role] .loom-page-nav__link,
+.loom-page-header[data-nav-bg-role] .loom-theme-toggle {
+  padding: 0.75rem 1rem;
+}
+.loom-page-header[data-nav-bg-role="primary"] .loom-page-nav > a:not(.loom-page-brand),
+.loom-page-header[data-nav-bg-role="primary"] .loom-page-nav > button {
+  margin-left: 0 !important;
+}
+/* Utility strip: bigger padding so the strip is visible. */
+.loom-utility-strip {
+  padding: 0.6rem 1.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500;
+}
+
+/* Logo on its own row — bigger when in 2-row header. */
+.loom-page-header[data-nav-bg-role] .loom-page-brand img,
+.loom-page-header[data-nav-bg-role] .loom-page-brand__logo {
+  max-height: 130px !important;
+  height: auto;
+}
+
+/* Standard a11y visually-hidden — content readable by screen readers
+   but invisible to sighted users. WCAG 2.1 AA pattern. */
+.loom-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* ===================================================================
+ * Brand-row extras: social links + lang selector on header right side.
+ * Substrate-general; any tenant can opt in via CmsPage.social_links
+ * + CmsPage.lang_selector. Positioned at the brand row's right edge.
+ * =================================================================== */
+.loom-page-brand-extras {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1rem;
+}
+/* 2-row header: brand row on top (brand + extras), links row below.
+   Emitted automatically when CmsPage carries brand_extras (social_links
+   or lang_selector). Substrate-general. */
+.loom-page-nav--brand-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.loom-page-nav--brand-row .loom-page-brand-extras {
+  margin-left: auto;
+}
+.loom-page-nav--links-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+header.loom-page-header:has(.loom-page-nav--brand-row) {
+  padding-bottom: 0.5rem;
+}
+/* Mobile hamburger via JS-free checkbox-hack. Hidden checkbox holds
+   the open state; <label for> flips it on tap. On desktop the toggle
+   is hidden + nav is always visible. On <=768px the nav collapses by
+   default; tapping MENU toggles it open. Tenants get the toggle
+   automatically once their CmsPage carries brand_extras (the trigger
+   for 2-row layout). */
+.loom-page-nav-collapse {
+  width: 100%;
+}
+.loom-page-nav-toggle-cb {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+.loom-page-nav-toggle {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border: none;
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-accent, var(--loom-color-primary));
+  color: var(--loom-color-on-accent, #111);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  user-select: none;
+  cursor: pointer;
+}
+.loom-page-nav-toggle__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+@media (max-width: 768px) {
+  .loom-page-nav-toggle {
+    display: inline-flex;
+  }
+  .loom-page-nav-toggle-cb:not(:checked) ~ .loom-page-nav--links-row {
+    display: none;
+  }
+  .loom-page-nav-toggle-cb:checked ~ .loom-page-nav--links-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+/* nav_collapse_always — hamburger pattern at EVERY viewport. Used by
+   tenants whose nav is long enough that inline desktop nav wraps or
+   visually crowds the brand row. Substrate-general opt-in. */
+.loom-page-nav-collapse--always .loom-page-nav-toggle {
+  display: inline-flex !important;
+}
+.loom-page-nav-collapse--always .loom-page-nav-toggle-cb:not(:checked) ~ .loom-page-nav--links-row {
+  display: none !important;
+}
+.loom-page-nav-collapse--always .loom-page-nav-toggle-cb:checked ~ .loom-page-nav--links-row {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.loom-social-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.loom-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--loom-radius-full, 9999px);
+  color: var(--loom-color-ink, #111);
+  background: transparent;
+  text-decoration: none;
+  transition: color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              background var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-social-link:hover {
+  color: var(--loom-color-primary);
+  background: color-mix(in oklab, var(--loom-color-primary) 10%, transparent);
+}
+.loom-social-link::before {
+  font-family: ui-monospace, monospace;
+  font-size: 18px;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+.loom-social-link--facebook::before    { content: "f"; font-weight: 900; font-style: italic; }
+.loom-social-link--linkedin::before    { content: "in"; font-weight: 800; font-size: 14px; }
+.loom-social-link--twitter::before,
+.loom-social-link--x::before           { content: "X"; font-weight: 900; }
+.loom-social-link--instagram::before   { content: "◉"; font-size: 22px; }
+.loom-social-link--youtube::before     { content: "▶"; font-size: 16px; }
+.loom-social-link--github::before      { content: "GH"; font-weight: 800; font-size: 13px; }
+.loom-social-link--mastodon::before    { content: "M"; font-weight: 800; }
+
+/* Lang selector — JS-free <details> disclosure with chevron. */
+.loom-lang-selector {
+  position: relative;
+  display: inline-block;
+  font-size: 0.875rem;
+}
+.loom-lang-selector > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--loom-color-border, #e5e5e5);
+  border-radius: var(--loom-radius-md, 6px);
+  background: var(--loom-color-surface, #fff);
+  color: var(--loom-color-ink, #111);
+  user-select: none;
+}
+.loom-lang-selector > summary::-webkit-details-marker { display: none; }
+.loom-lang-selector > summary::after {
+  content: "▾";
+  font-size: 0.7em;
+  margin-left: 0.25rem;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink, #111));
+}
+.loom-lang-selector__marker {
+  display: inline-block;
+  font-size: 1.1em;
+}
+.loom-lang-selector__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 60;
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+  min-width: 9rem;
+  background: var(--loom-color-surface, #fff);
+  border: 1px solid var(--loom-color-border, #e5e5e5);
+  border-radius: var(--loom-radius-md, 6px);
+  box-shadow: var(--loom-shadow-md, 0 4px 12px rgba(0,0,0,.1));
+}
+.loom-lang-selector__menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  color: var(--loom-color-ink, #111);
+  text-decoration: none;
+}
+.loom-lang-selector__menu a:hover {
+  background: color-mix(in oklab, var(--loom-color-primary) 8%, transparent);
+}
+
+/* Home icon — CSS-rendered house glyph, no SVG file needed. */
+.loom-page-nav__home-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--loom-radius-full, 9999px);
+  color: inherit;
+  text-decoration: none;
+  font-size: 18px;
+}
+.loom-page-nav__home-icon::before {
+  content: "⌂";
+  font-size: 22px;
+  line-height: 1;
+}
+.loom-page-nav__home-icon:hover {
+  background: color-mix(in oklab, currentColor 12%, transparent);
+}
+
+/* Inside colored-band header, brand-extras sit at top-right corner
+   of the white brand row. Constrained to the brand-row height so they
+   don't overlap the colored nav band below. */
+.loom-page-header[data-nav-bg-role] {
+  position: relative;
+}
+.loom-page-header[data-nav-bg-role] .loom-page-brand-extras {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.75rem;
+  background: transparent;
+  color: var(--loom-color-ink, #111);
+  z-index: 5;
+}
+
+/* Hide brand-extras from doc flow when empty; the wrapper div is only
+   emitted when at least one extra is present, so this is belt-and-suspenders. */
+.loom-page-brand-extras:empty {
+  display: none !important;
+}
+
+/* Mobile nav: tighter padding + smaller font so links fit better.
+   Substrate-general — applies to any tenant with colored-band header. */
+@media (max-width: 768px) {
+  .loom-page-header[data-nav-bg-role] .loom-page-nav {
+    justify-content: flex-start;
+    gap: 0;
+  }
+  .loom-page-header[data-nav-bg-role] .loom-page-nav__link,
+  .loom-page-header[data-nav-bg-role] .loom-page-nav a:not(.loom-page-brand) {
+    padding: 0.6rem 0.75rem !important;
+    font-size: 0.85rem !important;
+  }
+  .loom-page-header[data-nav-bg-role] .loom-page-brand img,
+  .loom-page-header[data-nav-bg-role] .loom-page-brand__logo {
+    max-height: 80px !important;
+  }
+  .loom-utility-strip {
+    font-size: 0.75rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+}
+
+/* Hero buttons — make them larger + flat-square per real-site shape. */
+.loom-hero-slideshow .loom-button,
+.loom-hero-slideshow__cta-row .loom-button {
+  padding: 0.85rem 1.5rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .03em !important;
+  border-radius: 4px !important;
+}
+.loom-hero-slideshow .loom-button[data-variant="secondary"] {
+  background: var(--loom-color-primary) !important;
+  color: var(--loom-color-on-primary, #fff) !important;
+}
+
+/* Footer bottom row — contact-cta + find-us + back-to-top.
+   Substrate-general; emitted when at least one of those is set. */
+.loom-page-footer__bottomrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--loom-color-border, #eee);
+  margin-top: 1.5rem;
+}
+.loom-page-footer__contact-cta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--loom-color-primary, var(--loom-color-ink, #111));
+  text-decoration: none;
+}
+.loom-page-footer__contact-cta:hover {
+  color: var(--loom-color-link-hover, var(--loom-color-primary));
+}
+.loom-page-footer__find-us {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.loom-page-footer__find-us-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--loom-color-ink-muted, var(--loom-color-ink, #111));
+}
+.loom-page-footer__bottomrow .loom-page-footer__back-to-top {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--loom-color-primary, var(--loom-color-ink, #111));
+  text-decoration: none;
+}
+
+/* Footer yellow accent bar at very bottom. */
+.loom-page-footer--rich {
+  border-bottom: 4px solid var(--loom-color-accent, #C9921A);
+}
+/* Generic colophon-band primitive — opt-in via footer.colophon_bg_role.
+   Tenants set the role; substrate maps it to the palette CSS var. */
+.loom-page-footer__colophon-band {
+  margin: 0 -1.75rem -2.5rem;
+  padding: .75rem 1.75rem;
+  text-align: center;
+}
+.loom-page-footer__colophon-band[data-bg-role="primary"]   { background: var(--loom-color-primary);   color: var(--loom-color-on-primary, #fff); }
+.loom-page-footer__colophon-band[data-bg-role="secondary"] { background: var(--loom-color-secondary); color: var(--loom-color-on-secondary, #fff); }
+.loom-page-footer__colophon-band[data-bg-role="accent"]    { background: var(--loom-color-accent);    color: var(--loom-color-on-accent, #111); }
+.loom-page-footer__colophon-band[data-bg-role="muted"]     { background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 6%, var(--loom-color-bg, var(--loom-bg))); }
+.loom-page-footer__colophon-band .loom-page-footer__colophon {
+  margin: 0;
+  color: inherit;
 }

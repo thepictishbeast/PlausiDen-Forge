@@ -62,6 +62,9 @@ fn canonical_emission_allowlist() -> HashSet<&'static str> {
     s.insert("loom-tokens.css");
     s.insert("loom-critical.css");
     s.insert("loom-fallback.css");
+    // Forge-emitted tenant overrides (T-* fixme write_tenant_style_css).
+    // Generated from forge.toml [style.*] sections; not hand-authored.
+    s.insert("tenant-style.css");
     // Loom-emitted runtime (SPA / hybrid modes)
     s.insert("loom-runtime.js");
     s.insert("loom-runtime.wasm");

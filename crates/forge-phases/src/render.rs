@@ -98,6 +98,7 @@ impl Phase for RenderPhase {
         // write_canonical=true, `forge build` rebuilds the served
         // pages in one step.
         let write_canonical = extract_render_write_canonical(forge_toml.as_ref());
+        let clean_urls = extract_render_clean_urls(forge_toml.as_ref());
         let out_dir = if write_canonical {
             ctx.static_dir.clone()
         } else {
@@ -112,6 +113,38 @@ impl Phase for RenderPhase {
 
         let json_files = collect_cms_jsons(&cms_dir)?;
         let mut findings = Vec::new();
+
+        // #573: load optional site-wide shared chrome from
+        // `<root>/site.json` — a tenant-root config file, sibling to
+        // `forge.toml` / `variables.json` / `palette.json`, NOT a cms
+        // page. Living at the root (rather than inside `cms/`) keeps it
+        // out of every phase that walks `cms/*.json` as pages: those
+        // phases would otherwise choke on it as a malformed `CmsPage`
+        // (no `title` / `path` / `sections`). When present, every page
+        // inherits its nav / footer / brand / flags (page-level values
+        // win). When absent, `site_chrome` is None and pages render
+        // exactly as before — byte-identical output for sites that
+        // never opt in. Fail-closed on parse error: a malformed
+        // `site.json` blocks the build with a strict finding rather
+        // than silently dropping the shared chrome.
+        let site_chrome: Option<loom_cms_render::SiteChrome> = {
+            let site_path = ctx.root.join("site.json");
+            match std::fs::read_to_string(&site_path) {
+                Ok(raw) => match serde_json::from_str(&raw) {
+                    Ok(sc) => Some(sc),
+                    Err(e) => {
+                        findings.push(Finding::strict(
+                            self.name(),
+                            site_path.display().to_string(),
+                            format!("SiteChrome parse failed: {e}"),
+                        ));
+                        None
+                    }
+                },
+                Err(_) => None, // absent → no shared chrome (the default)
+            }
+        };
+
         let mut rendered_count = 0usize;
         let mut rendered_slugs: std::collections::HashSet<String> =
             std::collections::HashSet::new();
@@ -205,6 +238,15 @@ impl Phase for RenderPhase {
                 }
             };
 
+            // #573: merge site-wide shared chrome BEFORE variable
+            // substitution so that nav/footer/brand text pulled in
+            // from `cms/_site.json` is itself subject to the tenant's
+            // `{{ VAR }}` table below. Page-level values always win;
+            // the merge only fills fields the page left unset.
+            if let Some(ref sc) = site_chrome {
+                loom_cms_render::apply_site_chrome(&mut page, sc);
+            }
+
             // #322 (paul 2026-05-21): apply per-tenant
             // `{{ VAR }}` / `@asset-slug` substitution BEFORE the
             // render path. Tenants ship variables.json /
@@ -297,7 +339,7 @@ impl Phase for RenderPhase {
             // error path including missing-section).
             let html = inject_tenant_style(&html, &ctx.root);
 
-            let out_path = output_path_for_slug(&out_dir, &slug, &parent_slugs);
+            let out_path = output_path_for_slug(&out_dir, &slug, &parent_slugs, clean_urls);
             if let Some(parent) = out_path.parent() {
                 if let Err(e) = std::fs::create_dir_all(parent) {
                     return Err(BuildError::Io {
@@ -410,6 +452,8 @@ impl Phase for RenderPhase {
             }
         }
 
+        write_tenant_style_css(&ctx.static_dir, &ctx.root)?;
+
         tracing::info!(
             target: "forge_phases::render",
             rendered = rendered_count,
@@ -515,6 +559,20 @@ fn extract_render_write_canonical(toml: Option<&toml::Value>) -> bool {
         .unwrap_or(false)
 }
 
+/// Extract `[render] clean_urls = true` from an already-parsed
+/// forge.toml value. Anything other than literal `true` (missing
+/// key, missing section, non-bool value) returns false — the
+/// default keeps the historic flat `<slug>.html` output so existing
+/// tenants stay byte-for-byte identical. When true, leaf slugs emit
+/// to `<slug>/index.html` (see [`output_path_for_slug`]) so
+/// extensionless links resolve under a plain static file_server.
+fn extract_render_clean_urls(toml: Option<&toml::Value>) -> bool {
+    toml.and_then(|t| t.get("render"))
+        .and_then(|r| r.get("clean_urls"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
 /// T37 v3.b: read `[render] theme = "..."` from `<root>/forge.toml`.
 /// Returns `Some("light"|"dark")` on a valid entry; `None` for any
 /// other case (file missing, parse error, missing section, unknown
@@ -545,16 +603,27 @@ fn forge_toml_theme(root: &Path) -> Option<String> {
 /// `out_dir/<a>/<b>/.../<n>/index.html`. A flat slug retains the
 /// original `out_dir/<slug>.html` shape — UNLESS another slug in
 /// the same build nests under it (`about--privacy-policy` makes
-/// `about` a parent slug), in which case the flat slug emits to
-/// `out_dir/<slug>/index.html` instead. That ensures URLs like
-/// `/about/` resolve to a page when the site links to them.
+/// `about` a parent slug), OR `clean_urls` is on, in which case the
+/// flat slug emits to `out_dir/<slug>/index.html` instead. That
+/// ensures extensionless URLs like `/about` resolve under a plain
+/// static file_server (which has no `.html`-stripping rule) via the
+/// host's automatic `/about` → `/about/` redirect to the directory
+/// index.
 ///
-/// Examples (assume `parent_slugs = {"about"}`):
+/// `index` is always the directory's own index and stays flat at
+/// `out_dir/index.html` regardless of `clean_urls` — it must never
+/// become `index/index.html`.
+///
+/// Examples (assume `parent_slugs = {"about"}`, `clean_urls = false`):
 /// * `index`                       → `out_dir/index.html`
 /// * `about`                       → `out_dir/about/index.html` (parent)
 /// * `contact`                     → `out_dir/contact.html` (not parent)
 /// * `about--privacy-policy`       → `out_dir/about/privacy-policy/index.html`
 /// * `legal--terms--us`            → `out_dir/legal/terms/us/index.html`
+///
+/// With `clean_urls = true` every leaf becomes a directory index:
+/// * `index`                       → `out_dir/index.html`
+/// * `contact`                     → `out_dir/contact/index.html`
 ///
 /// Why a sentinel rather than allowing literal `/` in the slug:
 /// the slug grammar (`[a-z][a-z0-9-]*`) was the contract for
@@ -566,9 +635,13 @@ fn output_path_for_slug(
     out_dir: &Path,
     slug: &str,
     parent_slugs: &std::collections::HashSet<String>,
+    clean_urls: bool,
 ) -> PathBuf {
     if !slug.contains("--") {
-        if parent_slugs.contains(slug) {
+        if slug == "index" {
+            return out_dir.join("index.html");
+        }
+        if clean_urls || parent_slugs.contains(slug) {
             return out_dir.join(slug).join("index.html");
         }
         return out_dir.join(format!("{slug}.html"));
@@ -629,16 +702,56 @@ fn inject_tenant_style(html: &str, root: &Path) -> String {
     let Some(style) = forge_core::tenant_style::TenantStyle::load(root) else {
         return html.to_owned();
     };
-    let style_tag = style.to_style_tag();
-    if style_tag.is_empty() {
+    // External CSS body = @font-face declarations + :root token block.
+    // Must match write_tenant_style_css byte-for-byte (SRI integrity).
+    let block = style.to_external_css();
+    if block.is_empty() {
         return html.to_owned();
     }
     if !html.contains("</head>") {
-        // Unexpected shape; leave untouched rather than risk a
-        // malformed document.
         return html.to_owned();
     }
-    html.replacen("</head>", &format!("{style_tag}</head>"), 1)
+    // Compute SRI sha384 over the bytes that `write_tenant_style_css`
+    // will write to disk, so the integrity attr on the link matches
+    // what the browser downloads. Closes the sri-gate warn for the
+    // external tenant-style.css emission.
+    use base64::Engine as _;
+    use sha2::Digest as _;
+    let mut h = sha2::Sha384::new();
+    h.update(block.as_bytes());
+    let hash_b64 = base64::engine::general_purpose::STANDARD.encode(h.finalize());
+    let link_tag = format!(
+        "<link rel=\"stylesheet\" href=\"/tenant-style.css\" \
+         integrity=\"sha384-{hash_b64}\" crossorigin=\"anonymous\" \
+         data-loom-tenant-style>\n"
+    );
+    html.replacen("</head>", &format!("{link_tag}</head>"), 1)
+}
+
+/// Write the tenant `[style]` CSS overrides to `<static_dir>/tenant-style.css`.
+/// External-file delivery is required because CSP `style-src 'self' 'sha256-X'`
+/// pins one specific inline-style hash for the page-shell critical CSS — an
+/// inline tenant `<style>` block produces a different hash and is silently
+/// blocked. `'self'` covers same-origin external stylesheets without hashing.
+fn write_tenant_style_css(static_dir: &Path, root: &Path) -> Result<(), BuildError> {
+    let Some(style) = forge_core::tenant_style::TenantStyle::load(root) else {
+        return Ok(());
+    };
+    // Must match the SRI-hashed body in `inject_tenant_style`.
+    let block = style.to_external_css();
+    if block.is_empty() {
+        return Ok(());
+    }
+    let path = static_dir.join("tenant-style.css");
+    if let Ok(existing) = std::fs::read_to_string(&path) {
+        if existing == block {
+            return Ok(());
+        }
+    }
+    atomic_write(&path, block.as_bytes()).map_err(|e| BuildError::Io {
+        context: format!("render write {}", path.display()),
+        source: e,
+    })
 }
 
 /// Default-fragmentation gradient cascade.
@@ -668,6 +781,35 @@ fn inject_tenant_style(html: &str, root: &Path) -> String {
 fn inject_default_gradient(html: &str, root: &Path) -> String {
     if !html.contains("</head>") {
         return html.to_owned();
+    }
+    // Tenant explicit gradient override: `[style.palette]` `gradient_a` +
+    // `gradient_b` (+ optional integer `gradient_direction`, default 135) replace
+    // the auto-selected pool gradient. This lets a utility/console page choose a
+    // clean or subtle hero instead of a random pool pick. Both color keys are
+    // required; values are validated as plain CSS color tokens (operator config,
+    // but kept clean so the emitted <style> can't be broken out of).
+    if let Some(toml) = parse_forge_toml(root) {
+        let pal = toml.get("style").and_then(|s| s.get("palette"));
+        let ga = pal.and_then(|p| p.get("gradient_a")).and_then(|v| v.as_str());
+        let gb = pal.and_then(|p| p.get("gradient_b")).and_then(|v| v.as_str());
+        let safe = |s: &str| {
+            !s.is_empty()
+                && s.len() <= 64
+                && s.chars().all(|c| c.is_ascii_alphanumeric() || "#(),.%/ ".contains(c))
+        };
+        if let (Some(a), Some(b)) = (ga, gb) {
+            if safe(a) && safe(b) {
+                let dir = pal
+                    .and_then(|p| p.get("gradient_direction"))
+                    .and_then(toml::Value::as_integer)
+                    .unwrap_or(135);
+                let img = format!("linear-gradient({dir}deg, {a}, {b})");
+                let block = format!(
+                    "<style data-loom-default-gradient data-pool-name=\"tenant\">\n:root {{\n  --loom-gradient-a: {a};\n  --loom-gradient-b: {b};\n  --loom-gradient-direction: {dir}deg;\n  --loom-gradient-image: {img};\n}}\n</style>\n"
+                );
+                return html.replacen("</head>", &format!("{block}</head>"), 1);
+            }
+        }
     }
     let identity = forge_core::site_identity::SiteIdentity::load(root);
     let (site_id_owned, tenant_id_owned);
@@ -1131,9 +1273,9 @@ mod tests {
     fn output_path_flat_slug_stays_flat() {
         let out_dir = Path::new("/tmp/out");
         let no_parents = std::collections::HashSet::new();
-        let p = output_path_for_slug(out_dir, "index", &no_parents);
+        let p = output_path_for_slug(out_dir, "index", &no_parents, false);
         assert_eq!(p, Path::new("/tmp/out/index.html"));
-        let p = output_path_for_slug(out_dir, "contact", &no_parents);
+        let p = output_path_for_slug(out_dir, "contact", &no_parents, false);
         assert_eq!(p, Path::new("/tmp/out/contact.html"));
     }
 
@@ -1141,9 +1283,9 @@ mod tests {
     fn output_path_double_dash_nests_into_index_html() {
         let out_dir = Path::new("/tmp/out");
         let no_parents = std::collections::HashSet::new();
-        let p = output_path_for_slug(out_dir, "about--privacy-policy", &no_parents);
+        let p = output_path_for_slug(out_dir, "about--privacy-policy", &no_parents, false);
         assert_eq!(p, Path::new("/tmp/out/about/privacy-policy/index.html"));
-        let p = output_path_for_slug(out_dir, "legal--terms--us", &no_parents);
+        let p = output_path_for_slug(out_dir, "legal--terms--us", &no_parents, false);
         assert_eq!(p, Path::new("/tmp/out/legal/terms/us/index.html"));
     }
 
@@ -1155,11 +1297,38 @@ mod tests {
         let out_dir = Path::new("/tmp/out");
         let mut parents = std::collections::HashSet::new();
         parents.insert("about".to_owned());
-        let p = output_path_for_slug(out_dir, "about", &parents);
+        let p = output_path_for_slug(out_dir, "about", &parents, false);
         assert_eq!(p, Path::new("/tmp/out/about/index.html"));
         // Non-parent flat slugs stay flat even with a populated set.
-        let p = output_path_for_slug(out_dir, "contact", &parents);
+        let p = output_path_for_slug(out_dir, "contact", &parents, false);
         assert_eq!(p, Path::new("/tmp/out/contact.html"));
+    }
+
+    #[test]
+    fn output_path_clean_urls_routes_leaves_to_directory_index() {
+        // With clean_urls on, every leaf slug becomes its own
+        // directory index so extensionless links resolve under a
+        // plain file_server — but `index` stays the root index.
+        let out_dir = Path::new("/tmp/out");
+        let no_parents = std::collections::HashSet::new();
+        let p = output_path_for_slug(out_dir, "index", &no_parents, true);
+        assert_eq!(p, Path::new("/tmp/out/index.html"));
+        let p = output_path_for_slug(out_dir, "about", &no_parents, true);
+        assert_eq!(p, Path::new("/tmp/out/about/index.html"));
+        let p = output_path_for_slug(out_dir, "contact", &no_parents, true);
+        assert_eq!(p, Path::new("/tmp/out/contact/index.html"));
+        // `--` nesting is unaffected by the flag.
+        let p = output_path_for_slug(out_dir, "legal--terms--us", &no_parents, true);
+        assert_eq!(p, Path::new("/tmp/out/legal/terms/us/index.html"));
+    }
+
+    #[test]
+    fn extract_render_clean_urls_defaults_false_and_reads_true() {
+        assert!(!extract_render_clean_urls(None));
+        let off: toml::Value = toml::from_str("[render]\nwrite_canonical = true\n").unwrap();
+        assert!(!extract_render_clean_urls(Some(&off)));
+        let on: toml::Value = toml::from_str("[render]\nclean_urls = true\n").unwrap();
+        assert!(extract_render_clean_urls(Some(&on)));
     }
 
     #[test]
@@ -1233,9 +1402,23 @@ mod tests {
         .unwrap();
         let html = "<head><title>x</title></head><body></body>";
         let out = inject_tenant_style(html, &dir);
+        // Tenant CSS is now delivered as an EXTERNAL, SRI-pinned
+        // stylesheet (not an inline <style>): the page-shell CSP
+        // `style-src 'self'` covers a same-origin <link> without a
+        // per-build hash, whereas an inline block would be silently
+        // blocked. Assert the link contract rather than inline tokens.
         assert!(out.contains("data-loom-tenant-style"));
-        assert!(out.contains("--loom-color-primary: #733635;"));
-        // Style tag lands BEFORE </head> so the cascade after
+        assert!(out.contains("rel=\"stylesheet\""));
+        assert!(out.contains("href=\"/tenant-style.css\""));
+        assert!(out.contains("integrity=\"sha384-"));
+        // The `:root` token block itself lives in the external file
+        // body that the integrity hash covers — assert the override
+        // landed there, not in the HTML.
+        let css = forge_core::tenant_style::TenantStyle::load(&dir)
+            .expect("tenant style loads")
+            .to_external_css();
+        assert!(css.contains("--loom-color-primary: #733635 !important;"));
+        // Link tag lands BEFORE </head> so the cascade after
         // loom-skin.css applies.
         let idx_style = out.find("data-loom-tenant-style").unwrap();
         let idx_close = out.find("</head>").unwrap();

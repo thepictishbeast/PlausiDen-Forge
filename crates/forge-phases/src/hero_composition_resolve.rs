@@ -60,6 +60,8 @@ impl HeroContent {
                 label: l.clone(),
                 href: h.clone(),
                 data_backend: "hero-composition-cta".to_owned(),
+                icon_slug: None,
+                variant: None,
             }),
             _ => None,
         }
@@ -130,6 +132,15 @@ fn build_hero_split_or_fallback(content: &HeroContent) -> CmsSection {
             image_alt: alt.clone(),
             image_side: HeroSplitSide::default(),
             cta: content.cta(),
+            // #582 additive fields: this resolve path does not source
+            // them, so default to the pre-#582 shape (byte-identical
+            // output). Eyebrow/body/secondary-CTA reach HeroSplit only
+            // via direct cms authoring, not this property-resolution.
+            eyebrow: None,
+            eyebrow_badge: false,
+            eyebrow_icon: None,
+            body: Vec::new(),
+            cta_secondary: None,
         },
         // Photo missing → fall back to Hero (text-only) rather
         // than rendering HeroSplit with empty image slots.
@@ -148,9 +159,12 @@ fn build_image_hero(content: &HeroContent) -> CmsSection {
     };
     CmsSection::ImageHero {
         eyebrow: content.eyebrow.clone(),
+        eyebrow_badge: None,
         title: content.title.clone(),
+        title_accent: None,
         lede: content.lede.clone(),
         cta: content.cta(),
+        cta_secondary: None,
         background,
         height: HeroHeight::default(),
         align: HeroAlign::default(),

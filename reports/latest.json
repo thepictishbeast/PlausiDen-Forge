@@ -2,6 +2,17 @@
   "mode": "poc",
   "findings": [
     {
+      "phase": "loom_sync",
+      "path": "static/loom-skin.css",
+      "message": "Loom skin.css drift (recorded sha384-zggW1d97jHMLqD/TTCHVAamnfTXG7VzcwzpumVWUyo1NUQLRk7kcRjF5If9yp8ST, current sha384-uW8b8ZiHt5vnhURoDCeGX6PIGC6X8Xo0j+xDyoKe8R/3I9G9nT6MZmusq/tKLWwR). Run `forge --sync-loom` to update.",
+      "severity": "warn",
+      "advocacy": {
+        "why": "Loom's canonical skin.css has changed (new design-system tokens, fixed a11y contrast, etc.) but static/loom-skin.css still carries the old hash. The served site is shipping the stale design system",
+        "substrate_fix": "run `forge --sync-loom` to copy the current Loom skin.css bytes + update the marker",
+        "anti_pattern": "don't manually update the marker — only the canonical sync command writes both bytes + hash atomically"
+      }
+    },
+    {
       "phase": "semver_enforcement",
       "path": "/home/paul/projects/PlausiDen-Forge/forge.toml",
       "message": "forge.toml missing [platform] block",
@@ -16,199 +27,135 @@
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/plausiden.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/stripe.html",
+      "message": "static/stripe.html has no cms/stripe.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/stripe.html if the page is intentionally gone, OR (b) restore cms/stripe.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/index.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/linear.html",
+      "message": "static/linear.html has no cms/linear.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/linear.html if the page is intentionally gone, OR (b) restore cms/linear.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/render.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/vercel.html",
+      "message": "static/vercel.html has no cms/vercel.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/vercel.html if the page is intentionally gone, OR (b) restore cms/vercel.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/vercel.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/render.html",
+      "message": "static/render.html has no cms/render.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/render.html if the page is intentionally gone, OR (b) restore cms/render.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/stripe.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/index.html",
+      "message": "static/index.html has no cms/index.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/index.html if the page is intentionally gone, OR (b) restore cms/index.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/github.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/sacred-vote.html",
+      "message": "static/sacred-vote.html has no cms/sacred-vote.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/sacred-vote.html if the page is intentionally gone, OR (b) restore cms/sacred-vote.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/linear.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/github.html",
+      "message": "static/github.html has no cms/github.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/github.html if the page is intentionally gone, OR (b) restore cms/github.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--privacy-policy.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/notion.html",
+      "message": "static/notion.html has no cms/notion.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/notion.html if the page is intentionally gone, OR (b) restore cms/notion.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/notion.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/anthropic.html",
+      "message": "static/anthropic.html has no cms/anthropic.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/anthropic.html if the page is intentionally gone, OR (b) restore cms/anthropic.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/fly.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/fly.html",
+      "message": "static/fly.html has no cms/fly.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/fly.html if the page is intentionally gone, OR (b) restore cms/fly.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/about.json",
-      "message": "cms page missing `version` field",
+      "phase": "render",
+      "path": "/home/paul/projects/PlausiDen-Forge/static/plausiden.html",
+      "message": "static/plausiden.html has no cms/plausiden.json source — stale artifact",
       "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
       "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
-      }
-    },
-    {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--terms-and-conditions.json",
-      "message": "cms page missing `version` field",
-      "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
-      "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
-      }
-    },
-    {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/sacred-vote.json",
-      "message": "cms page missing `version` field",
-      "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
-      "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
-      }
-    },
-    {
-      "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/anthropic.json",
-      "message": "cms page missing `version` field",
-      "severity": "warn",
-      "enforces_rules": [
-        "build-001"
-      ],
-      "advocacy": {
-        "why": "VERSION_DISCIPLINE.md § Per-artifact-class versioning: every CMS page carries a `version` field; absence prevents auto-migration when the page schema evolves",
-        "substrate_fix": "add `\"version\": \"1.0.0\"` to the page's top-level JSON object",
-        "skill": "author-cms-content"
+        "why": "the canonical render set is cms/*.json; when a CMS source is deleted the previously-rendered static/<slug>.html lingers and downstream audit phases (sri/tokens/perf_budget/unbuilt_route) re-scan it, producing N derived warns per stale file",
+        "substrate_fix": "either: (a) delete static/plausiden.html if the page is intentionally gone, OR (b) restore cms/plausiden.json if the page should still ship",
+        "skill": "author-cms-content",
+        "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
       }
     },
     {
@@ -258,11 +205,11 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "343K CSS > 64.0K budget — split into per-route bundles",
+      "message": "473K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn",
       "advocacy": {
         "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
-        "substrate_fix": "CSS over budget at 343K: split into per-route bundles",
+        "substrate_fix": "CSS over budget at 473K: split into per-route bundles",
         "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
       }
     },
@@ -275,6 +222,171 @@
         "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
         "substrate_fix": "JS over budget at 488K: code-split or tree-shake",
         "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "anthropic.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "fly.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "github.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "index.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "linear.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "notion.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "plausiden.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "render.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "sacred-vote.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "stripe.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
+      }
+    },
+    {
+      "phase": "sri",
+      "path": "vercel.html",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "skill": "add-loom-primitive",
+        "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
     },
     {
@@ -1072,129 +1184,21 @@
       }
     },
     {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/plausiden.json#section-2-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 6 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/plausiden.json#section-5-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/index.json#section-8-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/render.json#section-3-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/vercel.json#section-2-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/stripe.json#section-2-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 6 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/github.json#section-3-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/linear.json#section-3-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--privacy-policy.json",
-      "message": "image_desert: page has 16 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
-      "severity": "warn",
-      "advocacy": {
-        "why": "a page that's all text reads as either (a) a legal disclosure where text density is the point or (b) an unfinished page where the editor forgot the visual layer; the detector can't distinguish, so it flags both and lets the editor decide",
-        "substrate_fix": "if this is genuinely text-only by intent (privacy / terms / disclosure), add a single illustrative section above the body (an image_hero with a 'compact' or 'narrow' height, an asset_slug pointer to a relevant icon, or a feature_spotlight with one item carrying an icon_slug). If this is unfinished, add 2-3 visual sections to break up the wall of text",
-        "skill": "compose-loom-page",
-        "anti_pattern": "don't stuff a stock photo onto a legal page just to silence this gate — the gate exists to flag uninhabited pages, not to require photos on every page. A single icon next to the title is enough visual anchor for a disclosure page"
-      }
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/notion.json#section-3-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/fly.json#section-3-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 5 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/about--terms-and-conditions.json",
-      "message": "image_desert: page has 16 content section(s) and zero image / icon / illustration / logo references — the page feels uninhabited; consider adding visual texture via feature_spotlight icons, logo_cloud, picture, or image_hero with photo background",
-      "severity": "warn",
-      "advocacy": {
-        "why": "a page that's all text reads as either (a) a legal disclosure where text density is the point or (b) an unfinished page where the editor forgot the visual layer; the detector can't distinguish, so it flags both and lets the editor decide",
-        "substrate_fix": "if this is genuinely text-only by intent (privacy / terms / disclosure), add a single illustrative section above the body (an image_hero with a 'compact' or 'narrow' height, an asset_slug pointer to a relevant icon, or a feature_spotlight with one item carrying an icon_slug). If this is unfinished, add 2-3 visual sections to break up the wall of text",
-        "skill": "compose-loom-page",
-        "anti_pattern": "don't stuff a stock photo onto a legal page just to silence this gate — the gate exists to flag uninhabited pages, not to require photos on every page. A single icon next to the title is enough visual anchor for a disclosure page"
-      }
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/sacred-vote.json#section-2-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 3 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "aesthetic_distinctiveness",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/anthropic.json#section-3-feature_spotlight",
-      "message": "monotonous_feature_grid: 3-column feature_spotlight has 1 unique icon_slug(s) across 6 items — varying the iconography breaks the visual repeat",
-      "severity": "warn"
-    },
-    {
-      "phase": "slop_dictionary",
-      "path": "/home/paul/projects/PlausiDen-Forge/cms/linear.json#section-0-image_hero.lede",
-      "message": "image_hero.lede contains marketing phrase \"purpose-built\" (within \"Purpose-built for planning and building products with AI agents. Linear is shaped by the practices the highest-throughput product teams converged on independently.\"). The substring is unambiguous SaaS-marketing slop — rewrite the sentence to drop it.",
-      "severity": "warn",
-      "advocacy": {
-        "why": "phrases like 'ai-native', 'industry-leading', 'next-generation' are marketing modifiers that carry no editorial substance; their presence anywhere is a tell that the copy was generated rather than written.",
-        "substrate_fix": "remove the phrase \"purpose-built\" and restate what the sentence is actually about. If you can't restate it without the cliche, the sentence has no content to restate — drop the field.",
-        "skill": "author-cms-content",
-        "anti_pattern": "don't rewrite to a synonym from the same family ('cutting-edge' → 'state-of-the-art') — the family is the problem."
-      }
-    },
-    {
       "phase": "crawl",
-      "path": "127.0.0.1:8123",
-      "message": "dev server not responding — start it (e.g. `python3 -m http.server 8123 --directory static`) and re-run; runtime audit skipped",
+      "path": "../PlausiDen-Crawler/journeys/poc.json",
+      "message": "journey file not at ../PlausiDen-Crawler/journeys/poc.json — runtime audit skipped",
       "severity": "warn",
       "advocacy": {
-        "why": "crawl probes the dev server via raw TCP connect to 127.0.0.1:8123 before invoking the crawler — prevents the cascade-of-fake-regressions when the server is silently down (every axis reports failure for the wrong reason)",
-        "substrate_fix": "start a static file server at 127.0.0.1:8123 pointing at static/ (e.g. `python3 -m http.server 8123 --directory static`, or any equivalent that serves the freshly rendered tree), then re-run forge build",
-        "anti_pattern": "don't bind the dev server to a different port without updating the probe — crawl is hard-pinned to 8123 because the journey URLs hard-code it"
+        "why": "the crawler drives the static/ tree through a typed journey (goto / wait / screenshot / diff steps); without the journey JSON the runtime audit has nothing to execute",
+        "substrate_fix": "add a journey JSON at the expected path or override CRAWLER_JOURNEY env — see PlausiDen-Crawler/journeys/ for the schema",
+        "anti_pattern": "don't hand-edit prior run artifacts to fake a journey run; the crawler emits typed diff.json bytes and forge parses with serde, so synthetic state will fail the deserialize path"
       }
     }
   ],
-  "strict_count": 0,
-  "warn_count": 98,
-  "duration_ms": 31,
-  "prev_hash": "e1f14f8d24a4fa3c27b5a74facec3f695202d5224b926b2d1889a29204a74ad4",
-  "chain_length": 328,
-  "started": "2026-05-21T06:17:13Z"
+  "strict_count": 11,
+  "warn_count": 81,
+  "duration_ms": 36,
+  "prev_hash": "85931933a1a32e2349f2ea8e0994757c6bd7418063070b3699ae9055818e450d",
+  "chain_length": 347,
+  "started": "2026-05-28T19:34:54Z"
 }
