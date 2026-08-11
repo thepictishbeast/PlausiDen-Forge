@@ -264,6 +264,18 @@ pub fn parse_skin_themes(raw: &str) -> (Vec<ThemeBlock>, BTreeSet<TokenName>) {
         let end = rest
             .find(|c: char| c == ')' || c == ',' || c.is_whitespace())
             .unwrap_or(rest.len());
+        // A `var(--x, fallback)` reference is well-defined without a
+        // base declaration — the fallback IS the default and the
+        // token is an optional override hook (Loom ships button-hover
+        // and on-hero hooks this way). Only fallback-less references
+        // demand a base `:root` definition for a sound first paint.
+        let has_fallback = rest[end..]
+            .chars()
+            .find(|c| !c.is_whitespace())
+            .is_some_and(|c| c == ',');
+        if has_fallback {
+            continue;
+        }
         let candidate = &rest[..end];
         if let Some(t) = TokenName::new(candidate) {
             refs.insert(t);
@@ -312,6 +324,21 @@ pub fn parse_skin_themes(raw: &str) -> (Vec<ThemeBlock>, BTreeSet<TokenName>) {
         // Walk past whitespace to the brace.
         while probe < bytes.len() && (bytes[probe] as char).is_whitespace() {
             probe += 1;
+        }
+        // Selector lists: forge-codegen emits the tenant palette as
+        // `:root, :root[data-theme] { … }`. A `,` here means more
+        // selectors follow before the brace; the block still binds
+        // the name parsed so far, so skip ahead to the brace. (The
+        // trailing selectors are consumed with the block body via
+        // `i = j`, so they are never re-parsed as their own block.)
+        if probe < bytes.len() && bytes[probe] as char == ',' {
+            match stripped[probe..].find('{') {
+                Some(rel) => probe += rel,
+                None => {
+                    i = after_root;
+                    continue;
+                }
+            }
         }
         if probe >= bytes.len() || bytes[probe] as char != '{' {
             i = after_root;
@@ -371,6 +398,24 @@ pub fn parse_skin_themes(raw: &str) -> (Vec<ThemeBlock>, BTreeSet<TokenName>) {
     }
     let merged_vec = merged.into_values().collect::<Vec<_>>();
     (merged_vec, refs)
+}
+
+/// Merge companion-stylesheet blocks into the skin's blocks.
+///
+/// The tenant stylesheet (`static/tenant-style.css`) is linked into
+/// the same pages as the skin, so its `:root` declarations belong to
+/// the same cascade. Blocks merge by theme name; on a duplicate token
+/// the companion wins (it loads after the skin and overrides it).
+/// Companion `var()` references are intentionally NOT collected — the
+/// drift gate stays anchored on what the skin consumes.
+pub fn merge_companion_blocks(blocks: &mut Vec<ThemeBlock>, companion: Vec<ThemeBlock>) {
+    for cb in companion {
+        if let Some(existing) = blocks.iter_mut().find(|b| b.name == cb.name) {
+            existing.tokens.extend(cb.tokens);
+        } else {
+            blocks.push(cb);
+        }
+    }
 }
 
 /// Detect drift between the parsed blocks + reference set.
@@ -465,7 +510,22 @@ impl Phase for ThemeConsistencyPhase {
             context: format!("read {}", skin.display()),
             source,
         })?;
-        let (blocks, refs) = parse_skin_themes(&raw);
+        let (mut blocks, refs) = parse_skin_themes(&raw);
+        // forge-codegen emits the palette into tenant-style.css, and
+        // the skin consumes those tokens via var(); both files are
+        // linked into every page, so tenant definitions are base
+        // definitions. Skipping this merge falsely flags every
+        // tenant-emitted token as UndefinedRef.
+        let companion = ctx.static_dir.join("tenant-style.css");
+        if companion.is_file() {
+            let companion_raw =
+                std::fs::read_to_string(&companion).map_err(|source| BuildError::Io {
+                    context: format!("read {}", companion.display()),
+                    source,
+                })?;
+            let (companion_blocks, _companion_refs) = parse_skin_themes(&companion_raw);
+            merge_companion_blocks(&mut blocks, companion_blocks);
+        }
         let drift = detect_drift(&blocks, &refs);
         tracing::debug!(
             themes = blocks.len(),
@@ -607,6 +667,66 @@ mod tests {
             .filter(|f| matches!(f, ThemeFinding::OrphanInTheme { theme, .. } if theme == "weird"))
             .collect();
         assert_eq!(orphans.len(), 1);
+    }
+
+    #[test]
+    fn parser_skips_refs_with_fallbacks() {
+        let raw = "\
+.a { color: var(--loom-color-hook, red); }\n\
+.b { color: var(--loom-color-hook , blue); }\n\
+.c { color: var(--loom-color-hard); }\n";
+        let (_, refs) = parse_skin_themes(raw);
+        let names: Vec<&str> = refs.iter().map(TokenName::as_str).collect();
+        // Fallback'd occurrences are override hooks, not demands.
+        assert_eq!(names, vec!["--loom-color-hard"]);
+    }
+
+    #[test]
+    fn parser_handles_selector_list_root() {
+        // forge-codegen's actual tenant-style.css emission shape.
+        let raw = "\
+:root, :root[data-theme] { --loom-color-link: #A84E15; --loom-color-secondary: #0B0D10; }\n";
+        let (blocks, _) = parse_skin_themes(raw);
+        assert_eq!(blocks.len(), 1, "one base block, list not re-parsed");
+        let base = &blocks[0];
+        assert_eq!(base.name, "default");
+        assert_eq!(base.tokens.len(), 2);
+    }
+
+    #[test]
+    fn companion_definition_resolves_undefined_ref() {
+        // The exact production failure: skin consumes a token that
+        // only tenant-style.css defines. Without the merge this is
+        // UndefinedRef; with it, drift is clean.
+        let skin = "\
+:root { --loom-color-ink: black; }\n\
+.x { color: var(--loom-color-link); }\n";
+        let tenant = ":root { --loom-color-link: #A84E15; }\n";
+        let (mut blocks, refs) = parse_skin_themes(skin);
+        assert!(!detect_drift(&blocks, &refs).is_empty(), "must be red pre-merge");
+        let (companion, _) = parse_skin_themes(tenant);
+        merge_companion_blocks(&mut blocks, companion);
+        assert!(detect_drift(&blocks, &refs).is_empty(), "merge must resolve the ref");
+    }
+
+    #[test]
+    fn companion_merge_overrides_and_appends() {
+        let skin = "\
+:root { --loom-color-ink: black; }\n\
+:root[data-theme=\"dark\"] { --loom-color-ink: white; }\n";
+        let tenant = "\
+:root { --loom-color-ink: navy; }\n\
+:root[data-theme=\"sepia\"] { --loom-color-ink: tan; }\n";
+        let (mut blocks, _) = parse_skin_themes(skin);
+        let (companion, _) = parse_skin_themes(tenant);
+        merge_companion_blocks(&mut blocks, companion);
+        let base = blocks.iter().find(|b| b.name == "default").unwrap();
+        let ink = TokenName::new("--loom-color-ink").unwrap();
+        // Companion loads after the skin, so its value wins.
+        assert_eq!(base.tokens.get(&ink).map(String::as_str), Some("navy"));
+        // Companion-only theme block is appended, skin themes kept.
+        assert!(blocks.iter().any(|b| b.name == "sepia"));
+        assert!(blocks.iter().any(|b| b.name == "dark"));
     }
 
     #[test]
