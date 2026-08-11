@@ -35,3 +35,6 @@ reports/attest-key.b64
 # Track via git-lfs in a follow-on task if commit-discovery becomes load-bearing.
 static/assets/dreamstime/
 /target
+
+# session scaffolding stays off GitHub (cruft standard)
+docs/CLAUDE_SESSION_AUDIT.md
