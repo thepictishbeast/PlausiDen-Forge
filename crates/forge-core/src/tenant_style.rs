@@ -63,6 +63,17 @@ pub struct TenantStyle {
     /// `on_danger`. Additional keys pass through to CSS vars
     /// (`--loom-color-<key>`) for tenant-specific extensions.
     pub palette: BTreeMap<String, String>,
+    /// `[style.palette_dark]` — dark-theme palette overrides, same
+    /// keys as `[style.palette]`. Emitted as a
+    /// `:root[data-theme="dark"] { … }` block AFTER the base block,
+    /// so in dark mode these win over the base palette (same
+    /// importance, later in the cascade, equal-or-higher
+    /// specificity). A tenant that declares `[style.palette]` but no
+    /// dark palette keeps the base palette across themes (the
+    /// pre-existing behavior); tenants that want a real dark theme
+    /// MUST override at least `bg`, `ink`, `muted`, `border` here or
+    /// dark mode renders base ink on the skin's dark surfaces.
+    pub palette_dark: BTreeMap<String, String>,
     /// `[style.fonts]` — font-family stacks keyed by role
     /// (`display`, `body`, `mono`).
     pub fonts: BTreeMap<String, String>,
@@ -231,6 +242,7 @@ impl TenantStyle {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.palette.is_empty()
+            && self.palette_dark.is_empty()
             && self.fonts.is_empty()
             && self.radius.is_empty()
             && self.nav.is_empty()
@@ -328,6 +340,16 @@ impl TenantStyle {
             out.push_str(&format!("  --loom-density: {d} !important;\n"));
         }
         out.push_str("}\n");
+        // Dark-theme palette overrides ride AFTER the base block so
+        // they win it in dark mode at equal importance. See the
+        // `palette_dark` field docs for the cascade contract.
+        if !self.palette_dark.is_empty() {
+            out.push_str(":root[data-theme=\"dark\"] {\n");
+            for (k, v) in &self.palette_dark {
+                out.push_str(&format!("  --loom-color-{}: {} !important;\n", to_kebab(k), v));
+            }
+            out.push_str("}\n");
+        }
         out
     }
 
@@ -652,6 +674,35 @@ accent  = "#DBA830"
         assert_eq!(to_kebab("link_hover"), "link-hover");
         assert_eq!(to_kebab("on_primary"), "on-primary");
         assert_eq!(to_kebab("accent_2"), "accent-2");
+    }
+
+    #[test]
+    fn palette_dark_emits_theme_block_after_base() {
+        let mut style = TenantStyle::default();
+        style.palette.insert("bg".into(), "#F7F9FB".into());
+        style.palette.insert("ink".into(), "#161B22".into());
+        style
+            .palette_dark
+            .insert("bg".into(), "#000000".into());
+        style
+            .palette_dark
+            .insert("ink".into(), "#F2F5F8".into());
+        let css = style.to_css_root_block();
+        let dark_at = css
+            .find(":root[data-theme=\"dark\"]")
+            .expect("dark block present");
+        let base_at = css.find(":root, :root[data-theme]").expect("base block");
+        assert!(base_at < dark_at, "dark block must follow base");
+        assert!(css[dark_at..].contains("--loom-color-bg: #000000 !important;"));
+        assert!(css[dark_at..].contains("--loom-color-ink: #F2F5F8 !important;"));
+    }
+
+    #[test]
+    fn palette_dark_alone_is_not_empty() {
+        let mut style = TenantStyle::default();
+        style.palette_dark.insert("bg".into(), "#000".into());
+        assert!(!style.is_empty());
+        assert!(style.to_css_root_block().contains("data-theme=\"dark\""));
     }
 
     #[test]
