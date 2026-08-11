@@ -34,3 +34,4 @@ reports/attest-key.b64
 # Substrate-wide reusable photo pool; rsync to deploy targets.
 # Track via git-lfs in a follow-on task if commit-discovery becomes load-bearing.
 static/assets/dreamstime/
+/target
