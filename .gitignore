@@ -38,3 +38,6 @@ static/assets/dreamstime/
 
 # session scaffolding stays off GitHub (cruft standard)
 docs/CLAUDE_SESSION_AUDIT.md
+
+# agent onboarding kept local-only (cruft standard)
+AGENTS.md
