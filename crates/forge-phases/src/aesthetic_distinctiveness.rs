@@ -912,7 +912,20 @@ fn check_image_desert(
                         return true;
                     }
                 }
-                if obj.contains_key("src") || obj.contains_key("icon_slug") {
+                // Image-bearing fields are not uniformly named across the
+                // section vocabulary: `picture` carries `src_stem`,
+                // `image_text_row` and `image_hero` carry `image_src`,
+                // `figure` carries `asset_slug`. Matching only `src` made a
+                // page whose sole image is an image_text_row report as an
+                // "image desert" — the page is fine, the detector was blind.
+                // Match any `*_src` key rather than enumerating the list,
+                // so a newly added section kind is covered on arrival.
+                if obj.contains_key("icon_slug")
+                    || obj.contains_key("asset_slug")
+                    || obj
+                        .keys()
+                        .any(|k| k == "src" || k == "src_stem" || k.ends_with("_src"))
+                {
                     return true;
                 }
                 for (_, val) in obj {
@@ -1323,6 +1336,63 @@ fn check_fake_testimonials(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn image_text_row_counts_as_an_image() {
+        // Regression: image_desert matched only a bare `src` key, so a page
+        // whose sole image was an image_text_row (`image_src`) was reported as
+        // having "zero image references" while plainly showing a photograph.
+        let page = json!({
+            "sections": [
+                {"kind": "hero", "title": "About"},
+                {"kind": "image_text_row", "image_src": "/assets/portrait/w.webp",
+                 "image_alt": "W", "heading": "H", "body": ["b"]},
+                {"kind": "heading", "text": "More"},
+                {"kind": "paragraph", "text": "x"},
+                {"kind": "call_to_action", "title": "Go"}
+            ]
+        });
+        let mut findings = vec![];
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            forge_core::site_identity::PageKind::MarketingLanding,
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(
+            !findings.iter().any(|f| f.message.contains("image_desert")),
+            "image_text_row carries an image; got: {:?}",
+            findings.iter().map(|f| &f.message).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn genuinely_imageless_page_still_reports_image_desert() {
+        // The relaxed key match must not blind the detector to a real desert.
+        let page = json!({
+            "sections": [
+                {"kind": "hero", "title": "About"},
+                {"kind": "paragraph", "text": "a"},
+                {"kind": "heading", "text": "b"},
+                {"kind": "paragraph", "text": "c"},
+                {"kind": "call_to_action", "title": "Go"}
+            ]
+        });
+        let mut findings = vec![];
+        check_page(
+            Path::new("test.json"),
+            &page,
+            &[],
+            &[],
+            forge_core::site_identity::PageKind::MarketingLanding,
+            &mut findings,
+            "aesthetic_distinctiveness",
+        );
+        assert!(findings.iter().any(|f| f.message.contains("image_desert")));
+    }
 
     #[test]
     fn sparse_page_under_5_sections_warns() {
