@@ -1,4 +1,4 @@
-/* SYNC-FROM-LOOM:sha384-uW8b8ZiHt5vnhURoDCeGX6PIGC6X8Xo0j+xDyoKe8R/3I9G9nT6MZmusq/tKLWwR — auto-synced by forge render at build */
+/* SYNC-FROM-LOOM:sha384-VcYulrI0YLD6c/k4zWK+L4NBrJI53WleoSHxEXtbbYz3VhGAYellJv8VSEaRnt3v — auto-synced by forge render at build */
 /* ===================================================================
  * loom-skin.css — semantic component layer for the Loom design system
  * ===================================================================
@@ -535,8 +535,14 @@
   main#content {
     line-height: 1.55;
   }
-  main#content h1, main#content h2, main#content h3,
-  main#content h4, main#content h5, main#content h6 {
+  /* Scope is wrapped in :where() so these prose defaults carry only
+   * element-level specificity (0,0,1). They style author-written prose
+   * headings but never out-specify component heading rules (e.g.
+   * .loom-feature-spotlight__title) that live inside main#content — the
+   * #content id would otherwise win at (1,0,2) and clobber component
+   * font/size/margin. */
+  :where(main#content) h1, :where(main#content) h2, :where(main#content) h3,
+  :where(main#content) h4, :where(main#content) h5, :where(main#content) h6 {
     font-family: var(--loom-font-display, inherit);
     font-weight: 700;
     line-height: 1.15;
@@ -544,12 +550,12 @@
     text-wrap: balance;
     margin: var(--loom-space-8, 2rem) 0 0 0;
   }
-  main#content h1 { font-size: var(--loom-font-4xl, 2.25rem); }
-  main#content h2 { font-size: var(--loom-font-3xl, 1.875rem); }
-  main#content h3 { font-size: var(--loom-font-2xl, 1.5rem); }
-  main#content h4 { font-size: var(--loom-font-xl, 1.25rem); }
-  main#content h5 { font-size: var(--loom-font-lg, 1.125rem); }
-  main#content h6 {
+  :where(main#content) h1 { font-size: var(--loom-font-4xl, 2.25rem); }
+  :where(main#content) h2 { font-size: var(--loom-font-3xl, 1.875rem); }
+  :where(main#content) h3 { font-size: var(--loom-font-2xl, 1.5rem); }
+  :where(main#content) h4 { font-size: var(--loom-font-xl, 1.25rem); }
+  :where(main#content) h5 { font-size: var(--loom-font-lg, 1.125rem); }
+  :where(main#content) h6 {
     font-size: var(--loom-font-base, 1rem);
     text-transform: uppercase;
     letter-spacing: .04em;
@@ -675,6 +681,12 @@
     --loom-shadow-glow-accent:
       0 0 0 1px hsl(218 83% 65% / 0.35),
       0 8px 32px hsl(218 83% 65% / 0.20);
+    /* Tailwind shadow-2xl in the layered-shadow idiom: one deep, soft
+       drop — the premium "lifted hero image / floating card" elevation.
+       Opt-in only; no primitive applies it by default. hsl 0% lightness
+       is black, so this equals rgb(0 0 0 / 0.25) at the Tailwind offset. */
+    --loom-shadow-2xl:
+      0 25px 50px -12px hsl(220 33% 0% / 0.25);
 
     --loom-pad-card:            var(--loom-space-4);
     --loom-pad-panel:           var(--loom-space-5);
@@ -859,9 +871,19 @@
 
   .loom-page {
     width: 100%;
-    max-width: var(--loom-break-xl);
-    margin: 0 auto;
-    padding: var(--loom-pad-band);
+    /* Body content column tracks the same content-width knob the
+     * page-header / utility-strip insets use (--loom-page-content-max,
+     * set per data-content-width on <body>) via the SAME centering
+     * model: a full-width element whose content is inset to a centered
+     * column by symmetric inline padding, floored at 1.25rem on small
+     * screens. Using padding-inline rather than max-width + margin:auto
+     * avoids the double-count where the centring gutter AND a uniform
+     * pad stacked, leaving the body column narrower than the header
+     * above it. Block padding keeps the band's breathing room below the
+     * header and above the footer. Falls back to the xl breakpoint when
+     * content-max is unset. */
+    padding-block: var(--loom-pad-band);
+    padding-inline: max(1.25rem, calc((100% - var(--loom-page-content-max, var(--loom-break-xl))) / 2));
     display: flex;
     flex-direction: column;
     gap: var(--loom-space-5);
@@ -1118,7 +1140,7 @@
     --comp-btn-pad-x:  var(--loom-space-4);
     --comp-btn-pad-y:  var(--loom-space-2);
     --comp-btn-size:   var(--loom-font-sm);
-    --comp-btn-radius: var(--loom-radius-md);
+    --comp-btn-radius: var(--loom-radius-control, var(--loom-radius-md));
     --comp-btn-bg:     transparent;
     --comp-btn-fg:     var(--loom-color-ink);
     --comp-btn-border: 0;
@@ -1252,44 +1274,33 @@
     .loom-pulse-dot { animation: none; }
   }
 
-  /* ---------- Hero band ---------- */
+  /* ---------- Hero band ----------
+   *
+   * Owner directive 2026-08-19: "get rid of that stupid looking gradient box
+   * you use for everything."
+   *
+   * This was a rounded panel carrying two radial gradients, a diagonal tint, a
+   * border, an elevation shadow and a 32px grid overlay — on the hero of every
+   * page of every site. Three problems, in order of seriousness:
+   *
+   * 1. The hues were HARDCODED (hsl 218 blue, hsl 272 purple). They ignored the
+   *    tenant palette entirely, so a site built on petrol-and-brass still
+   *    rendered a lavender box. The substrate's whole anti-sameness argument
+   *    was undercut by its own most prominent component.
+   * 2. Every Forge site opened with the same decoration, which is precisely the
+   *    generated-template look the substrate exists to avoid.
+   * 3. It framed the hero as a widget sitting ON the page rather than as the
+   *    top of the page.
+   *
+   * Replaced with type and space. Emphasis now comes from scale and rhythm, and
+   * what colour appears comes from the tenant's own accent via the eyebrow and
+   * CTA — which is the only place the palette was ever supposed to speak.
+   */
   .loom-hero {
     --comp-hero-pad: var(--loom-pad-band);
     position: relative;
-    padding: var(--comp-hero-pad);
-    border-radius: var(--loom-radius-xl);
-    background:
-      /* Top-right glow */
-      radial-gradient(900px 320px at 100% -10%,
-        hsl(218 83% 65% / 0.30),
-        transparent 60%),
-      /* Bottom-left bloom */
-      radial-gradient(700px 320px at -5% 110%,
-        hsl(272 84% 65% / 0.18),
-        transparent 60%),
-      /* Underlying surface tint */
-      linear-gradient(135deg,
-        hsl(218 83% 65% / 0.10),
-        hsl(272 84% 65% / 0.06) 60%,
-        transparent),
-      var(--loom-color-surface-muted);
-    border: var(--loom-border-strong);
-    overflow: hidden;
+    padding: var(--comp-hero-pad) 0;
     margin-bottom: var(--loom-pad-band);
-    box-shadow: var(--loom-shadow-elevated);
-  }
-  .loom-hero::before {
-    /* Subtle grid pattern overlay — design-system signature. */
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(to right, hsl(0 0% 100% / 0.025) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(0 0% 100% / 0.025) 1px, transparent 1px);
-    background-size: 32px 32px;
-    pointer-events: none;
-    mask-image: linear-gradient(to bottom, black, transparent 70%);
-    -webkit-mask-image: linear-gradient(to bottom, black, transparent 70%);
   }
   .loom-hero-title {
     margin-top: var(--loom-space-3);
@@ -1298,13 +1309,13 @@
     font-weight: 800;
     letter-spacing: var(--loom-track-tight, -0.025em);
     line-height: var(--loom-leading-tight, 1.1);
-    /* Subtle gradient on the title itself for richness. */
-    background: linear-gradient(180deg,
-      var(--loom-color-ink) 0%,
-      color-mix(in oklab, var(--loom-color-ink) 75%, var(--loom-color-accent-glow)) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    /* Solid ink, not a gradient clipped to the glyphs. `color: transparent`
+     * with `background-clip: text` renders the heading invisible in Windows
+     * High Contrast / forced-colors mode, where the background is overridden
+     * and the text keeps its transparent colour — the page's most important
+     * line disappears for exactly the readers who need contrast most. It also
+     * defeats any real contrast measurement. */
+    color: var(--loom-color-ink);
   }
   @media (min-width: 768px)  { .loom-hero-title { font-size: var(--loom-font-3xl); } }
   @media (min-width: 1024px) { .loom-hero-title { font-size: var(--loom-font-4xl); } }
@@ -2062,31 +2073,29 @@
    * (no Tailwind), composes from existing tokens. Used by         *
    * cms-render's CmsSection::Hero.                                *
    * ============================================================ */
+  /* Owner directive 2026-08-19: "get rid of that stupid looking gradient box
+   * you use for everything."
+   *
+   * This was the hero of every page of every Forge site: a rounded, bordered,
+   * triple-shadowed panel carrying three gradients, a blurred decorative blob
+   * (::after) and a dot-pattern overlay (::before). It read as a widget sitting
+   * ON the page rather than as the top of the page, and because every tenant
+   * got it, every tenant opened the same way — the generated-template look the
+   * substrate exists to avoid.
+   *
+   * Now: type and space. A hero earns attention through scale and rhythm; the
+   * tenant's palette still speaks through the eyebrow and the CTA, which is
+   * where colour actually carries meaning. Removing `overflow: hidden` and the
+   * absolutely-positioned pseudo-elements also retires the tablet
+   * scrollWidth-overflow class of bug the old REGRESSION-GUARD notes fought.
+   */
   .loom-section-hero {
-    padding: clamp(var(--loom-space-8), 6vw, var(--loom-space-16)) clamp(var(--loom-space-6), 5vw, var(--loom-space-10));
-    border-radius: var(--loom-radius-lg, 24px);
-    background:
-      radial-gradient(900px 500px at 85% -20%,
-        color-mix(in oklab, var(--loom-color-gradient-b) 38%, transparent) 0%,
-        transparent 55%),
-      radial-gradient(700px 400px at -10% 110%,
-        color-mix(in oklab, var(--loom-color-gradient-a) 30%, transparent) 0%,
-        transparent 55%),
-      linear-gradient(135deg,
-        color-mix(in oklab, var(--loom-color-gradient-a) 14%, var(--loom-color-surface)) 0%,
-        var(--loom-color-surface) 50%,
-        color-mix(in oklab, var(--loom-color-gradient-b) 12%, var(--loom-color-surface)) 100%);
-    border: 1px solid color-mix(in oklab, var(--loom-color-primary) 20%, var(--loom-color-border));
-    box-shadow:
-      0 2px 4px color-mix(in oklab, var(--loom-color-ink) 5%, transparent),
-      0 24px 48px color-mix(in oklab, var(--loom-color-primary) 18%, transparent),
-      0 48px 96px color-mix(in oklab, var(--loom-color-ink) 10%, transparent);
+    padding: clamp(var(--loom-space-8), 6vw, var(--loom-space-16)) 0
+             clamp(var(--loom-space-6), 4vw, var(--loom-space-10));
     display: flex;
     flex-direction: column;
     gap: var(--loom-space-5);
     position: relative;
-    overflow: hidden;
-    isolation: isolate;
   }
   /* Decorative blob behind the hero — adds depth/dimension.
    * REGRESSION-GUARD (cycle 96 iter 2): tablet uiOverflow +7
@@ -2096,34 +2105,117 @@
    * Fix: stay strictly inside the box (no transform), AND add
    * contain:paint as belt-and-braces so any future ::after
    * won't accidentally bleed out. */
-  .loom-section-hero::after {
-    content: "";
-    position: absolute;
-    /* Strictly inside the hero box. -2% bleed in iter 2 still
-     * triggered uiOverflow on themed-page baselines. */
-    inset: 30% 0 0 auto;
-    width: 38%;
-    height: 100%;
-    background: radial-gradient(closest-side,
-      color-mix(in oklab, var(--loom-color-gradient-b) 36%, transparent) 0%,
-      transparent 70%);
-    pointer-events: none;
-    z-index: -1;
-    filter: blur(28px);
+  /* The blurred blob (::after) and dot-pattern overlay (::before) that sat
+   * behind the hero were removed with the panel above — decoration whose only
+   * job was to make an empty box look less empty. A hero built from type does
+   * not need a texture to hide behind.
+   *
+   * A hairline under the hero replaces the panel edge: it separates the hero
+   * from the content beneath without drawing a container around it. */
+  .loom-section-hero {
+    border-bottom: 1px solid color-mix(in oklab,
+      var(--loom-color-border) 70%, transparent);
   }
-  .loom-section-hero { contain: paint; }
-  .loom-section-hero::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(1px 1px at 20% 30%, color-mix(in oklab, var(--loom-color-primary) 40%, transparent), transparent 50%),
-      radial-gradient(1px 1px at 70% 60%, color-mix(in oklab, var(--loom-color-gradient-b) 40%, transparent), transparent 50%);
-    background-size: 60px 60px, 80px 80px;
-    opacity: .35;
-    mask-image: linear-gradient(180deg, transparent, black 30%, black 70%, transparent);
+  /* ---------- Motion ----------
+   *
+   * Scroll-linked reveal with no JavaScript at all. `animation-timeline: view()`
+   * drives the animation from the element's own position in the viewport, so
+   * there is no IntersectionObserver, no inline script, and therefore nothing
+   * for the page CSP to hash — the whole feature lives in this stylesheet,
+   * which is already served from 'self'.
+   *
+   * Three guards, in order of importance:
+   *
+   * 1. `prefers-reduced-motion: no-preference` wraps everything. A reader who
+   *    has asked their OS for less motion gets a completely static page — not
+   *    a faster animation, none.
+   * 2. `@supports (animation-timeline: view())` wraps the hidden start state.
+   *    Where scroll-linked animation is unsupported, the rule never applies and
+   *    content renders normally. The failure mode of getting this wrong is a
+   *    permanently invisible page, so the opacity: 0 MUST live inside the
+   *    @supports block, never outside it.
+   * 3. The hero is excluded. It is above the fold on load, and animating the
+   *    first thing a visitor sees delays the content rather than revealing it.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .loom-page > section:not(.loom-section-hero),
+      .loom-card-feed-item,
+      .loom-feature-spotlight__item {
+        animation: loom-reveal linear both;
+        animation-timeline: view();
+        /* The range ENDS at `entry 100%` — the moment the element has fully
+         * entered the viewport — and deliberately not at some point in the
+         * `cover` range. On a page too short to scroll, cover progress is
+         * fixed at whatever the element's resting position implies, so a
+         * cover-based end can leave a section permanently at partial opacity
+         * with no way for the reader to finish it. Ending on `entry`
+         * guarantees anything fully visible is fully opaque. */
+        animation-range: entry 0% entry 100%;
+      }
+      /* Stagger grid children so a row assembles rather than snapping in as one
+       * block. Still ends within `entry`, for the reason above. */
+      .loom-card-feed-item:nth-child(2n),
+      .loom-feature-spotlight__item:nth-child(2n) {
+        animation-range: entry 12% entry 100%;
+      }
+      @keyframes loom-reveal {
+        from {
+          opacity: 0;
+          /* translate only — no scale. Scaling text resamples glyphs mid
+           * animation and looks blurry on non-retina displays. */
+          transform: translateY(1.25rem);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+    }
+
+    /* Hover affordances. Transitions (unlike the reveal above) are supported
+     * everywhere, so these need no @supports guard — but they stay inside the
+     * reduced-motion query so a static page really is static. */
+    .loom-card-feed-item {
+      transition:
+        transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+    }
+    .loom-card-feed-item:hover,
+    .loom-card-feed-item:focus-within {
+      transform: translateY(-3px);
+      border-color: color-mix(in oklab, var(--loom-color-primary) 45%, var(--loom-color-border));
+      box-shadow: 0 10px 28px color-mix(in oklab, var(--loom-color-ink) 12%, transparent);
+    }
+    .loom-btn,
+    .loom-section-hero__cta {
+      transition:
+        transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+        background-color 140ms ease,
+        color 140ms ease;
+    }
+    .loom-btn:hover,
+    .loom-section-hero__cta:hover {
+      transform: translateY(-1px);
+    }
   }
+
+  /* A scroll timeline cannot advance on paper. Without this, every section
+   * below the first screen prints blank — the reveal's start state frozen at
+   * opacity 0. Same reasoning as the @supports guard: the failure mode of
+   * scroll-linked animation is invisible content, so every context that cannot
+   * scroll needs an explicit way out. */
+  @media print {
+    .loom-page > section,
+    .loom-card-feed-item,
+    .loom-feature-spotlight__item {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
   .loom-section-hero > * {
     position: relative;
     z-index: 1;
@@ -6449,7 +6541,11 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 .loom-page-footer__columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+  /* #557: a 16rem auto-fit floor lets the footer wrap 4 → 2 → 1 across
+   * desktop / tablet / phone without hardcoding a column count, so a
+   * footer with any number of columns collapses gracefully. (The old
+   * 8rem floor kept 4 cramped columns down into tablet widths.) */
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
   gap: 1.25rem;
   max-width: 80rem;
   width: 100%;
@@ -6469,10 +6565,43 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 .loom-page-footer__col h3.loom-page-footer__heading {
   margin: 0 0 0.75rem;
-  font: 700 0.72rem/1.4 var(--loom-font-mono, ui-monospace, monospace);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  /* #551: footer column headings default to a mono micro-caps label
+   * (the premium Loom footer look). Each dimension is tenant-tunable
+   * via forge.toml so a brand wanting Title-case sans headings opts in
+   * without per-site CSS: family ← [style.fonts] footer_heading,
+   * size ← [style.sizes] footer_heading, weight ← [style.weights]
+   * footer_heading, case ← [style.text] footer_heading_transform,
+   * tracking ← [style.text] footer_heading_tracking. Fallbacks
+   * reproduce the prior look byte-for-byte, so demos are unchanged. */
+  font:
+    var(--loom-weight-footer-heading, 700)
+    var(--loom-size-footer-heading, 0.72rem)/1.4
+    var(--loom-font-footer-heading, var(--loom-font-mono, ui-monospace, monospace));
+  letter-spacing: var(--loom-text-footer-heading-tracking, 0.14em);
+  text-transform: var(--loom-text-footer-heading-transform, uppercase);
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 75%, transparent);
+}
+/* #552: footer brand-mark lockup — a tenant repeats its header logo
+ * (icon glyph + two-tone wordmark) at the top of a footer column. It
+ * carries both `loom-page-footer__brand` and `loom-page-brand`, so the
+ * flex/gap layout, the boxed-icon fill, and the `__name-accent` color all
+ * inherit from the shared header-brand rules (visual parity, zero
+ * duplication). This block only sets the footer-scoped wordmark size +
+ * spacing. Inside a dark footer role `--loom-color-ink` is remapped to the
+ * on-* color, so the wordmark head reads light automatically while the
+ * accent tail keeps the primary brand color — matching real
+ * plausiden.com. Emitted only when a column carries `brand`. */
+.loom-page-footer__brand {
+  margin: 0 0 1rem;
+  font-family: var(--loom-font-display, var(--loom-font-body, system-ui, sans-serif));
+  font-size: 1.2rem;
+  font-weight: var(--loom-weight-heading, 700);
+  line-height: 1.2;
+  color: var(--loom-color-ink, var(--loom-fg));
+  text-decoration: none;
+}
+a.loom-page-footer__brand:hover {
+  color: var(--loom-color-ink, var(--loom-fg));
 }
 .loom-page-footer__links {
   list-style: none;
@@ -6493,6 +6622,44 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-page-footer__contact p {
   margin: 0 0 0.4rem;
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+}
+/* Per-field contact line-icons. Pure-CSS SVG masks (no external font,
+   no <img>): the shape comes from the mask, the color from
+   background-color so it inherits the contact-line text color and
+   recolors on hover/theme. data: SVG masks are CSP-clean under the
+   page-shell's `img-src 'self' data:`. Keyed by CmsFooterContact field
+   type so the renderer can pick the right glyph with no CMS change. */
+.loom-page-footer__contact-icon {
+  flex: none;
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+.loom-page-footer__contact-icon--location {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21.5s7-7.4 7-12.5a7 7 0 1 0-14 0c0 5.1 7 12.5 7 12.5z' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'/><circle cx='12' cy='9' r='2.6' fill='none' stroke='black' stroke-width='2'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21.5s7-7.4 7-12.5a7 7 0 1 0-14 0c0 5.1 7 12.5 7 12.5z' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'/><circle cx='12' cy='9' r='2.6' fill='none' stroke='black' stroke-width='2'/></svg>");
+}
+.loom-page-footer__contact-icon--phone {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M6.5 3.5h3.2l1.5 4.2-2.1 1.6a11.5 11.5 0 0 0 5.1 5.1l1.6-2.1 4.2 1.5v3.2a2 2 0 0 1-2.1 2A16.2 16.2 0 0 1 4.5 5.6a2 2 0 0 1 2-2.1z' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M6.5 3.5h3.2l1.5 4.2-2.1 1.6a11.5 11.5 0 0 0 5.1 5.1l1.6-2.1 4.2 1.5v3.2a2 2 0 0 1-2.1 2A16.2 16.2 0 0 1 4.5 5.6a2 2 0 0 1 2-2.1z' fill='none' stroke='black' stroke-width='2' stroke-linejoin='round'/></svg>");
+}
+.loom-page-footer__contact-icon--email {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='14' rx='2' fill='none' stroke='black' stroke-width='2'/><path d='M4 7.5l8 5.5 8-5.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='3' y='5' width='18' height='14' rx='2' fill='none' stroke='black' stroke-width='2'/><path d='M4 7.5l8 5.5 8-5.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+.loom-page-footer__contact-icon--region {
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2'/><path d='M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18' fill='none' stroke='black' stroke-width='2'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9' fill='none' stroke='black' stroke-width='2'/><path d='M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18' fill='none' stroke='black' stroke-width='2'/></svg>");
 }
 .loom-page-footer__contact a {
   color: inherit;
@@ -6567,6 +6734,55 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   margin: 0.5rem auto 0;
   font-size: 0.82rem;
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 55%, transparent);
+}
+/* Non-link footer column entries (capability/category names with no
+   destination). Match the resting link color so they read as peers of
+   the linked items, minus the hover affordance. */
+.loom-page-footer__text-item {
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 80%, transparent);
+}
+/* Opt-in single-row bottom bar: one shared top border, colophon + legal
+   links. Mobile-first — stacked + centered below 768px, then a
+   justify-between row (colophon left, legal right) at the 768px tier,
+   mirroring the columns grid's own collapse. The legal links stay on a
+   single non-wrapping row at both tiers. Only emitted when
+   CmsFooter.bottom_bar_inline is set. */
+.loom-page-footer__bottombar {
+  max-width: 80rem;
+  width: 100%;
+  margin: 4rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 50%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  font-size: 0.75rem;
+}
+.loom-page-footer__bottombar .loom-page-footer__legal,
+.loom-page-footer__bottombar .loom-page-footer__colophon {
+  max-width: none;
+  width: auto;
+  margin: 0;
+  padding-top: 0;
+  border-top: none;
+  font-size: inherit;
+}
+.loom-page-footer__bottombar .loom-page-footer__legal ul {
+  flex-wrap: nowrap;
+  gap: 1.5rem;
+  justify-content: center;
+  font-size: inherit;
+}
+@media (min-width: 768px) {
+  .loom-page-footer__bottombar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
 }
 
 /* Editorial: pull-quote-style typography, no card chrome. */
@@ -6809,7 +7025,13 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.4rem;
-  border-radius: 999px;
+  /* Default to a pill (999px) so demos/ProsperityClub are unchanged,
+   * but consume the tenant control-radius token (#537) when set — a
+   * tenant wanting rounded-rect buttons sets [style.radius] control
+   * and gets it on every .loom-btn (hero CTAs + nav actions). The
+   * earlier token rule (--comp-btn-radius ← --loom-radius-control) was
+   * being overridden by this later top-level rule's hardcoded 999px. */
+  border-radius: var(--loom-radius-control, 999px);
   font: 600 0.95rem/1 var(--loom-font-display, var(--loom-font-stack));
   letter-spacing: -0.012em;
   text-decoration: none;
@@ -6840,12 +7062,38 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   color: var(--loom-color-ink, var(--loom-fg));
   border-color: var(--loom-color-border, var(--loom-border));
 }
+/* #544: success/emerald variant — light fill, success-colored border
+ * + text. Reads as a "safe / verified" action (e.g. an encrypted
+ * inquiry button). Generic; any tenant opts in via variant="success"
+ * and can retint by setting palette.success. */
+.loom-btn--success {
+  background: var(--loom-color-bg, #fff);
+  color: var(--loom-color-success, hsl(142 75% 22%));
+  border-color: color-mix(in oklab, var(--loom-color-success, hsl(142 75% 22%)) 50%, transparent);
+}
+.loom-btn--success:hover {
+  background: color-mix(in oklab, var(--loom-color-success, hsl(142 75% 22%)) 9%, var(--loom-color-bg, #fff));
+  border-color: color-mix(in oklab, var(--loom-color-success, hsl(142 75% 22%)) 70%, transparent);
+}
 .loom-btn--ghost {
   background: transparent;
   color: var(--loom-color-ink, var(--loom-fg));
 }
 .loom-btn--ghost:hover {
   background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 6%, transparent);
+}
+/* Outline button — transparent fill + 1px border + ink text.
+ * Distinct from --secondary (which fills a surface): outline reads
+ * as a true secondary action over any backdrop, picking up the
+ * inherited text color so it inverts correctly on dark sections. */
+.loom-btn--outline {
+  background: transparent;
+  color: currentColor;
+  border-color: color-mix(in oklab, currentColor 32%, transparent);
+}
+.loom-btn--outline:hover {
+  border-color: color-mix(in oklab, currentColor 60%, transparent);
+  background: color-mix(in oklab, currentColor 6%, transparent);
 }
 .loom-btn--lg {
   padding: 1rem 1.75rem;
@@ -6900,22 +7148,186 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   text-transform: uppercase;
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 70%, transparent);
 }
+/* Solid brand-tinted badge variant (#535): filled primary tint + primary
+ * text, no glass blur. Opt-in via ImageHero.eyebrow_badge = true. */
+.loom-image-hero__eyebrow--badge {
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 12%, transparent);
+  border-color: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 32%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  /* #541: the glass eyebrow base forces mono + UPPERCASE + wide
+   * tracking (a "techy" treatment). The solid badge variant reads as
+   * an editorial label, so render it Title Case in the body font with
+   * tight tracking. Opt-in variant only; the glass base is unchanged. */
+  font-family: var(--loom-font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+/* Per-item pill label on feature_spotlight items (#602): brand-tinted
+ * badge above the card title, mirroring the ImageHero eyebrow-badge.
+ * Renders only when SpotlightItem.eyebrow is set. */
+.loom-feature-spotlight__eyebrow {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 32%, transparent);
+  font-family: var(--loom-font-body);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+  color: var(--loom-color-primary, var(--loom-accent));
+  margin-bottom: 0.7rem;
+}
+/* Breadcrumb trail (#602): "Site » Section » Page" rendered above the
+ * first body section. Small, muted, » separators between items. */
+.loom-breadcrumb {
+  margin: 0 0 1.5rem;
+  font-family: var(--loom-font-body);
+  font-size: 0.82rem;
+}
+.loom-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.loom-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  color: color-mix(in oklab, var(--loom-color-ink, currentColor) 60%, transparent);
+}
+.loom-breadcrumb__item + .loom-breadcrumb__item::before {
+  content: "»";
+  margin-right: 0.5rem;
+  color: color-mix(in oklab, var(--loom-color-ink, currentColor) 40%, transparent);
+}
+.loom-breadcrumb__link {
+  color: color-mix(in oklab, var(--loom-color-ink, currentColor) 65%, transparent);
+  text-decoration: none;
+}
+.loom-breadcrumb__link:hover,
+.loom-breadcrumb__link:focus-visible {
+  color: var(--loom-color-primary, var(--loom-accent));
+  text-decoration: underline;
+}
+.loom-breadcrumb__current {
+  color: var(--loom-color-ink, currentColor);
+  font-weight: 600;
+}
+/* Dark "solid"-fill hero (#602). CSP-safe: the page-shell CSP blocks
+ * inline style attributes, so the fill is applied here in the stylesheet
+ * rather than inline. A `.bg-solid` hero paints the primary brand color
+ * with on-primary text; the eyebrow badge + lede shift to a light-on-dark
+ * treatment so they stay legible against the dark fill. */
+.loom-image-hero.bg-solid {
+  background: var(--loom-color-primary);
+  color: var(--loom-color-on-primary, #fff);
+}
+.loom-image-hero.bg-solid .loom-image-hero__lede {
+  color: color-mix(in oklab, var(--loom-color-on-primary, #fff) 85%, transparent);
+}
+.loom-image-hero.bg-solid .loom-image-hero__eyebrow--badge {
+  background: color-mix(in oklab, #fff 16%, transparent);
+  color: var(--loom-color-on-primary, #fff);
+  border-color: color-mix(in oklab, #fff 32%, transparent);
+}
+/* Title base goes on-primary (white) on a dark solid fill; an inner
+ * wrapper otherwise resets it to ink. The `__title-accent` span keeps
+ * its own accent color (more specific direct rule). */
+.loom-image-hero.bg-solid .loom-image-hero__title {
+  color: var(--loom-color-on-primary, #fff);
+}
 .loom-image-hero__title {
   margin: 0;
   font-family: var(--loom-font-display);
-  font-weight: 900;
+  font-weight: var(--loom-weight-display, 900);
   letter-spacing: -0.035em;
-  line-height: 1.02;
-  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  /* #567: tenant-tunable via [style.sizes] hero_title_leading →
+   * --loom-size-hero-title-leading. REAL marketing heroes (e.g.
+   * plausiden.com) run a looser 1.1 leading on the headline; the
+   * substrate default stays the tight 1.02 expressive setting so
+   * demos/ProsperityClub are unchanged. */
+  line-height: var(--loom-size-hero-title-leading, 1.02);
+  /* #538: tenant-tunable via [style.sizes] hero_title → --loom-size-
+   * hero-title. Default clamp keeps the substrate's expressive ceiling
+   * (88px); a tenant whose reference hero is smaller can dial it down
+   * without hand-authored CSS. */
+  font-size: var(--loom-size-hero-title, clamp(2.5rem, 7vw, 5.5rem));
   color: var(--loom-color-ink);
   max-width: 22ch;
 }
 .loom-image-hero__lede {
   margin: 0;
-  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
-  line-height: 1.5;
+  /* #570: lede type-scale is tenant-tunable so a site can match its real
+   * design (next.plausiden: 1.25rem / lh 1.4 = Tailwind text-xl/leading-7).
+   * Defaults reproduce the substrate's fluid clamp + 1.5 leading. */
+  font-size: var(--loom-size-hero-lede, clamp(1.05rem, 1.6vw, 1.35rem));
+  line-height: var(--loom-size-hero-lede-leading, 1.5);
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 75%, transparent);
-  max-width: 60ch;
+  /* #568: the lede is a flex column child under align-items:flex-start,
+   * so a bare `max-width` is NOT honored on the cross axis — it would
+   * stretch to the full inner column (≈64rem). Drive the measure through
+   * `width: min(token, 100%)` instead, which IS honored: the inner is
+   * width:100%/max-width:64rem so the `100%` resolves to the column, and
+   * min() caps the lede at the token on desktop (42rem → 672px, the real
+   * site's max-w-2xl) while shrinking with the column on narrow viewports
+   * (verified no overflow at 390). A bare definite width is NOT usable
+   * here — max-width:100% is swallowed by the same flex quirk, so a fixed
+   * width overflows mobile. Default min(100%,100%)=100% preserves the
+   * generic full-stretch behavior (demos/ProsperityClub unchanged). */
+  max-width: var(--loom-size-hero-lede-max, 60ch);
+  width: min(var(--loom-size-hero-lede-max, 100%), 100%);
+}
+/* Two-tone headline: the trailing accent fragment renders in the
+ * brand accent color (real marketing pattern — highlight the second
+ * half of a long title). */
+.loom-image-hero__title-accent {
+  color: var(--loom-color-accent, var(--loom-accent));
+}
+/* Dual-CTA row: primary + secondary side by side, wrapping on
+ * narrow viewports. */
+.loom-image-hero__cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+/* #554: trailing icon glyph inside the primary hero CTA (opt-in via the
+ * CTA's icon_slug, e.g. "arrow-right"). Inline-flex keeps the glyph
+ * centered with the label; the SVG inherits the button text color and
+ * scales with the label via em units. Generic — any vetted slug. */
+.loom-image-hero__cta-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+.loom-image-hero__cta-icon-svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+/* #567: REAL marketing heroes use chunky CTAs (plausiden.com: ~18px
+ * label, 24px/32px padding, ~76px tall) whereas the base .loom-btn is
+ * a compact 0.95rem / 0.75rem-1.4rem / 44px control. These tunable
+ * tokens let a tenant dial the hero CTA up via [style.sizes]
+ * (hero_cta / hero_cta_pad_y / hero_cta_pad_x / hero_cta_min /
+ * hero_cta_leading) with no hand-authored CSS. Each falls back to the
+ * current .loom-btn base value, so demos/ProsperityClub render byte-
+ * identical. The compound .loom-image-hero__cta.loom-btn selector
+ * (0,2,0) beats both .loom-btn and .loom-btn--lg (0,1,0) regardless of
+ * source order, so it scopes the chunk to hero CTAs only. */
+.loom-image-hero__cta.loom-btn {
+  padding: var(--loom-size-hero-cta-pad-y, 0.75rem) var(--loom-size-hero-cta-pad-x, 1.4rem);
+  font-size: var(--loom-size-hero-cta, 0.95rem);
+  line-height: var(--loom-size-hero-cta-leading, 1);
+  min-height: var(--loom-size-hero-cta-min, 44px);
 }
 
 /* Backdrops */
@@ -6947,6 +7359,19 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   background:
     radial-gradient(circle, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 30%, transparent) 1.5px, transparent 1.6px) 0 0 / 24px 24px,
     var(--loom-color-surface, var(--loom-bg));
+}
+/* Faint square grid-line backdrop — orthogonal ruled lines in the
+ * primary color at low opacity over the surface. Enterprise /
+ * engineering register (vs the softer dot-grid). */
+.loom-image-hero.bg-grid::before,
+.loom-cta-band.bg-grid::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(to right, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 7%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 7%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
+    var(--loom-color-surface, var(--loom-bg));
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, #000 55%, transparent 100%);
+          mask-image: radial-gradient(120% 100% at 50% 0%, #000 55%, transparent 100%);
 }
 
 /* Photo background: an <img> child sized to cover the hero +
@@ -7098,10 +7523,15 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
  * (callers that explicitly want the centered-marketing shape).
  * ============================================================ */
 .loom-feature-spotlight {
-  padding: clamp(.5rem, 1vw, .9rem) 0;
+  /* #572: vertical padding is tenant-tunable via --loom-size-feature-py so a
+   * tenant can match a source site that bakes generous py INSIDE the section
+   * band (e.g. plausiden.com features py-24 = 96px) rather than relying on the
+   * page-level flex gap. Default = the current thin clamp, so every existing
+   * site (ProsperityClub/demos) stays byte-identical. Horizontal stays 0. */
+  padding: var(--loom-size-feature-py, clamp(.5rem, 1vw, .9rem)) 0;
 }
 .loom-feature-spotlight__heading {
-  font: 800 clamp(1.75rem, 3.5vw, 2.5rem)/1.1 var(--loom-font-display);
+  font: var(--loom-weight-heading, 800) clamp(1.75rem, 3.5vw, 2.5rem)/1.1 var(--loom-font-display);
   letter-spacing: -0.025em;
   margin: 0 0 0.75rem;
   text-align: start;
@@ -7127,14 +7557,36 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-feature-spotlight.cols-2 .loom-feature-spotlight__grid { grid-template-columns: repeat(2, 1fr); }
 .loom-feature-spotlight.cols-3 .loom-feature-spotlight__grid { grid-template-columns: repeat(3, 1fr); }
 .loom-feature-spotlight.cols-4 .loom-feature-spotlight__grid { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 800px) {
+/* #555: tablet tier — 3-/4-up grids step down to 2 columns before
+ * collapsing to a single column on phones, instead of jumping straight
+ * to 1. cols-1/cols-2 are left alone here (already ≤2). Generic.
+ * #581: boundary aligned to the canonical 768 md breakpoint (was 800)
+ * so cols-3/4 hold full width at 768 like mainstream Tailwind grids. */
+@media (max-width: 767.98px) {
+  .loom-feature-spotlight.cols-3 .loom-feature-spotlight__grid,
+  .loom-feature-spotlight.cols-4 .loom-feature-spotlight__grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
   .loom-feature-spotlight__grid { grid-template-columns: 1fr !important; }
 }
 .loom-feature-spotlight__item {
-  padding: 1.75rem;
-  border-radius: 16px;
+  /* #540: more generous padding + a soft resting elevation so the
+   * default card reads premium (not boxed-in) at rest, then lifts
+   * further on hover. Generic; the flat deco variants (editorial /
+   * minimal) null this shadow back out below.
+   * #571: card padding is tenant-tunable (default = the #540 clamp, so
+   * untouched sites are byte-identical). next.plausiden opts into
+   * REAL's p-6/md:p-8 rhythm via --loom-size-feature-card-pad. */
+  padding: var(--loom-size-feature-card-pad, clamp(1.75rem, 2.2vw, 2.25rem));
+  /* #571: card corner is tenant-tunable; default 16px preserves every
+   * existing site. next.plausiden opts into REAL's rounded-xl (12px)
+   * via --loom-size-feature-card-radius. */
+  border-radius: var(--loom-size-feature-card-radius, 16px);
   background: var(--loom-color-surface, var(--loom-bg));
   border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 5%, transparent),
+    0 10px 30px color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 6%, transparent);
   transition: transform var(--loom-motion-base, 280ms) var(--loom-ease-spring, ease), box-shadow var(--loom-motion-base, 280ms) var(--loom-ease-out, ease), border-color var(--loom-motion-fast, 140ms) var(--loom-ease-out, ease);
 }
 .loom-feature-spotlight__item:hover {
@@ -7147,10 +7599,18 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-feature-spotlight__icon {
   display: grid;
   place-items: center;
-  width: 48px; height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 22%, transparent), color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 22%, transparent));
-  margin-bottom: 1.2rem;
+  /* #571: icon box size + icon→title gap are tenant-tunable; defaults
+   * (48px / 1.2rem) preserve every existing site. next.plausiden opts
+   * into REAL's w-14 (56px) box + mb-6 (1.5rem) gap. */
+  width: var(--loom-size-feature-icon, 48px); height: var(--loom-size-feature-icon, 48px);
+  /* #571: icon tile corner + fill are tenant-tunable; defaults (12px /
+   * the diagonal primary→accent gradient) preserve every existing site.
+   * next.plausiden opts into REAL's rounded-2xl (16px) tile + flat
+   * bg-primary/5 wash via --loom-size-feature-icon-radius /
+   * --loom-color-feature-icon-bg. */
+  border-radius: var(--loom-size-feature-icon-radius, 12px);
+  background: var(--loom-color-feature-icon-bg, linear-gradient(135deg, color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 22%, transparent), color-mix(in oklab, var(--loom-color-accent-2, var(--loom-accent-2)) 22%, transparent)));
+  margin-bottom: var(--loom-size-feature-icon-gap, 1.2rem);
   font: 700 1.4rem/1 var(--loom-font-display);
   color: var(--loom-color-primary, var(--loom-accent));
 }
@@ -7159,13 +7619,24 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
-  border-radius: var(--loom-radius, 10px);
+  border-radius: var(--loom-img-radius, var(--loom-radius, 10px));
   margin-bottom: 1rem;
   background: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 6%, transparent);
 }
+/* Portrait media mode (#602): centered natural-aspect headshot for
+ * team/profile cards, overriding the default 16:10 cover. !important
+ * to win over the decoration-specific aspect-ratio rules. */
+.loom-feature-spotlight__photo--portrait {
+  width: auto !important;
+  max-width: 220px;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  margin-left: auto;
+  margin-right: auto;
+}
 .loom-feature-spotlight.deco-editorial .loom-feature-spotlight__photo {
   aspect-ratio: 4 / 3;
-  border-radius: var(--loom-radius-sm, 6px);
+  border-radius: var(--loom-img-radius, var(--loom-radius-sm, 6px));
   margin-bottom: 1.1rem;
 }
 .loom-feature-spotlight.deco-minimal .loom-feature-spotlight__photo {
@@ -7174,8 +7645,13 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 .loom-feature-spotlight__title {
   margin: 0 0 0.55rem;
-  font: 700 1.2rem/1.25 var(--loom-font-display);
-  letter-spacing: -0.018em;
+  font: 700 1.2rem/1.25 var(--loom-font-body);
+  /* Tokenized (2026-08-11): fonts with narrow space glyphs at 700
+   * (e.g. the Plus Jakarta Sans subsets) merge words under fixed
+   * negative tracking. Tenants tune via [style.text] tracking_title /
+   * word_title; defaults preserve the prior look. */
+  letter-spacing: var(--loom-text-tracking-title, -0.018em);
+  word-spacing: var(--loom-text-word-title, normal);
   color: var(--loom-color-ink, var(--loom-fg));
 }
 .loom-feature-spotlight__body {
@@ -7184,6 +7660,52 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   line-height: 1.55;
   font-size: 0.97rem;
 }
+/* Structured sub-blocks (SpotlightItem.segments) — bold lead-in
+   heading + paragraph, e.g. case-study "What mattered / What we
+   shipped / Outcome" sections. */
+.loom-feature-spotlight__segment {
+  margin: 0 0 0.85rem;
+}
+.loom-feature-spotlight__segment-heading {
+  display: block;
+  font-weight: 700;
+  color: var(--loom-color-ink, var(--loom-fg));
+  margin-bottom: 0.15rem;
+}
+.loom-feature-spotlight__segment-body {
+  margin: 0;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 68%, transparent);
+  line-height: 1.55;
+  font-size: 0.97rem;
+}
+/* Numbered process steps (FeatureSpotlight.numbered) — circular badge. */
+.loom-feature-spotlight__number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: var(--loom-color-primary, var(--loom-accent));
+  color: var(--loom-color-on-primary, #fff);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+/* Per-card meta row (SpotlightItem.meta) — date · read-time chips. */
+.loom-feature-spotlight__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 60%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.loom-feature-spotlight__meta-sep { opacity: 0.5; }
 .loom-feature-spotlight__more {
   display: inline-flex;
   align-items: center;
@@ -7194,6 +7716,16 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   text-decoration: none;
 }
 .loom-feature-spotlight__more:hover {
+  text-decoration: underline;
+}
+/* Trailing inline body link — final phrase of the body paragraph
+   continues into a brand-secondary linked phrase (in-flow). */
+.loom-feature-spotlight__body-link {
+  color: var(--loom-color-secondary, var(--loom-color-primary));
+  font-weight: 700;
+  text-decoration: none;
+}
+.loom-feature-spotlight__body-link:hover {
   text-decoration: underline;
 }
 
@@ -7207,6 +7739,7 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   border-top: 2px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 60%, transparent);
   border-radius: 0;
   background: transparent;
+  box-shadow: none;
   transition: none;
 }
 .loom-feature-spotlight.deco-editorial .loom-feature-spotlight__item:hover {
@@ -7234,6 +7767,7 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
   padding: 0.5rem 0;
   border: 0;
   background: transparent;
+  box-shadow: none;
   transition: none;
 }
 .loom-feature-spotlight.deco-minimal .loom-feature-spotlight__item:hover {
@@ -7251,6 +7785,102 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-feature-spotlight.deco-minimal .loom-feature-spotlight__body {
   font-size: 0.9rem;
   color: color-mix(in oklab, var(--loom-color-ink, var(--loom-fg)) 75%, transparent);
+}
+/* #583: Soft feature-spotlight cards — filled muted surface + hairline
+ * border + rounded corners + generous padding. No icon tile, no top
+ * accent, no hover lift. The quiet "info card" shape (mission / vision
+ * / values blurbs). Themable: surface + border tokens flip with theme. */
+.loom-feature-spotlight.deco-soft .loom-feature-spotlight__item {
+  padding: 2rem;
+  background: var(--loom-color-surface-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 4%, transparent));
+  border: 1px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 10%, transparent));
+  border-radius: var(--loom-radius-lg, 1rem);
+  box-shadow: none;
+}
+.loom-feature-spotlight.deco-soft .loom-feature-spotlight__item:hover {
+  transform: none;
+  box-shadow: none;
+}
+.loom-feature-spotlight.deco-soft .loom-feature-spotlight__icon {
+  display: none;
+}
+.loom-feature-spotlight.deco-soft .loom-feature-spotlight__title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--loom-color-text, inherit);
+}
+.loom-feature-spotlight.deco-soft .loom-feature-spotlight__body {
+  margin: 0;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 70%, transparent));
+}
+
+/* ============================================================
+ * PillGrid (#584) — centered heading over a grid of compact
+ * icon+label pills. Each pill is a horizontal row (icon chip +
+ * short label) in a light card. For value lists / capability
+ * checklists / certifications / trust badges. Collapses to one
+ * column below 640px; cols-N sets the wide-breakpoint count.
+ * ============================================================ */
+.loom-pill-grid {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+  text-align: center;
+}
+.loom-pill-grid__heading {
+  margin: 0 0 2rem;
+  font-family: var(--loom-font-display, var(--loom-font-body));
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--loom-color-text, inherit);
+}
+.loom-pill-grid__lede {
+  margin: -1rem auto 2rem;
+  max-width: 40rem;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 70%, transparent));
+}
+.loom-pill-grid__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  text-align: left;
+}
+.loom-pill-grid__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--loom-color-surface, var(--loom-color-bg, #fff));
+  border: 1px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 10%, transparent));
+  border-radius: var(--loom-radius-md, 0.75rem);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.loom-pill-grid__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  color: var(--loom-color-primary, var(--loom-primary));
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 10%, transparent);
+}
+.loom-pill-grid__icon-svg {
+  width: 1rem;
+  height: 1rem;
+}
+.loom-pill-grid__label {
+  font-weight: 500;
+  color: var(--loom-color-text, inherit);
+}
+@media (min-width: 640px) {
+  .loom-pill-grid.cols-2 .loom-pill-grid__grid { grid-template-columns: repeat(2, 1fr); }
+  .loom-pill-grid.cols-3 .loom-pill-grid__grid { grid-template-columns: repeat(3, 1fr); }
+  .loom-pill-grid.cols-4 .loom-pill-grid__grid { grid-template-columns: repeat(4, 1fr); }
 }
 
 /* ============================================================
@@ -7712,7 +8342,11 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 .loom-cta-band {
   display: grid;
   place-items: center;
-  padding: clamp(4rem, 8vw, 7rem) clamp(1.5rem, 4vw, 3rem);
+  /* #572: vertical padding tenant-tunable via --loom-size-cta-py. The default
+   * clamp is already generous (64-112px); a tenant matching a tighter source
+   * CTA band (e.g. plausiden.com py-20 = 80px) dials it DOWN. Default = current
+   * clamp (byte-identical for existing sites). */
+  padding: var(--loom-size-cta-py, clamp(4rem, 8vw, 7rem)) clamp(1.5rem, 4vw, 3rem);
   text-align: center;
   position: relative; overflow: hidden;
   isolation: isolate;
@@ -7748,10 +8382,10 @@ body[data-loom-drawer-open] .loom-drawer-scrim {
 }
 .loom-cta-band__title {
   margin: 0;
-  font: 900 clamp(2.25rem, 5vw, 4rem)/1.05 var(--loom-font-display);
-  letter-spacing: -0.035em;
+  font: 900 clamp(1.75rem, 3vw, 2.5rem)/1.1 var(--loom-font-display);
+  letter-spacing: -0.025em;
   color: var(--loom-color-ink, var(--loom-fg));
-  max-width: 22ch;
+  max-width: 28ch;
 }
 .loom-cta-band__lede {
   margin: 0;
@@ -8784,13 +9418,58 @@ body[data-chrome="floating-pill"]::after {
   display: flex; gap: 0.4rem; align-items: center;
   flex: 0 0 auto;
 }
-.loom-floating-pill__action {
+/* Chrome-neutral nav-action button (#533): emitted by render_nav_actions
+ * for BOTH FloatingPill (inside .loom-floating-pill__actions) and
+ * PageShell (inside .loom-page-nav__actions). */
+.loom-nav-action {
   padding: 0.55rem 1rem !important;
   /* 44px = WCAG 2.5.5 AAA tap-target floor (Apple HIG + Material
    * Design agree). Was 36px — failed AAA + triggered Crawler
    * tap_targets.below-recommended warn. */
   min-height: 44px !important;
   font-size: 0.88rem !important;
+}
+/* Nav-action buttons are <a> elements inside the nav, so the inline
+ * critical baseline `nav.loom-page-nav a` (0,1,2) forces --loom-muted
+ * onto their text + icon (the icon is currentColor). The variant's own
+ * `color` (e.g. .loom-btn--success at 0,1,0) loses on specificity, so
+ * only the variant border survives — a success button reads slate-gray
+ * with a faint green border instead of full emerald, a primary button
+ * would lose its on-color text, etc. Re-assert each variant's
+ * foreground at (0,3,2) so the button reads correctly inside the nav,
+ * mirroring the .loom-page-nav__home-icon fix. Generic — any tenant's
+ * nav actions inherit this; no per-site CSS. */
+nav.loom-page-nav a.loom-nav-action.loom-btn--success {
+  color: var(--loom-color-success, hsl(142 75% 22%));
+}
+nav.loom-page-nav a.loom-nav-action.loom-btn--primary {
+  color: var(--loom-color-on-primary, #fff);
+}
+nav.loom-page-nav a.loom-nav-action.loom-btn--secondary,
+nav.loom-page-nav a.loom-nav-action.loom-btn--outline,
+nav.loom-page-nav a.loom-nav-action.loom-btn--ghost {
+  color: var(--loom-color-ink, var(--loom-fg));
+}
+/* #563: the SAME inline-critical baseline `nav.loom-page-nav a`
+ * (0,1,2) that clobbers nav-action color above ALSO forces
+ * `border-radius: var(--loom-radius-full)` (the pill) onto every nav
+ * anchor — beating `.loom-btn`'s own `var(--loom-radius-control,999px)`
+ * (0,1,0). So a tenant that sets [style.radius] control gets rounded
+ * hero CTAs but the nav actions stay pill, an inconsistency. Re-assert
+ * the control radius at (0,2,2) so nav-action buttons honor the tenant
+ * token too. Fallback is the full pill, so demos/ProsperityClub (which
+ * set no control radius) are byte-for-byte unchanged. Generic; no
+ * per-site CSS. */
+nav.loom-page-nav a.loom-nav-action {
+  border-radius: var(--loom-radius-control, var(--loom-radius-full, 9999px));
+}
+/* #544: leading icon-mark on a nav action. .loom-btn is inline-flex
+ * with gap, so the icon auto-spaces from the label — only sizing is
+ * needed. Inherits button text color via currentColor. */
+.loom-nav-action__icon {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
 }
 .loom-floating-pill .loom-theme-toggle {
   /* 44x44 = tap-target floor; was 36x36. */
@@ -9226,7 +9905,7 @@ body[data-chrome="minimal"] main#content { padding-top: 2rem; }
   display: block;
   max-width: 100%;
   height: auto;
-  border-radius: var(--loom-radius, 10px);
+  border-radius: var(--loom-img-radius, var(--loom-radius, 10px));
 }
 
 /* Link + Button */
@@ -9864,6 +10543,44 @@ body[data-chrome="minimal"] main#content { padding-top: 2rem; }
   cursor: not-allowed;
 }
 .loom-block-number-field__input:invalid:not(:focus) {
+  border-color: var(--loom-color-danger, #b91c1c);
+}
+
+/* === CmsBlock::TextField (text / email / tel / url) =============== *
+ * Single-line text input — same chrome as NumberField so form rows
+ * read consistently. */
+.loom-block-text-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.loom-block-text-field__label {
+  font-size: 0.92rem;
+  color: var(--loom-color-ink, var(--loom-fg));
+  font-weight: 500;
+}
+.loom-block-text-field__input {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--loom-color-border, var(--loom-border)) 70%, transparent);
+  border-radius: var(--loom-radius-sm, 6px);
+  background: var(--loom-color-surface, var(--loom-bg, #fff));
+  color: var(--loom-color-ink, var(--loom-fg));
+  font: inherit;
+  font-size: 0.95rem;
+  width: 100%;
+  transition: border-color var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease),
+              box-shadow var(--loom-motion-fast, 120ms) var(--loom-ease-out, ease);
+}
+.loom-block-text-field__input:focus-visible {
+  outline: none;
+  border-color: var(--loom-color-primary, var(--loom-accent));
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 20%, transparent);
+}
+.loom-block-text-field__input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.loom-block-text-field__input:invalid:not(:focus) {
   border-color: var(--loom-color-danger, #b91c1c);
 }
 
@@ -11627,6 +12344,16 @@ footer[data-loom-footer-style="dense"] h3 {
   line-height: 1.1;
   color: var(--loom-color-text, inherit);
 }
+/* #588: step the hero title down below the 768 md boundary so a long
+ * title (e.g. "We Are PlausiDen LLC") wraps to 2 lines on phones like a
+ * mainstream Tailwind text-4xl→5xl hero, not 3. Capped by min() so a
+ * tenant whose --loom-font-hero is already <2.25rem is never enlarged.
+ * Generic; desktop/tablet (≥768) stay byte-identical. */
+@media (max-width: 767.98px) {
+  .loom-section-hero-split__title {
+    font-size: min(var(--loom-font-hero, 3rem), 2.25rem);
+  }
+}
 .loom-section-hero-split__lede {
   margin: 0;
   font-size: 1.125rem;
@@ -11652,6 +12379,14 @@ footer[data-loom-footer-style="dense"] h3 {
   width: 100%;
   height: auto;
   border-radius: var(--loom-radius-image, var(--loom-radius-md, 0.75rem));
+  /* #586: opt-in hero-image elevation + hairline. Both default to
+     none so a HeroSplit without [style.image] hero_shadow / hero_border
+     renders byte-identically to the pre-#586 markup. Scoped to the hero
+     image (not the shared --loom-img-shadow) so an inline content figure
+     keeps its own lighter shadow — the hero image is a distinct, larger
+     elevation slot, matching how real marketing heroes lift the image. */
+  box-shadow: var(--loom-img-hero-shadow, none);
+  border: var(--loom-img-hero-border, none);
 }
 .loom-section-hero-split__placeholder {
   aspect-ratio: 4 / 3;
@@ -11662,6 +12397,61 @@ footer[data-loom-footer-style="dense"] h3 {
   .loom-section-hero-split__grid {
     flex-direction: column !important;
   }
+}
+/* #582: HeroSplit eyebrow + extra body paragraphs + secondary CTA.
+   All opt-in — a HeroSplit with none of these renders byte-identically
+   to the pre-#582 markup. The eyebrow mirrors the ImageTextRow eyebrow
+   (same uppercase/tracking/badge treatment) so a page eyebrow looks
+   identical whichever primitive emits it. */
+.loom-section-hero-split__eyebrow {
+  margin: 0;
+  font-size: .875rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--loom-color-primary, var(--loom-primary));
+}
+.loom-section-hero-split__eyebrow--badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 32%, transparent);
+  font-family: var(--loom-font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+.loom-section-hero-split__eyebrow-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.4rem;
+  vertical-align: -0.15em;
+}
+.loom-section-hero-split__eyebrow-icon-svg {
+  width: 1em;
+  height: 1em;
+}
+.loom-section-hero-split__body {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: var(--loom-color-muted, color-mix(in oklab, var(--loom-color-text, currentColor) 70%, transparent));
+  max-width: 36rem;
+}
+.loom-section-hero-split__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-self: flex-start;
+}
+.loom-section-hero-split__cta.loom-section-hero-split__cta--secondary {
+  background: transparent;
+  color: var(--loom-color-text, inherit);
+  border: 1px solid var(--loom-color-border, color-mix(in oklab, var(--loom-color-text, currentColor) 22%, transparent));
 }
 
 /* === CmsSection::HeroMinimal ======================================= */
@@ -11709,7 +12499,7 @@ footer[data-loom-footer-style="dense"] h3 {
 .loom-block-figure__image {
   width: 100%;
   height: auto;
-  border-radius: var(--loom-radius-figure, var(--loom-radius-md, 0.5rem));
+  border-radius: var(--loom-img-radius, var(--loom-radius-figure, var(--loom-radius-md, 0.5rem)));
 }
 .loom-block-figure__caption {
   display: flex;
@@ -11788,7 +12578,10 @@ footer[data-loom-footer-style="dense"] h3 {
 }
 .loom-hero-slideshow__title {
   margin: 0 0 .5em;
-  font-family: var(--loom-font-display, var(--loom-font-body));
+  /* Hero title defaults to the premium display face, but a tenant can
+     opt it to another stack via [style.fonts] hero_title (→
+     --loom-font-hero-title) without affecting other headings. */
+  font-family: var(--loom-font-hero-title, var(--loom-font-display, var(--loom-font-body)));
   font-size: clamp(1.4rem, 2.8vw, 2.25rem);
   font-weight: 700;
   line-height: 1.1;
@@ -11798,6 +12591,10 @@ footer[data-loom-footer-style="dense"] h3 {
   font-size: clamp(1rem, 1.5vw, 1.25rem);
   line-height: 1.55;
   max-width: 50ch;
+}
+.loom-hero-slideshow__lede--accent {
+  font-style: italic;
+  margin-top: -1.2em;
 }
 .loom-hero-slideshow__slide .loom-button {
   align-self: flex-start;
@@ -11816,6 +12613,10 @@ footer[data-loom-footer-style="dense"] h3 {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 0;
+  /* Hero CTAs carry a thin accent-color outline over their fill (the
+   * base button's border is transparent). Token-driven, so each tenant's
+   * own accent supplies the edge; where accent == fill it reads as none. */
+  border-color: var(--loom-color-accent);
 }
 .loom-hero-slideshow--align-center .loom-hero-slideshow__slide .loom-button { align-self: center; }
 .loom-hero-slideshow--align-end    .loom-hero-slideshow__slide .loom-button { align-self: flex-end; }
@@ -11901,6 +12702,28 @@ footer[data-loom-footer-style="dense"] h3 {
   top: calc(50% + 4px);
 }
 .loom-hero-slideshow__nav--next::before { content: "›"; }
+/* Split layout: dock the prev/next controls at the text↔image seam
+   (centered on 50%) and stack next-over-prev, matching the editorial
+   split-hero pattern. Scoped to --split so the overlay mode keeps its
+   right-edge controls. */
+.loom-hero-slideshow--split .loom-hero-slideshow__nav {
+  right: auto;
+  left: calc(50% - 18px);
+}
+.loom-hero-slideshow--split .loom-hero-slideshow__nav--next { top: calc(50% - 40px); }
+.loom-hero-slideshow--split .loom-hero-slideshow__nav--prev { top: calc(50% + 4px); }
+/* Mobile: the split hero restacks vertically at <=768px (see the split
+   layout media query further down), so the seam-centered controls lose
+   the seam they dock to. Reflow them to the right edge — the primitive's
+   default overlay position — so prev/next sit on the right on phones. */
+@media (max-width: 768px) {
+  .loom-hero-slideshow--split .loom-hero-slideshow__nav {
+    left: auto;
+    right: clamp(0.5rem, 3vw, 1rem);
+  }
+  .loom-hero-slideshow--split .loom-hero-slideshow__nav--prev { top: calc(50% - 40px); }
+  .loom-hero-slideshow--split .loom-hero-slideshow__nav--next { top: calc(50% + 4px); }
+}
 
 @keyframes loom-hero-slideshow-cycle {
   /* Each slide is visible for ~1/N of the cycle with smooth fade.
@@ -11919,11 +12742,37 @@ footer[data-loom-footer-style="dense"] h3 {
   pointer-events: none;
 }
 
+/* Per-slide stagger driven by static rules, NOT inline style. The
+   page-shell CSP hash-pins only the critical-inline <style> block, so
+   inline `style=` attributes on slides are silently dropped — which
+   left every slide at --loom-slideshow-slide-index:0, so all slides
+   animated in lockstep and stacked on top of each other. Slides are
+   always the first N children (the prev/next buttons follow), so
+   :nth-child maps 1:1 to the slide index. Range matches the keyframe's
+   validated N=2..6. */
+.loom-hero-slideshow__slide:nth-child(1) { --loom-slideshow-slide-index: 0; }
+.loom-hero-slideshow__slide:nth-child(2) { --loom-slideshow-slide-index: 1; }
+.loom-hero-slideshow__slide:nth-child(3) { --loom-slideshow-slide-index: 2; }
+.loom-hero-slideshow__slide:nth-child(4) { --loom-slideshow-slide-index: 3; }
+.loom-hero-slideshow__slide:nth-child(5) { --loom-slideshow-slide-index: 4; }
+.loom-hero-slideshow__slide:nth-child(6) { --loom-slideshow-slide-index: 5; }
+/* Slide count + cycle duration via container class (custom properties
+   inherit to the slides). Duration assumes the substrate-default ~5s
+   dwell; a tenant with a custom interval_ms still gets exact rotation
+   timing through the data-interval-ms JS path. */
+.loom-hero-slideshow--count-2 { --loom-slideshow-slide-count: 2; --loom-slideshow-total-ms: 10000ms; }
+.loom-hero-slideshow--count-3 { --loom-slideshow-slide-count: 3; --loom-slideshow-total-ms: 15000ms; }
+.loom-hero-slideshow--count-4 { --loom-slideshow-slide-count: 4; --loom-slideshow-total-ms: 20000ms; }
+.loom-hero-slideshow--count-5 { --loom-slideshow-slide-count: 5; --loom-slideshow-total-ms: 25000ms; }
+.loom-hero-slideshow--count-6 { --loom-slideshow-slide-count: 6; --loom-slideshow-total-ms: 30000ms; }
+
 /* CSS-only auto-rotation as primary driver (JS is now redundant
    sync for the prev/next arrow buttons, not required for rotation).
-   Explicit longhand because some headless renderers parse the
-   shorthand inconsistently. */
-.loom-hero-slideshow__slide {
+   Scoped to counted (multi-slide) shows so a single-slide hero keeps
+   its static data-active opacity and never fades out. Explicit
+   longhand because some headless renderers parse the shorthand
+   inconsistently. */
+:where(.loom-hero-slideshow[class*="loom-hero-slideshow--count-"]) .loom-hero-slideshow__slide {
   animation-name: loom-hero-slideshow-cycle;
   animation-duration: var(--loom-slideshow-total-ms, 20000ms);
   animation-iteration-count: infinite;
@@ -12022,29 +12871,33 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
  * =================================================================== */
 .loom-image-text-row {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: clamp(1rem, 2.5vw, 2rem);
-  align-items: start;
-  padding: clamp(.5rem, .75vw, .75rem) clamp(1rem, 3vw, 2rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  /* #572: vertical padding tenant-tunable via --loom-size-row-py. On a
+   * [data-surface=secondary] row the navy band is painted by ::before, so the
+   * row's py is exactly how much navy shows above/below the content — a tenant
+   * matching plausiden.com's dark "Why Industry Leaders" band (py-24 = 96px)
+   * dials this up. Default = current clamp (byte-identical for existing sites). */
+  padding: var(--loom-size-row-py, clamp(.5rem, .75vw, .75rem)) clamp(1rem, 3vw, 2rem);
   max-width: 80rem;
   margin: 0 auto;
 }
 .loom-image-text-row--image-right {
-  grid-template-columns: 1fr 220px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 .loom-image-text-row--image-right .loom-image-text-row__media { order: 2; }
 .loom-image-text-row--image-right .loom-image-text-row__body  { order: 1; }
 .loom-image-text-row__media {
   margin: 0;
-  border-radius: var(--loom-radius-lg, 14px);
+  border-radius: var(--loom-img-radius, var(--loom-radius-lg, 14px));
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+  box-shadow: var(--loom-img-shadow, 0 8px 30px rgba(0,0,0,.08));
 }
 .loom-image-text-row__media img {
   display: block;
   width: 100%;
   height: auto;
-  max-width: 240px;
   margin: 0 auto;
 }
 .loom-image-text-row__body {
@@ -12060,15 +12913,47 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
   text-transform: uppercase;
   color: var(--loom-color-primary, var(--loom-primary));
 }
+/* #550: solid brand-tinted pill-badge eyebrow — mirrors the ImageHero
+ * eyebrow badge (#535). Opt-in via ImageTextRow.eyebrow_badge = true;
+ * the bare uppercase label above is unchanged. The body is a flex
+ * column, so align-self: flex-start keeps the pill hugging its text
+ * instead of stretching full width. Generic. */
+.loom-image-text-row__eyebrow--badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--loom-color-primary, var(--loom-accent)) 32%, transparent);
+  font-family: var(--loom-font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+/* #559: optional leading glyph inside the image-text-row eyebrow. The
+ * badge stays inline-block; the icon is an inline-flex box so the svg
+ * sits on the label baseline with a small gap before the text. Sized
+ * in em so it tracks the eyebrow font-size; inherits currentColor so
+ * it tints with the eyebrow/surface text. Substrate-general. */
+.loom-image-text-row__eyebrow-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.4rem;
+  vertical-align: -0.15em;
+}
+.loom-image-text-row__eyebrow-icon-svg {
+  width: 1em;
+  height: 1em;
+}
 .loom-image-text-row__heading {
   margin: 0;
   font-family: var(--loom-font-display, var(--loom-font-body));
-  font-size: clamp(1rem, 1.4vw, 1.25rem);
-  font-weight: 700;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: var(--loom-weight-heading, 700);
   line-height: 1.25;
   color: var(--loom-color-ink, var(--loom-fg));
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 .loom-image-text-row__prose {
   margin: 0;
@@ -12080,7 +12965,7 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
   margin: 0;
   font-family: var(--loom-font-display, var(--loom-font-body));
   font-size: clamp(1.05rem, 1.6vw, 1.35rem);
-  font-weight: 700;
+  font-weight: var(--loom-weight-heading, 700);
   line-height: 1.25;
   color: var(--loom-color-primary, var(--loom-primary));
   text-transform: uppercase;
@@ -12100,6 +12985,32 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
 .loom-image-text-row__bullets li {
   margin-bottom: .2rem;
 }
+/* #542: icon-led bullet list — drop the disc marker and lay each
+ * item out as a leading glyph + label row. Opt-in via bullets_icon;
+ * the icon inherits --loom-color-primary (which inverts to a light
+ * tint inside a dark surface remap, staying visible). Generic. */
+.loom-image-text-row__bullets--iconed {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.loom-image-text-row__bullets--iconed li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0;
+}
+.loom-image-text-row__bullet-icon {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+.loom-image-text-row__bullet-label {
+  flex: 1;
+}
 .loom-image-text-row__body .loom-button {
   align-self: flex-start;
   margin-top: .75rem;
@@ -12108,8 +13019,81 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
   .loom-image-text-row {
     grid-template-columns: 1fr;
   }
-  .loom-image-text-row--image-right .loom-image-text-row__media { order: 1; }
-  .loom-image-text-row--image-right .loom-image-text-row__body  { order: 2; }
+  /* #556: stacked rows are text-first regardless of desktop image side.
+   * The base image-right rule keeps body order:1 / media order:2, so we
+   * intentionally do NOT re-flip media above body on mobile — leading
+   * with the heading reads better on a phone than an orphaned image. */
+}
+
+/* Surface tones (#532): paint a full-bleed tinted band behind the row.
+ * The ::before breaks out of the max-width container to span the
+ * viewport; --loom-color-ink/primary/accent are locally remapped so
+ * every child (eyebrow / heading / prose / mid-heading / bullets /
+ * links) inverts to on-color text with no per-child edits — the same
+ * technique as the rich footer (#531). Absent attr → transparent. */
+.loom-image-text-row[data-surface] {
+  position: relative;
+  isolation: isolate;
+  align-items: center;
+  padding-block: clamp(2.5rem, 5vw, 4.5rem);
+}
+.loom-image-text-row[data-surface]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  z-index: -1;
+}
+.loom-image-text-row[data-surface="secondary"]::before {
+  background: var(--loom-color-secondary);
+}
+.loom-image-text-row[data-surface="primary"]::before {
+  background: var(--loom-color-primary);
+}
+.loom-image-text-row[data-surface="accent"]::before {
+  background: var(--loom-color-accent);
+}
+.loom-image-text-row[data-surface="muted"]::before {
+  background: color-mix(in oklab, var(--loom-color-ink, #1d2530) 6%, var(--loom-color-bg, #fff));
+}
+.loom-image-text-row[data-surface="secondary"] {
+  --loom-color-ink: var(--loom-color-on-secondary, #fff);
+  --loom-color-primary: var(--loom-color-on-secondary, #fff);
+  --loom-color-accent: color-mix(in oklab, var(--loom-color-on-secondary, #fff) 72%, var(--loom-color-accent));
+}
+.loom-image-text-row[data-surface="primary"] {
+  --loom-color-ink: var(--loom-color-on-primary, #fff);
+  --loom-color-primary: var(--loom-color-on-primary, #fff);
+  --loom-color-accent: color-mix(in oklab, var(--loom-color-on-primary, #fff) 72%, var(--loom-color-accent));
+}
+.loom-image-text-row[data-surface="accent"] {
+  --loom-color-ink: var(--loom-color-on-accent, #fff);
+  --loom-color-primary: var(--loom-color-on-accent, #fff);
+}
+/* #539: primary button on a dark image-text surface. The surface
+ * remap above re-points --loom-color-primary at the light on-* color
+ * so that primary-colored TEXT inverts to light. But a primary
+ * BUTTON fills with --loom-color-primary and draws text in
+ * --loom-color-on-primary, so the remap renders it light-on-light
+ * (invisible). Restore a visible inverted button: light fill
+ * (--loom-color-ink is remapped to the surface's on-* color, so this
+ * picks the right light per surface) + dark text (--loom-color-
+ * secondary is never remapped on these surfaces and is the canonical
+ * dark section color). Generic; applies to any tenant using a dark
+ * image-text surface. */
+.loom-image-text-row[data-surface="secondary"] .loom-button[data-variant="primary"],
+.loom-image-text-row[data-surface="primary"] .loom-button[data-variant="primary"],
+.loom-image-text-row[data-surface="accent"] .loom-button[data-variant="primary"] {
+  background: var(--loom-color-ink);
+  color: var(--loom-color-secondary, #0f172a);
+  border-color: transparent;
+}
+.loom-image-text-row[data-surface="secondary"] .loom-button[data-variant="primary"]:hover,
+.loom-image-text-row[data-surface="primary"] .loom-button[data-variant="primary"]:hover,
+.loom-image-text-row[data-surface="accent"] .loom-button[data-variant="primary"]:hover {
+  background: color-mix(in oklab, var(--loom-color-ink) 88%, var(--loom-color-secondary));
 }
 
 /* ===================================================================
@@ -12137,10 +13121,10 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
 }
 .loom-feature-spotlight.deco-bordered .loom-feature-spotlight__title {
   color: var(--loom-color-primary);
-  font-size: 0.82rem;
+  font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .02em;
+  letter-spacing: .028em;
   line-height: 1.3;
   margin: 0 0 .5rem;
 }
@@ -12155,11 +13139,70 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
 .loom-feature-spotlight.deco-bordered .loom-feature-spotlight__item:nth-child(3n+3) .loom-feature-spotlight__title {
   color: var(--loom-color-accent);
 }
+/* Uniform heading color (SpotlightHeadingColor != Cycle): when the
+ * section carries .heading-fixed + a .heading-<role> class, every card
+ * heading uses one palette role instead of the per-card rotation above.
+ * The nth-child selectors here are specificity (0,6,0) — one class
+ * higher than the rotation rules (0,5,0) — so they override without
+ * :not() or !important and without editing the rotation rules. */
+.loom-feature-spotlight.deco-bordered.heading-fixed.heading-primary {
+  --loom-spotlight-heading: var(--loom-color-primary);
+}
+.loom-feature-spotlight.deco-bordered.heading-fixed.heading-secondary {
+  --loom-spotlight-heading: var(--loom-color-secondary);
+}
+.loom-feature-spotlight.deco-bordered.heading-fixed.heading-accent {
+  --loom-spotlight-heading: var(--loom-color-accent);
+}
+.loom-feature-spotlight.deco-bordered.heading-fixed .loom-feature-spotlight__title,
+.loom-feature-spotlight.deco-bordered.heading-fixed .loom-feature-spotlight__item:nth-child(3n+2) .loom-feature-spotlight__title,
+.loom-feature-spotlight.deco-bordered.heading-fixed .loom-feature-spotlight__item:nth-child(3n+3) .loom-feature-spotlight__title {
+  color: var(--loom-spotlight-heading);
+}
+/* Uniform top-border color (SpotlightBorderColor != Cycle): mirrors the
+ * heading-fixed mechanism above. .border-fixed + .border-<role> makes
+ * every card's 4px top border one palette role instead of the per-card
+ * rotation (12160-12172). The override selectors carry one extra class
+ * (.border-fixed) over the rotation rules, so the base item is (0,4,0)
+ * and the nth-child items are (0,5,0) — each one specificity step above
+ * its rotation counterpart, winning without :not() or !important. */
+.loom-feature-spotlight.deco-bordered.border-fixed.border-primary {
+  --loom-spotlight-border: var(--loom-color-primary);
+}
+.loom-feature-spotlight.deco-bordered.border-fixed.border-secondary {
+  --loom-spotlight-border: var(--loom-color-secondary);
+}
+.loom-feature-spotlight.deco-bordered.border-fixed.border-accent {
+  --loom-spotlight-border: var(--loom-color-accent);
+}
+.loom-feature-spotlight.deco-bordered.border-fixed .loom-feature-spotlight__item,
+.loom-feature-spotlight.deco-bordered.border-fixed .loom-feature-spotlight__item:nth-child(3n+2),
+.loom-feature-spotlight.deco-bordered.border-fixed .loom-feature-spotlight__item:nth-child(3n+3) {
+  border-top-color: var(--loom-spotlight-border);
+}
 .loom-feature-spotlight.deco-bordered .loom-feature-spotlight__body {
   color: var(--loom-color-ink, var(--loom-fg));
   font-size: .88rem;
   line-height: 1.5;
   margin: 0;
+}
+/* Full-box border variant (border_style="box"): a thin 2px border on
+ * ALL four sides instead of the default 4px top rule, squared corners,
+ * no shadow, color cycling primary → accent → secondary per card.
+ * Opt-in and additive — leaves the default top-only treatment (above)
+ * untouched. The extra .border-box class lifts specificity one step
+ * over the base/nth-child rules so the `border` shorthand cleanly
+ * resets the top-only rule and the per-card border-color wins. */
+.loom-feature-spotlight.deco-bordered.border-box .loom-feature-spotlight__item {
+  border: 2px solid var(--loom-color-primary);
+  border-radius: 0;
+  box-shadow: none;
+}
+.loom-feature-spotlight.deco-bordered.border-box .loom-feature-spotlight__item:nth-child(3n+2) {
+  border-color: var(--loom-color-accent);
+}
+.loom-feature-spotlight.deco-bordered.border-box .loom-feature-spotlight__item:nth-child(3n+3) {
+  border-color: var(--loom-color-secondary);
 }
 
 /* ===================================================================
@@ -12254,8 +13297,35 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
  * =================================================================== */
 .loom-page-footer[data-bg-role="surface"]   { background: var(--loom-color-surface, var(--loom-color-bg, #fff)); }
 .loom-page-footer[data-bg-role="muted"]     { background: color-mix(in oklab, var(--loom-color-muted, #f3f4f6) 50%, var(--loom-color-bg, #fff)); }
+/* Dark footer surfaces (#531): full palette bg + on-* text. Locally
+   remap the ink/border tokens so every percentage-mixed child
+   (headings, links, col-body, legal, colophon, dividers) inverts to
+   light-on-dark with no per-child edits — mirrors the utility-strip
+   (data-bg-role) and colophon-band treatment. The brand button color
+   (--loom-color-primary) is left intact so footer CTA buttons keep
+   their accent; only text-link hovers brighten to the full on-color. */
+.loom-page-footer[data-bg-role="primary"] {
+  background: var(--loom-color-primary);
+  color: var(--loom-color-on-primary, #fff);
+  --loom-color-ink: var(--loom-color-on-primary, #fff);
+  --loom-color-border: color-mix(in oklab, var(--loom-color-on-primary, #fff) 28%, transparent);
+}
 .loom-page-footer[data-bg-role="secondary"] {
-  background: color-mix(in oklab, var(--loom-color-secondary) 12%, var(--loom-color-bg, #fff));
+  background: var(--loom-color-secondary);
+  color: var(--loom-color-on-secondary, #fff);
+  --loom-color-ink: var(--loom-color-on-secondary, #fff);
+  --loom-color-border: color-mix(in oklab, var(--loom-color-on-secondary, #fff) 28%, transparent);
+}
+.loom-page-footer[data-bg-role="accent"] {
+  background: var(--loom-color-accent);
+  color: var(--loom-color-on-accent, #fff);
+  --loom-color-ink: var(--loom-color-on-accent, #fff);
+  --loom-color-border: color-mix(in oklab, var(--loom-color-on-accent, #fff) 28%, transparent);
+}
+.loom-page-footer[data-bg-role="primary"] a:hover,
+.loom-page-footer[data-bg-role="secondary"] a:hover,
+.loom-page-footer[data-bg-role="accent"] a:hover {
+  color: var(--loom-color-ink);
 }
 .loom-page-footer__buttons {
   display: flex;
@@ -12277,18 +13347,32 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
   opacity: .9;
 }
 .loom-page-footer__back-to-top {
-  display: inline-block;
-  padding: .5rem 1rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .15rem;
+  padding: 0;
   margin: 1.25rem 1.75rem 0;
-  font-size: .875rem;
-  color: var(--loom-color-primary);
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--loom-color-ink, var(--loom-fg));
   text-decoration: none;
-  border: 1px solid var(--loom-color-border, var(--loom-border));
-  border-radius: var(--loom-radius-full, 9999px);
-  transition: background var(--loom-motion-fast) var(--loom-ease-out);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  transition: color var(--loom-motion-fast) var(--loom-ease-out);
+}
+.loom-page-footer__back-to-top::before {
+  content: "\25B2";
+  font-size: .7rem;
+  line-height: 1;
+  color: var(--loom-color-secondary, var(--loom-color-primary));
 }
 .loom-page-footer__back-to-top:hover {
-  background: color-mix(in oklab, var(--loom-color-primary) 10%, transparent);
+  background: none;
+  color: var(--loom-color-secondary, var(--loom-color-primary));
 }
 
 /* Brand logo image — substrate-general sizing. Auto-fits within
@@ -12296,15 +13380,81 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
    forge.toml [identity.logo_max_height]. */
 .loom-page-brand__logo {
   display: block;
-  max-height: clamp(80px, 10vw, 160px);
+  /* clamp floor is the minimum rendered logo height; on narrow
+     viewports 10vw falls below it so the floor governs the mobile
+     size. Tenant-overridable via --loom-nav-logo-min so a brand
+     whose mark should stay large on mobile (rather than shrink to
+     the 80px default) can opt in without upscaling past natural. */
+  max-height: clamp(var(--loom-nav-logo-min, 80px), 10vw, 160px);
   width: auto;
   height: auto;
   object-fit: contain;
+}
+/* On the dark theme a raster logo with baked-in dark ink would
+   vanish against the near-black canvas. Give it a light chip so
+   fixed-color marks stay legible. Light theme is untouched (logo
+   sits transparent on the page, matching a light brand bar). A
+   tenant whose logo is already dark-theme-ready can override via
+   tenant-style. */
+:root[data-theme="dark"] .loom-page-brand__logo {
+  background: #fff;
+  padding: 0.3rem 0.55rem;
+  border-radius: var(--loom-radius-md, 8px);
 }
 .loom-page-brand {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+/* Brand icon-mark (#536): inline loom-icons glyph before the wordmark.
+ * currentColor on the SVG stroke would inherit the ink brand text; pin
+ * it to the primary accent so the mark reads as a logo, not text. */
+.loom-page-brand__icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: 0 0 auto;
+  color: var(--loom-color-primary, var(--loom-accent));
+}
+/* Boxed brand mark (#553): opt-in (brand_icon_boxed) filled rounded
+ * container so the icon + wordmark read as a logo lockup rather than a
+ * bare glyph. content-box keeps the glyph at its 1.6rem size and adds
+ * the pad + fill around it; the glyph inverts to the on-primary ink. */
+.loom-page-brand__icon--boxed {
+  box-sizing: content-box;
+  padding: 0.4rem;
+  border-radius: var(--loom-radius-md, 0.5rem);
+  background: var(--loom-color-primary, var(--loom-accent));
+  color: var(--loom-color-on-primary, #fff);
+}
+/* Two-tone wordmark (#543): the trailing accent portion (e.g. "LLC")
+ * picks up the primary brand color while the head stays ink. Generic;
+ * emitted only when the tenant sets brand_accent_tail. */
+.loom-page-brand__name-accent {
+  color: var(--loom-color-primary, var(--loom-accent));
+  /* #565: the parent .loom-page-brand is a flex row with gap:0.5rem, so
+   * that 0.5rem also separates the wordmark head from this accent tail —
+   * REAL renders "PlausiDen LLC" as one wordmark with a single word
+   * space. A tunable margin (default 0 = flex gap unchanged for demos)
+   * lets a tenant pull the tail back toward a normal word space WITHOUT
+   * collapsing the icon↔wordmark gap that the same flex gap also sets. */
+  margin-left: var(--loom-size-brand-accent-gap, 0);
+}
+
+/* Chrome content aligns to the page content column (same width as
+   main#content). Without this the header + utility strip are full-bleed
+   while the body is centered, so the brand/nav sit flush-left and read
+   as "in the wrong spot" against the indented body. Backgrounds and
+   borders still span full width; only the inner content is inset via
+   auto gutters. The colored 2-row [data-nav-bg-role] header keeps its
+   own full-bleed layout (its padding:0 !important wins). */
+body { --loom-page-content-max: 64rem; }
+body[data-content-width="narrow"]      { --loom-page-content-max: 42rem; }
+body[data-content-width="comfortable"] { --loom-page-content-max: 64rem; }
+body[data-content-width="roomy"]       { --loom-page-content-max: 70rem; }
+body[data-content-width="wide"]        { --loom-page-content-max: 90rem; }
+body[data-content-width="full"]        { --loom-page-content-max: 100%; }
+header.loom-page-header {
+  padding-inline: max(1.25rem, calc((100% - var(--loom-page-content-max, 64rem)) / 2));
 }
 
 /* When the header has a colored nav-bg, force a 2-row layout:
@@ -12336,9 +13486,11 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
 .loom-page-header[data-nav-bg-role="primary"] .loom-page-nav > button {
   margin-left: 0 !important;
 }
-/* Utility strip: bigger padding so the strip is visible. */
+/* Utility strip: full-width bar, content inset to the page content
+   column so the email/phone align with the header + body below. */
 .loom-utility-strip {
-  padding: 0.6rem 1.5rem !important;
+  padding-block: 0.6rem !important;
+  padding-inline: max(1.5rem, calc((100% - var(--loom-page-content-max, 64rem)) / 2)) !important;
   font-size: 0.875rem !important;
   font-weight: 500;
 }
@@ -12390,12 +13542,166 @@ header.loom-page-header[data-nav-bg-role="secondary"] {
 }
 .loom-page-nav--links-row {
   display: flex;
-  align-items: center;
+  align-items: var(--loom-nav-links-row-align, center);
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 header.loom-page-header:has(.loom-page-nav--brand-row) {
   padding-bottom: 0.5rem;
+}
+/* Right-aligned action-button cluster in the PageShell header (#533).
+ * margin-left:auto pushes it to the far edge of the flex nav so brand +
+ * links stay left, CTA buttons sit right. Substrate-general; emitted
+ * only when CmsPage carries nav_actions. */
+.loom-page-nav__actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+/* ===================================================================
+ * Tenant-overridable primary-nav link styling. A tenant opts in via
+ * forge.toml [style.nav] (link_color / link_weight / link_padding /
+ * link_hover_color), which emits --loom-nav-* CSS vars in
+ * tenant-style.css. With NO override these fall back to the premium
+ * muted-nav baseline from BASE_THEME_CSS, so other tenants are
+ * unaffected. Selector carries higher specificity (0,2,2) than the
+ * baseline `nav.loom-page-nav a` (0,1,2) via the .loom-page-nav__link
+ * class, so it wins regardless of source order without touching the
+ * CSP-hashed inline critical block. Padding applies to every
+ * top-level link (incl. active) for uniform item width; color +
+ * weight use :not([aria-current="page"]) so the active-page
+ * highlight stays on the baseline accent rule.
+ * Substrate-general — no per-site CSS.
+ * =================================================================== */
+nav.loom-page-nav a.loom-page-nav__link {
+  padding: var(--loom-nav-link-padding, 0.5rem 0.9rem);
+}
+nav.loom-page-nav a.loom-page-nav__link:not([aria-current="page"]) {
+  color: var(--loom-nav-link-color, var(--loom-muted));
+  font-weight: var(--loom-nav-link-weight, 500);
+}
+nav.loom-page-nav a.loom-page-nav__link:hover,
+nav.loom-page-nav a.loom-page-nav__link:focus-visible {
+  color: var(--loom-nav-link-hover-color, var(--loom-fg));
+}
+/* #554: the active-page link carries a brand-accent underline so the
+ * current section is visibly marked (matches real marketing nav). Uses
+ * text-decoration rather than a border so it adds no layout shift, and
+ * an offset so it clears the descenders. `background: none` overrides
+ * the lower-specificity `.loom-navlinks a[aria-current="page"]` overlay
+ * pill (0,3,2 beats 0,2,1, so it wins regardless of source order and
+ * without touching the CSP-hashed inline block) — real marketing navs
+ * mark the active link with an underline alone, not a filled chip.
+ * Substrate-general. */
+nav.loom-page-nav a.loom-page-nav__link[aria-current="page"] {
+  background: none;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.45em;
+  text-decoration-color: var(--loom-color-primary, var(--loom-accent));
+}
+/* Home-icon glyph tracks the tenant nav-link color so it doesn't read
+   as a lone muted item among colored links. Higher specificity (0,2,2)
+   than the baseline `nav.loom-page-nav a` (0,1,2) that otherwise forces
+   --loom-muted onto the icon anchor's `color: inherit`. Padding stays
+   on the icon's own fixed 36×36 box — only color is overridden here. */
+nav.loom-page-nav a.loom-page-nav__home-icon {
+  color: var(--loom-nav-link-color, var(--loom-muted));
+  align-self: var(--loom-nav-home-align, auto);
+}
+/* ===================================================================
+ * Nav dropdown submenus. A CmsNavLink carrying `children` renders as
+ * a parent: an inline-flex item wrapper holding the parent anchor
+ * (with a disclosure caret) plus an absolutely-positioned submenu.
+ * The submenu is hidden by default and revealed on :hover OR
+ * :focus-within, so it works for mouse, keyboard, and touch with no
+ * JavaScript. Nested children reuse the same machinery one level
+ * deeper. Substrate-general: any tenant gets dropdowns purely from
+ * cms/*.json — no per-site CSS.
+ * =================================================================== */
+.loom-page-nav__item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+/* Caret placement knob. By default the disclosure caret sits inline to
+   the right of the label (flex-direction:row, inherited from the
+   .loom-page-nav__link inline-flex base). A tenant can stack the caret
+   centered BELOW the label by setting [style.nav] caret_flow=column
+   (pair with caret_margin_left=0, caret_margin_top=<x>, and
+   links_row_align=baseline so every label stays on one line while only
+   the dropdown carets hang beneath). CSS-only; the row default leaves
+   every other tenant's nav unchanged. */
+nav.loom-page-nav a.loom-page-nav__link--parent {
+  flex-direction: var(--loom-nav-caret-flow, row);
+}
+.loom-page-nav__caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: var(--loom-nav-caret-margin-left, 0.35em);
+  margin-top: var(--loom-nav-caret-margin-top, 0);
+  border-left: 0.3em solid transparent;
+  border-right: 0.3em solid transparent;
+  border-top: 0.32em solid currentColor;
+  transition: transform 0.15s ease;
+}
+.loom-page-nav__item:hover > .loom-page-nav__link--parent .loom-page-nav__caret,
+.loom-page-nav__item:focus-within > .loom-page-nav__link--parent .loom-page-nav__caret {
+  transform: rotate(180deg);
+}
+.loom-page-nav__submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 15rem;
+  padding: 0.4rem 0;
+  margin-top: 0.25rem;
+  background: var(--loom-surface, #fff);
+  border: var(--loom-stroke-thin, 1px) solid var(--loom-border, #e5e5e5);
+  border-radius: var(--loom-radius-sm, 6px);
+  box-shadow: var(--loom-shadow-md, 0 8px 24px rgba(0, 0, 0, 0.12));
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-0.25rem);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+.loom-page-nav__item:hover > .loom-page-nav__submenu,
+.loom-page-nav__item:focus-within > .loom-page-nav__submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+/* Submenu entries: full-width vertical rows, not inline nav pills. */
+.loom-page-nav__sublink {
+  display: block;
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+  color: var(--loom-fg, #222);
+  text-decoration: none;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.loom-page-nav__sublink:hover,
+.loom-page-nav__sublink:focus {
+  background: color-mix(in oklab, var(--loom-accent) 12%, transparent);
+  color: var(--loom-accent);
+}
+/* Nested submenu (a child that itself has children): flies out to the
+   right of its row rather than stacking below. */
+.loom-page-nav__subitem {
+  position: relative;
+}
+.loom-page-nav__subitem .loom-page-nav__submenu {
+  top: 0;
+  left: 100%;
+  margin-top: 0;
+  margin-left: 0.25rem;
 }
 /* Mobile hamburger via JS-free checkbox-hack. Hidden checkbox holds
    the open state; <label for> flips it on tap. On desktop the toggle
@@ -12441,6 +13747,31 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
   .loom-page-nav-toggle {
     display: inline-flex;
   }
+  /* Mobile header reflow for the brand-extras layout: keep the logo and
+     the MENU toggle together on row 1 (toggle pushed to the right edge),
+     and wrap the brand-extras (social links / language selector) onto a
+     centered row 2 — the standard premium mobile-header arrangement.
+     The MENU <label> now lives inside the brand row (its `for`/`id` still
+     toggles the checkbox in the sibling collapse container), so pure
+     flex order + wrap places it without absolute positioning.
+     Substrate-general: applies to any tenant carrying brand_extras. */
+  .loom-page-nav--brand-row {
+    flex-wrap: wrap;
+    row-gap: 0.6rem;
+  }
+  .loom-page-nav--brand-row .loom-page-nav-toggle {
+    order: 1;
+    margin-left: auto;
+  }
+  .loom-page-nav--brand-row .loom-page-brand-extras {
+    order: 2;
+    flex-basis: 100%;
+    margin-left: 0;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 0.5rem;
+    justify-content: center;
+  }
   .loom-page-nav-toggle-cb:not(:checked) ~ .loom-page-nav--links-row {
     display: none;
   }
@@ -12455,7 +13786,7 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
 /* nav_collapse_always — hamburger pattern at EVERY viewport. Used by
    tenants whose nav is long enough that inline desktop nav wraps or
    visually crowds the brand row. Substrate-general opt-in. */
-.loom-page-nav-collapse--always .loom-page-nav-toggle {
+.loom-page-nav-toggle--always {
   display: inline-flex !important;
 }
 .loom-page-nav-collapse--always .loom-page-nav-toggle-cb:not(:checked) ~ .loom-page-nav--links-row {
@@ -12467,6 +13798,122 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
   align-items: flex-start;
   width: 100%;
   margin-top: 0.5rem;
+}
+
+/* Path A inline-collapse wrapper. At desktop it is layout-transparent
+   (display:contents) so brand / links / actions / theme-toggle flow in the
+   nav flex exactly as before — no desktop change. At <=768px it becomes a
+   real box: hidden until the shared toggle checkbox is checked, then a
+   full-width stacked column. Generic across page_shell tenants without
+   brand-extras. */
+.loom-page-nav__collapse-inline {
+  display: contents;
+}
+@media (max-width: 768px) {
+  .loom-page-nav > .loom-page-nav-toggle {
+    margin-left: auto;
+  }
+  .loom-page-nav__collapse-inline {
+    display: none;
+    flex-basis: 100%;
+  }
+  .loom-page-nav-toggle-cb:checked ~ .loom-page-nav__collapse-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+  }
+  .loom-page-nav-toggle-cb:checked ~ .loom-page-nav__collapse-inline .loom-page-nav__actions {
+    margin-left: 0;
+  }
+}
+
+/* Opt-in right-packed desktop nav (nav_links_align_end). At >=769px the
+   first child of the collapse-inline wrapper takes margin-left:auto, so
+   the brand stays far-left and the link+action cluster groups on the
+   right; the actions container drops its own auto so the cluster stays
+   tight. No effect at <=768px — the hamburger column owns that range. */
+@media (min-width: 769px) {
+  .loom-page-nav--links-end .loom-page-nav__collapse-inline > :first-child {
+    margin-left: auto;
+  }
+  .loom-page-nav--links-end .loom-page-nav__actions {
+    margin-left: 0.5rem;
+  }
+}
+
+/* Opt-in lower collapse breakpoint (nav_collapse_sm). The default
+   hamburger fires at <=768px; tenants whose links fit one row down to
+   tablet width opt into collapsing only at <=640px, matching sites that
+   keep the full horizontal nav at 768. In the 641-768 band we override
+   the default md-collapse back to the expanded inline row and re-apply
+   the #560 align-end cluster (whose own min-width:769 rule does not
+   reach this band). At <=640 the default collapse rules already apply,
+   so the hamburger returns with no extra CSS. No effect on navs without
+   this class -> ProsperityClub + demos keep the md collapse. */
+@media (min-width: 641px) and (max-width: 768px) {
+  .loom-page-nav--collapse-sm > .loom-page-nav-toggle {
+    display: none;
+  }
+  .loom-page-nav--collapse-sm .loom-page-nav__collapse-inline {
+    display: contents;
+  }
+  .loom-page-nav--collapse-sm.loom-page-nav--links-end .loom-page-nav__collapse-inline > :first-child {
+    margin-left: auto;
+  }
+  .loom-page-nav--collapse-sm.loom-page-nav--links-end .loom-page-nav__actions {
+    margin-left: 0.5rem;
+  }
+  /* Tablet density: a nav that stays expanded down to 641px keeps a
+     single row. The trap is plain `flex-wrap:nowrap` — flex items
+     default to `flex-shrink:1`, so a too-wide row is compressed item
+     by item until the brand wordmark and each link wrap their text
+     vertically ("Pl/au/si"). Reference marketing navs avoid this by
+     pinning every item to its natural width (`flex:0 0 auto`) +
+     `white-space:nowrap`, then letting the action cluster run past the
+     right edge (clipped by the nav's own `overflow:hidden`, so no
+     page-wide horizontal scrollbar). Trim gap + per-link padding so as
+     much as possible fits before the clip. nav-level specificity
+     (0,1,1) beats the inline base `.loom-page-nav` (0,1,0); the link
+     rule matches the base (0,2,2) and wins on later source order.
+     NOTE: `.loom-page-nav__collapse-inline` is `display:contents`
+     here, so its children (links + actions) are nav flex items and
+     the `flex`/`white-space` rules below reach them directly. */
+  nav.loom-page-nav--collapse-sm {
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    overflow: hidden;
+  }
+  .loom-page-nav--collapse-sm .loom-page-brand,
+  .loom-page-nav--collapse-sm .loom-page-nav__link,
+  .loom-page-nav--collapse-sm .loom-page-nav__actions {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  nav.loom-page-nav--collapse-sm a.loom-page-nav__link {
+    padding: 0.4rem 0.5rem;
+  }
+  .loom-page-nav--collapse-sm .loom-page-nav__actions {
+    gap: 0.35rem;
+  }
+}
+
+/* Opt-in plain/borderless toggle glyph (nav_toggle_plain). Drops the
+   accent fill + box so the hamburger reads as a bare menu icon at the
+   inherited text color. Same specificity as the default filled button
+   rule but later in source, so it wins per-property for tenants that opt
+   in; every other tenant keeps the filled button. */
+.loom-page-nav-toggle--plain {
+  background: none;
+  color: inherit;
+  padding: 0.35rem;
+  border-radius: 0;
+  font-weight: 400;
+}
+.loom-page-nav-toggle--plain .loom-page-nav-toggle__icon {
+  font-size: 1.6rem;
 }
 
 .loom-social-links {
@@ -12507,6 +13954,27 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
 .loom-social-link--github::before      { content: "GH"; font-weight: 800; font-size: 13px; }
 .loom-social-link--mastodon::before    { content: "M"; font-weight: 800; }
 
+/* Utility-strip leading icons — same pure-CSS glyph mechanism as
+   social links, keyed by slug. Built-ins below; tenants extend by
+   adding more --slug rules. Trailing U+FE0E forces text (non-emoji)
+   presentation so the glyph stays monochrome and inherits color. */
+.loom-utility-strip__left, .loom-utility-strip__right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.loom-utility-strip__icon {
+  display: inline-flex;
+  align-items: center;
+}
+.loom-utility-strip__icon::before {
+  font-style: normal;
+  line-height: 1;
+  font-size: 1em;
+}
+.loom-utility-strip__icon--envelope::before { content: "\2709\FE0E"; }
+.loom-utility-strip__icon--phone::before    { content: "\260E\FE0E"; }
+
 /* Lang selector — JS-free <details> disclosure with chevron. */
 .loom-lang-selector {
   position: relative;
@@ -12537,6 +14005,19 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
   display: inline-block;
   font-size: 1.1em;
 }
+/* Image flag marker (LangSelector::current_marker_image / option
+ * marker_image). 2:1 flag at ~1em tall; robust where emoji fonts are
+ * absent. margin-right spaces it from the label inside menu <a> rows
+ * (the summary uses flex `gap`, so a little extra there is harmless). */
+.loom-lang-selector__flag {
+  display: inline-block;
+  height: 0.95em;
+  width: auto;
+  margin-right: 0.35rem;
+  border-radius: 2px;
+  vertical-align: -0.12em;
+  object-fit: contain;
+}
 .loom-lang-selector__menu {
   position: absolute;
   top: calc(100% + 4px);
@@ -12563,8 +14044,14 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
   background: color-mix(in oklab, var(--loom-color-primary) 8%, transparent);
 }
 
-/* Home icon — CSS-rendered house glyph, no SVG file needed. */
+/* Home icon — CSS-rendered house glyph, no external font/SVG file.
+   The mark is an SVG-mask filled house (color inherited via
+   background-color: currentColor) rather than the U+2302 ⌂ text
+   glyph: the mask renders identically across fonts and reads as a
+   solid house, the conventional home affordance. CSP-clean under the
+   page-shell's `img-src 'self' data:`. */
 .loom-page-nav__home-icon {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -12576,9 +14063,29 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
   font-size: 18px;
 }
 .loom-page-nav__home-icon::before {
-  content: "⌂";
-  font-size: 22px;
-  line-height: 1;
+  content: "";
+  display: inline-block;
+  width: 1.18em;
+  height: 1.18em;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2 L1 12 h3 v10 h6 v-6 h4 v6 h6 V12 h3 Z'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M12 2 L1 12 h3 v10 h6 v-6 h4 v6 h6 V12 h3 Z'/></svg>") center / contain no-repeat;
+}
+/* Optional vertical divider between the home icon and the first nav
+   link. Off by default (width/gap 0, transparent) so other tenants are
+   unchanged; a tenant opts in via forge.toml [style.nav]
+   home_divider_width / home_divider_color / home_divider_gap. Absolute
+   so enabling it never shifts the house glyph. */
+.loom-page-nav__home-icon::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: var(--loom-nav-home-divider-gap, 0px);
+  width: var(--loom-nav-home-divider-width, 0px);
+  height: var(--loom-nav-home-divider-height, 1.4em);
+  background: var(--loom-nav-home-divider-color, transparent);
 }
 .loom-page-nav__home-icon:hover {
   background: color-mix(in oklab, currentColor 12%, transparent);
@@ -12682,11 +14189,11 @@ header.loom-page-header:has(.loom-page-nav--brand-row) {
   color: var(--loom-color-ink-muted, var(--loom-color-ink, #111));
 }
 .loom-page-footer__bottomrow .loom-page-footer__back-to-top {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--loom-color-primary, var(--loom-color-ink, #111));
+  color: var(--loom-color-ink, #111);
   text-decoration: none;
 }
 

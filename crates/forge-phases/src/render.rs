@@ -180,7 +180,61 @@ impl Phase for RenderPhase {
         // write can use the same prepared buffer instead of recomputing.
         use base64::Engine as _;
         use sha2::Digest as _;
-        let skin_raw = loom_tokens::SKIN_CSS.as_bytes();
+        // `forge.toml` `[style] skin = "…"` selects the expression overlay
+        // appended to the base skin. This is what lets two tenants look
+        // genuinely unlike each other rather than merely differently coloured
+        // — the base carries structure, the overlay carries the look.
+        //
+        // An unknown name fails the build. Silently serving the default would
+        // ship the wrong visual identity with nothing reporting it, which is
+        // the failure mode this whole mechanism exists to end.
+        // A forge.toml that does not parse makes TenantStyle::load return None,
+        // which drops EVERY palette, font and nav override without a word — the
+        // build succeeds and the site renders in default colours. Surface it.
+        if let Some(err) = forge_core::tenant_style::TenantStyle::parse_error(&ctx.root) {
+            findings.push(
+                Finding::strict(
+                    self.name(),
+                    "forge.toml".to_owned(),
+                    format!("forge.toml did not parse, so ALL tenant styling was dropped: {err}"),
+                )
+                .why("`[style]` uses deny_unknown_fields, so a single unrecognised key silently removes every palette, font and nav override the tenant configured — the site still builds and still renders, just in default colours, with nothing explaining why")
+                .fix("fix the key or value named in the parse error above"),
+            );
+        }
+        let skin_name = extract_skin_name(forge_toml.as_ref());
+        let overlay = match loom_tokens::skin_overlay(&skin_name) {
+            Ok(o) => o,
+            Err(()) => {
+                findings.push(
+                    Finding::strict(
+                        self.name(),
+                        "forge.toml".to_owned(),
+                        format!(
+                            "unknown skin {skin_name:?} — known skins: {}",
+                            loom_tokens::SKIN_NAMES.join(", ")
+                        ),
+                    )
+                    .why("the build would otherwise fall back to the default skin and ship the wrong visual identity with nothing reporting it")
+                    .fix("correct `[style] skin` in forge.toml, or add the overlay to loom-tokens"),
+                );
+                None
+            }
+        };
+        let skin_owned: Vec<u8> = match overlay {
+            None => loom_tokens::SKIN_CSS.as_bytes().to_vec(),
+            Some(ov) => {
+                let mut b =
+                    Vec::with_capacity(loom_tokens::SKIN_CSS.len() + ov.len() + 64);
+                b.extend_from_slice(loom_tokens::SKIN_CSS.as_bytes());
+                b.extend_from_slice(
+                    format!("\n/* ---- skin overlay: {skin_name} ---- */\n").as_bytes(),
+                );
+                b.extend_from_slice(ov.as_bytes());
+                b
+            }
+        };
+        let skin_raw: &[u8] = &skin_owned;
         let raw_hash_b64 = {
             let mut h = sha2::Sha384::new();
             h.update(skin_raw);
@@ -563,6 +617,17 @@ fn extract_render_write_canonical(toml: Option<&toml::Value>) -> bool {
 /// tenants stay byte-for-byte identical. When true, leaf slugs emit
 /// to `<slug>/index.html` (see [`output_path_for_slug`]) so
 /// extensionless links resolve under a plain static file_server.
+/// Read `[style] skin = "…"` from `forge.toml`. Defaults to `"base"`, which is
+/// the pre-existing single-skin behaviour, so every existing tenant renders
+/// byte-identically until it opts in.
+fn extract_skin_name(toml: Option<&toml::Value>) -> String {
+    toml.and_then(|t| t.get("style"))
+        .and_then(|s| s.get("skin"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("base")
+        .to_owned()
+}
+
 fn extract_render_clean_urls(toml: Option<&toml::Value>) -> bool {
     toml.and_then(|t| t.get("render"))
         .and_then(|r| r.get("clean_urls"))
@@ -1298,6 +1363,24 @@ mod tests {
         // `--` nesting is unaffected by the flag.
         let p = output_path_for_slug(out_dir, "legal--terms--us", &no_parents, true);
         assert_eq!(p, Path::new("/tmp/out/legal/terms/us/index.html"));
+    }
+
+    #[test]
+    fn extract_skin_name_defaults_to_base_and_reads_the_override() {
+        assert_eq!(extract_skin_name(None), "base", "no forge.toml → unchanged output");
+        let t: toml::Value = toml::from_str("[style]\nskin = \"editorial\"\n").unwrap();
+        assert_eq!(extract_skin_name(Some(&t)), "editorial");
+        let no_style: toml::Value = toml::from_str("[render]\nclean_urls = true\n").unwrap();
+        assert_eq!(extract_skin_name(Some(&no_style)), "base");
+    }
+
+    #[test]
+    fn unknown_skin_is_an_error_not_a_silent_fallback() {
+        // Falling back would ship the wrong visual identity with nothing
+        // reporting it — the exact failure this mechanism exists to prevent.
+        assert!(loom_tokens::skin_overlay("typo-here").is_err());
+        assert!(loom_tokens::skin_overlay("base").unwrap().is_none());
+        assert!(loom_tokens::skin_overlay("editorial").unwrap().is_some());
     }
 
     #[test]

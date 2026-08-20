@@ -3,18 +3,18 @@
   "findings": [
     {
       "phase": "loom_sync",
-      "path": "static/loom-skin.css",
-      "message": "Loom skin.css drift (recorded sha384-zggW1d97jHMLqD/TTCHVAamnfTXG7VzcwzpumVWUyo1NUQLRk7kcRjF5If9yp8ST, current sha384-uW8b8ZiHt5vnhURoDCeGX6PIGC6X8Xo0j+xDyoKe8R/3I9G9nT6MZmusq/tKLWwR). Run `forge --sync-loom` to update.",
+      "path": "PlausiDen-Loom/loom-tokens/src/skin.css",
+      "message": "Loom skin.css not found at PlausiDen-Loom/loom-tokens/src/skin.css. Set LOOM_PATH or check out PlausiDen-Loom as a sibling of PlausiDen-Forge.",
       "severity": "warn",
       "advocacy": {
-        "why": "Loom's canonical skin.css has changed (new design-system tokens, fixed a11y contrast, etc.) but static/loom-skin.css still carries the old hash. The served site is shipping the stale design system",
-        "substrate_fix": "run `forge --sync-loom` to copy the current Loom skin.css bytes + update the marker",
-        "anti_pattern": "don't manually update the marker — only the canonical sync command writes both bytes + hash atomically"
+        "why": "loom_sync verifies static/loom-skin.css matches the canonical bytes from a PlausiDen-Loom checkout; without that checkout the sync chain is unverifiable",
+        "substrate_fix": "set LOOM_PATH=/path/to/PlausiDen-Loom OR check out PlausiDen-Loom as a sibling directory of PlausiDen-Forge (the default loom_skin_path probe location)",
+        "anti_pattern": "don't hand-copy skin.css bytes from Loom releases — the SYNC-FROM-LOOM marker won't match and the next build will flag drift"
       }
     },
     {
       "phase": "semver_enforcement",
-      "path": "/home/paul/projects/PlausiDen-Forge/forge.toml",
+      "path": "./forge.toml",
       "message": "forge.toml missing [platform] block",
       "severity": "warn",
       "enforces_rules": [
@@ -28,7 +28,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/stripe.html",
+      "path": "./static/stripe.html",
       "message": "static/stripe.html has no cms/stripe.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -40,7 +40,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/linear.html",
+      "path": "./static/linear.html",
       "message": "static/linear.html has no cms/linear.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -52,7 +52,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/vercel.html",
+      "path": "./static/vercel.html",
       "message": "static/vercel.html has no cms/vercel.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -64,7 +64,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/render.html",
+      "path": "./static/render.html",
       "message": "static/render.html has no cms/render.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -76,7 +76,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/index.html",
+      "path": "./static/index.html",
       "message": "static/index.html has no cms/index.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -88,7 +88,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/sacred-vote.html",
+      "path": "./static/sacred-vote.html",
       "message": "static/sacred-vote.html has no cms/sacred-vote.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -100,7 +100,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/github.html",
+      "path": "./static/github.html",
       "message": "static/github.html has no cms/github.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -112,7 +112,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/notion.html",
+      "path": "./static/notion.html",
       "message": "static/notion.html has no cms/notion.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -124,7 +124,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/anthropic.html",
+      "path": "./static/anthropic.html",
       "message": "static/anthropic.html has no cms/anthropic.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -136,7 +136,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/fly.html",
+      "path": "./static/fly.html",
       "message": "static/fly.html has no cms/fly.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -148,7 +148,7 @@
     },
     {
       "phase": "render",
-      "path": "/home/paul/projects/PlausiDen-Forge/static/plausiden.html",
+      "path": "./static/plausiden.html",
       "message": "static/plausiden.html has no cms/plausiden.json source — stale artifact",
       "severity": "warn",
       "advocacy": {
@@ -156,6 +156,160 @@
         "substrate_fix": "either: (a) delete static/plausiden.html if the page is intentionally gone, OR (b) restore cms/plausiden.json if the page should still ship",
         "skill": "author-cms-content",
         "anti_pattern": "don't manually edit static/<slug>.html — Forge regenerates it from cms/<slug>.json on every build with write_canonical=true"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "anthropic.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "fly.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "github.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "index.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "linear.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "notion.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "plausiden.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "render.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "sacred-vote.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "stripe.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
+      }
+    },
+    {
+      "phase": "csp",
+      "path": "vercel.html",
+      "message": "meta CSP carries `frame-ancestors`, which browsers ignore there",
+      "severity": "strict",
+      "enforces_rules": [
+        "sec-005"
+      ],
+      "advocacy": {
+        "why": "CSP Level 3 requires user agents to ignore frame-ancestors, report-uri, report-to and sandbox when the policy arrives in a <meta> element — the directive provides no protection, reads as protection in review, and logs a console error on every page",
+        "substrate_fix": "remove it from the meta CSP in the Loom page-shell template; framing protection is a response-header concern — serve the headers named in the generated deploy/headers.caddy",
+        "skill": "add-loom-primitive"
       }
     },
     {
@@ -205,11 +359,11 @@
     {
       "phase": "perf_budget",
       "path": "loom-skin.css",
-      "message": "473K CSS > 64.0K budget — split into per-route bundles",
+      "message": "543K CSS > 64.0K budget — split into per-route bundles",
       "severity": "warn",
       "advocacy": {
         "why": "every kilobyte over budget is one more TLS round-trip the reader's browser has to wait for before paint — the budget is the reader-side latency floor, not an internal lint",
-        "substrate_fix": "CSS over budget at 473K: split into per-route bundles",
+        "substrate_fix": "CSS over budget at 543K: split into per-route bundles",
         "anti_pattern": "don't raise the budget to silence the warn — every active substrate uses the same defaults so over-budget assets are a real regression, not a config mismatch"
       }
     },
@@ -227,14 +381,14 @@
     {
       "phase": "sri",
       "path": "anthropic.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -242,14 +396,14 @@
     {
       "phase": "sri",
       "path": "fly.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -257,14 +411,14 @@
     {
       "phase": "sri",
       "path": "github.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-nconHbAg4HoZWyhejJT//wOah37z9RxZML84LqQdFeho/uP8hkqjYV6Y0sbTXYIQ, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -272,14 +426,14 @@
     {
       "phase": "sri",
       "path": "index.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -287,14 +441,14 @@
     {
       "phase": "sri",
       "path": "linear.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -302,14 +456,14 @@
     {
       "phase": "sri",
       "path": "notion.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -317,14 +471,14 @@
     {
       "phase": "sri",
       "path": "plausiden.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -332,14 +486,14 @@
     {
       "phase": "sri",
       "path": "render.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -347,14 +501,14 @@
     {
       "phase": "sri",
       "path": "sacred-vote.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -362,14 +516,14 @@
     {
       "phase": "sri",
       "path": "stripe.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -377,14 +531,14 @@
     {
       "phase": "sri",
       "path": "vercel.html",
-      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-K1jbU2kGYxL9xh3jIMh68pMCAFmezKHnlcgPZRmX1FjZeR3BzkBVsAVYgx4ySPUN)",
+      "message": "link → loom-skin.css: integrity mismatch (declared sha384-q4ErW/Mr+r3YPWkCSQvSQE4nOkjPCcvzP2JL94q4bP/JqnvW2CwDOlGb/St+LetG, expected sha384-bDWhP3Ev75+TKSTO2JfjQG8g/X98mU6y65nUhxngKCWUG9Bj2YLkT/7uyHzDtWlp)",
       "severity": "strict",
       "enforces_rules": [
         "sec-005"
       ],
       "advocacy": {
         "why": "HTML declares a subresource integrity that does not match the file on disk — either the asset was modified post-build OR the integrity was hand-edited",
-        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-K1jbU2kGY` from the on-disk content. Do NOT hand-edit the integrity in static/",
+        "substrate_fix": "rebuild the asset cleanly (`forge build`) — the Loom integrity emitter regenerates `sha384-sha384-bDWhP3Ev7` from the on-disk content. Do NOT hand-edit the integrity in static/",
         "skill": "add-loom-primitive",
         "anti_pattern": "don't paste integrity hashes from anywhere except `forge build` output"
       }
@@ -1195,10 +1349,10 @@
       }
     }
   ],
-  "strict_count": 11,
+  "strict_count": 22,
   "warn_count": 81,
-  "duration_ms": 36,
-  "prev_hash": "85931933a1a32e2349f2ea8e0994757c6bd7418063070b3699ae9055818e450d",
-  "chain_length": 347,
-  "started": "2026-05-28T19:34:54Z"
+  "duration_ms": 38,
+  "prev_hash": "ad9928bd0888a07c16970b325ac445e971e0d3c2017cf54461f0e3d78cb580be",
+  "chain_length": 349,
+  "started": "2026-08-20T00:46:02Z"
 }

@@ -74,6 +74,15 @@ pub struct TenantStyle {
     /// MUST override at least `bg`, `ink`, `muted`, `border` here or
     /// dark mode renders base ink on the skin's dark surfaces.
     pub palette_dark: BTreeMap<String, String>,
+    /// `[style] skin = "…"` — which expression overlay this tenant renders
+    /// with. `None` (the default) means the base skin, so existing tenants are
+    /// unaffected. The render phase resolves the name against
+    /// `loom_tokens::SKIN_NAMES` and fails the build on an unknown one.
+    ///
+    /// This is the field that lets two tenants look genuinely unlike each
+    /// other rather than merely differently coloured: palettes recolour a
+    /// single layout language, a skin replaces it.
+    pub skin: Option<String>,
     /// `[style.fonts]` — font-family stacks keyed by role
     /// (`display`, `body`, `mono`).
     pub fonts: BTreeMap<String, String>,
@@ -228,13 +237,35 @@ struct ForgeTomlEnvelope {
 impl TenantStyle {
     /// Load the `[style]` section from `<root>/forge.toml`.
     ///
-    /// Fail-tolerant: ANY error returns `None`.
+    /// Fail-tolerant: ANY error returns `None`. Callers that can report a
+    /// problem MUST pair this with [`TenantStyle::parse_error`] — see the note
+    /// there for why silence here is dangerous.
     #[must_use]
     pub fn load(root: &Path) -> Option<Self> {
         let path = root.join("forge.toml");
         let body = std::fs::read_to_string(&path).ok()?;
         let envelope: ForgeTomlEnvelope = toml::from_str(&body).ok()?;
         envelope.style
+    }
+
+    /// The TOML error when `forge.toml` exists but cannot be parsed, so a
+    /// caller can turn a silent style-drop into a build failure.
+    ///
+    /// `load` swallowing errors is a genuinely bad failure mode: `[style]` uses
+    /// `deny_unknown_fields`, so ONE unrecognised key — a typo, or a key added
+    /// to the schema in a newer Forge — makes the whole section vanish. The
+    /// build then succeeds, the site renders, and every palette and font the
+    /// operator configured is silently absent. The symptom is "my colours are
+    /// wrong" with nothing in the output pointing at the cause. Reporting the
+    /// parse error costs one extra read and removes an entire class of
+    /// mystery.
+    #[must_use]
+    pub fn parse_error(root: &Path) -> Option<String> {
+        let body = std::fs::read_to_string(root.join("forge.toml")).ok()?;
+        match toml::from_str::<ForgeTomlEnvelope>(&body) {
+            Ok(_) => None,
+            Err(e) => Some(e.to_string()),
+        }
     }
 
     /// True when this tenant declares NO style overrides. The
