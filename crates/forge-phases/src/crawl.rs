@@ -128,6 +128,9 @@ pub enum CrawlFinding {
     },
     /// One specific axis regressed. STRICT.
     AxisRegression { axis: AxisName, new_strict: u32 },
+    /// Crawler subprocess exceeded its timeout. WARN — the
+    /// runtime audit is incomplete, not a site regression.
+    CrawlerTimedOut { timeout_secs: u64 },
 }
 
 impl CrawlFinding {
@@ -182,6 +185,14 @@ impl CrawlFinding {
                 format!(
                     "crawler errored (exit {exit_code}) — runtime audit could not \
                      complete: {stderr_excerpt}"
+                ),
+            ),
+            Self::CrawlerTimedOut { timeout_secs } => Finding::warn(
+                PHASE,
+                "PlausiDen-Crawler",
+                format!(
+                    "crawler subprocess timed out after {timeout_secs}s — runtime audit \
+                     incomplete (set CRAWLER_TIMEOUT_SECS to adjust; default 120)"
                 ),
             ),
             Self::AxisRegression { axis, new_strict } => Finding::strict(
@@ -395,25 +406,68 @@ impl Phase for CrawlPhase {
             return Ok(vec![CrawlFinding::DevServerDown.as_finding()]);
         }
 
-        // 4. Run the crawler.
+        // 4. Run the crawler with a timeout.
         // SECURITY: command + args are static; the only operator-
         // controlled values (CRAWLER_DIR, CRAWLER_JOURNEY) flow
         // through the resolved PathBuf so shell metachars never
         // touch a shell. We invoke `npm` directly, no shell.
-        tracing::info!(?crawler_dir, ?journey, "crawl: invoking crawler");
+        let timeout_secs: u64 = std::env::var("CRAWLER_TIMEOUT_SECS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(120);
+        tracing::info!(?crawler_dir, ?journey, timeout_secs, "crawl: invoking crawler");
         let journey_arg = journey
             .strip_prefix(&crawler_dir)
             .map(Path::to_path_buf)
             .unwrap_or_else(|_| journey.clone());
-        let output = Command::new("npm")
+        let mut child = Command::new("npm")
             .args(["run", "audit", "--", "--journey"])
             .arg(&journey_arg)
             .current_dir(&crawler_dir)
-            .output()
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
             .map_err(|source| BuildError::Io {
                 context: format!("npm run audit in {}", crawler_dir.display()),
                 source,
             })?;
+
+        let deadline = std::time::Instant::now() + Duration::from_secs(timeout_secs);
+        let poll_interval = Duration::from_millis(250);
+        let output = loop {
+            match child.try_wait() {
+                Ok(Some(status)) => {
+                    // Child exited — collect output.
+                    let mut stdout = Vec::new();
+                    let mut stderr = Vec::new();
+                    if let Some(mut o) = child.stdout.take() {
+                        let _ = std::io::Read::read_to_end(&mut o, &mut stdout);
+                    }
+                    if let Some(mut e) = child.stderr.take() {
+                        let _ = std::io::Read::read_to_end(&mut e, &mut stderr);
+                    }
+                    break std::process::Output { status, stdout, stderr };
+                }
+                Ok(None) => {
+                    // Still running — check deadline.
+                    if std::time::Instant::now() >= deadline {
+                        tracing::warn!(timeout_secs, "crawl: killing crawler — timeout exceeded");
+                        let _ = child.kill();
+                        let _ = child.wait(); // Reap zombie.
+                        return Ok(vec![
+                            CrawlFinding::CrawlerTimedOut { timeout_secs }.as_finding()
+                        ]);
+                    }
+                    std::thread::sleep(poll_interval);
+                }
+                Err(e) => {
+                    return Err(BuildError::Io {
+                        context: "waiting on crawler process".into(),
+                        source: e,
+                    });
+                }
+            }
+        };
 
         let exit_code = output.status.code().unwrap_or(-1);
         tracing::debug!(exit_code, "crawl: crawler exited");
