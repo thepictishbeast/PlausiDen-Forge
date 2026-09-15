@@ -51,6 +51,7 @@ use forge_phases::html_semantic::HtmlSemanticPhase;
 use forge_phases::hunted_tier::HuntedTierPhase;
 use forge_phases::id_strategy::IdStrategyPhase;
 use forge_phases::identity_coherence::IdentityCoherencePhase;
+use forge_phases::invalid_link::InvalidLinkPhase;
 use forge_phases::jurisdiction_compliance::JurisdictionCompliancePhase;
 use forge_phases::label_consistency::LabelConsistencyPhase;
 use forge_phases::link_check::LinkCheckPhase;
@@ -1596,6 +1597,7 @@ fn run() -> Result<ExitCode> {
         Box::new(HtmlSemanticPhase),
         Box::new(CspPhase),
         Box::new(CspDevmodePhase),
+        Box::new(InvalidLinkPhase),
         Box::new(ExternalAssetsPhase),
         Box::new(A11yLandmarksPhase),
         Box::new(IdStrategyPhase),
