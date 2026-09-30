@@ -76,7 +76,7 @@ Hard constraints (read these EVERY iteration; memory loader re-loads them automa
   - LFI repos: PR-only flow, never direct push to main.
   - Per memory feedback_no_meta_narration: no announcing what you're about to do; just do or skip.
   - Per memory ceo_mode: don't menu paul. Pick and execute.
-  - Email paul at redcaptian1917@gmail.com only if something is blocking and only with concrete recommendation.
+  - Email paul at william@plausiden.com only if something is blocking and only with concrete recommendation.
 
 Don't restart paused work mid-step. Don't sleep. Don't poll. Don't ask paul to run commands unless absolutely required. Don't re-arm this loop — it expires 7 days from creation; ask paul before re-creating.
 ```

@@ -424,8 +424,8 @@ mod tests {
     #[test]
     fn detects_phone_in_text() {
         assert_eq!(
-            detect_phone("call 978-351-6495 today"), // audit-allow: test phone fixture
-            Some("978-351-6495".to_owned())          // audit-allow: test phone fixture
+            detect_phone("call 123-456-7890 today"), // audit-allow: test phone fixture
+            Some("123-456-7890".to_owned())          // audit-allow: test phone fixture
         );
     }
 
